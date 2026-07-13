@@ -1,0 +1,22 @@
+# Netlify deploy config for the pre-built safety-wiki static site.
+#
+# The site under graph/site/ is already rendered: fully self-contained with
+# relative links and locally bundled KaTeX + fonts, so there is NO build step.
+# Netlify simply publishes the directory as-is.
+
+[build]
+  publish = "graph/site"
+  # No build command: the HTML is committed pre-rendered.
+
+# Long-cache the immutable static assets (fonts, KaTeX, styles).
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Sensible baseline security headers for all pages.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
