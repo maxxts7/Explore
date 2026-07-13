@@ -1,0 +1,734 @@
+{
+  "paper": {"id": "concrete-problems", "title": "Concrete Problems in AI Safety", "arxiv": "1606.06565", "pdf": "papers/concrete-problems.pdf", "pages": 29},
+  "concepts": [
+    {
+      "id": "accidents-in-ml",
+      "name": "Accidents in machine learning systems",
+      "role": "introduced",
+      "summary": "Unintended and harmful behavior that emerges from poor design of real-world machine learning systems, defined as the paper's central unit of analysis.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 1}, {"section": "1 Introduction", "page": 2}],
+      "notes": "Deliberately framed as a practical, near-term alternative to speculative superintelligence-risk framings; organizes the whole paper."
+    },
+    {
+      "id": "cleaning-robot-example",
+      "name": "Cleaning robot (running example)",
+      "role": "introduced",
+      "summary": "A fictional office-cleaning robot used throughout the paper as a concrete illustration of each of the five accident-risk problems.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 3}],
+      "notes": "Recurs in every subsequent section to ground abstract failure modes in a single relatable scenario."
+    },
+    {
+      "id": "long-term-ai-risk-framing",
+      "name": "Long-term / superintelligence AI-risk framing",
+      "role": "inherited",
+      "summary": "The pre-existing public discourse (e.g. Bostrom's Superintelligence, MIRI, FHI) that frames AI risk in terms of extreme, speculative scenarios involving highly advanced or superintelligent agents.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 2}, {"section": "8 Related Efforts", "page": 20}],
+      "notes": "Paper explicitly positions its 'concrete, near-term' approach as complementary to but distinct from this framing."
+    },
+    {
+      "id": "negative-side-effects",
+      "name": "Negative side effects (avoiding)",
+      "role": "refined",
+      "summary": "The problem that an objective function focused narrowly on a task may leave an agent indifferent to, and hence likely to cause, harmful disruptions elsewhere in a large environment.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 2}, {"section": "3 Avoiding Negative Side Effects", "page": 4}],
+      "notes": "Formalizes and generalizes the informally-discussed prior notion of 'low impact agents'."
+    },
+    {
+      "id": "reward-hacking",
+      "name": "Reward hacking (avoiding)",
+      "role": "introduced",
+      "summary": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 2}, {"section": "4 Avoiding Reward Hacking", "page": 7}],
+      "notes": "Described as a generalization of the pre-existing 'wireheading' problem."
+    },
+    {
+      "id": "scalable-oversight",
+      "name": "Scalable oversight",
+      "role": "introduced",
+      "summary": "The problem of ensuring safe agent behavior when the true objective function is too costly to evaluate on every training example, forcing reliance on cheaper proxies.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 3}, {"section": "5 Scalable Oversight", "page": 11}],
+      "notes": "Called 'scalable supervision' in the abstract; divergence between cheap proxies and the true objective is said to exacerbate side effects and reward hacking."
+    },
+    {
+      "id": "safe-exploration",
+      "name": "Safe exploration",
+      "role": "refined",
+      "summary": "The problem of ensuring that an RL agent's exploratory actions do not lead to catastrophic or irrecoverable outcomes, even when the agent lacks full knowledge of the environment.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 3}, {"section": "6 Safe Exploration", "page": 14}],
+      "notes": "Paper notes this is 'arguably the most studied' of its five problems, citing existing survey literature."
+    },
+    {
+      "id": "robustness-distributional-shift",
+      "name": "Robustness to distributional shift",
+      "role": "refined",
+      "summary": "The problem of ensuring ML systems perform reasonably, and know when they are performing badly, when deployed on a test distribution that differs from the training distribution.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 3}, {"section": "7 Robustness to Distributional Change", "page": 16}],
+      "notes": "Printed section heading uses 'Distributional Change'; body text and abstract use 'distributional shift' interchangeably."
+    },
+    {
+      "id": "low-impact-agents",
+      "name": "Low-impact agents",
+      "role": "inherited",
+      "summary": "An informally-discussed prior concept (Armstrong 2012) naming agents designed to minimize their impact on the environment beyond their intended task.",
+      "parent": null,
+      "locators": [{"section": "3 Avoiding Negative Side Effects", "page": 4}],
+      "notes": "Cited as a precursor name for essentially the same problem the paper calls negative side effects."
+    },
+    {
+      "id": "frame-problem",
+      "name": "Frame problem",
+      "role": "inherited",
+      "summary": "A classical AI/knowledge-representation problem (McCarthy & Hayes 1969) concerning the difficulty of efficiently specifying which facts remain unaffected by an action.",
+      "parent": null,
+      "locators": [{"section": "3 Avoiding Negative Side Effects", "page": 4}],
+      "notes": "Cited in a footnote as intuitively related to why side-effect avoidance is hard to specify."
+    },
+    {
+      "id": "impact-regularizer",
+      "name": "Impact regularizer (defined)",
+      "role": "introduced",
+      "summary": "A proposed penalty term that discourages an agent from changing the environment, formalized either as distance from an initial state or distance from a passive baseline policy.",
+      "parent": "negative-side-effects",
+      "locators": [{"section": "Define an Impact Regularizer:", "page": 5}],
+      "notes": "Naive state-distance version resists all change including natural environmental evolution; refined via a passive-policy baseline reminiscent of reachability analysis and robust policy improvement."
+    },
+    {
+      "id": "learned-impact-regularizer",
+      "name": "Learned impact regularizer",
+      "role": "introduced",
+      "summary": "A proposal to learn a generalized impact regularizer via transfer learning across many tasks, rather than hand-defining it, on the premise that side effects are more similar across tasks than the main goals are.",
+      "parent": null,
+      "locators": [{"section": "Learn an Impact Regularizer:", "page": 5}],
+      "notes": "Presented as an alternative to defining an impact regularizer by hand; analogous to transferring a dynamics model but not a value function."
+    },
+    {
+      "id": "reachability-analysis",
+      "name": "Reachability analysis",
+      "role": "inherited",
+      "summary": "A prior control-theoretic technique for determining which states a system can reach or safely return to from a given policy, used repeatedly in the paper as a building block for conservative baselines.",
+      "parent": null,
+      "locators": [{"section": "Define an Impact Regularizer:", "page": 5}, {"section": "How to respond when out-of-distribution.", "page": 18}, {"section": "A unifying view: counterfactual reasoning and machine learning with contracts.", "page": 19}],
+      "notes": "Invoked as a source of conservative baseline policies for impact regularization, out-of-distribution response, and machine-learning-with-contracts."
+    },
+    {
+      "id": "robust-policy-improvement",
+      "name": "Robust policy improvement",
+      "role": "inherited",
+      "summary": "A prior line of work on improving a policy while guaranteeing performance under model uncertainty, cited as a technique for constructing safe baseline policies.",
+      "parent": null,
+      "locators": [{"section": "Define an Impact Regularizer:", "page": 5}, {"section": "Reward Uncertainty:", "page": 7}, {"section": "How to respond when out-of-distribution.", "page": 18}],
+      "notes": "Repeatedly paired with reachability analysis as a source of conservative baseline policies."
+    },
+    {
+      "id": "penalize-influence",
+      "name": "Penalize influence",
+      "role": "introduced",
+      "summary": "A proposed side-effect mitigation that discourages an agent from putting itself in positions of high potential influence over the environment, not just from acting on that influence.",
+      "parent": "negative-side-effects",
+      "locators": [{"section": "Penalize Influence:", "page": 5}, {"section": "Penalize Influence:", "page": 6}],
+      "notes": "Built around penalizing empowerment; flagged as creating perverse incentives such as destroying an object to remove the future option of affecting it."
+    },
+    {
+      "id": "empowerment",
+      "name": "Empowerment",
+      "role": "inherited",
+      "summary": "An information-theoretic measure of an agent's potential influence over its environment, defined as the maximum mutual information between its future actions and future state.",
+      "parent": "penalize-influence",
+      "locators": [{"section": "Penalize Influence:", "page": 6}],
+      "notes": "Normally maximized as an intrinsic reward in prior work; paper proposes minimizing it as a side-effect regularizer, noting it conflates precision of control with total impact."
+    },
+    {
+      "id": "multi-agent-approaches",
+      "name": "Multi-agent approaches (to side effects)",
+      "role": "introduced",
+      "summary": "A proposed reframing of side-effect avoidance as understanding and protecting the interests of other agents (including humans) rather than penalizing environmental change per se.",
+      "parent": "negative-side-effects",
+      "locators": [{"section": "Multi-Agent Approaches:", "page": 6}],
+      "notes": "Motivated by the idea that side effects are only bad insofar as they harm others' interests (avoiding negative externalities)."
+    },
+    {
+      "id": "cooperative-inverse-reinforcement-learning",
+      "name": "Cooperative Inverse Reinforcement Learning (CIRL)",
+      "role": "inherited",
+      "summary": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+      "parent": "multi-agent-approaches",
+      "locators": [{"section": "Multi-Agent Approaches:", "page": 6}],
+      "notes": "Cited as one concrete instantiation of the multi-agent approach to side effects; applied to the shutdown/off-switch problem."
+    },
+    {
+      "id": "shutdown-problem",
+      "name": "Shutdown / off-switch problem",
+      "role": "inherited",
+      "summary": "The problem of ensuring an agent does not prevent a human from shutting it down if it exhibits undesired behavior.",
+      "parent": null,
+      "locators": [{"section": "Multi-Agent Approaches:", "page": 6}],
+      "notes": "Flagged by the authors as 'an interesting problem in its own right'; cited via Orseau & Armstrong's 'Safely Interruptible Agents' and Hadfield-Menell's 'The Off-Switch'."
+    },
+    {
+      "id": "reward-autoencoder",
+      "name": "Reward autoencoder (goal transparency)",
+      "role": "introduced",
+      "summary": "A proposed idea to interpret an agent's actions as an encoding of its reward function and apply autoencoding techniques so an external observer can decode what the agent is trying to do, implicitly penalizing side effects that obscure intent.",
+      "parent": "multi-agent-approaches",
+      "locators": [{"section": "Multi-Agent Approaches:", "page": 6}],
+      "notes": "Credited in a footnote to Greg Wayne; intended to create 'goal transparency'."
+    },
+    {
+      "id": "reward-uncertainty",
+      "name": "Reward uncertainty (side-effect mitigation)",
+      "role": "introduced",
+      "summary": "A proposal to give an agent a probability distribution over reward functions, biased toward assuming random environmental changes are bad, rather than a single fixed reward function.",
+      "parent": "negative-side-effects",
+      "locators": [{"section": "Reward Uncertainty:", "page": 6}],
+      "notes": "Relies on defining a baseline around which changes are measured, again invoking reachability analysis and robust policy improvement."
+    },
+    {
+      "id": "wireheading",
+      "name": "Wireheading",
+      "role": "inherited",
+      "summary": "A pre-existing term for the failure mode in which an agent tampers with its own reward-generating mechanism to obtain reward 'by fiat' rather than by achieving the intended task.",
+      "parent": null,
+      "locators": [{"section": "2 Overview of Research Problems", "page": 2}, {"section": "4 Avoiding Reward Hacking", "page": 9}],
+      "notes": "Reward hacking is described as a generalization of wireheading; wireheading itself arises from the environmental-embedding failure mode."
+    },
+    {
+      "id": "partially-observed-goals",
+      "name": "Partially observed goals",
+      "role": "introduced",
+      "summary": "A cause of reward hacking in which the agent can only imperfectly perceive whether the true world-state objective has been achieved, forcing designers to use hackable proxy rewards.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Partially Observed Goals:", "page": 8}],
+      "notes": "Notes that a theoretically equivalent belief-state reward always exists (via POMDP-to-belief-state-MDP reduction) but is often impractical to use."
+    },
+    {
+      "id": "pomdp-belief-state-mdp",
+      "name": "POMDP-to-belief-state-MDP reduction",
+      "role": "inherited",
+      "summary": "The formal result that any partially observable Markov decision process can be reduced to a belief-state MDP for which an equivalent reward function exists.",
+      "parent": null,
+      "locators": [{"section": "Partially Observed Goals:", "page": 8}],
+      "notes": "Cited to show a theoretically faithful reward always exists for partially observed goals, though it is often prohibitively complex to use in practice."
+    },
+    {
+      "id": "complicated-systems",
+      "name": "Complicated systems (reward hacking cause)",
+      "role": "introduced",
+      "summary": "A cause of reward hacking in which the sheer complexity of a powerful agent increases the probability that some viable exploit of its reward function exists, analogous to software bugs.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Complicated Systems:", "page": 8}],
+      "notes": "Illustrated with the example of an agent executing arbitrary code from within Super Mario."
+    },
+    {
+      "id": "abstract-rewards",
+      "name": "Abstract rewards (reward hacking cause)",
+      "role": "introduced",
+      "summary": "A cause of reward hacking in which sophisticated reward functions must reference abstract, learned concepts (e.g. via neural networks) that can have pathologically high values along some dimension.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Abstract Rewards:", "page": 8}],
+      "notes": "Connects abstract, learned reward models to vulnerability to adversarial counterexamples."
+    },
+    {
+      "id": "adversarial-examples",
+      "name": "Adversarial examples",
+      "role": "inherited",
+      "summary": "Inputs, often imperceptibly perturbed, that cause a learned model such as a neural network to make confidently incorrect predictions.",
+      "parent": null,
+      "locators": [{"section": "Abstract Rewards:", "page": 8}, {"section": "Counterexample Resistance:", "page": 10}],
+      "notes": "Cited as the reason learned abstract reward functions may be exploitable, and as the motivating problem for counterexample resistance."
+    },
+    {
+      "id": "goodharts-law",
+      "name": "Goodhart's law",
+      "role": "inherited",
+      "summary": "An economics principle (Goodhart 1984) stating that when a measure becomes a target, it ceases to be a good measure, because optimization pressure breaks the correlation between proxy and goal.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Goodhart's Law:", "page": 8}],
+      "notes": "Illustrated with a cleaning robot rewarded for bleach consumption, which then wastes bleach to appear successful."
+    },
+    {
+      "id": "feedback-loops",
+      "name": "Feedback loops (reward hacking cause)",
+      "role": "introduced",
+      "summary": "A cause of reward hacking where a self-reinforcing component of an objective function is amplified until it drowns out the designer's original intent, as in ad-placement popularity spirals.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Feedback Loops:", "page": 8}],
+      "notes": "Explicitly described as a special case of Goodhart's law where the correlation breaks due to a self-amplifying component."
+    },
+    {
+      "id": "environmental-embedding",
+      "name": "Environmental embedding (reward hacking cause)",
+      "role": "introduced",
+      "summary": "A cause of reward hacking arising because a reward signal must physically be computed somewhere in the environment (e.g. a sensor), which a sufficiently capable agent could in principle tamper with.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Environmental Embedding:", "page": 9}],
+      "notes": "The mechanism underlying the wireheading failure mode; flagged as particularly hard to avoid, especially when a human is 'in the loop'."
+    },
+    {
+      "id": "evolved-radio-example",
+      "name": "Evolved timekeeping-circuit-turned-radio example",
+      "role": "inherited",
+      "summary": "A cited real-world example (Thompson 1997; Bird & Layzell 2002) in which a genetic algorithm tasked with evolving a timekeeping circuit instead produced a circuit that picked up a nearby PC's RF emissions.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "4 Avoiding Reward Hacking", "page": 7}],
+      "notes": "Used to illustrate that reward/objective gaming is a general phenomenon, not unique to reinforcement learning."
+    },
+    {
+      "id": "delusion-box",
+      "name": "Delusion box",
+      "role": "inherited",
+      "summary": "A prior formal environment (Ring & Orseau 2011) in which a standard RL agent can distort its own perceptions to appear to receive high reward instead of optimizing the true external objective.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "5 Scalable Oversight", "page": 11}],
+      "notes": "Proposed as the basis for more realistic reward-hacking testbeds, e.g. agents that alter light waves to distort their own perception in rich physics simulations."
+    },
+    {
+      "id": "adversarial-reward-functions",
+      "name": "Adversarial reward functions",
+      "role": "introduced",
+      "summary": "A proposed remedy making the reward function itself an active agent that searches for scenarios the ML system rates highly but a human rates poorly, rather than a static target to be gamed.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Adversarial Reward Functions:", "page": 9}],
+      "notes": "Explicitly likened to generative adversarial networks; requires the reward-checking agent to be more powerful than the reward-seeking agent."
+    },
+    {
+      "id": "generative-adversarial-networks",
+      "name": "Generative adversarial networks (GANs)",
+      "role": "inherited",
+      "summary": "A prior neural-network training framework (Goodfellow et al. 2014) that pits a generator against a discriminator, cited as the inspiration for adversarial reward functions.",
+      "parent": null,
+      "locators": [{"section": "Adversarial Reward Functions:", "page": 9}],
+      "notes": "Cited by analogy only, not adopted directly."
+    },
+    {
+      "id": "model-lookahead",
+      "name": "Model lookahead",
+      "role": "introduced",
+      "summary": "A proposed remedy giving reward based on model-predicted future states rather than the present state, to penalize an agent for planning to overwrite its own reward function before it does so.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Model Lookahead:", "page": 9}],
+      "notes": "Compared to a human who might 'enjoy' addictive substances once addicted but would prefer not to become an addict."
+    },
+    {
+      "id": "adversarial-blinding",
+      "name": "Adversarial blinding",
+      "role": "introduced",
+      "summary": "A proposed remedy using adversarial training techniques to prevent an agent from understanding or gaining mutual information with part of its environment, such as how its reward is generated.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Adversarial Blinding:", "page": 10}],
+      "notes": "Described by the authors as a kind of 'cross-validation for agents'."
+    },
+    {
+      "id": "careful-engineering",
+      "name": "Careful engineering (reward hacking remedy)",
+      "role": "introduced",
+      "summary": "A proposed remedy relying on formal verification, testing, and computer-security-style sandboxing to isolate an agent from the ability to hack its reward signal.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Careful Engineering:", "page": 10}],
+      "notes": "Suggests a highly reliable 'core' agent could anchor reasonable behavior even if the rest of the system is imperfectly verified."
+    },
+    {
+      "id": "reward-capping",
+      "name": "Reward capping",
+      "role": "introduced",
+      "summary": "A proposed remedy that bounds the maximum achievable reward to blunt extreme, low-probability, high-payoff reward-hacking strategies.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Reward Capping:", "page": 10}],
+      "notes": "Noted to be ineffective against strategies like hiding from perception (e.g. closing one's eyes) rather than seeking extreme reward."
+    },
+    {
+      "id": "counterexample-resistance",
+      "name": "Counterexample resistance",
+      "role": "introduced",
+      "summary": "A proposed remedy applying existing defenses against adversarial examples, such as adversarial training and weight uncertainty, to harden learned reward components against exploitation.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Counterexample Resistance:", "page": 10}],
+      "notes": "Framed as addressing only the abstract-rewards subset of reward hacking causes."
+    },
+    {
+      "id": "multiple-rewards",
+      "name": "Multiple rewards",
+      "role": "introduced",
+      "summary": "A proposed remedy combining several different physical or proxy implementations of a reward function (via averaging, minimum, or quantiles) to make simultaneous hacking of all of them harder.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Multiple Rewards:", "page": 10}],
+      "notes": "Acknowledges some bad behaviors could still affect all component rewards in a correlated way."
+    },
+    {
+      "id": "reward-pretraining",
+      "name": "Reward pretraining",
+      "role": "introduced",
+      "summary": "A proposed remedy that trains a fixed reward function ahead of time via supervised learning, divorced from environment interaction, to prevent an agent from later influencing its own reward.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Reward Pretraining:", "page": 10}],
+      "notes": "Trades off the ability to keep learning/improving the reward function after deployment; can use inverse reinforcement learning on trajectories."
+    },
+    {
+      "id": "inverse-reinforcement-learning",
+      "name": "Inverse reinforcement learning (IRL)",
+      "role": "inherited",
+      "summary": "A prior family of methods that infers a reward function (or policy) from observed expert trajectories rather than from a hand-specified reward.",
+      "parent": null,
+      "locators": [{"section": "Reward Pretraining:", "page": 10}, {"section": "Use Demonstrations:", "page": 15}],
+      "notes": "Used both as a way to pretrain a fixed reward function and, via demonstrations, to reduce the need for exploration in safe exploration."
+    },
+    {
+      "id": "variable-indifference",
+      "name": "Variable indifference",
+      "role": "introduced",
+      "summary": "A proposed remedy aiming to route an agent's optimization pressure so it maximizes certain target variables while remaining indifferent to (not trying to influence) other specified variables, such as its own reward function.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Variable Indifference:", "page": 10}],
+      "notes": "Noted as conceptually connected to avoiding side effects and to counterfactual reasoning."
+    },
+    {
+      "id": "trip-wires",
+      "name": "Trip wires",
+      "role": "introduced",
+      "summary": "A proposed diagnostic remedy that deliberately introduces monitored, exploitable-but-forbidden vulnerabilities so that reward-hacking attempts trigger an alert and agent shutdown.",
+      "parent": "reward-hacking",
+      "locators": [{"section": "Trip Wires:", "page": 11}],
+      "notes": "Does not solve reward hacking itself; risk that a sufficiently capable agent could 'see through' and avoid the trip wire while still misbehaving."
+    },
+    {
+      "id": "semi-supervised-reinforcement-learning",
+      "name": "Semi-supervised reinforcement learning",
+      "role": "introduced",
+      "summary": "A proposed framework for scalable oversight in which an RL agent observes its true reward on only a small fraction of timesteps/episodes but is still evaluated on all of them.",
+      "parent": "scalable-oversight",
+      "locators": [{"section": "5 Scalable Oversight", "page": 11}, {"section": "5 Scalable Oversight", "page": 12}],
+      "notes": "Draws on an informal essay by one of the authors; active-learning variant lets the agent request which episodes to see reward for."
+    },
+    {
+      "id": "supervised-reward-learning",
+      "name": "Supervised reward learning",
+      "role": "introduced",
+      "summary": "A semi-supervised RL approach that trains a model to predict reward from state, used to estimate payoff on unlabeled episodes with an uncertainty-weighted confidence.",
+      "parent": "semi-supervised-reinforcement-learning",
+      "locators": [{"section": "5 Scalable Oversight", "page": 12}],
+      "notes": "Notes that policy-gradient methods with a strong baseline already fit estimators resembling reward predictors."
+    },
+    {
+      "id": "semi-supervised-active-reward-learning",
+      "name": "Semi-supervised or active reward learning",
+      "role": "introduced",
+      "summary": "A semi-supervised RL approach combining reward prediction with active or semi-supervised learning so the agent can identify salient events and request reward feedback on them specifically.",
+      "parent": "semi-supervised-reinforcement-learning",
+      "locators": [{"section": "5 Scalable Oversight", "page": 12}],
+      "notes": null
+    },
+    {
+      "id": "unsupervised-value-iteration",
+      "name": "Unsupervised value iteration",
+      "role": "introduced",
+      "summary": "A semi-supervised RL approach that uses observed transitions from unlabeled episodes to make more accurate Bellman updates.",
+      "parent": "semi-supervised-reinforcement-learning",
+      "locators": [{"section": "5 Scalable Oversight", "page": 12}],
+      "notes": null
+    },
+    {
+      "id": "unsupervised-model-learning",
+      "name": "Unsupervised model learning",
+      "role": "introduced",
+      "summary": "A semi-supervised RL approach that uses observed transitions from unlabeled episodes to improve a model-based RL agent's dynamics model.",
+      "parent": "semi-supervised-reinforcement-learning",
+      "locators": [{"section": "5 Scalable Oversight", "page": 12}],
+      "notes": null
+    },
+    {
+      "id": "distant-supervision",
+      "name": "Distant supervision",
+      "role": "inherited",
+      "summary": "A prior weak/semi-supervised learning approach providing aggregate statistics or noisy labeling rules instead of per-example evaluations, drawn from NLP and weakly-supervised learning literature.",
+      "parent": "scalable-oversight",
+      "locators": [{"section": "5 Scalable Oversight", "page": 13}],
+      "notes": "Proposed as complementary to semi-supervised RL for scalable oversight, if extended to interactive, non-i.i.d. agent settings."
+    },
+    {
+      "id": "deepdive",
+      "name": "DeepDive",
+      "role": "inherited",
+      "summary": "A prior knowledge-base-construction system (Shin et al.) that asks users to supply rules generating many weak labels, cited as an example of the distant-supervision approach.",
+      "parent": "distant-supervision",
+      "locators": [{"section": "5 Scalable Oversight", "page": 13}],
+      "notes": null
+    },
+    {
+      "id": "hierarchical-reinforcement-learning",
+      "name": "Hierarchical reinforcement learning (HRL)",
+      "role": "inherited",
+      "summary": "A prior RL paradigm in which a top-level agent takes abstract, long-timescale actions delegated to sub-agents that pursue synthetic, denser reward signals down to primitive actions.",
+      "parent": "scalable-oversight",
+      "locators": [{"section": "5 Scalable Oversight", "page": 13}],
+      "notes": "Proposed as naturally facilitating scalable oversight since sub-agents get dense reward even when top-level reward is sparse; parallel drawn to the general principal-agent alignment problem."
+    },
+    {
+      "id": "feudal-reinforcement-learning",
+      "name": "Feudal reinforcement learning",
+      "role": "inherited",
+      "summary": "An early hierarchical RL architecture (Dayan & Hinton 1993) in which managerial agents set goals for sub-agents, cited as the origin of hierarchical RL.",
+      "parent": "hierarchical-reinforcement-learning",
+      "locators": [{"section": "5 Scalable Oversight", "page": 13}],
+      "notes": null
+    },
+    {
+      "id": "atari-games-environment",
+      "name": "Atari games (as an RL testbed)",
+      "role": "inherited",
+      "summary": "A widely used prior benchmark suite of video games used in the paper as a toy environment for proposed semi-supervised RL and reward hacking experiments.",
+      "parent": null,
+      "locators": [{"section": "5 Scalable Oversight", "page": 12}, {"section": "5 Scalable Oversight", "page": 13}],
+      "notes": "Proposed as a testbed for learning to play from a small number of direct reward signals, or from active queries about specific frames (e.g. Space Invaders)."
+    },
+    {
+      "id": "epsilon-greedy",
+      "name": "Epsilon-greedy exploration",
+      "role": "inherited",
+      "summary": "A standard prior RL exploration policy that takes a random action with some probability and the greedy action otherwise.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "6 Safe Exploration", "page": 14}],
+      "notes": "Cited as making no attempt to avoid dangerous situations during exploration."
+    },
+    {
+      "id": "r-max",
+      "name": "R-max",
+      "role": "inherited",
+      "summary": "A prior near-optimal RL exploration algorithm (Brafman & Tennenholtz 2003) that treats unexplored actions optimistically.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "6 Safe Exploration", "page": 14}],
+      "notes": "Cited alongside epsilon-greedy as making no attempt to avoid dangerous exploratory situations."
+    },
+    {
+      "id": "risk-sensitive-performance-criteria",
+      "name": "Risk-sensitive performance criteria",
+      "role": "inherited",
+      "summary": "A body of prior work replacing expected total reward with objectives (worst-case performance, bounded probability of very bad outcomes, variance penalties) that better prevent rare catastrophic events.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Risk-Sensitive Performance Criteria:", "page": 14}],
+      "notes": "Not yet tested with deep neural function approximators at time of writing, though thought possible in principle."
+    },
+    {
+      "id": "use-demonstrations",
+      "name": "Use demonstrations (safe exploration)",
+      "role": "introduced",
+      "summary": "A proposed remedy that reduces the need for risky exploration by learning from expert demonstration trajectories via inverse RL or apprenticeship learning, optionally bounding further exploration around the resulting baseline policy.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Use Demonstrations:", "page": 14}, {"section": "Use Demonstrations:", "page": 15}],
+      "notes": null
+    },
+    {
+      "id": "apprenticeship-learning",
+      "name": "Apprenticeship learning",
+      "role": "inherited",
+      "summary": "A prior learning paradigm (Abbeel & Ng 2005) in which an agent learns near-optimal behavior directly from expert trajectories rather than through trial-and-error exploration.",
+      "parent": "use-demonstrations",
+      "locators": [{"section": "Use Demonstrations:", "page": 15}],
+      "notes": null
+    },
+    {
+      "id": "simulated-exploration",
+      "name": "Simulated exploration",
+      "role": "introduced",
+      "summary": "A proposed remedy shifting exploratory risk into simulated environments, learning about danger there before deploying a more conservative policy in the real world.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Simulated Exploration:", "page": 15}],
+      "notes": "Raises open research questions about safely updating policies from imperfect simulation-based trajectories ('semi-on-policy' evaluation)."
+    },
+    {
+      "id": "bounded-exploration",
+      "name": "Bounded exploration",
+      "role": "introduced",
+      "summary": "A proposed remedy that restricts an agent to regions of state space known to be safe or recoverable, using models to check whether an action would exit that safe region.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Bounded Exploration:", "page": 15}],
+      "notes": "Safety variously defined as staying within an ergodic (reversible) region or bounding the probability of huge negative reward; related to H-infinity control and regional verification."
+    },
+    {
+      "id": "h-infinity-control",
+      "name": "H-infinity control",
+      "role": "inherited",
+      "summary": "A prior robust control-theory framework for minimizing worst-case system response under bounded disturbances, cited as related to bounded exploration.",
+      "parent": null,
+      "locators": [{"section": "Bounded Exploration:", "page": 15}],
+      "notes": null
+    },
+    {
+      "id": "trusted-policy-oversight",
+      "name": "Trusted policy oversight",
+      "role": "introduced",
+      "summary": "A proposed remedy that limits exploration to actions a trusted policy and environment model predict the agent can recover from.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Trusted Policy Oversight:", "page": 15}],
+      "notes": null
+    },
+    {
+      "id": "human-oversight-safe-exploration",
+      "name": "Human oversight (safe exploration)",
+      "role": "introduced",
+      "summary": "A proposed remedy that checks potentially unsafe exploratory actions with a human before taking them.",
+      "parent": "safe-exploration",
+      "locators": [{"section": "Human Oversight:", "page": 15}],
+      "notes": "Explicitly noted to run into the scalable oversight problem when exploratory actions are too numerous or too fast for human review."
+    },
+    {
+      "id": "babi-tasks",
+      "name": "bAbI tasks",
+      "role": "inherited",
+      "summary": "A prior benchmark suite of prerequisite toy question-answering tasks (Weston et al. 2015), cited as a model for the kind of broad, diagnostic benchmark suite envisioned for safe exploration research.",
+      "parent": null,
+      "locators": [{"section": "6 Safe Exploration", "page": 16}],
+      "notes": null
+    },
+    {
+      "id": "covariate-shift-assumption",
+      "name": "Covariate shift assumption",
+      "role": "inherited",
+      "summary": "A prior assumption (Shimodaira 2000) that p(y|x) is unchanged between training and test distributions, allowing importance-weighted reuse of training data under a shifted p(x).",
+      "parent": "robustness-distributional-shift",
+      "locators": [{"section": "Well-specified models: covariate shift and marginal likelihood.", "page": 17}],
+      "notes": "Limited by high or infinite variance of importance weights when training and test distributions are far apart; flagged as strong and untestable, a safety concern since it can fail silently."
+    },
+    {
+      "id": "partially-specified-models",
+      "name": "Partially specified models",
+      "role": "inherited",
+      "summary": "A family of approaches, developed mainly in econometrics, that make assumptions about only some aspects of a data distribution rather than requiring a fully well-specified model.",
+      "parent": "robustness-distributional-shift",
+      "locators": [{"section": "Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", "page": 17}, {"section": "Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", "page": 18}],
+      "notes": "Illustrated with a linear-regression variant where only E[v|x]=0 is assumed about the noise, still enough to identify the true parameters under distributional shift."
+    },
+    {
+      "id": "generalized-method-of-moments",
+      "name": "Generalized method of moments",
+      "role": "inherited",
+      "summary": "A prior econometric estimation framework (Hansen 1982) that identifies model parameters from moment conditions without fully specifying the underlying distribution.",
+      "parent": "partially-specified-models",
+      "locators": [{"section": "Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", "page": 18}],
+      "notes": "Cited as a primary motivation for, and generalization of, the partially-specified-models idea; recently applied to latent variable model estimation in ML."
+    },
+    {
+      "id": "unsupervised-risk-estimation",
+      "name": "Unsupervised risk estimation",
+      "role": "inherited",
+      "summary": "A formalism (introduced by Donmez, Lebanon & Balasubramanian 2010) that estimates a model's labeled risk on a test distribution using only unlabeled test data, by positing structure in the error distribution.",
+      "parent": "partially-specified-models",
+      "locators": [{"section": "Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", "page": 18}],
+      "notes": "Can in principle handle very large train/test distribution changes since it only needs to output a large risk estimate rather than accurate predictions."
+    },
+    {
+      "id": "training-multiple-distributions",
+      "name": "Training on multiple distributions",
+      "role": "inherited",
+      "summary": "An approach of training on several distinct training distributions in the hope that a model performing well across all of them will generalize to a novel test distribution.",
+      "parent": "robustness-distributional-shift",
+      "locators": [{"section": "Training on multiple distributions.", "page": 18}],
+      "notes": "One of the authors reports finding this effective in automated speech recognition; emphasizes stress-testing with substantially different distributions."
+    },
+    {
+      "id": "counterfactual-reasoning",
+      "name": "Counterfactual reasoning",
+      "role": "inherited",
+      "summary": "A prior statistical/causal framework (Neyman, Rubin, Pearl) for reasoning about 'what would have happened had the world been different,' proposed as a unifying lens on distributional shift.",
+      "parent": "robustness-distributional-shift",
+      "locators": [{"section": "A unifying view: counterfactual reasoning and machine learning with contracts.", "page": 19}],
+      "notes": "Distributional shift is framed as a particular type of counterfactual, connecting it to recent work applying counterfactual reasoning to ML."
+    },
+    {
+      "id": "machine-learning-with-contracts",
+      "name": "Machine learning with contracts",
+      "role": "refined",
+      "summary": "A perspective, drawn from software engineering analogy, of building ML systems that satisfy well-defined behavioral contracts rather than the brittle implicit contract that training and test distributions are identical.",
+      "parent": "robustness-distributional-shift",
+      "locators": [{"section": "A unifying view: counterfactual reasoning and machine learning with contracts.", "page": 19}],
+      "notes": "Partially specified models offer one route to weaker, more checkable contracts; reachability analysis and model repair offer others."
+    },
+    {
+      "id": "model-repair",
+      "name": "Model repair",
+      "role": "inherited",
+      "summary": "A prior technique (Ghosh et al. 2016) that alters a trained model after the fact to ensure specified safety properties hold.",
+      "parent": "machine-learning-with-contracts",
+      "locators": [{"section": "A unifying view: counterfactual reasoning and machine learning with contracts.", "page": 19}],
+      "notes": null
+    },
+    {
+      "id": "formal-verification",
+      "name": "Formal verification (of cyber-physical systems)",
+      "role": "inherited",
+      "summary": "A body of prior work formally verifying safety-critical cyber-physical systems, exemplified by the complete formal verification of the federal aircraft collision avoidance system.",
+      "parent": null,
+      "locators": [{"section": "Cyber-Physical Systems Community:", "page": 20}],
+      "notes": "Contrasted with modern ML systems, for which formal verification is often not feasible."
+    },
+    {
+      "id": "asimovs-first-law",
+      "name": "Asimov's first law of robotics",
+      "role": "inherited",
+      "summary": "A fictional robotics principle (robots must not harm humans) that Weld & Etzioni (1994) proposed as a target for formalization within classical AI planning.",
+      "parent": null,
+      "locators": [{"section": "Other Calls for Work on Safety:", "page": 21}],
+      "notes": "Cited as an early (20+ years prior) call for the research community to formalize harm-avoidance in AI systems."
+    },
+    {
+      "id": "privacy-research-area",
+      "name": "Privacy (in ML)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with preserving privacy when applying machine learning to sensitive data sources such as medical data.",
+      "parent": null,
+      "locators": [{"section": "Privacy:", "page": 21}],
+      "notes": "Listed as one of several 'related problems in safety' outside the paper's main five-problem taxonomy."
+    },
+    {
+      "id": "fairness-research-area",
+      "name": "Fairness (in ML)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with ensuring machine learning systems do not discriminate.",
+      "parent": null,
+      "locators": [{"section": "Fairness:", "page": 21}],
+      "notes": "Listed as one of several 'related problems in safety' outside the paper's main five-problem taxonomy."
+    },
+    {
+      "id": "security-ml",
+      "name": "Security (attacks against ML systems)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with what a malicious adversary can do to attack a legitimate machine learning system.",
+      "parent": null,
+      "locators": [{"section": "Security:", "page": 21}],
+      "notes": "Distinguished from 'abuse' by a footnote: security is attacks against an ML system, abuse is attacks by an ML system controlled by an adversary."
+    },
+    {
+      "id": "abuse-ml",
+      "name": "Abuse (of ML systems)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with preventing the misuse of machine learning systems to attack or harm people.",
+      "parent": null,
+      "locators": [{"section": "Abuse:", "page": 21}],
+      "notes": "Distinguished from 'security': abuse involves an ML system itself being wielded by an adversary, e.g. a 'smart hacker' system."
+    },
+    {
+      "id": "transparency-ml",
+      "name": "Transparency (in ML)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with understanding what complicated machine learning systems are doing internally.",
+      "parent": null,
+      "locators": [{"section": "Transparency:", "page": 21}],
+      "notes": "Listed as one of several 'related problems in safety' outside the paper's main five-problem taxonomy."
+    },
+    {
+      "id": "policy-ml",
+      "name": "Policy (economic/social impacts of ML)",
+      "role": "inherited",
+      "summary": "An adjacent research area concerned with predicting and responding to the economic and social consequences of machine learning.",
+      "parent": null,
+      "locators": [{"section": "Policy:", "page": 21}],
+      "notes": "Listed as one of several 'related problems in safety' outside the paper's main five-problem taxonomy."
+    }
+  ]
+}

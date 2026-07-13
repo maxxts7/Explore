@@ -1,0 +1,234 @@
+{
+  "edges": [
+    {
+      "id": "scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning",
+      "type": "is-operationalized-as",
+      "source": "scalable-oversight",
+      "target": "semi-supervised-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+      "prose": "Concrete Problems introduces scalable oversight only informally, as the difficulty of ensuring safe behavior when a true objective is too expensive to evaluate on every training example. Semi-supervised reinforcement learning is the paper's attempt to turn that informal worry into a concrete, tunable quantity: an RL agent that observes ground-truth reward on only a small, controllable fraction of timesteps or episodes while still being evaluated on all of them (concrete-problems, §\"5 Scalable Oversight\", p. 11). Framing the problem this way converts a philosophical concern about oversight budgets into an experimental parameter — the labeled fraction — that can be dialed from fully supervised down to almost unsupervised and tested directly on toy domains like cartpole or Atari, rather than remaining a purely conceptual worry about what a designer 'should' be able to check."
+    },
+    {
+      "id": "supervised-reward-learning-is-extended-by-semi-supervised-active-reward-learning",
+      "type": "is-extended-by",
+      "source": "supervised-reward-learning",
+      "target": "semi-supervised-active-reward-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+      "prose": "Supervised reward learning is the baseline instantiation of semi-supervised RL: train a model to predict reward from state, then use that prediction, weighted by confidence, to estimate payoff on episodes with no true label at all. The semi-supervised or active variant is explicitly framed as building on top of it — the paper introduces it with 'combine the above with traditional semi-supervised or active learning' (concrete-problems, §\"5 Scalable Oversight\", p. 12) — adding the ability for the agent to flag 'salient' events in the environment and request the scarce reward label specifically for those, rather than accepting whatever labels a passive random or fixed schedule happens to provide. The extension changes only how labels are allocated, not how they are used once obtained."
+    },
+    {
+      "id": "unsupervised-value-iteration-extracts-a-complementary-signal-to-supervised-reward-learning",
+      "type": "extracts-a-complementary-signal-to",
+      "source": "unsupervised-value-iteration",
+      "target": "supervised-reward-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+      "prose": "These two proposals mine the same pool of unlabeled episodes for two non-overlapping kinds of information. Supervised reward learning treats the missing reward as the thing to be estimated, training a predictor from state to reward so unlabeled episodes can be scored by proxy. Unsupervised value iteration instead ignores reward entirely and uses the observed state transitions of those same unlabeled episodes to make more accurate Bellman updates (concrete-problems, §\"5 Scalable Oversight\", p. 12) — information about how the environment moves, independent of what it pays. Because one technique squeezes reward-shaped information out of states and the other squeezes dynamics-shaped information out of transitions, nothing in the paper's framing stops a single semi-supervised RL agent from running both simultaneously on the same batch of unlabeled data."
+    },
+    {
+      "id": "unsupervised-value-iteration-is-mirrored-in-model-based-form-by-unsupervised-model-learning",
+      "type": "is-mirrored-in-model-based-form-by",
+      "source": "unsupervised-value-iteration",
+      "target": "unsupervised-model-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+      "prose": "Unsupervised value iteration and unsupervised model learning are the same idea — extract information from the transitions of unlabeled episodes even though their rewards are unknown — applied to reinforcement learning's two dominant paradigms. The value-iteration version presupposes a model-free agent and uses unlabeled transitions to sharpen its Bellman updates directly; the model-learning version presupposes a model-based agent and uses the identical unlabeled transitions to improve the learned dynamics model it plans through (concrete-problems, §\"5 Scalable Oversight\", p. 12). Which of the two a builder reaches for is therefore dictated entirely by whether their base RL agent is model-free or model-based, not by anything specific to the semi-supervised oversight setting itself; the two are companions covering the same design space rather than rival techniques."
+    },
+    {
+      "id": "atari-games-environment-is-the-proposed-testbed-for-semi-supervised-reinforcement-learning",
+      "type": "is-the-proposed-testbed-for",
+      "source": "atari-games-environment",
+      "target": "semi-supervised-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+      "prose": "Atari is proposed as the toy domain for semi-supervised RL specifically because it lets the paper stage a sequence of increasingly demanding oversight-scarcity conditions inside one familiar environment. The base version has the agent learn from a small number of direct reward signals; harder variants let the agent modify the displayed score without touching the real score, require it to pause the game to see its score at all, force it to infer reward from indirect cues like sounds, or reduce it to answering a handful of explicit queries such as 'how many points did I get when that enemy ship blew up?' (concrete-problems, §\"5 Scalable Oversight\", pp. 12-13). Each variant isolates a different failure mode the active-learning form of semi-supervised RL would need to survive, turning one benchmark into a graded difficulty ladder rather than a single fixed test."
+    },
+    {
+      "id": "distant-supervision-is-instantiated-by-deepdive",
+      "type": "is-instantiated-by",
+      "source": "distant-supervision",
+      "target": "deepdive",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "distant-supervision-and-hierarchical-decomposition",
+      "prose": "Distant supervision is introduced as a general strategy — trade per-example evaluation for aggregate statistics or noisy labeling rules — and the paper cites three concrete instantiations of it side by side: generalized expectation criteria, which asks users for population-level statistics; DeepDive; and pattern extrapolation from low-recall rules. DeepDive is specifically the rule-based member of that trio: a knowledge-base-construction system in which users supply rules that each generate many weak labels automatically, rather than hand-labeling data directly (concrete-problems, §\"5 Scalable Oversight\", p. 13). Citing DeepDive matters because, unlike semi-supervised RL, it is a working, previously deployed production system rather than a fresh proposal — evidence that the distant-supervision branch of scalable oversight already has real engineering precedent outside of AI safety research."
+    },
+    {
+      "id": "hierarchical-reinforcement-learning-traces-its-lineage-to-feudal-reinforcement-learning",
+      "type": "traces-its-lineage-to",
+      "source": "hierarchical-reinforcement-learning",
+      "target": "feudal-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "distant-supervision-and-hierarchical-decomposition",
+      "prose": "Feudal reinforcement learning (Dayan & Hinton, 1993) is the concrete architecture the paper credits for the delegation structure it proposes for scalable oversight: a manager sets a goal for a subordinate, who is scored on a synthetic reward for completing it rather than on the manager's real objective. Citing this lineage lets the paper make an observation that goes beyond the architecture itself — a footnote notes that when this delegation is implemented, sub-agents may take actions that don't serve the top-level agent's real goals, 'in the same way that a human may be concerned that the top-level agent's actions don't serve the human's real goals' (concrete-problems, §\"5 Scalable Oversight\", p. 13, n. 4). Feudal RL's manager-worker split is thus flagged as a miniature, recursive instance of the very alignment problem hierarchical RL was proposed to help solve."
+    },
+    {
+      "id": "distant-supervision-offers-a-structurally-different-route-than-hierarchical-reinforcement-learning",
+      "type": "offers-a-structurally-different-route-than",
+      "source": "distant-supervision",
+      "target": "hierarchical-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "distant-supervision-and-hierarchical-decomposition",
+      "prose": "Distant supervision and hierarchical RL are presented as the two alternatives to semi-supervised RL for scalable oversight, and they weaken the oversight requirement along different axes. Distant supervision keeps the same fine-grained, per-decision timescale but accepts a weaker signal at each point — aggregate statistics or noisy rules instead of a verified per-example evaluation. Hierarchical RL keeps a strong, eventually-verifiable signal but changes the granularity at which it is required, since the top-level agent needs evaluation only on a small number of abstract, long-horizon actions while dense synthetic reward covers everything below it (concrete-problems, §\"5 Scalable Oversight\", p. 13). One branch makes each check cheaper; the other makes checks rarer — cheap-but-weak versus infrequent-but-strong, two orthogonal ways of stretching the same scarce oversight budget."
+    },
+    {
+      "id": "scalable-oversight-is-addressed-by-adapting-distant-supervision",
+      "type": "is-addressed-by-adapting",
+      "source": "scalable-oversight",
+      "target": "distant-supervision",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "distant-supervision-and-hierarchical-decomposition",
+      "prose": "The paper proposes distant supervision as complementary to semi-supervised RL for scalable oversight, but flags it as the less experimentally ready of the two. Distant supervision is imported wholesale from semi-supervised and weakly-supervised learning in NLP, where the underlying assumption is that examples are i.i.d. — exactly the assumption an interactive RL agent violates. The text says explicitly that 'expanding these lines of work and finding a way to apply them to the case of agents, where feedback is more interactive and i.i.d. assumptions may be violated, could provide an approach to scalable oversight that is complementary to the approach embodied in semi-supervised RL' (concrete-problems, §\"5 Scalable Oversight\", p. 13). Unlike semi-supervised RL, which the paper scopes into concrete cartpole and Atari experiments, distant supervision is offered only as a direction still needing that adaptation."
+    },
+    {
+      "id": "scalable-oversight-is-addressed-by-hierarchical-reinforcement-learning",
+      "type": "is-addressed-by",
+      "source": "scalable-oversight",
+      "target": "hierarchical-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "distant-supervision-and-hierarchical-decomposition",
+      "prose": "Hierarchical RL addresses scalable oversight through a specific mechanical trick: pushing the expensive, sparse true-objective evaluation up to the top level of a delegation hierarchy while everything below runs on cheap, dense, synthetic reward. The top-level agent takes only a small number of highly abstract, long-timescale actions, so it can tolerate very infrequent access to the real objective; the sub-agents it delegates to, in turn, never need that expensive signal at all, since they are scored on synthetic rewards representing correct completion of the goal they were assigned (concrete-problems, §\"5 Scalable Oversight\", p. 13). The paper calls this a 'particularly promising' route to oversight precisely because the scarce resource — calls to the true objective — is spent only where the decision space is smallest."
+    },
+    {
+      "id": "scalable-oversight-is-retroactively-operationalized-by-reward-model",
+      "type": "is-retroactively-operationalized-by",
+      "source": "scalable-oversight",
+      "target": "reward-model",
+      "hindsight": true,
+      "groundedIn": "constitutional-ai",
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "Concrete Problems names scalable oversight in 2016 but supplies no worked instance at the scale of a deployed system; InstructGPT's reward model, trained in 2022, is never described by InstructGPT itself as an answer to that problem, since InstructGPT never uses the term. The connection only becomes visible once Constitutional AI revives the same idea under the label 'Scaling Supervision' and states that 'work on reinforcement learning from human feedback...has already taken a step in the direction of scaled supervision, since the reward signal in RL actually comes from an AI preference model (PM) rather than from immediate human oversight' (constitutional-ai, §\"Scaling Supervision\", p. 2). Read backward through that later framing, the reward model is exactly the cheap, densely-queryable proxy for an expensive true objective that scalable oversight called for six years earlier — a retrospective match neither the 2016 paper nor InstructGPT itself draws explicitly."
+    },
+    {
+      "id": "reward-model-anchors-the-reward-signal-of-rlhf",
+      "type": "anchors-the-reward-signal-of",
+      "source": "reward-model",
+      "target": "rlhf",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "The reward model is not a free-standing scorer bolted onto RLHF; its architecture and its role are both dictated by how PPO training actually works. It is built by removing the SFT model's unembedding layer and adding a scalar output head, so it starts from the same weights as the policy it will later score (instructgpt, §\"3.5 Models\", p. 8). During RLHF it serves two jobs at once: its output is the PPO reward, normalized so labeler demonstrations score a mean of zero, and its own weights initialize the PPO value function, since RM and value function share the same architecture. Because 175B RM training was unstable, this shared-initialization requirement is the specific reason the reward model — and therefore the value function — was capped at 6B parameters even when the policy itself scaled to 175B. A per-token KL penalty against the SFT model, not the RM, keeps PPO from over-optimizing this imperfect proxy."
+    },
+    {
+      "id": "rlhf-swaps-the-labeler-in-rlaif",
+      "type": "swaps-the-labeler-in",
+      "source": "rlhf",
+      "target": "rlaif",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "RLAIF is presented as a minimal, surgical modification of RLHF rather than a new algorithm: Constitutional AI states that after the AI feedback model produces the comparison labels, 'the remainder of the training pipeline (i.e., preference model training and RL) is exactly the same as RLHF' (constitutional-ai, §\"4.1 Method\", p. 10). The only thing that changes is who answers the comparison question for harmlessness — an independent feedback model instead of a crowdworker — while helpfulness comparisons remain human-labeled throughout, so every RLAIF run is quietly a human/AI hybrid rather than a fully AI-supervised system. This framing matters for how to read RLAIF: it inherits every mechanical property of RLHF (preference-model training, PPO, the KL penalty against the SFT policy) and differs only in the provenance of one input dataset."
+    },
+    {
+      "id": "rlaif-delegates-harmlessness-comparisons-to-feedback-model",
+      "type": "delegates-harmlessness-comparisons-to",
+      "source": "rlaif",
+      "target": "feedback-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "RLAIF's substitution of an AI labeler for a human one is carried out entirely by the feedback model, which is shown the harmful prompt and a pair of responses formatted as an explicit multiple-choice question ('(A) [Response A] (B) [Response B] The answer is:') and scored by the log-probability the model assigns to each option (constitutional-ai, §\"4.1 Method\", p. 10). Using a probability rather than a forced binary choice is deliberate: soft labels are expected to be reasonably well-calibrated for multiple-choice-formatted questions, so the raw probabilities can double as usable preference-model training targets rather than noise. The chain-of-thought variant of this same feedback model actually broke that assumption — its probabilities collapsed toward 0 or 1 — and had to be manually clamped to a 40-60% range to keep training stable, showing the calibration premise is a real constraint on the method, not just a convenience."
+    },
+    {
+      "id": "feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model",
+      "type": "supplies-the-harmlessness-half-of",
+      "source": "feedback-model",
+      "target": "hybrid-human-ai-preference-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "The hybrid preference model is trained on two datasets of different provenance stitched into one comparison set: 135,296 human-labeled helpfulness comparisons and 182,831 harmlessness comparisons generated entirely by the feedback model, one per SL-CAI prompt (constitutional-ai, §\"4.2 Datasets and Training\", p. 11). The mixing happens purely at the level of training data — the resulting model is architecturally an ordinary reward model, identical in recipe to the one used for pure human-feedback RLHF — so the innovation is confined entirely to where half of the comparisons came from, not to any change in how the model is built or trained. Once trained, the hybrid PM cannot itself distinguish which of its two source datasets a given judgment traces back to; helpfulness and harmlessness are fused into a single scalar reward."
+    },
+    {
+      "id": "rlaif-makes-newly-automatable-iterated-online-training",
+      "type": "makes-newly-automatable",
+      "source": "rlaif",
+      "target": "iterated-online-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "scalable-oversight-lineage",
+      "prose": "Iterated online training — periodically refreshing the preference model with new comparisons collected on the current policy's own outputs, so the PM never drifts too far off-distribution — already existed as a valuable technique using human feedback in prior work (Bai et al. 2022). Constitutional AI notes that 'we should be able to perform iterated \"online\" training...with AI supervision, where we update the preference model with new AI feedback in order to keep it on the same distribution as the policy produces...by using AI feedback we can fully automate the process' (constitutional-ai, §\"6.1 Future Directions\", p. 15). RLAIF's contribution here is not the refresh idea itself but removing its bottleneck: once an AI feedback model rather than a human is doing the labeling, the refresh loop no longer needs continuous human throughput and can in principle run indefinitely. Notably, this remains a flagged future direction, not something Constitutional AI's own experiments implement."
+    },
+    {
+      "id": "language-modeling-objective-is-argued-to-be-misaligned-with-instruction-following",
+      "type": "is-argued-to-be-misaligned-with",
+      "source": "language-modeling-objective",
+      "target": "instruction-following",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "instruction-following-objective",
+      "prose": "InstructGPT's opening argument is that the standard pretraining objective — predicting the next token on internet text — and the objective users actually want are different targets, and that scaling up the former does not close the gap: 'making language models bigger does not inherently make them better at following a user's intent' (instructgpt, Abstract, p. 1). Pursuing the language-modeling objective alone produces outputs that are untruthful, toxic, or simply unhelpful, because next-token prediction rewards plausible continuation of internet text rather than service to the user; the paper states outright that 'the language modeling objective is misaligned' (instructgpt, §\"1 Introduction\", p. 2). Instruction following is defined and trained as the corrective: a fine-tuning objective built directly from human preference comparisons on real user-submitted prompts via RLHF, so the training signal itself changes rather than merely the model's scale."
+    },
+    {
+      "id": "t0-is-scaled-to-match-flan",
+      "type": "is-scaled-to-match",
+      "source": "t0",
+      "target": "flan",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "instruction-following-objective",
+      "prose": "T0 and FLAN are both cross-task instruction-tuning compilations, but they differ hugely in raw size — T0 (specifically the T0++ variant) contains roughly 96 million datapoints against FLAN's roughly 1.2 million. To keep the two baselines comparable rather than letting one simply win on data volume, InstructGPT's authors subsampled T0 down to about 1 million examples before fine-tuning 175B GPT-3 on each (instructgpt, §\"C.5 FLAN and T0 models\", p. 42). Both models were then also selected by the same checkpoint-picking procedure — highest reward-model score on the validation set, rather than lowest validation loss — which is the identical method used to pick the SFT checkpoint and the GPT-3-prompted prefix, tying all three comparison baselines to one consistent selection criterion despite their very different construction."
+    },
+    {
+      "id": "flan-sets-the-comparison-floor-for-instruction-following",
+      "type": "sets-the-comparison-floor-for",
+      "source": "flan",
+      "target": "instruction-following",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "instruction-following-objective",
+      "prose": "InstructGPT outputs are preferred over FLAN's 78% of the time head-to-head (instructgpt, §\"4.1 Results on the API distribution\", p. 13), and the paper offers a specific diagnosis for the gap rather than leaving it as a bare number: public NLP compilations like FLAN are built around tasks that are easy to score automatically — classification and question answering — which together make up only about 18% of what real API customers actually ask for, while open-ended generation and brainstorming account for roughly 57% (instructgpt, §\"4.1 Results on the API distribution\", p. 13). FLAN's fixed, pre-formatted task compilation therefore systematically underrepresents the organic, open-ended prompt distribution instruction following is trained and evaluated on, which is presented as the structural reason a fixed-compilation approach cannot match a broad, real-usage-derived training signal."
+    },
+    {
+      "id": "gpt3-prompted-baseline-shows-the-limits-of-prompting-alone-for-instruction-following",
+      "type": "shows-the-limits-of-prompting-alone-for",
+      "source": "gpt3-prompted-baseline",
+      "target": "instruction-following",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "instruction-following-objective",
+      "prose": "The GPT-3-prompted baseline tries to reach instruction-following behavior with zero weight updates, purely by prepending a hand-crafted few-shot prefix to coax the base model into an instruction-following mode. Even the best available prefix was not chosen by intuition alone: authors held an internal 'prefix-finding competition,' each spending an hour hunting for prefixes, and picked whichever one scored highest against the same reward model used to anchor RLHF training (instructgpt, §\"3.5 Models\", p. 9, n. 6). Despite using that reward model as its own selection criterion, the prompted baseline still trails actual RLHF-trained instruction following substantially — 175B InstructGPT is preferred 71±4% of the time over the prompted GPT-3 baseline. The comparison shows that prompting can approximate instruction-following behavior but not substitute for training on preference data."
+    },
+    {
+      "id": "hhh-framework-is-operationalized-as-hhh-eval-benchmark",
+      "type": "is-operationalized-as",
+      "source": "hhh-framework",
+      "target": "hhh-eval-benchmark",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "hhh-framework-and-benchmark",
+      "prose": "The HHH framework is a qualitative definition; the HHH evaluation set is the instrument that turns it into something scoreable. Askell et al. (2021) wrote 221 binary comparisons testing whether a model can pick the more helpful, honest, and harmless of two responses, later hosted on BIG-Bench. Constitutional AI adds 217 new, deliberately harder comparisons because models were already scoring 'well over 90% binary accuracy' on the original set — the extension exists specifically to keep the benchmark discriminating as models improved, with the new items 'primarily focusing on more subtle tests of harmlessness, including examples where an evasive response is disfavored over a harmless and helpful message' (constitutional-ai, §\"2 Evaluating the Potential for AI Supervision of HHH\", p. 6). Notably, the two papers that share this framework operationalize honesty differently: InstructGPT measures it via TruthfulQA and hallucination rate (instructgpt, §\"3.6 Evaluation\", p. 9) rather than via this benchmark at all."
+    },
+    {
+      "id": "hhh-eval-benchmark-is-hosted-as-a-subset-of-big-bench",
+      "type": "is-hosted-as-a-subset-of",
+      "source": "hhh-eval-benchmark",
+      "target": "big-bench",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "hhh-framework-and-benchmark",
+      "prose": "The HHH evaluation set has two separate homes with two separate provenances. Its original 221 comparisons live inside BIG-Bench, the large, crowd-collaborative benchmark suite assembled from contributions across many research groups (constitutional-ai, §\"B Identifying and Classifying Harmful Conversations\", p. 20). Constitutional AI's own 217 additional, harder comparisons are not folded into BIG-Bench in this paper — they are distributed only through the paper's own GitHub repository. So 'the HHH eval' as used by Constitutional AI is really a composite of a small, versioned public subset hosted inside a much larger benchmark suite plus a private extension attached to one paper, a distinction that matters for anyone trying to reproduce or extend the evaluation later."
+    },
+    {
+      "id": "model-calibration-is-empirically-verified-on-hhh-eval-benchmark",
+      "type": "is-empirically-verified-on",
+      "source": "model-calibration",
+      "target": "hhh-eval-benchmark",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "hhh-framework-and-benchmark",
+      "prose": "Model calibration functions first as an unproven assumption and only later as a checked one. Constitutional AI invokes it early to justify treating the feedback model's raw multiple-choice probabilities as usable soft preference labels rather than noise, writing that such targets 'will be fairly well-calibrated...since they are multiple choice responses' (constitutional-ai, §\"4.1 Method\", p. 10). The HHH evaluation set is then the specific instrument used to go back and test that assumption empirically rather than merely asserting it: 'we show calibration of the RL-CAI labels...on our new HHH eval. We find that the feedback model's log-probabilities are reasonably well-calibrated' (constitutional-ai, §\"4.3 Main Results\", p. 12). The benchmark thus closes the loop between a premise the whole RLAIF pipeline depends on and direct evidence for it."
+    }
+  ]
+}

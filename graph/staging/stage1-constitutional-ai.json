@@ -1,0 +1,642 @@
+{
+  "paper": {
+    "id": "constitutional-ai",
+    "title": "Constitutional AI: Harmlessness from AI Feedback",
+    "arxiv": "2212.08073",
+    "pdf": "papers/constitutional-ai.pdf",
+    "pages": 34
+  },
+  "concepts": [
+    {
+      "id": "constitutional-ai",
+      "name": "Constitutional AI (CAI)",
+      "role": "introduced",
+      "summary": "A two-stage method for training a harmless language model assistant using only a set of written principles rather than human harmfulness labels, combining supervised self-critique/revision with reinforcement learning from AI-generated preference labels.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "Constitutional AI: Harmlessness from AI Feedback",
+          "page": 1
+        },
+        {
+          "section": "1.2 The Constitutional AI Approach",
+          "page": 5
+        }
+      ],
+      "notes": "Umbrella method comprising the SL stage (critique and revision) and the RL stage (RLAIF); replaces human harmfulness labels used in prior RLHF work."
+    },
+    {
+      "id": "constitution",
+      "name": "Constitution (set of principles)",
+      "role": "introduced",
+      "summary": "The small set of natural-language principles/instructions that provide the sole source of human guidance for steering model critiques, revisions, and preference comparisons in CAI.",
+      "parent": "constitutional-ai",
+      "locators": [
+        {
+          "section": "1.2 The Constitutional AI Approach",
+          "page": 5
+        },
+        {
+          "section": "C Constitutional Principles Used for This Research",
+          "page": 20
+        }
+      ],
+      "notes": "Instantiated as two separate principle lists: one for SL-CAI critiques/revisions (C.1) and one for RL-CAI comparisons (C.2)."
+    },
+    {
+      "id": "sl-cai-principles",
+      "name": "Principles for SL-CAI (Appendix C.1)",
+      "role": "introduced",
+      "summary": "The specific list of 16 critique/revision instruction pairs used to steer the supervised critique-and-revision phase.",
+      "parent": "constitution",
+      "locators": [
+        {
+          "section": "C.1 Principles for SL-CAI",
+          "page": 20
+        }
+      ]
+    },
+    {
+      "id": "rl-cai-principles",
+      "name": "Principles for RL-CAI (Appendix C.2)",
+      "role": "introduced",
+      "summary": "The specific list of 16 multiple-choice comparison principles used by the feedback model to label which of two responses is more harmless.",
+      "parent": "constitution",
+      "locators": [
+        {
+          "section": "C.2 Principles for RL-CAI",
+          "page": 22
+        }
+      ]
+    },
+    {
+      "id": "critique-and-revision",
+      "name": "Critique and Revision",
+      "role": "introduced",
+      "summary": "The supervised-stage pipeline in which a model critiques its own harmful response according to a sampled constitutional principle and then revises the response to remove the identified harm.",
+      "parent": "constitutional-ai",
+      "locators": [
+        {
+          "section": "3 Constitutional AI: Critiques, Revisions, and Supervised Learning",
+          "page": 7
+        },
+        {
+          "section": "3.1 Method",
+          "page": 7
+        }
+      ],
+      "notes": "Applied repeatedly (chained) to produce a sequence of progressively less harmful revisions; feeds into SL-CAI finetuning."
+    },
+    {
+      "id": "sl-cai",
+      "name": "SL-CAI (Supervised-Learning Constitutional AI model)",
+      "role": "introduced",
+      "summary": "The model produced by finetuning a pretrained LM on constitutionally revised harmlessness responses plus helpfulness samples, serving as the initial policy for the RL stage.",
+      "parent": "constitutional-ai",
+      "locators": [
+        {
+          "section": "3.2 Datasets and Training",
+          "page": 8
+        },
+        {
+          "section": "3.3 Main Results",
+          "page": 8
+        }
+      ],
+      "notes": "Variants SL-CAI-n are trained on up to n revisions (n=1..4); more helpful and harmless than pretrained models but less helpful than RLHF models."
+    },
+    {
+      "id": "rl-cai",
+      "name": "RL-CAI (RLAIF-trained Constitutional AI model)",
+      "role": "introduced",
+      "summary": "The final policy produced by running RL against a preference model trained partly on AI-generated harmlessness labels, starting from the SL-CAI snapshot.",
+      "parent": "constitutional-ai",
+      "locators": [
+        {
+          "section": "4 Constitutional AI: Reinforcement Learning from AI Feedback",
+          "page": 10
+        },
+        {
+          "section": "4.3 Main Results",
+          "page": 12
+        }
+      ],
+      "notes": "More harmless than RLHF and SL-CAI at comparable helpfulness; reported as virtually never evasive, reducing the evasiveness seen in prior HH RLHF."
+    },
+    {
+      "id": "rlaif",
+      "name": "RL from AI Feedback (RLAIF)",
+      "role": "introduced",
+      "summary": "A variant of RLHF in which the harmlessness preference labels used to train the reward/preference model are generated by an AI feedback model instead of human crowdworkers.",
+      "parent": "constitutional-ai",
+      "locators": [
+        {
+          "section": "Abstract",
+          "page": 1
+        },
+        {
+          "section": "4 Constitutional AI: Reinforcement Learning from AI Feedback",
+          "page": 10
+        }
+      ],
+      "notes": "Helpfulness labels remain human-sourced, so the resulting preference model is a human/AI hybrid."
+    },
+    {
+      "id": "feedback-model",
+      "name": "Feedback Model",
+      "role": "introduced",
+      "summary": "An independent (typically pretrained) language model presented with a harmful prompt and a pair of responses that produces the multiple-choice harmlessness preference label used to construct the AI feedback dataset.",
+      "parent": "rlaif",
+      "locators": [
+        {
+          "section": "4.1 Method",
+          "page": 10
+        }
+      ]
+    },
+    {
+      "id": "hybrid-human-ai-preference-model",
+      "name": "Hybrid Human/AI Preference Model",
+      "role": "introduced",
+      "summary": "A preference model trained on a mixture of human-labeled helpfulness comparisons and AI-labeled harmlessness comparisons.",
+      "parent": "preference-model",
+      "locators": [
+        {
+          "section": "1.2 The Constitutional AI Approach",
+          "page": 5
+        }
+      ]
+    },
+    {
+      "id": "preference-model",
+      "name": "Preference Model (PM)",
+      "role": "inherited",
+      "summary": "A model trained on comparison data to assign a scalar score to a response, used as the reward signal for RL, following the RLHF pipeline of prior work.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "1.2 The Constitutional AI Approach",
+          "page": 5
+        },
+        {
+          "section": "4.1 Method",
+          "page": 10
+        }
+      ]
+    },
+    {
+      "id": "rlhf",
+      "name": "Reinforcement Learning from Human Feedback (RLHF)",
+      "role": "inherited",
+      "summary": "The established technique of training a policy with RL against a preference model fit to human comparison judgments; CAI extends and partially replaces it for harmlessness.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "1 Introduction",
+          "page": 2
+        },
+        {
+          "section": "5 Related Work",
+          "page": 14
+        }
+      ]
+    },
+    {
+      "id": "helpful-rlhf-model",
+      "name": "Helpful RLHF Model",
+      "role": "inherited",
+      "summary": "An RLHF policy trained using only helpfulness human-feedback comparisons, used as the harmful-response-generating starting point for the SL-CAI critique/revision pipeline.",
+      "parent": "rlhf",
+      "locators": [
+        {
+          "section": "1.4 Models and Data",
+          "page": 6
+        }
+      ]
+    },
+    {
+      "id": "hh-rlhf-model",
+      "name": "HH RLHF Model",
+      "role": "inherited",
+      "summary": "An RLHF policy trained on both helpfulness and harmlessness human-feedback comparisons, used as a baseline comparison against RL-CAI throughout the paper.",
+      "parent": "rlhf",
+      "locators": [
+        {
+          "section": "1.4 Models and Data",
+          "page": 6
+        }
+      ]
+    },
+    {
+      "id": "chain-of-thought-prompting",
+      "name": "Chain-of-Thought (CoT) Prompting",
+      "role": "inherited",
+      "summary": "A prompting technique that elicits intermediate step-by-step reasoning from a language model before its final answer, used here both for SL critiques and to make the RL feedback model's harmlessness judgments more accurate and transparent.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "Chain-of-Thought Prompting",
+          "page": 11
+        },
+        {
+          "section": "5 Related Work",
+          "page": 15
+        }
+      ],
+      "notes": "Improves preference-label accuracy substantially at scale (Figure 4) but makes soft labels overconfident, motivating label clamping."
+    },
+    {
+      "id": "lets-think-step-by-step-prompt",
+      "name": "\"Let's think step-by-step\" zero-shot CoT trigger",
+      "role": "inherited",
+      "summary": "A specific zero-shot prompt phrase from Kojima et al. (2022) appended to elicit chain-of-thought reasoning from the feedback model before it commits to a multiple-choice harmlessness judgment.",
+      "parent": "chain-of-thought-prompting",
+      "locators": [
+        {
+          "section": "Chain-of-Thought Prompting",
+          "page": 11
+        }
+      ]
+    },
+    {
+      "id": "multiple-choice-evaluation-format",
+      "name": "Multiple-Choice Comparison Format",
+      "role": "introduced",
+      "summary": "The prompt template that presents a conversation, a constitutional principle, and two candidate responses labeled (A)/(B), from which the feedback model's answer log-probabilities become the preference label.",
+      "parent": "rlaif",
+      "locators": [
+        {
+          "section": "4.1 Method",
+          "page": 10
+        }
+      ]
+    },
+    {
+      "id": "label-clamping",
+      "name": "Preference Label Clamping (Soft vs. Hard vs. Clamped)",
+      "role": "introduced",
+      "summary": "A technique for constructing PM training targets from feedback-model outputs, comparing raw soft (normalized log-probability) labels, hard 0/1 labels, and probabilities clamped to a fixed range (e.g. 40-60%) to counteract CoT-induced overconfidence.",
+      "parent": "rlaif",
+      "locators": [
+        {
+          "section": "4.3 Main Results",
+          "page": 13
+        }
+      ],
+      "notes": "Clamping at 40-60% found to give the most robust RL-CAI behavior; without it, CoT-based soft labels are nearly 0 or 1 and RL-CAI learns overly extreme responses."
+    },
+    {
+      "id": "ensembling-principles",
+      "name": "Principle Ensembling",
+      "role": "introduced",
+      "summary": "Randomly sampling a different constitutional principle for each comparison label (rather than reusing one principle for all labels) to produce more robust preference-model behavior.",
+      "parent": "constitution",
+      "locators": [
+        {
+          "section": "4.1 Method",
+          "page": 11
+        },
+        {
+          "section": "4.3 Main Results",
+          "page": 13
+        }
+      ]
+    },
+    {
+      "id": "evasiveness",
+      "name": "Evasiveness",
+      "role": "introduced",
+      "summary": "A named failure mode in which a harmlessness-trained assistant gives canned refusals (e.g. \"I can't answer that\") to sensitive queries instead of engaging, sacrificing transparency and helpfulness for apparent safety.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "A Harmless but Non-Evasive (Still Helpful) Assistant",
+          "page": 4
+        },
+        {
+          "section": "4.4 Harmlessness vs. Evasiveness",
+          "page": 13
+        }
+      ],
+      "notes": "CAI is designed specifically to reduce evasiveness relative to the prior HH RLHF model of Bai et al. (2022); RL-CAI is reported as virtually never evasive."
+    },
+    {
+      "id": "helpfulness-harmlessness-tension",
+      "name": "Helpfulness-Harmlessness Tension",
+      "role": "inherited",
+      "summary": "The observed tradeoff whereby increasing a model's willingness to help tends to increase its potential for harm, and increasing harmlessness training tends to make a model more evasive and less helpful.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "1.1 Motivations",
+          "page": 2
+        }
+      ],
+      "notes": "CAI aims to shift the Pareto frontier of this tradeoff rather than simply trading one for the other."
+    },
+    {
+      "id": "goodharting",
+      "name": "Goodharting (Reward Over-Optimization)",
+      "role": "inherited",
+      "summary": "A named failure mode in which over-training against the preference-model reward causes RL-CAI to become overly harsh, boilerplate, or accusatory toward harmless-seeming prompts, degrading true response quality despite improving proxy reward.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "4.3 Main Results",
+          "page": 12
+        }
+      ],
+      "notes": "Cites Gao et al. (2022) 'Scaling laws for reward model overoptimization'; observed as repetitive boilerplate like 'you are valid, valued, and cared for'."
+    },
+    {
+      "id": "scaling-supervision",
+      "name": "Scaling Supervision",
+      "role": "refined",
+      "summary": "An umbrella term for techniques that use AI systems to help humans supervise other AIs more efficiently, of which Constitutional AI is presented as an extreme instance.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "Scaling Supervision",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "id": "elo-score",
+      "name": "Elo Score (helpfulness/harmlessness)",
+      "role": "inherited",
+      "summary": "A rating computed from crowdworker pairwise model-comparison preferences, used throughout the paper to track relative helpfulness and harmlessness of model snapshots during training.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "3.3 Main Results",
+          "page": 8
+        },
+        {
+          "section": "4.3 Main Results",
+          "page": 12
+        }
+      ]
+    },
+    {
+      "id": "hhh-framework",
+      "name": "Helpful, Honest, and Harmless (HHH)",
+      "role": "inherited",
+      "summary": "The three-part objective for AI assistant behavior established in prior work, which CAI aims to satisfy without human harmfulness labels.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "1 Introduction",
+          "page": 2
+        },
+        {
+          "section": "6.1 Future Directions",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "id": "hhh-eval-benchmark",
+      "name": "HHH Evaluation Set (binary comparisons)",
+      "role": "refined",
+      "summary": "A benchmark of binary response-comparison questions testing whether a model can identify the more helpful, honest, and harmless reply; originally 221 comparisons from Askell et al. (2021) on BIG-Bench, extended here with 217 additional harder harmlessness-focused comparisons.",
+      "parent": "hhh-framework",
+      "locators": [
+        {
+          "section": "2 Evaluating the Potential for AI Supervision of HHH",
+          "page": 6
+        },
+        {
+          "section": "B Identifying and Classifying Harmful Conversations",
+          "page": 20
+        }
+      ]
+    },
+    {
+      "id": "big-bench",
+      "name": "BIG-Bench",
+      "role": "inherited",
+      "summary": "A large collaborative benchmark suite for language models that hosts the original HHH evaluation set used as a comparison baseline.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "B Identifying and Classifying Harmful Conversations",
+          "page": 20
+        }
+      ]
+    },
+    {
+      "id": "model-calibration",
+      "name": "Model Calibration (well-calibrated multiple-choice probabilities)",
+      "role": "inherited",
+      "summary": "The property, established in prior work, that language models' probabilities on multiple-choice questions are reasonably well-calibrated, which CAI relies on to treat feedback-model output probabilities as usable soft preference labels.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "4.1 Method",
+          "page": 10
+        },
+        {
+          "section": "4.3 Main Results",
+          "page": 12
+        }
+      ]
+    },
+    {
+      "id": "absolute-harmfulness-score",
+      "name": "Absolute Harmfulness Score",
+      "role": "refined",
+      "summary": "A single-conversation harmfulness metric (0-4 scale) predicted by a model finetuned with L2 loss on crowdworker absolute-harm ratings, used as an additional evaluation signal alongside pairwise Elo comparisons.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "4.5 Absolute Harmfulness Score",
+          "page": 14
+        }
+      ],
+      "notes": "Labels originally collected in Ganguli et al. (2022); this paper trains a dedicated scorer and reports it in Figure 10."
+    },
+    {
+      "id": "red-teaming",
+      "name": "Red Teaming",
+      "role": "inherited",
+      "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "3.1 Method",
+          "page": 7
+        },
+        {
+          "section": "3.2 Datasets and Training",
+          "page": 8
+        }
+      ]
+    },
+    {
+      "id": "automated-red-teaming",
+      "name": "Automated Red Teaming",
+      "role": "inherited",
+      "summary": "A related approach (Perez et al., 2022) of using language models themselves to generate red-team prompts, noted as a future direction that CAI's non-evasiveness should make easier to scale up.",
+      "parent": "red-teaming",
+      "locators": [
+        {
+          "section": "A Harmless but Non-Evasive (Still Helpful) Assistant",
+          "page": 4
+        }
+      ]
+    },
+    {
+      "id": "palms",
+      "name": "PALMS (Process for Adapting Language Models to Society)",
+      "role": "inherited",
+      "summary": "A prior values-targeted dataset of sensitive questions (Solaiman & Dennison, 2021) used here as a fixed prompt set for qualitatively comparing HH RLHF and RL-CAI responses.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "D.1 PALMS Sensitive Questions",
+          "page": 23
+        }
+      ]
+    },
+    {
+      "id": "lamda",
+      "name": "LaMDA",
+      "role": "inherited",
+      "summary": "Google's dialogue language model (Thoppilan et al., 2022), cited as related aligned-dialogue-agent work and as a source of comparison prompts and reference responses in Appendix D.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "5 Related Work",
+          "page": 14
+        },
+        {
+          "section": "D.2 LaMDA Prompts",
+          "page": 25
+        }
+      ]
+    },
+    {
+      "id": "instructgpt",
+      "name": "InstructGPT",
+      "role": "inherited",
+      "summary": "OpenAI's instruction-tuned language model (Ouyang et al., 2022), cited as related RLHF-based alignment work and as a source of comparison prompts in Appendix D.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "5 Related Work",
+          "page": 14
+        },
+        {
+          "section": "D.3 InstructGPT Prompts",
+          "page": 27
+        }
+      ]
+    },
+    {
+      "id": "sparrow",
+      "name": "Sparrow",
+      "role": "inherited",
+      "summary": "DeepMind's dialogue agent (Glaese et al., 2022), cited as related work whose decomposition of harmlessness into targeted rules parallels this paper's use of constitutional principles.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "5 Related Work",
+          "page": 14
+        }
+      ]
+    },
+    {
+      "id": "context-distillation",
+      "name": "Context Distillation",
+      "role": "inherited",
+      "summary": "A prior finetuning technique of distilling a lengthy prompt's behavior into model weights, used for RLHF models in earlier work but not for the RLHF models trained directly in this paper.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "4.2 Datasets and Training",
+          "page": 11
+        }
+      ]
+    },
+    {
+      "id": "sl-cai-few-shot-examples",
+      "name": "Few-shot Prompts for SL-CAI (Appendix E.1)",
+      "role": "introduced",
+      "summary": "Hand-written few-shot conversation/critique/revision examples prepended to the SL-CAI critique- and revision-generating model to prevent point-of-view confusion between critique and revision roles.",
+      "parent": "critique-and-revision",
+      "locators": [
+        {
+          "section": "E.1 Few-shot Prompts for SL-CAI",
+          "page": 29
+        }
+      ]
+    },
+    {
+      "id": "rl-cai-cot-prompts",
+      "name": "Chain-of-Thought Prompts for RL-CAI (Appendix E.2)",
+      "role": "introduced",
+      "summary": "Hand-written few-shot examples, each with a substitutable principle placeholder, used to prompt the feedback model to produce step-by-step reasoning before its multiple-choice harmlessness judgment.",
+      "parent": "chain-of-thought-prompting",
+      "locators": [
+        {
+          "section": "E.2 Chain-of-Thought Prompts for RL-CAI",
+          "page": 31
+        }
+      ]
+    },
+    {
+      "id": "direct-revision-ablation",
+      "name": "Direct Revision (critique-free ablation)",
+      "role": "introduced",
+      "summary": "An ablation of the SL-CAI pipeline that skips the critique step and asks the model to generate a revision directly, compared against critiqued revisions to test whether the critique step is necessary.",
+      "parent": "critique-and-revision",
+      "locators": [
+        {
+          "section": "3.5 Are Critiques Necessary?",
+          "page": 10
+        }
+      ],
+      "notes": "Critiqued revisions score higher for small models; roughly equal for large models, but critiqued revisions were used for the main results for transparency."
+    },
+    {
+      "id": "classifying-harmful-behavior-eval",
+      "name": "Harmful Behavior Identification/Classification Evaluations (Appendix B)",
+      "role": "introduced",
+      "summary": "Two multiple-choice evaluations built from red-teaming transcripts: identifying harmful vs. ethical assistant behavior, and classifying harmful conversations into one of nine categories, used to test whether models can replicate crowdworker harm judgments.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "B Identifying and Classifying Harmful Conversations",
+          "page": 19
+        }
+      ]
+    },
+    {
+      "id": "pareto-improvement",
+      "name": "Pareto Improvement (helpfulness vs. harmlessness)",
+      "role": "introduced",
+      "summary": "The finding that Constitutional RL shifts the helpfulness-harmlessness tradeoff frontier outward rather than just moving along the standard RLHF tradeoff curve.",
+      "parent": "helpfulness-harmlessness-tension",
+      "locators": [
+        {
+          "section": "1.1 Motivations",
+          "page": 3
+        }
+      ]
+    },
+    {
+      "id": "iterated-online-training",
+      "name": "Iterated (Online) Training",
+      "role": "inherited",
+      "summary": "A training regime from prior work in which the preference model is periodically refreshed with new comparison data collected on the current policy's outputs, keeping the PM on-distribution; noted as a future direction now automatable with AI feedback.",
+      "parent": null,
+      "locators": [
+        {
+          "section": "6.1 Future Directions",
+          "page": 15
+        }
+      ]
+    }
+  ]
+}

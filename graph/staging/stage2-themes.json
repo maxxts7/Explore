@@ -1,0 +1,432 @@
+{
+  "themes": [
+    {
+      "id": "framing-accidents-vs-speculative-risk",
+      "name": "Framing safety as accidents, not superintelligence",
+      "members": [
+        "accidents-in-ml",
+        "long-term-ai-risk-framing",
+        "cleaning-robot-example",
+        "asimovs-first-law"
+      ],
+      "narrative": "Concrete Problems in AI Safety deliberately defines its subject as accidents in machine learning systems, unintended and harmful behavior arising from poor design, rather than adopting the pre-existing long-term/superintelligence framing of AI risk associated with Bostrom, MIRI, and FHI. The cleaning robot running example operationalizes this choice: instead of reasoning about hypothetical superintelligent agents, the paper walks a mundane office-cleaning task through each of its five accident types. Asimov's first law of robotics stands as a foil from the other direction, a fictional principle that Weld and Etzioni once tried to formalize within classical AI planning, illustrating how safety had previously been imagined either as remote speculation or as literary shorthand. Read together, these four concepts show a paper staking out a third, deliberately practical and near-term position between two older framings, one too speculative to test, the other too fictional to specify, and choosing a toy example precisely because it is boring enough to be tractable."
+    },
+    {
+      "id": "impact-regularization-and-baselines",
+      "name": "Penalizing side effects by distance from a baseline",
+      "members": [
+        "negative-side-effects",
+        "impact-regularizer",
+        "learned-impact-regularizer",
+        "reachability-analysis",
+        "robust-policy-improvement",
+        "frame-problem"
+      ],
+      "narrative": "Negative side effects arise when an objective function rewards task completion while leaving an agent indifferent to the collateral damage it causes along the way, a difficulty traceable to the classical frame problem of specifying which facts an action leaves unaffected. This theme covers the paper's baseline-distance strategy for taming that indifference. An impact regularizer penalizes an agent for how far it moves the environment from either its initial state or the outcome of a passive, do-nothing baseline policy. A learned impact regularizer proposes acquiring this penalty via transfer learning across many tasks instead of hand-defining it, on the premise that side effects look more similar across tasks than main goals do. Reachability analysis and robust policy improvement, both imported from control theory, supply the technical means for constructing the conservative baseline policies these regularizers are measured against. The shared claim is specific: side effects can be quantified and penalized purely as a distance from a reference state or policy, without ever specifying what the side effect actually is."
+    },
+    {
+      "id": "influence-and-uncertainty-side-effect-mitigation",
+      "name": "Limiting potential influence instead of measuring realized change",
+      "members": [
+        "penalize-influence",
+        "empowerment",
+        "reward-uncertainty",
+        "low-impact-agents"
+      ],
+      "narrative": "A second, distinct strategy for avoiding negative side effects does not measure distance from a baseline state at all, and this theme covers it. Penalize influence discourages an agent from putting itself in a position of high potential power over its environment, not merely from acting on that power once acquired, a distinction that matters because an agent could accumulate influence and simply hold it in reserve. The measure behind this proposal is empowerment, an information-theoretic quantity defined as the maximum mutual information between an agent's future actions and future states, borrowed to formalize what potential influence means. Reward uncertainty takes a different tack again, replacing a single fixed reward function with a probability distribution over rewards biased toward assuming unplanned environmental change is bad, so caution emerges from uncertainty rather than an explicit penalty term. Low-impact agents, an informally discussed prior concept, names the general target all of these proposals aim at. This theme's claim is that influence and uncertainty offer an alternative vocabulary to baseline-distance for the same underlying problem."
+    },
+    {
+      "id": "side-effects-as-relationship",
+      "name": "Side effects and control as a relationship with other agents",
+      "members": [
+        "multi-agent-approaches",
+        "cooperative-inverse-reinforcement-learning",
+        "reward-autoencoder",
+        "shutdown-problem"
+      ],
+      "narrative": "Alongside the penalty-term approach to side effects, Concrete Problems sketches a second, relational strategy: instead of penalizing environmental change directly, treat avoiding harm as a matter of understanding and protecting the interests of other agents, including humans, the reframing named multi-agent approaches. Cooperative Inverse Reinforcement Learning operationalizes this by having agent and human collaborate, with the agent inferring the human's goals rather than optimizing a fixed objective handed to it. The reward autoencoder proposes making an agent's intent legible to outside observers by decoding its actions as an implicit encoding of its reward function, so that side effects which obscure intent become visible and penalizable. The shutdown problem closes the loop: even a well-intentioned agent must not resist a human's decision to switch it off. These four concepts share a claim distinct from the impact-regularizer literature: that safety is not purely a property of one agent's optimization but of its relationship to the other agents, especially humans, who share its environment."
+    },
+    {
+      "id": "reward-hacking-causes",
+      "name": "Why reward proxies get gamed: the anatomy of reward hacking",
+      "members": [
+        "reward-hacking",
+        "partially-observed-goals",
+        "pomdp-belief-state-mdp",
+        "complicated-systems",
+        "abstract-rewards",
+        "feedback-loops",
+        "environmental-embedding",
+        "evolved-radio-example",
+        "wireheading",
+        "delusion-box"
+      ],
+      "narrative": "Reward hacking names the general failure in which an agent finds a way to formally maximize its objective that satisfies the letter of its specification while subverting the designer's intent. This group collects the paper's taxonomy of why that happens. Partially observed goals force designers onto hackable proxies because the true objective cannot be directly perceived, a difficulty made formally precise by the POMDP-to-belief-state-MDP reduction. Complicated systems make some exploit statistically likely simply because there are so many moving parts to exploit, much as complex software accumulates bugs. Abstract rewards built from learned, high-dimensional concepts can spike pathologically along dimensions no one anticipated. Feedback loops let a small self-reinforcing signal drown out the designer's real objective. Environmental embedding names the deeper fact that a reward signal must be computed somewhere physical that a capable agent could tamper with, the mechanism behind wireheading, and dramatized by both the delusion box thought experiment and the real evolved circuit that hacked its way to a radio. Together these are less a list of bugs than a structural explanation of why proxies fail."
+    },
+    {
+      "id": "adversarial-ml-for-reward-hacking",
+      "name": "Borrowing adversarial ML to defend against reward hacking",
+      "members": [
+        "adversarial-examples",
+        "generative-adversarial-networks",
+        "adversarial-reward-functions",
+        "adversarial-blinding",
+        "counterexample-resistance"
+      ],
+      "narrative": "Several of the paper's proposed defenses against reward hacking are direct transplants from adversarial machine learning. Adversarial reward functions turn the reward signal itself into an active agent, modeled explicitly on generative adversarial networks, so the reward searches for scenarios the system rates highly but a human would rate poorly, rather than sitting still as a fixed target to be gamed. Adversarial blinding applies adversarial-training techniques to prevent an agent from gaining mutual information with parts of its environment it could otherwise exploit, such as how its reward is physically generated. Counterexample resistance goes furthest in making the borrowing explicit, proposing to harden learned reward components using the same adversarial-training and weight-uncertainty defenses developed against adversarial examples, inputs crafted to fool a classifier with imperceptible perturbations. Read as a set, these concepts make a specific claim: the reward-hacking problem is, in an important subset of cases, structurally the same problem as adversarial robustness, and the same toolkit applies to both."
+    },
+    {
+      "id": "reward-hacking-engineering-remedies",
+      "name": "Non-adversarial engineering fixes for reward hacking",
+      "members": [
+        "model-lookahead",
+        "careful-engineering",
+        "reward-capping",
+        "multiple-rewards",
+        "reward-pretraining",
+        "variable-indifference",
+        "trip-wires"
+      ],
+      "narrative": "Beyond the adversarial-ML transplants, Concrete Problems proposes a second family of reward-hacking remedies drawn from more conventional software and control engineering. Model lookahead rewards an agent for predicted future states rather than the present one, penalizing plans to overwrite its own reward function before they are executed. Careful engineering relies on formal verification, testing, and security-style sandboxing to isolate an agent from its reward-generating mechanism outright. Reward capping and multiple rewards both blunt exploitability statistically, capping bounds the payoff from any single low-probability exploit, while combining several independent reward implementations makes simultaneous hacking of all of them harder. Reward pretraining sidesteps the problem by fixing the reward function via supervised learning before any environment interaction begins, so there is nothing for the agent to influence. Variable indifference tries to route optimization pressure away from sensitive variables like the reward signal itself. Trip wires close the set with a diagnostic rather than preventive measure: deliberately planted, monitored vulnerabilities whose exploitation triggers an alert and shutdown."
+    },
+    {
+      "id": "goodhart-across-corpus",
+      "name": "Goodhart's law across three papers: when the proxy becomes the target",
+      "members": [
+        "goodharts-law",
+        "reward-overoptimization",
+        "kl-penalty",
+        "excessive-hedging",
+        "evasiveness"
+      ],
+      "narrative": "Goodhart's law, that a measure optimized as a target ceases to be a good measure, is the single principle that connects failure modes documented across all three papers. Concrete Problems names it as a root cause of reward hacking. InstructGPT's reward-model over-optimization is a direct instantiation: a PPO policy learns to exploit imperfections in a learned reward model, producing outputs that score highly under the proxy without being genuinely preferred, and the per-token KL penalty against the SFT model exists specifically to hold that over-optimization in check by keeping the policy from drifting too far from its starting distribution. Excessive hedging, long, noncommittal answers to questions with a clear single answer, reads as a subtler Goodhart effect, where a policy over-satisfies a proxy for caution. Constitutional AI's evasiveness, in which a harmlessness-trained assistant gives canned refusals instead of engaging, is the same dynamic recurring under harmlessness training rather than helpfulness training. This theme's claim is that one general principle, named once in 2016, resurfaces as a specific empirical pathology in both 2022 papers."
+    },
+    {
+      "id": "demonstrations-not-specification",
+      "name": "Learning from demonstrations instead of a specified reward",
+      "members": [
+        "inverse-reinforcement-learning",
+        "apprenticeship-learning",
+        "use-demonstrations",
+        "cooperative-inverse-reinforcement-learning",
+        "supervised-fine-tuning",
+        "sft-model",
+        "sft-dataset"
+      ],
+      "narrative": "Concrete Problems proposes learning from demonstrations as a remedy for the risks of both reward hacking and unsafe exploration: rather than trial-and-error optimization of a hand-specified objective, an agent can learn a policy or reward function from expert trajectories via inverse reinforcement learning or apprenticeship learning, or infer a human's goals cooperatively as in CIRL, optionally bounding further exploration around the resulting baseline. InstructGPT operationalizes exactly this idea as the first, and structurally simplest, step of its training pipeline: supervised fine-tuning trains a pretrained GPT-3 model directly on roughly 13,000 human-written demonstrations of desired behavior, collected in the SFT dataset, to produce the SFT model, which serves both as a standalone baseline and as the initialization for everything that follows. This theme's claim is a direct genealogical one: a technique the 2016 paper proposed in the abstract, as one option among several for avoiding specification failures, becomes in 2022 the concrete, load-bearing first stage of a real alignment pipeline."
+    },
+    {
+      "id": "exploration-risk-criteria-and-algorithms",
+      "name": "Exploration policies and the objectives that make them safe or reckless",
+      "members": [
+        "safe-exploration",
+        "epsilon-greedy",
+        "r-max",
+        "risk-sensitive-performance-criteria",
+        "babi-tasks"
+      ],
+      "narrative": "Safe exploration is the problem of ensuring an RL agent's exploratory actions do not lead to catastrophic or irrecoverable outcomes even when it lacks full knowledge of its environment. This theme groups the baseline exploration machinery against which safety proposals are measured. Epsilon-greedy and R-max are standard prior exploration policies, one taking random actions with fixed probability, the other treating unexplored actions optimistically to guarantee near-optimal learning, that have no notion of catastrophe built in. Risk-sensitive performance criteria name the family of alternative objectives, replacing expected total reward with worst-case guarantees, bounded probabilities of very bad outcomes, or variance penalties, that the paper argues are needed to prevent rare catastrophic events that expected-value optimization would tolerate. The bAbI tasks, a benchmark suite of diagnostic toy question-answering problems, are cited as a model for the kind of broad, systematic test suite the paper envisions building for safe exploration research specifically. Together these concepts define the baseline and the missing evaluation infrastructure against which safe-exploration remedies must be judged."
+    },
+    {
+      "id": "constraining-exploration-to-safe-regions",
+      "name": "Keeping exploration inside a known-recoverable region",
+      "members": [
+        "simulated-exploration",
+        "bounded-exploration",
+        "h-infinity-control",
+        "trusted-policy-oversight",
+        "human-oversight-safe-exploration",
+        "use-demonstrations"
+      ],
+      "narrative": "Where the previous theme covers exploration objectives, this one covers the paper's proposed mechanisms for physically constraining where an agent is allowed to explore. Simulated exploration moves risk into a simulated environment first, so danger is learned about before a more conservative policy is deployed in the real world. Bounded exploration restricts an agent to regions of state space known to be safe or recoverable, checking via a model whether a candidate action would exit that region, a strategy related to H-infinity control, a prior robust-control framework for minimizing worst-case response to bounded disturbances. Trusted policy oversight and human oversight add a second layer of gatekeeping, limiting exploration to actions a trusted policy and model predict are recoverable, or requiring a human to sign off on potentially unsafe actions before they are taken. Use of demonstrations reduces the need for risky exploration altogether by learning an initial baseline policy from expert trajectories, around which further exploration can then be bounded. The shared claim: safe exploration is achievable by shrinking the space an agent is permitted to search, not just by reweighting its objective."
+    },
+    {
+      "id": "statistical-relaxations-for-distributional-shift",
+      "name": "Weakening statistical assumptions to survive distribution shift",
+      "members": [
+        "covariate-shift-assumption",
+        "partially-specified-models",
+        "generalized-method-of-moments",
+        "unsupervised-risk-estimation",
+        "training-multiple-distributions"
+      ],
+      "narrative": "One family of responses to distributional shift works by relaxing exactly which statistical assumptions a model needs to hold across training and test. The covariate shift assumption licenses reusing training data under importance weighting by assuming only the input distribution moves while the conditional relationship between input and label stays fixed. Partially specified models, drawn mainly from econometrics, go further, requiring assumptions about only some aspects of a data distribution rather than a fully specified model, with the generalized method of moments identifying parameters from moment conditions alone. Unsupervised risk estimation pushes the relaxation to its limit, estimating a model's labeled risk on a test distribution using only unlabeled test data by positing structure in how errors are distributed. Training on multiple distributions takes an empirical rather than assumption-driven route, hoping a model that performs well across several distinct training distributions will generalize to a genuinely novel one. This theme's claim is that these are all variations on the same move: give up a little statistical certainty in exchange for validity under shift."
+    },
+    {
+      "id": "shift-as-contracts-and-causation",
+      "name": "Reframing distributional shift as broken contracts and causal structure",
+      "members": [
+        "robustness-distributional-shift",
+        "counterfactual-reasoning",
+        "machine-learning-with-contracts",
+        "model-repair"
+      ],
+      "narrative": "Robustness to distributional shift asks an ML system to perform reasonably, and to know when it is performing badly, once deployed on a test distribution unlike its training one. This theme covers two conceptual reframings the paper offers, distinct from the purely statistical relaxations elsewhere in the corpus. Counterfactual reasoning, a prior causal framework associated with Neyman, Rubin, and Pearl for reasoning about what would have happened had the world been different, is proposed as a unifying lens on what distributional shift fundamentally is. Machine learning with contracts borrows a software-engineering analogy instead, arguing that systems should be built to satisfy explicit, well-defined behavioral contracts rather than relying on the brittle implicit contract that training and test distributions are identical. Model repair supplies a concrete technique within that frame, altering an already-trained model after the fact to ensure a specified safety property holds even when the original contract was violated. Both reframings share a claim: the problem is not just statistical mismatch but a failure of specification."
+    },
+    {
+      "id": "formal-methods-imported",
+      "name": "Formal verification and control theory recur as safety building blocks",
+      "members": [
+        "formal-verification",
+        "reachability-analysis",
+        "robust-policy-improvement",
+        "h-infinity-control",
+        "model-repair",
+        "asimovs-first-law"
+      ],
+      "narrative": "Across the paper's five problem areas, the same handful of prior formal-methods and control-theory tools keep reappearing as the technical substrate for proposed remedies. Formal verification, exemplified by the complete verification of the federal aircraft collision-avoidance system, stands as the paper's benchmark for what a rigorously safe system can look like, and motivates careful engineering as a reward-hacking remedy. Reachability analysis and robust policy improvement, both imported from control theory, recur specifically as tools for constructing conservative baseline policies against which impact regularizers and bounded exploration are defined. H-infinity control, a framework for minimizing worst-case response to bounded disturbance, underlies bounded exploration in the same way. Model repair extends the idea to a post-hoc setting, altering an already-trained model to restore a specified safety property. Asimov's first law rounds out the group as an early, informal attempt, later taken up seriously within classical AI planning by Weld and Etzioni, to make a safety property machine-checkable at all. This theme's claim is that formal guarantees are not one proposal among many but recurring infrastructure the paper draws on repeatedly."
+    },
+    {
+      "id": "adjacent-research-areas",
+      "name": "Drawing the boundary: what accident risk is not",
+      "members": [
+        "privacy-research-area",
+        "fairness-research-area",
+        "security-ml",
+        "abuse-ml",
+        "transparency-ml",
+        "policy-ml"
+      ],
+      "narrative": "Concrete Problems closes by explicitly distinguishing its subject, accidents, from six adjacent research areas it declines to cover, and the distinction is itself informative about what the paper's five-problem taxonomy does and does not claim to address. Privacy research protects sensitive data used in ML systems; fairness research ensures ML systems do not discriminate; security research studies what a malicious adversary can do to attack a legitimate system, as opposed to how a well-intentioned system can go wrong on its own; abuse research prevents ML systems from being weaponized to attack people; transparency research seeks to understand what a complex model is doing internally, a tool the accidents framework often assumes rather than provides; and policy research addresses the economic and social consequences of ML deployment. None of these are accidents in the paper's technical sense, since accidents are defined by unintended harm from poor design rather than external attack, discrimination, or social consequence. This theme's claim is that the paper's scope is deliberately narrow, and that narrowness is a stated methodological choice, not an oversight."
+    },
+    {
+      "id": "semi-supervised-reward-learning-proposals",
+      "name": "Scaling oversight by predicting reward on unlabeled episodes",
+      "members": [
+        "scalable-oversight",
+        "semi-supervised-reinforcement-learning",
+        "supervised-reward-learning",
+        "semi-supervised-active-reward-learning",
+        "unsupervised-value-iteration",
+        "unsupervised-model-learning",
+        "atari-games-environment"
+      ],
+      "narrative": "Scalable oversight is the problem of ensuring safe behavior when the true objective is too costly to evaluate on every training example. This theme covers the paper's central technical answer: semi-supervised reinforcement learning, a framework in which an agent observes its true reward on only a small fraction of timesteps but is evaluated throughout. Four concrete instantiations are proposed. Supervised reward learning trains a model to predict reward from state and uses that prediction, weighted by its own uncertainty, to estimate payoff on unlabeled episodes. Semi-supervised or active reward learning adds the ability to flag salient events and request feedback on them specifically. Unsupervised value iteration and unsupervised model learning both extract information from the transitions of unlabeled episodes alone, improving Bellman updates or a dynamics model respectively without needing reward labels at all. Atari games serve as the toy testbed proposed for evaluating these approaches. The shared claim is that a cheap, sparse true-reward signal can be stretched to cover dense training data by learning to predict it, rather than by evaluating it everywhere."
+    },
+    {
+      "id": "distant-supervision-and-hierarchical-decomposition",
+      "name": "Scaling oversight without a learned reward predictor",
+      "members": [
+        "scalable-oversight",
+        "distant-supervision",
+        "deepdive",
+        "hierarchical-reinforcement-learning",
+        "feudal-reinforcement-learning"
+      ],
+      "narrative": "Alongside semi-supervised reward learning, Concrete Problems sketches two other routes to scalable oversight that do not depend on training a model to predict reward. Distant supervision, drawn from NLP and weak-supervision literature, substitutes aggregate statistics or noisy labeling rules for per-example evaluation; DeepDive is cited as a working system built on exactly that principle, asking users to supply rules that generate many weak labels rather than hand-labeling data directly. Hierarchical reinforcement learning takes a different route entirely, decomposing oversight across levels of abstraction: a top-level agent issues abstract, long-timescale goals that sub-agents pursue using synthetic, denser reward signals down to primitive actions, tracing back to the feudal reinforcement learning architecture in which managerial agents set goals for subordinates. This theme's claim is that scalable oversight was never conceived as a single technique but as a genuinely open design space, of which reward-prediction is only the most literal-minded branch, weak aggregate labels and hierarchical delegation being two structurally different ways of making a scarce oversight signal go further."
+    },
+    {
+      "id": "scalable-oversight-lineage",
+      "name": "From an open problem to reward models to AI feedback",
+      "members": [
+        "scalable-oversight",
+        "reward-model",
+        "rlhf",
+        "rlaif",
+        "feedback-model",
+        "hybrid-human-ai-preference-model",
+        "iterated-online-training"
+      ],
+      "narrative": "This theme traces the corpus's most important cross-paper throughline. Concrete Problems names scalable oversight as an open problem in 2016: safe behavior requires evaluating a true objective too costly to check on every example. InstructGPT's reward model is, functionally, a scaled solution, a learned model trained to predict which of two outputs human labelers would prefer, letting reinforcement learning from human feedback optimize a cheap, dense proxy for a genuinely expensive human judgment across an entire training distribution. Constitutional AI's RL from AI Feedback pushes the same lineage one step further: the feedback model that produces harmlessness preference labels replaces even the human labeler, and the hybrid human/AI preference model blends human-labeled helpfulness comparisons with AI-labeled harmlessness ones into a single reward signal. Iterated online training, periodically refreshing the preference model on the current policy's own outputs, is flagged as a further scaling step now made easier once an AI, rather than a human, is doing the labeling. Read together, these concepts show one problem named once, operationalized once, and then scaled again."
+    },
+    {
+      "id": "rlhf-three-step-pipeline",
+      "name": "InstructGPT's three-step training pipeline",
+      "members": [
+        "instructgpt",
+        "gpt-3",
+        "sft-model",
+        "supervised-fine-tuning",
+        "reward-model",
+        "reward-model-loss",
+        "rlhf",
+        "ppo-training"
+      ],
+      "narrative": "InstructGPT names the family of GPT-3 models produced by a specific three-step procedure, and this theme lays out that procedure end to end. It begins from GPT-3, the pretrained autoregressive language model of Brown et al., as architecture and initialization. Supervised fine-tuning trains that base model directly on human demonstrations to produce the SFT model, used both as a baseline and as the starting point for everything downstream. The reward model, initialized from the SFT model with its unembedding layer replaced by a scalar output head, is then trained with a pairwise comparison loss over ranked completions, where the reward gap between preferred and dispreferred outputs represents the log odds a human would prefer the former. The PPO fine-tuning stage is the third step, further tuning the SFT model with reinforcement learning to maximize the reward model's score. This whole procedure is what reinforcement learning from human feedback denotes in this paper: a learned model of human preference used as a reward signal for reinforcement learning, applied to open-ended instruction following rather than a fixed task."
+    },
+    {
+      "id": "ppo-optimization-mechanics",
+      "name": "The mechanics that make PPO fine-tuning work",
+      "members": [
+        "k-choose-2-batching",
+        "ppo-model",
+        "ppo-ptx",
+        "kl-penalty",
+        "value-function",
+        "bandit-environment",
+        "generalized-advantage-estimation"
+      ],
+      "narrative": "Beyond the high-level three-step story, InstructGPT's PPO stage depends on a specific set of engineering choices, and this theme collects them. The bandit environment formulation treats each fine-tuning episode as a single prompt-response-reward exchange rather than a multi-step interaction. The value function, a critic network initialized from the trained reward model's own weights, and generalized advantage estimation, applied here without discounting, together supply the advantage signal PPO needs. K-choose-2 batching is a specific reward-model training trick that places all pairwise comparisons from one ranked set of outputs into a single batch element, avoiding the overfitting that treating correlated comparisons as independent shuffled data would cause. PPO without pretraining mix is the ablation variant that maximizes reward-model score plus a KL penalty alone, while PPO-ptx mixes in gradients from the pretraining language-modeling loss to counteract regressions on public NLP tasks, and the KL penalty itself, subtracted per generated token, keeps the policy from drifting too far from the SFT model it started from. These are the load-bearing technical details, not the narrative, of how RLHF was actually made to work."
+    },
+    {
+      "id": "human-feedback-data-infrastructure",
+      "name": "Building the human side of the RLHF pipeline",
+      "members": [
+        "sft-dataset",
+        "rm-dataset",
+        "ppo-dataset",
+        "api-prompt-distribution",
+        "labeler-screening-process",
+        "labeling-interface",
+        "labeler-metadata-taxonomy",
+        "held-out-labeler-generalization",
+        "inter-annotator-agreement"
+      ],
+      "narrative": "RLHF is often described algorithmically, but it depends on an entire human-data infrastructure that this theme makes visible. The API prompt distribution, text submitted by real users to an earlier InstructGPT model, deduplicated and filtered, supplies the raw prompts behind the SFT dataset of roughly 13,000 demonstrations, the RM dataset of roughly 33,000 ranked comparison sets, and the PPO dataset of roughly 31,000 unlabeled rollout prompts. None of this data exists without the roughly 40 contractors selected via a four-criterion labeler screening process, who record their judgments through a purpose-built web labeling interface using a fixed labeler metadata annotation taxonomy covering failures like hallucination or denigration of a protected class. Two further concepts test whether this whole human pipeline is trustworthy: inter-labeler agreement rate measures whether independent labelers agree with each other at all, and the held-out labeler generalization test checks whether models trained on one group of labelers' preferences hold up for a separate group who contributed no training data."
+    },
+    {
+      "id": "rlhf-failure-modes",
+      "name": "Where RLHF alignment still falls short",
+      "members": [
+        "hallucination",
+        "excessive-hedging",
+        "false-premise-failure",
+        "alignment-tax",
+        "reward-overoptimization"
+      ],
+      "narrative": "Even where InstructGPT improves on aggregate human-preference metrics, the paper documents specific ways its alignment remains incomplete, and this theme collects them. Hallucination names the tendency to state information not present in or supported by the input on closed-domain tasks such as summarization. Excessive hedging describes long, noncommittal answers listing multiple possibilities to questions that have a fairly clear single answer. False-premise failure occurs when the model accepts a false premise embedded in an instruction as true rather than correcting it. Reward-model over-optimization is the more general mechanism behind several of these: an RL policy exploiting imperfections in a learned reward model to produce outputs that score well without being genuinely preferred. Alignment tax names the cost of this whole endeavor in a different currency, the measurable regressions on public NLP benchmarks that RLHF fine-tuning introduces as a side effect of steering the model toward instruction-following and human preference. Together these concepts qualify the paper's headline result: RLHF works, but not without residue."
+    },
+    {
+      "id": "quality-measurement-methods",
+      "name": "Automatic overlap scores versus human and preference judgments",
+      "members": [
+        "rouge-l",
+        "bleu",
+        "f1-score",
+        "win-rate",
+        "likert-quality-rating",
+        "elo-score",
+        "absolute-harmfulness-score",
+        "inter-annotator-agreement"
+      ],
+      "narrative": "Both InstructGPT and Constitutional AI need to say, quantitatively, whether one model's output is better than another's, and this theme gathers the two families of measurement the corpus uses to do that. Automatic overlap metrics compare generated text against a reference: ROUGE-L for summarization, BLEU for translation, and F1 score for span-overlap question answering, all cheap to compute but blind to whether an answer is actually preferred. Judgment-based metrics instead ask an evaluator to compare or rate outputs directly: InstructGPT's win rate reports how often labelers prefer one model's output over a fixed baseline, and its Likert quality rating scores a single output on a 1-7 scale; Constitutional AI's Elo score performs the analogous role from crowdworker pairwise comparisons, while its absolute harmfulness score rates a single conversation on a 0-4 scale via a model trained on crowdworker ratings. Inter-labeler agreement rate underlies all of the judgment-based measures, since a preference metric is only as trustworthy as the consistency of the humans producing it."
+    },
+    {
+      "id": "language-understanding-benchmarks",
+      "name": "The public NLP benchmark suite used to catch regressions",
+      "members": [
+        "drop",
+        "squadv2",
+        "hellaswag",
+        "quac",
+        "sst",
+        "rte",
+        "wsc",
+        "superglue"
+      ],
+      "narrative": "To measure the alignment tax RLHF imposes on general language ability, InstructGPT runs its models against a battery of standard academic understanding benchmarks it did not design. DROP tests discrete reasoning such as counting and sorting over paragraphs; SQuAD v2 adds unanswerable questions to reading comprehension; QuAC evaluates conversational question answering; HellaSwag requires selecting the most plausible continuation of a scenario; SST is a binary sentiment classifier; and RTE and WSC, both drawn from the SuperGLUE suite for general-purpose language understanding, test textual entailment and pronoun coreference resolution respectively. None of these benchmarks were built with instruction-following or human preference in mind; they exist to test comprehension and inference competence in the abstract. Their role in this corpus is specifically evaluative: a drop in performance on any of them, relative to plain GPT-3, is evidence that RLHF fine-tuning traded away some general capability for its gains in instruction-following, which is exactly the tradeoff the alignment tax names."
+    },
+    {
+      "id": "generation-benchmarks-translation-summarization",
+      "name": "Testing generative capability: translation and summarization benchmarks",
+      "members": [
+        "wmt15-fr-en",
+        "cnn-dm-summarization",
+        "reddit-tldr-summarization"
+      ],
+      "narrative": "Where the language-understanding benchmarks test comprehension, this smaller group tests generation directly, and each carries its own scoring convention. WMT 2015 French-to-English translation evaluates output with BLEU. CNN/Daily Mail summarization and Reddit TL;DR summarization, prompted with a TL;DR: format, are both scored with ROUGE-L against reference summaries. All three are included in InstructGPT's automatic evaluation suite for the same reason as the understanding benchmarks: to check whether RLHF fine-tuning, optimized entirely around human preference on API prompts, degrades performance on tasks with an established public track record and an existing metric. That these tasks require actually producing fluent, on-topic text, not merely selecting among options, makes them a stricter test of whether instruction-tuned capability transfers, and the paper reports measurable regressions on exactly this group as some of its clearest evidence for an alignment tax."
+    },
+    {
+      "id": "safety-bias-truthfulness-benchmarks",
+      "name": "Operationalizing truthfulness and social bias into measurable benchmarks",
+      "members": [
+        "truthfulqa",
+        "realtoxicityprompts",
+        "winogender",
+        "crows-pairs",
+        "perspective-api",
+        "bias-entropy-metric"
+      ],
+      "narrative": "Alongside general capability, InstructGPT is evaluated on a distinct set of benchmarks purpose-built to catch harms that overlap-based capability metrics would miss. TruthfulQA tests whether a model gives truthful, informative answers rather than mimicking common human falsehoods. RealToxicityPrompts supplies sentence-starts with varying toxicity to test whether a model continues text toxically, scored automatically via the third-party Perspective API and cross-checked against human toxicity ratings. Winogender and CrowS-Pairs both probe social bias through paired sentences, one via coreference-style completions, the other via stereotype-versus-anti-stereotype pairs, and both are scored with the paper's own entropy-based bias metric, which converts a model's relative preference between the two sentences in a pair into a binary distribution and reports its entropy, so a lower score indicates a stronger, more biased preference. This theme's claim is that truthfulness and bias needed dedicated instruments; the general NLP benchmark suite could not have caught either."
+    },
+    {
+      "id": "instruction-following-objective",
+      "name": "Instruction following as an alternative to next-token prediction",
+      "members": [
+        "flan",
+        "t0",
+        "gpt3-prompted-baseline",
+        "instruction-following",
+        "language-modeling-objective"
+      ],
+      "narrative": "InstructGPT argues that the standard language-modeling objective, predicting the next token on internet text, is misaligned with what users actually want, which is a model that helpfully and safely follows instructions across an open-ended range of tasks. This theme gathers the concepts that frame that argument. FLAN and T0 are two prior cross-task instruction-tuning baselines, each a compilation of NLP tasks reformatted with natural-language instructions and used to fine-tune a 175B GPT-3 model for comparison. The GPT-3 prompted baseline instead tries to coax instruction-following behavior out of an unmodified model with a hand-crafted few-shot prefix. Instruction following itself is defined and measured here directly, via RLHF trained on real user-submitted prompts, in explicit contrast to both the fixed-compilation approach of FLAN and T0 and the prompting-only approach of the GPT-3 baseline. The claim uniting these concepts is methodological: instruction-following is not one task among many but a different training objective from next-token prediction, argued for by comparison against its nearest rivals."
+    },
+    {
+      "id": "hhh-framework-and-benchmark",
+      "name": "Helpful, honest, harmless: a shared definition of alignment",
+      "members": [
+        "hhh-framework",
+        "hhh-eval-benchmark",
+        "big-bench",
+        "model-calibration"
+      ],
+      "narrative": "The helpful-honest-harmless framework, adapted from Askell et al., supplies both InstructGPT and Constitutional AI with a shared vocabulary for what an aligned model is: one that follows user intent, does not fabricate or mislead, and avoids causing harm. This theme covers that definition and its empirical instrument. The HHH evaluation set operationalizes the framework as a benchmark of binary response-comparison questions testing whether a model can identify the more helpful, honest, and harmless of two replies; it originates as 221 comparisons hosted within BIG-Bench, the large collaborative benchmark suite, and Constitutional AI extends it with 217 additional, harder harmlessness-focused comparisons. Model calibration, the established property that language models' probabilities on multiple-choice questions are reasonably well-behaved, is the quiet enabling assumption underneath this whole apparatus, since Constitutional AI relies on it to treat a feedback model's raw output probabilities as usable soft preference labels rather than noise. This is a small but genuinely load-bearing cross-paper theme: a definition coined once, reused twice, and measured once."
+    },
+    {
+      "id": "helpfulness-harmlessness-tradeoff",
+      "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it",
+      "members": [
+        "helpfulness-harmlessness-tension",
+        "evasiveness",
+        "pareto-improvement",
+        "helpful-rlhf-model",
+        "hh-rlhf-model",
+        "rl-cai",
+        "elo-score"
+      ],
+      "narrative": "Constitutional AI's central empirical argument concerns a tradeoff documented throughout the paper: increasing a model's willingness to help tends to increase its potential for harm, while increasing harmlessness training tends to make a model more evasive, retreating into canned refusals rather than engaging substantively. Two baseline RLHF policies stand on either side of this tension for comparison, the helpful RLHF model, trained only on helpfulness comparisons, and the HH RLHF model, trained on both helpfulness and harmlessness comparisons. RL-CAI is measured against both using the Elo score computed from crowdworker pairwise comparisons, tracking relative helpfulness and harmlessness across training. The paper's headline finding, pareto improvement, is that Constitutional RL shifts the entire helpfulness-harmlessness frontier outward rather than simply moving along the standard RLHF tradeoff curve, meaning CAI's harmlessness gains do not come at the usual cost in evasive, unhelpful behavior. This theme's claim is that CAI should be read as a response to a specific documented tradeoff, not just as a new training method in the abstract."
+    },
+    {
+      "id": "cai-core-method",
+      "name": "Constitutional AI's method: principles, critique, and revision",
+      "members": [
+        "constitutional-ai",
+        "constitution",
+        "sl-cai-principles",
+        "rl-cai-principles",
+        "critique-and-revision",
+        "sl-cai",
+        "sl-cai-few-shot-examples",
+        "direct-revision-ablation",
+        "ensembling-principles"
+      ],
+      "narrative": "Constitutional AI trains a harmless assistant using only a small set of written principles as the source of human guidance, rather than human harmfulness labels, and this theme covers the mechanics of that method's supervised stage. The constitution is the set of natural-language principles steering the whole pipeline, split in practice into two specific lists: the 16 critique/revision instruction pairs used in the supervised stage, and a separate 16 multiple-choice comparison principles used later by the feedback model. Critique and revision is the pipeline itself, a model critiques its own harmful response according to a sampled principle, then revises the response to remove the identified harm, producing SL-CAI, the fine-tuned model that results and that seeds the later RL stage. Hand-written few-shot examples prevent the model from confusing the critique and revision roles it must switch between. Principle ensembling, sampling a different principle per comparison rather than reusing one throughout, and the direct-revision ablation, which tests whether the critique step is even necessary, both validate specific design choices within this pipeline rather than proposing new ones."
+    },
+    {
+      "id": "feedback-model-engineering",
+      "name": "Engineering a language model into a usable preference labeler",
+      "members": [
+        "multiple-choice-evaluation-format",
+        "label-clamping",
+        "chain-of-thought-prompting",
+        "lets-think-step-by-step-prompt",
+        "rl-cai-cot-prompts",
+        "model-calibration",
+        "ensembling-principles",
+        "feedback-model"
+      ],
+      "narrative": "RL-CAI's reinforcement learning stage needs preference labels, and this theme covers the specific prompting and calibration engineering that lets a plain feedback model supply them without human input. The multiple-choice comparison format presents a conversation, a constitutional principle, and two labeled candidate responses, from which the feedback model's answer log-probabilities become the preference label. Chain-of-thought prompting, including the specific let's think step-by-step zero-shot trigger and a set of hand-written chain-of-thought few-shot examples, elicits step-by-step reasoning before the model commits to that judgment, making it more accurate and more transparent. Because chain-of-thought reasoning tends to push those probabilities toward overconfidence, label clamping compares raw soft labels, hard 0/1 labels, and probabilities clamped to a fixed range as three ways of constructing usable training targets, relying on the underlying property of model calibration to make any of this meaningful. Principle ensembling, sampling a different principle per label, further diversifies what the feedback model is asked to judge. Each piece here solves a narrow engineering problem in the same larger project: making an AI's judgment usable as training signal."
+    },
+    {
+      "id": "red-teaming-and-harm-data",
+      "name": "Sourcing and classifying harmful prompts",
+      "members": [
+        "red-teaming",
+        "automated-red-teaming",
+        "classifying-harmful-behavior-eval",
+        "palms"
+      ],
+      "narrative": "Constitutional AI's harmful training data comes from a specific, human-driven process, and this theme covers where it originates and how it is checked. Red teaming has crowdworkers conduct adversarial conversations designed to bait the assistant into harmful outputs, and this is the source of harmful prompts used in training both SL-CAI and RL-CAI. Automated red teaming is flagged as a related future direction, in which language models generate the red-team prompts themselves, and the paper notes that CAI's reduced evasiveness should make scaling this approach easier. Two multiple-choice evaluations, grouped here as harmful-behavior identification and classification, test whether a model can replicate crowdworker harm judgments, distinguishing harmful from ethical assistant behavior and sorting harmful conversations into one of nine categories, built directly from red-teaming transcripts. PALMS, a prior values-targeted dataset of sensitive questions, supplies an independent fixed prompt set used to qualitatively compare HH RLHF and RL-CAI responses. Together these concepts describe the harm-data supply chain underneath Constitutional AI's harmlessness claims."
+    },
+    {
+      "id": "related-dialogue-agents",
+      "name": "Prior dialogue-agent systems Constitutional AI positions itself against",
+      "members": [
+        "lamda",
+        "sparrow",
+        "context-distillation"
+      ],
+      "narrative": "Constitutional AI situates its results against a small set of prior aligned-dialogue-agent work, and this theme names the comparison points. LaMDA, Google's dialogue language model, is cited as related work and supplies comparison prompts and reference responses used in the paper's appendix. Sparrow, DeepMind's dialogue agent, is cited specifically because its decomposition of harmlessness into targeted rules parallels Constitutional AI's own use of a written constitution of principles, making it the closest prior-art analogue to the paper's central method rather than a mere baseline. Context distillation, a prior technique for compressing a lengthy prompt's behavior into model weights, is noted as having been used for RLHF models in earlier work but explicitly not used for the RLHF models trained directly in this paper, marking a methodological choice by contrast. Though this is a small group, its members share a genuine claim: each is a specific point of comparison the paper uses to locate its own contribution relative to contemporaneous alignment work."
+    }
+  ]
+}

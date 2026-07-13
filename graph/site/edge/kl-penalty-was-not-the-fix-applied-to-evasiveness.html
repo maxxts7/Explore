@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Per-token KL penalty from the SFT model — was not the fix applied to → Evasiveness — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-edge">edge</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Per-token KL penalty from the SFT model — was not the fix applied to → Evasiveness</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> &middot; explored within the theme <a href="../theme/goodhart-across-corpus.html">Goodhart&#x27;s law across three papers: when the proxy becomes the target</a></p>
+<section class="prose-section"><p>Both concepts are engineered countermeasures to a Goodhart-style failure in RLHF, but they intervene at opposite ends of the training pipeline, and comparing them shows that Goodharting in RLHF has at least two independent entry points. The KL penalty acts downstream, inside the optimization step: it does not touch the reward model or the human labels that produced it, it simply constrains how far the PPO policy is allowed to drift from the SFT model while chasing RM score (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">§"3.5 Models", p. 9</a>). Evasiveness was not fixed that way. Its cause was traced upstream, to the labeling instructions themselves: earlier crowdworkers were told only to pick the more harmless of two responses, which "likely produced a significant amount of data favoring evasiveness," so Constitutional AI's fix was to change what workers were asked to prefer, choosing the more nuanced, transparent response over the evasive one whenever both were similarly harmless (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">§"4.4 Harmlessness vs. Evasiveness", p. 13</a>). One bug was patched by constraining the optimizer; the other, by correcting the training signal before optimization ever saw it.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a> and <a href="../concept/evasiveness.html">Evasiveness</a></p></section>
+<section class="nav-block"><h2>Appears in tissue themes</h2><ul><li><a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a></li><li><a href="../tissue/fix-lives-upstream-in-the-data.html">When a bug is traced to the labels, the repair goes to the labels too</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;A Harmless but Non-Evasive (Still Helpful) Assistant&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;4.4 Harmlessness vs. Evasiveness&rdquo;, p. 13</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">&sect;&ldquo;E.7 Optimal KL reward coefficient&rdquo;, p. 56</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

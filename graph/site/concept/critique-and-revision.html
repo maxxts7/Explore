@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Critique and Revision — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Critique and Revision</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The supervised-stage pipeline in which a model critiques its own harmful response according to a sampled constitutional principle and then revises the response to remove the identified harm.</p>
+<section class="prose-section">
+<h2>The supervised-stage pipeline</h2>
+<p>Critique and revision is the mechanism that produces harmlessness training data without any human harmfulness labels. Starting from a harmful response sampled from a <a href="../concept/helpful-rlhf-model.html">Helpful RLHF Model</a>, the model is asked to critique its own output against a randomly sampled principle from <a href="../concept/constitution.html">Constitution (set of principles)</a>, then to revise the response in light of that critique. The paper's own example: a request to help hack a neighbor's wifi, an initial response, a critique ("hacking into someone else's wifi is an invasion of their privacy and is possibly illegal"), and a revision that removes the harmful advice while explaining why (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=7" target="_blank" rel="noopener">§"3.1 Method", p. 7</a>). Because the revised prompt-response pair is formatted identically to the original, the pipeline can be applied repeatedly, producing a chain of progressively less harmful revisions — the paper reports the first revision "almost always removed most aspects of harmfulness," with later revisions improving results "less obvious[ly] by inspection" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">§"3.1 Method", p. 8</a>). Every revision from every step, not just the final one, becomes training data: the pipeline was run on 182,831 red-team prompts, four critique-revision pairs each, and the output finetunes a pretrained model into <a href="../concept/sl-cai.html">SL-CAI (Supervised-Learning Constitutional AI model)</a> via the <a href="../edge/critique-and-revision-supplies-the-finetuning-data-for-sl-cai.html">Critique and Revision — supplies the finetuning data for → SL-CAI (Supervised-Learning Constitutional AI model)</a> edge.</p>
+</section>
+<section class="prose-section">
+<h2>Serving the whole method, and two design checks</h2>
+<p>As the supervised half of <a href="../concept/constitutional-ai.html">Constitutional AI (CAI)</a>, critique-and-revision exists to get the model "on-distribution" cheaply, reducing "the need for exploration and the total length of training during the second RL phase" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">§"1.2 The Constitutional AI Approach", p. 5</a>) — without it, <a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a> would have to explore harmlessness behavior from a purely helpful starting point. Two children probe the design. <a href="../concept/sl-cai-few-shot-examples.html">Few-shot Prompts for SL-CAI (Appendix E.1)</a> fixes a concrete bug: asking one model to play critic then reviser in the same context caused it to occasionally confuse the two roles, and hand-written worked examples resolve this. <a href="../concept/direct-revision-ablation.html">Direct Revision (critique-free ablation)</a> asks whether the critique step earns its keep at all, finding a real but shrinking benefit as model scale grows, yet the paper keeps critiques anyway for the transparency a written rationale provides. The paper also reports, as an early qualitative signal that would later motivate <a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a>'s redesign of the <a href="../concept/rl-cai-principles.html">Principles for RL-CAI (Appendix C.2)</a>, that revised responses were "rarely evasive," in contrast to prior human-feedback-trained harmlessness models (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">§"3.1 Method", p. 8</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/constitutional-ai.html">Constitutional AI (CAI)</a></p></section>
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/direct-revision-ablation.html">Direct Revision (critique-free ablation)</a></li><li><a href="../concept/sl-cai-few-shot-examples.html">Few-shot Prompts for SL-CAI (Appendix E.1)</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Direct Revision (critique-free ablation) — <a href="../edge/direct-revision-ablation-tests-the-necessity-of-critique-in-critique-and-revision.html">tests the necessity of critique in</a> → <strong>Critique and Revision</strong></li><li>Few-shot Prompts for SL-CAI (Appendix E.1) — <a href="../edge/sl-cai-few-shot-examples-prevents-role-confusion-in-critique-and-revision.html">prevents role confusion in</a> → <strong>Critique and Revision</strong></li><li><strong>Critique and Revision</strong> — <a href="../edge/critique-and-revision-supplies-the-finetuning-data-for-sl-cai.html">supplies the finetuning data for</a> → SL-CAI (Supervised-Learning Constitutional AI model)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/cai-core-method.html">Constitutional AI&#x27;s method: principles, critique, and revision</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3 Constitutional AI: Critiques, Revisions, and Supervised Learning&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3.1 Method&rdquo;, p. 7</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

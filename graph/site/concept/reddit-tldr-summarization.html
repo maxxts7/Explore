@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reddit TL;DR summarization — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reddit TL;DR summarization</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A summarization benchmark (Volske et al., 2017) of Reddit posts with author-written TL;DR summaries, included in the automatic evaluation suite.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>Reddit TL;DR summarization (Volske et al., 2017) is a summarization benchmark of Reddit posts paired with author-written TL;DR summaries, inherited into InstructGPT's automatic evaluation suite within <a href="../theme/generation-benchmarks-translation-summarization.html">Testing generative capability: translation and summarization benchmarks</a>, scored via <a href="../concept/rouge-l.html">ROUGE-L</a> against the reference summaries (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=44" target="_blank" rel="noopener">§"D Automatic evaluation details", p. 44</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=50" target="_blank" rel="noopener">§"TLDR Summarization", p. 50</a>). It predates InstructGPT and, notably, is the exact domain in which Stiennon et al. (2020) originally developed the RLHF summarization method InstructGPT builds on.</p>
+</section>
+<section class="prose-section">
+<h2>What it revealed, and a reporting problem it shares</h2>
+<p>Because the API prompt distribution driving RLHF is over 96% English and summarization is a named API use case whose TL;DR-style prompt format mirrors real user traffic — listed at 4.2% of prompts in Table 1 — Reddit TL;DR sits close to the RLHF fine-tuning distribution in a way few other benchmarks do. This proximity produces a striking asymmetry: <a href="../edge/wmt15-fr-en-bears-the-alignment-tax-that-spares-reddit-tldr-summarization.html">WMT15 fr-en bears the alignment tax that spares this benchmark</a>. TL;DR ROUGE-L actually rises above the GPT-3 baseline under PPO training, from 0.196 to 0.227, even as French-to-English translation collapses under the same training regime (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=15" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 15</a>; Table 14, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">p. 56</a>). The lesson is that generative capability transferred where the benchmark resembled the RLHF tuning data and was spent where it did not — task difficulty alone does not predict which benchmarks the <a href="../concept/alignment-tax.html">Alignment tax</a> hits. Separately, this benchmark is the target of a data-integrity problem rather than a measurement one: <a href="../edge/cnn-dm-summarization-duplicates-the-reported-results-of-reddit-tldr-summarization.html">CNN/DM summarization duplicates its reported results</a>, with the two benchmarks' rows in Table 14 numerically identical across all twelve models to three decimal places, almost certainly a copy-paste error rather than two genuinely independent measurements (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">§"E.1 Performance on public NLP datasets", p. 56</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>CNN/Daily Mail summarization — <a href="../edge/cnn-dm-summarization-duplicates-the-reported-results-of-reddit-tldr-summarization.html">duplicates the reported results of</a> → <strong>Reddit TL;DR summarization</strong></li><li>WMT 2015 French-to-English translation — <a href="../edge/wmt15-fr-en-bears-the-alignment-tax-that-spares-reddit-tldr-summarization.html">bears the alignment tax that spares</a> → <strong>Reddit TL;DR summarization</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/generation-benchmarks-translation-summarization.html">Testing generative capability: translation and summarization benchmarks</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=44" target="_blank" rel="noopener">&sect;&ldquo;D Automatic evaluation details&rdquo;, p. 44</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=50" target="_blank" rel="noopener">&sect;&ldquo;TLDR Summarization&rdquo;, p. 50</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

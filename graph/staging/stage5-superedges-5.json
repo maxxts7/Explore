@@ -1,0 +1,74 @@
+{
+  "superedges": [
+    {
+      "id": "generation-benchmarks-resist-mitigation-alongside-language-understanding-benchmarks",
+      "type": "resists-mitigation-alongside",
+      "source": "generation-benchmarks-translation-summarization",
+      "target": "language-understanding-benchmarks",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "supertheme": "measuring-instructgpt-quality-and-safety",
+      "prose": "Both groups catch the same alignment tax, but they do not recover uniformly once InstructGPT tries to fix it, and the mitigation experiment cuts across the two themes rather than respecting the boundary between them. Adding pretraining updates to PPO fine-tuning (PPO-ptx) reverses the regression on most of the public NLP suite and even pushes HellaSwag past plain GPT-3. It does not fix everything: after this mitigation, the PPO-ptx model still lags GPT-3 on DROP and SQuAD v2, from language-understanding-benchmarks' comprehension suite, and on the WMT 2015 French-to-English translation task from this theme's generation suite, with the paper conceding more work is needed on all three (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The paper's own grouping of its unresolved cases is therefore by resistance to the fix, not by task type: a discrete-reasoning benchmark, an unanswerable-question benchmark, and a translation benchmark turn out to share one failure mode while the rest of both families recover."
+    },
+    {
+      "id": "safety-bias-truthfulness-benchmarks-falls-outside-the-taxonomy-of-quality-measurement-methods",
+      "type": "falls-outside-the-taxonomy-of",
+      "source": "safety-bias-truthfulness-benchmarks",
+      "target": "quality-measurement-methods",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "supertheme": "measuring-instructgpt-quality-and-safety",
+      "prose": "Quality-measurement-methods sorts every instrument in the corpus into two families: automatic overlap-against-a-reference, and human judgment. This theme's safety-specific instruments fit neither bin cleanly. RealToxicityPrompts is scored primarily by the Perspective API, a third-party automated classifier that compares against no reference text and is not itself a human judgment, though InstructGPT separately sends the same outputs to labelers to confirm the two track together (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). The entropy-based bias metric used for Winogender and CrowS-Pairs goes further still: it is computed purely from the model's own per-choice token probabilities, with no reference completion and no rater in the loop at evaluation time at all (instructgpt, §\"D.1 Toxicity and bias evaluation details\", p. 44). Operationalizing safety therefore did not just extend quality-measurement-methods' overlap-versus-judgment taxonomy; it required stepping outside it, to a third-party classifier and to a model's raw distribution over its own outputs."
+    },
+    {
+      "id": "quality-measurement-methods-instruments-only-the-extractive-half-of-language-understanding-benchmarks",
+      "type": "instruments-only-the-extractive-half-of",
+      "source": "quality-measurement-methods",
+      "target": "language-understanding-benchmarks",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "supertheme": "measuring-instructgpt-quality-and-safety",
+      "prose": "Only three of language-understanding-benchmarks' eight tasks are actually scored by an instrument this theme names. DROP, QuAC, and SQuAD v2 are free-response span-extraction tasks, each scored with quality-measurement-methods' F1 score against a target completion. HellaSwag, SST, RTE, and WSC are instead framed as multiple-choice completions and decided by a mechanism neither theme catalogues: \"multiple choice answers are picked according to which one has the lowest average per-token log probability\" (instructgpt, §\"D Automatic evaluation details\", p. 44), a comparison of the model's own output probabilities against itself, with no reference text and no overlap score computed. The overlap-metric family this theme supplies therefore instruments only the free-response half of the public benchmark suite; the multiple-choice half is settled by a probability comparison closer in kind to the entropy-based bias metric than to anything quality-measurement-methods defines."
+    },
+    {
+      "id": "instruction-following-objective-adopts-the-vocabulary-of-hhh-framework-and-benchmark",
+      "type": "adopts-the-vocabulary-of",
+      "source": "instruction-following-objective",
+      "target": "hhh-framework-and-benchmark",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "supertheme": "defining-the-alignment-target",
+      "prose": "Instruction-following-objective states its target as a single phrase, following instructions helpfully and safely, but InstructGPT immediately glosses that phrase using this theme's vocabulary rather than defining it from scratch: alignment \"encompasses both explicit intentions such as following instructions and implicit intentions such as staying truthful, and not being biased, toxic, or otherwise harmful,\" and, \"using the language of Askell et al. (2021),\" the model should be helpful, honest, and harmless (instructgpt, §\"1 Introduction\", p. 2). So the founding objective was never literal command compliance that HHH later got layered onto; it was defined as the HHH triad from its first statement, with instruction-following covering only the explicit, helpful half of a target whose implicit half, honesty and harmlessness, this theme's framework supplies the words for."
+    },
+    {
+      "id": "hhh-framework-and-benchmark-narrows-to-two-of-its-three-terms-in-helpfulness-harmlessness-tradeoff",
+      "type": "narrows-to-two-of-its-three-terms-in",
+      "source": "hhh-framework-and-benchmark",
+      "target": "helpfulness-harmlessness-tradeoff",
+      "hindsight": false,
+      "groundedIn": "constitutional-ai",
+      "supertheme": "defining-the-alignment-target",
+      "prose": "HHH names three co-equal criteria as what an aligned model must be, and Constitutional AI opens by committing to train systems that \"remain helpful, honest, and harmless\" together (constitutional-ai, §\"1 Introduction\", p. 2). But when that definition becomes an empirical research question, only two of the three terms enter the documented tension: \"helpfulness tends to increase harmfulness, since models are willing to obey pernicious requests, and conversely models trained to be harmless tend to be more evasive and generally less helpful\" (constitutional-ai, §\"1.1 Motivations\", p. 2). Honesty drops out of the tradeoff entirely, neither traded against helpfulness nor against harmlessness anywhere in this theme's account. The tension this corpus can actually measure and report on is a two-dimensional slice of the three-part target the framework defines, not the full HHH space."
+    },
+    {
+      "id": "quality-measurement-methods-supplies-the-frontier-tracking-instrument-for-helpfulness-harmlessness-tradeoff",
+      "type": "supplies-the-frontier-tracking-instrument-for",
+      "source": "quality-measurement-methods",
+      "target": "helpfulness-harmlessness-tradeoff",
+      "hindsight": true,
+      "groundedIn": "constitutional-ai",
+      "supertheme": "defining-the-alignment-target",
+      "prose": "Quality-measurement-methods' judgment-based family starts from a single-baseline design: InstructGPT's win rate reports preference against one fixed 175B SFT model. That design cannot track the frontier this theme documents, because Constitutional AI compares 24 model snapshots across multiple training runs, with over 18,000 helpfulness and harmlessness comparisons collected across them, and no one snapshot is a natural anchor for the whole set (constitutional-ai, §\"3.3 Main Results\", p. 8). Elo score is this theme's answer: it places every snapshot on one shared interval scale, pinning SL-CAI's initial snapshot to zero, so harmlessness can be plotted as a curve against RL training steps rather than reported as one number (constitutional-ai, §\"4.3 Main Results\", p. 12). Because an Elo ranking has no absolute zero and drifts with elicitation instructions, the same theme adds a second, independently anchored check, the absolute harmfulness score, so the tradeoff's direction does not rest on one metric's artifacts."
+    },
+    {
+      "id": "quality-measurement-methods-adjudicates-the-baseline-comparison-in-instruction-following-objective",
+      "type": "adjudicates-the-baseline-comparison-in",
+      "source": "quality-measurement-methods",
+      "target": "instruction-following-objective",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "supertheme": "defining-the-alignment-target",
+      "prose": "Instruction-following-objective stakes its founding argument on beating FLAN and T0, the two prior cross-task instruction-tuning baselines, but the theme itself does not say how that contest was decided. The verdict comes from this theme's win rate: in a head-to-head comparison, 175B InstructGPT outputs were preferred over FLAN 78% of the time and over T0 79% of the time (instructgpt, §\"4.1 Results on the API distribution\", p. 13). The paper's diagnosis of why is itself measurement-driven: public instruction-tuning compilations emphasize tasks that are easy to score automatically, such as classification and QA, which make up only about 18% of real API traffic, while open-ended generation and brainstorming, poorly represented in FLAN and T0, make up 57%. The claim that a genuinely different objective beats fixed-compilation tuning is a claim quality-measurement-methods' win rate was built to test, not one instruction-following-objective could settle on its own terms."
+    }
+  ]
+}

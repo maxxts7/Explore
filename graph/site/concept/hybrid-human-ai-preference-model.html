@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Hybrid Human/AI Preference Model — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Hybrid Human/AI Preference Model</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A preference model trained on a mixture of human-labeled helpfulness comparisons and AI-labeled harmlessness comparisons.</p>
+<section class="prose-section">
+<h2>What it is</h2>
+<p>The hybrid human/AI preference model is architecturally an ordinary <a href="../concept/reward-model.html">reward model</a> — a scalar-output model trained with a pairwise ranking loss — with nothing changed about its structure or training procedure. Given a prompt $x$ and a preferred/dispreferred response pair $(y_w, y_l)$, it is trained with the standard Bradley-Terry preference loss:
+$$\mathcal{L}(\theta) = -\mathbb{E}_{(x,y_w,y_l)\sim D}\left[\log \sigma\big(r_\theta(x,y_w) - r_\theta(x,y_l)\big)\right].$$
+The innovation is entirely in what $D$ is built from: 135,296 human-labeled helpfulness comparisons stitched together with 182,831 harmlessness comparisons generated entirely by the <a href="../concept/feedback-model.html">feedback model</a>, one per SL-CAI prompt (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=11" target="_blank" rel="noopener">§"4.2 Datasets and Training", p. 11</a>; introduced at <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">§"1.2 The Constitutional AI Approach", p. 5</a>). Once trained, the resulting model cannot itself distinguish which half of its training data any given judgment traces back to; helpfulness and harmlessness are fused into a single scalar reward.</p>
+</section>
+<section class="prose-section">
+<h2>Its place in the scalable-oversight lineage</h2>
+<p>This concept is the specific mechanism by which Constitutional AI keeps helpfulness supervision human while making harmlessness supervision synthetic, and it is best read as the point where two separate supervision lineages converge: the human-labeled comparisons descend from ordinary RLHF, while the AI-labeled half is what the <a href="../concept/feedback-model.html">feedback model</a> supplies as its output (<a href="../edge/feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model.html">Feedback Model — supplies the harmlessness half of → Hybrid Human/AI Preference Model</a>). It is a direct descendant, in spirit, of <a href="../concept/reward-model.html">Reward model (RM)</a> generally, inheriting its architecture and loss wholesale while changing only where the training signal originates. The concept sits inside the <a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a> theme, which traces Concrete Problems' 2016 naming of scalable oversight as an open problem through InstructGPT's reward model to this hybrid design, and inside the <a href="../tissue/assembly-line-pipeline.html">Each pipeline stage&#x27;s output is the next stage&#x27;s engineered raw material</a> tissue theme, since it is the specific stage where two differently-provenanced comparison datasets are stitched into one training signal for the RL stage that follows.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/reward-model.html">Reward model (RM)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Feedback Model — <a href="../edge/feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model.html">supplies the harmlessness half of</a> → <strong>Hybrid Human/AI Preference Model</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;1.2 The Constitutional AI Approach&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

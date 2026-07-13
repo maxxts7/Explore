@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reinforcement learning from human feedback (RLHF) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reinforcement learning from human feedback (RLHF)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-refined">refined</span>; <a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.</p>
+<section class="prose-section">
+<h2>The technique, in general</h2>
+<p>Reinforcement learning from human feedback trains a policy using a reward signal derived not from a hand-specified function but from a model fit to human preference judgments, typically pairwise comparisons between two candidate outputs. The technique predates InstructGPT: Christiano et al. (2017) applied it to simulated robotic control and Atari games, and Ziegler et al. (2019) and Stiennon et al. (2020) extended it to fine-tuning language models, on stylistic continuation and text summarization respectively. InstructGPT's origin is therefore marked "refined" rather than "introduced": it takes an established technique and extends it, for the first time, to a broad, open-ended distribution of natural-language instructions spanning generation, question answering, brainstorming, and more, rather than one narrow, fixed domain (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=2" target="_blank" rel="noopener">§"1 Introduction", p. 2</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.1 High-level methodology", p. 6</a>).</p>
+</section>
+<section class="prose-section">
+<h2>The pipeline instantiation here</h2>
+<p>In this paper, RLHF names the whole three-step procedure gathered under the <a href="../theme/rlhf-three-step-pipeline.html">InstructGPT&#x27;s three-step training pipeline</a> theme: <a href="../concept/supervised-fine-tuning.html">Supervised fine-tuning (SFT)</a> on labeler demonstrations produces the <a href="../concept/sft-model.html">Supervised fine-tuned (SFT) model</a>; a <a href="../concept/reward-model.html">Reward model (RM)</a> is trained on labeler rankings to predict preferred outputs; and <a href="../concept/ppo-training.html">PPO fine-tuning stage (RLHF policy optimization)</a> then optimizes the SFT model against that learned reward. The <a href="../edge/reward-model-anchors-the-reward-signal-of-rlhf.html">Reward model (RM) — anchors the reward signal of → Reinforcement learning from human feedback (RLHF)</a> edge notes that the reward model's architecture is not incidental to this story, it is built by replacing the SFT model's unembedding layer with a scalar head, so it starts from the same weights as the policy it will later score, and its own weights in turn initialize the PPO <a href="../concept/value-function.html">PPO value function</a>.</p>
+</section>
+<section class="prose-section">
+<h2>Its place in a scalable-oversight lineage</h2>
+<p>Within the <a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a> theme, RLHF is presented as a scaled solution to the open problem Concrete Problems named in 2016: safe behavior requires evaluating an objective too costly to check on every example, and a learned reward model lets a cheap, dense proxy stand in for genuinely expensive human judgment across an entire training distribution. The <a href="../edge/rlhf-swaps-the-labeler-in-rlaif.html">Reinforcement learning from human feedback (RLHF) — swaps the labeler in → RL from AI Feedback (RLAIF)</a> edge traces this lineage one step further into Constitutional AI, whose RL from AI Feedback keeps "the remainder of the training pipeline...exactly the same as RLHF" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">§"4.1 Method", p. 10</a>) and changes only who answers the comparison question for harmlessness, an AI feedback model instead of a human labeler; RLHF is accordingly inherited by Constitutional AI as an established technique it extends and partially replaces (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">§"1 Introduction", p. 2</a>; <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=14" target="_blank" rel="noopener">§"5 Related Work", p. 14</a>). In the graph's hierarchy, <a href="../concept/helpful-rlhf-model.html">Helpful RLHF Model</a> and <a href="../concept/hh-rlhf-model.html">HH RLHF Model</a> are Constitutional AI's own applications of this technique, sitting as children of this concept outside the present paper's scope.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/helpful-rlhf-model.html">Helpful RLHF Model</a></li><li><a href="../concept/hh-rlhf-model.html">HH RLHF Model</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Reward model (RM) — <a href="../edge/reward-model-anchors-the-reward-signal-of-rlhf.html">anchors the reward signal of</a> → <strong>Reinforcement learning from human feedback (RLHF)</strong></li><li><strong>Reinforcement learning from human feedback (RLHF)</strong> — <a href="../edge/rlhf-swaps-the-labeler-in-rlaif.html">swaps the labeler in</a> → RL from AI Feedback (RLAIF)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a></li><li><a href="../theme/rlhf-three-step-pipeline.html">InstructGPT&#x27;s three-step training pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3.1 High-level methodology&rdquo;, p. 6</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;5 Related Work&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

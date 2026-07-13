@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Feedback Model — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Feedback Model</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An independent (typically pretrained) language model presented with a harmful prompt and a pair of responses that produces the multiple-choice harmlessness preference label used to construct the AI feedback dataset.</p>
+<section class="prose-section">
+<h2>An ordinary language model repurposed as a labeler</h2>
+<p>The feedback model is, in the paper's own words, "an independent model, typically a pretrained LM" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">§"4.1 Method", p. 10</a>) — nothing architecturally special. It is shown a harmful prompt, a pair of candidate responses, and a principle sampled from <a href="../concept/rl-cai-principles.html">Principles for RL-CAI (Appendix C.2)</a>, formatted as a <a href="../concept/multiple-choice-evaluation-format.html">Multiple-Choice Comparison Format</a> question, and the log-probability it assigns to each option becomes a soft preference label (<a href="../edge/multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model.html">Multiple-Choice Comparison Format — turns into a preference labeler → Feedback Model</a>). When chain-of-thought prompting is added, the paper swaps in a <a href="../concept/helpful-rlhf-model.html">Helpful RLHF Model</a> in place of the plain pretrained model, "which typically writes higher quality chain-of-thought" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=11" target="_blank" rel="noopener">§"4.1 Method", p. 11</a>) — so "the feedback model" names a role filled by different underlying models depending on whether reasoning is elicited.</p>
+</section>
+<section class="prose-section">
+<h2>Supplying half of a hybrid reward, robustly</h2>
+<p>As the mechanism at the center of <a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a>, the feedback model supplies the harmlessness half of the <a href="../concept/hybrid-human-ai-preference-model.html">Hybrid Human/AI Preference Model</a>, while human labels continue to supply the helpfulness half (<a href="../edge/feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model.html">Feedback Model — supplies the harmlessness half of → Hybrid Human/AI Preference Model</a>) — 182,831 AI-generated harmlessness comparisons mixed with 135,296 human helpfulness comparisons (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=11" target="_blank" rel="noopener">§"4.2 Datasets and Training", p. 11</a>). Its judgments are made more robust by <a href="../concept/ensembling-principles.html">Principle Ensembling</a>, sampling a different principle per label rather than reusing one, which the paper reports gives "notably more robust PM behavior" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=11" target="_blank" rel="noopener">§"4.1 Method", p. 11</a>). The feedback model's usability rests on <a href="../concept/model-calibration.html">Model Calibration (well-calibrated multiple-choice probabilities)</a> — the pre-existing finding that language-model probabilities on multiple-choice questions are reasonably trustworthy — which is what justifies treating its raw log-probabilities as training targets at all, and which the paper verifies directly on its own <a href="../concept/hhh-eval-benchmark.html">HHH Evaluation Set (binary comparisons)</a> questions (constitutional-ai, §"4.3 Main Results", Figure 9, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=12" target="_blank" rel="noopener">p. 12</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Feedback Model</strong> — <a href="../edge/feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model.html">supplies the harmlessness half of</a> → Hybrid Human/AI Preference Model</li><li>Multiple-Choice Comparison Format — <a href="../edge/multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model.html">turns into a preference labeler</a> → <strong>Feedback Model</strong></li><li>Principle Ensembling — <a href="../edge/ensembling-principles-makes-more-robust-feedback-model.html">makes more robust</a> → <strong>Feedback Model</strong></li><li>RL from AI Feedback (RLAIF) — <a href="../edge/rlaif-delegates-harmlessness-comparisons-to-feedback-model.html">delegates harmlessness comparisons to</a> → <strong>Feedback Model</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/feedback-model-engineering.html">Engineering a language model into a usable preference labeler</a></li><li><a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;4.1 Method&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

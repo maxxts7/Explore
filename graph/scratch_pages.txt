@@ -1,0 +1,198 @@
+============================== PAGE 14 ==============================
+6 Safe Exploration
+All autonomous learning agents need to sometimes engage in exploration—taking actions that don’t
+seem ideal given current information, but which help the agent learn about its environment. However,
+exploration can be dangerous, since it involves taking actions whose consequences the agent doesn’t
+understand well. In toy environments, like an Atari video game, there’s a limit to how bad these
+consequences can be—maybe the agent loses some score, or runs into an enemy and suﬀers some
+damage. But the real world can be much less forgiving. Badly chosen actions may destroy the agent
+or trap it in states it can’t get out of. Robot helicopters may run into the ground or damage property;
+industrial control systems could cause serious issues. Common exploration policies such as epsilon-
+greedy [150] or R-max [31] explore by choosing an action at random or viewing unexplored actions
+optimistically, and thus make no attempt to avoid these dangerous situations. More sophisticated
+exploration strategies that adopt a coherent exploration policy over extended temporal scales [114]
+could actually have even greater potential for harm, since a coherently chosen bad policy may be
+more insidious than mere random actions. Yet intuitively it seems like it should often be possible
+to predict which actions are dangerous and explore in a way that avoids them, even when we don’t
+have that much information about the environment. For example, if I want to learn about tigers,
+should I buy a tiger, or buy a book about tigers? It takes only a tiny bit of prior knowledge about
+tigers to determine which option is safer.
+In practice, real world RL projects can often avoid these issues by simply hard-coding an avoidance
+of catastrophic behaviors. For instance, an RL-based robot helicopter might be programmed to
+override its policy with a hard-coded collision avoidance sequence (such as spinning its propellers to
+gain altitude) whenever it’s too close to the ground. This approach works well when there are only
+a few things that could go wrong, and the designers know all of them ahead of time. But as agents
+become more autonomous and act in more complex domains, it may become harder and harder to
+anticipate every possible catastrophic failure. The space of failure modes for an agent running a
+power grid or a search-and-rescue operation could be quite large. Hard-coding against every possible
+failure is unlikely to be feasible in these cases, so a more principled approach to preventing harmful
+exploration seems essential. Even in simple cases like the robot helicopter, a principled approach
+would simplify system design and reduce the need for domain-speciﬁc engineering.
+There is a sizable literature on such safe exploration—it is arguably the most studied of the problems
+we discuss in this document. [55, 118] provide thorough reviews of this literature, so we don’t review
+it extensively here, but simply describe some general routes that this research has taken, as well as
+suggesting some directions that might have increasing relevance as RL systems expand in scope and
+capability.
+• Risk-Sensitive Performance Criteria: A body of existing literature considers changing
+the optimization criteria from expected total reward to other objectives that are better at
+preventing rare, catastrophic events; see [55] for a thorough and up-to-date review of this
+literature. These approaches involve optimizing worst-case performance, or ensuring that
+the probability of very bad performance is small, or penalizing the variance in performance.
+These methods have not yet been tested with expressive function approximators such as deep
+neural networks, but this should be possible in principle for some of the methods, such as
+[153], which proposes a modiﬁcation to policy gradient algorithms to optimize a risk-sensitive
+criterion. There is also recent work studying how to estimate uncertainty in value functions
+that are represented by deep neural networks [114, 53]; these ideas could be incorporated into
+risk-sensitive RL algorithms. Another line of work relevant to risk sensitivity uses oﬀ-policy
+estimation to perform a policy update that is good with high probability [156].
+• Use Demonstrations: Exploration is necessary to ensure that the agent ﬁnds the states that
+are necessary for near-optimal performance. We may be able to avoid the need for exploration
+14
+============================== PAGE 15 ==============================
+altogether if we instead use inverse RL or apprenticeship learning, where the learning algorithm
+is provided with expert trajectories of near-optimal behavior [128, 2]. Recent progress in inverse
+reinforcement learning using deep neural networks to learn the cost function or policy [51]
+suggests that it might also be possible to reduce the need for exploration in advanced RL
+systems by training on a small set of demonstrations. Such demonstrations could be used to
+create a baseline policy, such that even if further learning is necessary, exploration away from
+the baseline policy can be limited in magnitude.
+• Simulated Exploration: The more we can do our exploration in simulated environments
+instead of the real world, the less opportunity there is for catastrophe. It will probably al-
+ways be necessary to do some real-world exploration, since many complex situations cannot
+be perfectly captured by a simulator, but it might be possible to learn about danger in sim-
+ulation and then adopt a more conservative “safe exploration” policy when acting in the real
+world. Training RL agents (particularly robots) in simulated environments is already quite
+common, so advances in “exploration-focused simulation” could be easily incorporated into
+current workﬂows. In systems that involve a continual cycle of learning and deployment, there
+may be interesting research problems associated with how to safely incrementally update poli-
+cies given simulation-based trajectories that imperfectly represent the consequences of those
+policies as well as reliably accurate oﬀ-policy trajectories (e.g. “semi-on-policy” evaluation).
+• Bounded Exploration: If we know that a certain portion of state space is safe, and that
+even the worst action within it can be recovered from or bounded in harm, we can allow
+the agent to run freely within those bounds. For example, a quadcopter suﬃciently far from
+the ground might be able to explore safely, since even if something goes wrong there will be
+ample time for a human or another policy to rescue it. Better yet, if we have a model, we
+can extrapolate forward and ask whether an action will take us outside the safe state space.
+Safety can be deﬁned as remaining within an ergodic region of the state space such that
+actions are reversible [104, 159], or as limiting the probability of huge negative reward to some
+small value [156]. Yet another approaches uses separate safety and performance functions and
+attempts to obey constraints on the safety function with high probabilty [22]. As with several
+of the other directions, applying or adapting these methods to recently developed advanced RL
+systems could be a promising area of research. This idea seems related to H-inﬁnity control [20]
+and regional veriﬁcation [148].
+• Trusted Policy Oversight: If we have a trusted policy and a model of the environment, we
+can limit exploration to actions the trusted policy believes we can recover from. It’s ﬁne to
+dive towards the ground, as long as we know we can pull out of the dive in time.
+• Human Oversight: Another possibility is to check potentially unsafe actions with a human.
+Unfortunately, this problem runs into the scalable oversight problem: the agent may need to
+make too many exploratory actions for human oversight to be practical, or may need to make
+them too fast for humans to judge them. A key challenge to making this work is having the
+agent be a good judge of which exploratory actions are genuinely risky, versus which are safe
+actions it can unilaterally take; another challenge is ﬁnding appropriately safe actions to take
+while waiting for the oversight.
+Potential Experiments: It might be helpful to have a suite of toy environments where unwary
+agents can fall prey to harmful exploration, but there is enough pattern to the possible catastro-
+phes that clever agents can predict and avoid them. To some extent this feature already exists in
+autonomous helicopter competitions and Mars rover simulations [104], but there is always the risk
+of catastrophes being idiosyncratic, such that trained agents can overﬁt to them. A truly broad set
+of environments, containing conceptually distinct pitfalls that can cause unwary agents to receive
+15
+============================== PAGE 16 ==============================
+extremely negative reward, and covering both physical and abstract catastrophes, might help in the
+development of safe exploration techniques for advanced RL systems. Such a suite of environments
+might serve a benchmarking role similar to that of the bAbI tasks [163], with the eventual goal being
+to develop a single architecture that can learn to avoid catastrophes in all environments in the suite.
+7 Robustness to Distributional Change
+All of us occasionally ﬁnd ourselves in situations that our previous experience has not adequately
+prepared us to deal with—for instance, ﬂying an airplane, traveling to a country whose culture is
+very diﬀerent from ours, or taking care of children for the ﬁrst time. Such situations are inherently
+diﬃcult to handle and inevitably lead to some missteps. However, a key (and often rare) skill in
+dealing with such situations is to recognize our own ignorance, rather than simply assuming that
+the heuristics and intuitions we’ve developed for other situations will carry over perfectly. Machine
+learning systems also have this problem—a speech system trained on clean speech will perform very
+poorly on noisy speech, yet often be highly conﬁdent in its erroneous classiﬁcations (some of the
+authors have personally observed this in training automatic speech recognition systems). In the case
+of our cleaning robot, harsh cleaning materials that it has found useful in cleaning factory ﬂoors
+could cause a lot of harm if used to clean an oﬃce. Or, an oﬃce might contain pets that the robot,
+never having seen before, attempts to wash with soap, leading to predictably bad results. In general,
+when the testing distribution diﬀers from the training distribution, machine learning systems may
+not only exhibit poor performance, but also wrongly assume that their performance is good.
+Such errors can be harmful or oﬀensive—a classiﬁer could give the wrong medical diagnosis with
+such high conﬁdence that the data isn’t ﬂagged for human inspection, or a language model could
+output oﬀensive text that it conﬁdently believes is non-problematic. For autonomous agents acting
+in the world, there may be even greater potential for something bad to happen—for instance, an
+autonomous agent might overload a power grid because it incorrectly but conﬁdently perceives that
+a particular region doesn’t have enough power, and concludes that more power is urgently needed
+and overload is unlikely. More broadly, any agent whose perception or heuristic reasoning processes
+are not trained on the correct distribution may badly misunderstand its situation, and thus runs the
+risk of committing harmful actions that it does not realize are harmful. Additionally, safety checks
+that depend on trained machine learning systems (e.g. “does my visual system believe this route is
+clear?”) may fail silently and unpredictably if those systems encounter real-world data that diﬀers
+suﬃciently from their training data. Having a better way to detect such failures, and ultimately
+having statistical assurances about how often they’ll happen, seems critical to building safe and
+predictable systems.
+For concreteness, we imagine that a machine learning model is trained on one distribution (call it
+p0) but deployed on a potentially diﬀerent test distribution (call it p∗). There are many other ways
+to formalize this problem (for instance, in an online learning setting with concept drift [70, 54]) but
+we will focus on the above for simplicity. An important point is that we likely have access to a
+large amount of labeled data at training time, but little or no labeled data at test time. Our goal
+is to ensure that the model “performs reasonably” on p∗, in the sense that (1) it often performs
+well on p∗, and (2) it knows when it is performing badly (and ideally can avoid/mitigate the bad
+performance by taking conservative actions or soliciting human input).
+There are a variety of areas that are potentially relevant to this problem, including change detection
+and anomaly detection [21, 80, 91], hypothesis testing [145], transfer learning [138, 124, 125, 25],
+and several others [136, 87, 18, 122, 121, 74, 147]. Rather than fully reviewing all of this work in
+detail (which would necessitate a paper in itself), we will describe a few illustrative approaches and
+lay out some of their relative strengths and challenges.
+16
+============================== PAGE 17 ==============================
+Well-speciﬁed models: covariate shift and marginal likelihood. If we specialize to prediction
+tasks and let x denote the input and y denote the output (prediction target), then one possibility
+is to make the covariate shift assumption that p0(y|x) = p∗(y|x). In this case, assuming that we
+can model p0(x) andp∗(x) well, we can perform importance weighting by re-weighting each training
+example (x,y ) byp∗(x)/p0(x) [138, 124]. Then the importance-weighted samples allow us to estimate
+the performance on p∗, and even re-train a model to perform well on p∗. This approach is limited
+by the variance of the importance estimate, which is very large or even inﬁnite unless p0 andp∗ are
+close together.
+An alternative to sample re-weighting involves assuming a well-speciﬁed model family, in which case
+there is a single optimal model for predicting under both p0 and p∗. In this case, one need only
+heed ﬁnite-sample variance in the estimated model [25, 87]. A limitation to this approach, at least
+currently, is that models are often mis-speciﬁed in practice. However, this could potentially be over-
+come by employing highly expressive model families such as reproducing kernel Hilbert spaces [72],
+Turing machines [143, 144], or suﬃciently expressive neural nets [64, 79]. In the latter case, there
+has been interesting recent work on using bootstrapping to estimate ﬁnite-sample variation in the
+learned parameters of a neural network [114]; it seems worthwhile to better understand whether
+this approach can be used to eﬀectively estimate out-of-sample performance in practice, as well as
+how local minima, lack of curvature, and other peculiarities relative to the typical setting of the
+bootstrap [47] aﬀect the validity of this approach.
+All of the approaches so far rely on the covariate shift assumption, which is very strong and is
+also untestable; the latter property is particularly problematic from a safety perspective, since it
+could lead to silent failures in a machine learning system. Another approach, which does not rely on
+covariate shift, builds a generative model of the distribution. Rather than assuming thatp(x) changes
+while p(y|x) stays the same, we are free to assume other invariants (for instance, that p(y) changes
+butp(x|y) stays the same, or that certain conditional independencies are preserved). An advantage
+is that such assumptions are typically more testable than the covariate shift assumption (since they
+do not only involve the unobserved variable y). A disadvantage is that generative approaches are
+even more fragile than discriminative approaches in the presence of model mis-speciﬁcation — for
+instance, there is a large empirical literature showing that generative approaches to semi-supervised
+learning based on maximizing marginal likelihood can perform very poorly when the model is mis-
+speciﬁed [98, 110, 35, 90, 88].
+The approaches discussed above all rely relatively strongly on having a well-speciﬁed model family —
+one that contains the true distribution or true concept. This can be problematic in many cases, since
+nature is often more complicated than our model family is capable of capturing. As noted above,
+it may be possible to mitigate this with very expressive models, such as kernels, Turing machines,
+or very large neural networks, but even here there is at least some remaining problem: for example,
+even if our model family consists of all Turing machines, given any ﬁnite amount of data we can only
+actually learn among Turing machines up to a given description length, and if the Turing machine
+describing nature exceeds this length, we are back to the mis-speciﬁed regime (alternatively, nature
+might not even be describable by a Turing machine).
+Partially speciﬁed models: method of moments, unsupervised risk estimation, causal
+identiﬁcation, and limited-information maximum likelihood. Another approach is to take
+for granted that constructing a fully well-speciﬁed model family is probably infeasible, and to design
+methods that perform well despite this fact. This leads to the idea of partially speciﬁed models —
+models for which assumptions are made about some aspects of a distribution, but for which we are
+agnostic or make limited assumptions about other aspects. For a simple example, consider a variant
+of linear regression where we might assume that y =⟨w∗,x⟩ +v, where E[v|x] = 0, but we don’t
+make any further assumptions about the distributional form of the noise v. It turns out that this is
+already enough to identify the parameters w∗, and that these parameters will minimize the squared
+17

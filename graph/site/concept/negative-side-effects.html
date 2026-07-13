@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Negative side effects (avoiding) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Negative side effects (avoiding)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-refined">refined</span></p>
+<p class="lede">The problem that an objective function focused narrowly on a task may leave an agent indifferent to, and hence likely to cause, harmful disruptions elsewhere in a large environment.</p>
+<section class="prose-section">
+<h2>One of the paper&#x27;s five core problems</h2>
+<p>Negative side effects is one of Concrete Problems' five headline research problems, and the paper places it, together with reward hacking, in the category of accidents caused by a wrong objective function, as opposed to failures during learning itself (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=2" target="_blank" rel="noopener">§"2 Overview of Research Problems", p. 2</a>). The problem is stated through the paper's cleaning-robot running example: an objective that rewards moving a box from one side of a room to the other says nothing about a vase of water sitting in the robot's path, so an agent given reward only for the box will probably knock the vase over (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=4" target="_blank" rel="noopener">§"3 Avoiding Negative Side Effects", p. 4</a>). The paper generalizes past vases immediately: for any agent operating in a large, multifaceted environment, an objective function focused on one aspect of that environment implicitly expresses indifference to every other aspect, and that indifference tends toward harm on average, since side effects disrupt a status quo that likely reflects human preferences more than a random change would. Negative side effects refines an informally discussed prior notion the paper calls "low impact agents," giving it a name, a running example, and a menu of candidate mitigations.</p>
+</section>
+<section class="prose-section">
+<h2>An old diagnosis for a new problem</h2>
+<p>A footnote, not the main text, supplies the problem's intellectual lineage: "Intuitively, this seems related to the frame problem, an obstacle in efficient specification for knowledge representation" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=4" target="_blank" rel="noopener">§"3 Avoiding Negative Side Effects", p. 4</a>). McCarthy and Hayes' 1969 <a href="../concept/frame-problem.html">Frame problem</a> concerned the difficulty of specifying, in a formal knowledge-representation system, which facts an action leaves unchanged; negative side effects restates that difficulty as an engineering problem, a designer cannot feasibly enumerate every "vase" an agent must not knock over, <a href="../edge/frame-problem-supplies-the-classical-diagnosis-for-negative-side-effects.html">because doing so requires specifying everything the task should leave untouched</a>, which is exactly what the frame problem showed is hard to do efficiently. The connection is offered as a hedge rather than a solution: the paper does not claim to resolve a decades-old classical AI difficulty, only that it resurfaces, largely unaddressed, in modern reinforcement learning objective design.</p>
+</section>
+<section class="prose-section">
+<h2>Four children, two strategies</h2>
+<p>The paper's proposed remedies split into two families, both represented among this concept's children. <a href="../concept/impact-regularizer.html">Defining</a> or <a href="../concept/learned-impact-regularizer.html">learning</a> an impact regularizer penalizes distance from a passive baseline; the first attempt at this, penalizing raw distance from the initial state, <a href="../edge/negative-side-effects-provokes-an-overcorrecting-first-attempt-in-impact-regularizer.html">overcorrects</a> into resisting all environmental change, including change the agent had no part in, which is why the paper moves quickly to a baseline-policy comparison instead. <a href="../concept/penalize-influence.html">Penalizing influence</a> and <a href="../concept/reward-uncertainty.html">reward uncertainty</a> instead attack potential rather than realized change, discouraging an agent from acquiring positions of power over its environment, or replacing a fixed reward with a distribution biased toward assuming random change is bad. A fourth, <a href="../concept/multi-agent-approaches.html">multi-agent approaches</a>, abandons the distance-from-baseline strategy altogether in favor of treating side-effect avoidance as a matter of understanding and protecting other agents' interests directly. Negative side effects anchors the theme <a href="../theme/impact-regularization-and-baselines.html">Penalizing side effects by distance from a baseline</a>, and its four children between them cover essentially every mitigation strategy the paper offers for the problem it names.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/impact-regularizer.html">Impact regularizer (defined)</a></li><li><a href="../concept/multi-agent-approaches.html">Multi-agent approaches (to side effects)</a></li><li><a href="../concept/penalize-influence.html">Penalize influence</a></li><li><a href="../concept/reward-uncertainty.html">Reward uncertainty (side-effect mitigation)</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Frame problem — <a href="../edge/frame-problem-supplies-the-classical-diagnosis-for-negative-side-effects.html">supplies the classical diagnosis for</a> → <strong>Negative side effects (avoiding)</strong></li><li><strong>Negative side effects (avoiding)</strong> — <a href="../edge/negative-side-effects-provokes-an-overcorrecting-first-attempt-in-impact-regularizer.html">provokes an overcorrecting first attempt in</a> → Impact regularizer (defined)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/impact-regularization-and-baselines.html">Penalizing side effects by distance from a baseline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 Overview of Research Problems&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;3 Avoiding Negative Side Effects&rdquo;, p. 4</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,194 @@
+{
+  "edges": [
+    {
+      "id": "instructgpt-outperforms-at-100x-smaller-scale-gpt-3",
+      "type": "outperforms-at-100x-smaller-scale",
+      "source": "instructgpt",
+      "target": "gpt-3",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-three-step-pipeline",
+      "prose": "The comparison between these two models is a controlled experiment, not just a benchmark win: every InstructGPT model shares GPT-3's architecture and pretrained weights, so the only difference is fine-tuning on the human data pipeline. Under that control, labelers prefer 1.3B InstructGPT outputs to those of the 175B GPT-3, and 175B InstructGPT beats 175B GPT-3 head-to-head 85 ± 3% of the time (instructgpt, §\"1 Introduction\", p. 3). The paper also decomposes the gap into rungs — GPT-3, then GPT-3 with a crafted few-shot prefix, then SFT, then PPO — each adding a measurable step in labeler preference (instructgpt, §\"4.1 Results on the API distribution\", p. 11). The cost asymmetry is the deeper point: training the 175B PPO-ptx model took 60 petaflop/s-days against 3,640 for pretraining GPT-3 (instructgpt, §\"5.1 Implications for alignment research\", p. 17), so under 2% of pretraining compute bought more preference gain than a 100x parameter increase. On this distribution, alignment data, not scale, was the binding lever."
+    },
+    {
+      "id": "reward-model-back-selects-the-checkpoint-of-sft-model",
+      "type": "back-selects-the-checkpoint-of",
+      "source": "reward-model",
+      "target": "sft-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-three-step-pipeline",
+      "prose": "The three-step diagram runs left to right, but selection pressure runs backward through it. The SFT models overfit validation loss after a single epoch, yet were trained for 16 epochs anyway, because later epochs kept improving both RM score and human preference; the final SFT checkpoint was chosen by its score under the reward model, not by validation loss (instructgpt, §\"3.5 Models\", p. 8). The appendix states the rationale plainly: RM score proved more predictive of human preference results than validation loss (instructgpt, §\"C.1 Details of SFT training\", p. 41). Two consequences follow. First, the \"supervised baseline\" that PPO is measured against was itself already tuned to please the preference model, so the SFT-versus-PPO comparison understates how much the RM shapes the whole pipeline. Second, the RM does double duty as a model-selection metric before it ever emits a single RL reward, which means errors in the RM propagate upstream into the initialization as well as downstream into optimization."
+    },
+    {
+      "id": "sft-model-anchors-as-both-init-and-reference-for-ppo-training",
+      "type": "anchors-as-both-init-and-reference-for",
+      "source": "sft-model",
+      "target": "ppo-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-three-step-pipeline",
+      "prose": "The SFT model plays two distinct roles in the PPO stage: the policy starts from its weights, and the per-token KL term in the training objective is computed against it, so the same artifact defines both where optimization begins and what it is pulled back toward (instructgpt, §\"3.5 Models\", p. 9). Less visibly, \"the SFT model\" here is not the checkpoint evaluated as the SFT baseline. The RL initialization was a variant trained for 2 epochs on demonstrations with 10% pretraining data mixed in, while the flagship SFT baseline was trained for 16 epochs; the 10%-mix setting was chosen because sweeps showed it was the only initialization variant that stood out for PPO performance (instructgpt, §\"C.3 Details of the initialization models for RLHF\", p. 42; §\"E.8 PPO init models\", p. 56). So the pipeline's second stage quietly forks: one SFT lineage exists to be compared against, another exists to be optimized from, and the anchor for the KL penalty is the latter."
+    },
+    {
+      "id": "reward-model-loss-under-determines-the-scale-of-reward-model",
+      "type": "under-determines-the-scale-of",
+      "source": "reward-model-loss",
+      "target": "reward-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-three-step-pipeline",
+      "prose": "The pairwise cross-entropy loss sees only differences between rewards for preferred and dispreferred completions, so adding any constant to every reward leaves the loss unchanged: training produces a ranker whose absolute output is meaningless. This matters the moment the ranker is reused as an RL reward, where absolute values feed the optimization directly. The paper handles it with an explicit post-hoc step, adding a bias so that labeler demonstrations score a mean of 0 before RL begins (instructgpt, §\"3.5 Models\", p. 9). The choice of anchor is quietly substantive: zero is defined as \"what a human demonstrator would have written,\" so positive reward literally means better-than-demonstration, and PPO's objective becomes exceeding the humans who taught the SFT stage. The loss also explains why comparisons rather than scores were collected in the first place — a preference probability is all Equation 1 can extract — and why calibration of the reward scale had to come from outside the training signal entirely."
+    },
+    {
+      "id": "reward-model-supervises-from-below-ppo-training",
+      "type": "supervises-from-below",
+      "source": "reward-model",
+      "target": "ppo-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-three-step-pipeline",
+      "prose": "Every PPO policy in the paper, including the 175B one, is trained against a single 6B reward model — supervision from a model nearly 30x smaller than the policy it steers. This was a forced choice, not a preference: 175B RM training was unstable, which made large RMs unsuitable as initializations for the PPO value function, and a 175B RM plus value function would have greatly increased PPO's compute cost (instructgpt, §\"C.2 Details of RM training\", p. 41). Reusing the same 6B RM and value function across all policy sizes also had a methodological payoff, making policy-scale comparisons clean because the training signal is held constant (instructgpt, §\"C.4 Details of RLHF training\", p. 42). The arrangement quietly tests a scalable-oversight question the paper never poses directly: whether a weaker judge can usefully train a stronger model. Its headline results say yes, at least when the judge only needs to distill broad human preferences rather than out-reason the policy it is scoring."
+    },
+    {
+      "id": "ppo-ptx-outperforms-tightening-of-kl-penalty",
+      "type": "outperforms-tightening-of",
+      "source": "ppo-ptx",
+      "target": "kl-penalty",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "ppo-optimization-mechanics",
+      "prose": "Both of these are knobs on the same objective (β and γ in Equation 2), and both were candidate fixes for the public-NLP-dataset regressions. The paper tested them against each other: raising the KL coefficient sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, while a well-chosen pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The asymmetry is instructive about what each term actually does. The KL penalty constrains where the policy can go relative to the SFT model, so buying back capabilities with it means giving up alignment gains proportionally. Pretraining gradients instead inject the missing training signal directly — the lost capabilities live in the pretraining distribution, so restoring them requires that distribution, not just less movement. Notably, ptx does not make the KL knob redundant: even with the pretraining mix, β must still be tuned, with human Likert scores peaking near 0.01-0.02 and degrading at both 0 and 2 (instructgpt, §\"E.7 Optimal KL reward coefficient\", p. 56)."
+    },
+    {
+      "id": "ppo-ptx-diverges-only-off-distribution-from-ppo-model",
+      "type": "diverges-only-off-distribution-from",
+      "source": "ppo-ptx",
+      "target": "ppo-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "ppo-optimization-mechanics",
+      "prose": "On the paper's own headline metric these two variants are nearly the same model. Adding pretraining updates during PPO \"does not lead to large changes in labeler preference\" on the API distribution, and on prompts submitted to GPT-3 models PPO-ptx actually performs slightly worse at larger sizes (instructgpt, §\"4.1 Results on the API distribution\", p. 11). The entire case for preferring PPO-ptx — and it is the variant the paper crowns as \"InstructGPT\" — rests on evaluations orthogonal to human preference: it recovers most public-NLP-dataset regressions and even surpasses GPT-3 on HellaSwag, where plain PPO regresses (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). This makes the pair an unusually clean ablation: γ = 27.8 versus γ = 0 separates what RLHF does to preference from what RLHF does to capabilities, and shows the two effects are nearly independent — the alignment tax can be paid down without touching the alignment gain."
+    },
+    {
+      "id": "bandit-environment-renders-discounting-moot-in-generalized-advantage-estimation",
+      "type": "renders-discounting-moot-in",
+      "source": "bandit-environment",
+      "target": "generalized-advantage-estimation",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "ppo-optimization-mechanics",
+      "prose": "GAE normally exposes two bias-variance knobs, λ and a discount factor, and the discount exists to down-weight rewards that arrive far in the future. The bandit formulation removes the future: an episode is one prompt, one sampled response, one reward-model score, then termination (instructgpt, §\"3.5 Models\", p. 9). The only temporal structure left is the token sequence within a single response, and there is no principled reason a token generated late in an answer should count for less than an early one — the reward model judges the completed text as a whole. Accordingly, the training recipe applies no discount when estimating the generalized advantage (instructgpt, §\"C.4 Details of RLHF training\", p. 42). This is a small setting with a real lesson: much of classic RL machinery is calibrated for long-horizon credit assignment, and RLHF's single-exchange episode quietly deactivates parts of it. What remains load-bearing is GAE's variance reduction across tokens, not its handling of time."
+    },
+    {
+      "id": "kl-penalty-densifies-the-terminal-reward-of-bandit-environment",
+      "type": "densifies-the-terminal-reward-of",
+      "source": "kl-penalty",
+      "target": "bandit-environment",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "ppo-optimization-mechanics",
+      "prose": "In the bandit formulation the reward model contributes exactly one number per episode, delivered when the response is complete. The KL penalty is the objective's only per-token component: it is subtracted at every generated token, proportional to the log-ratio between the policy and the SFT model at that position (instructgpt, §\"3.5 Models\", p. 9). So beyond its stated purpose — mitigating over-optimization of the reward model — the penalty changes the shape of the learning problem: an otherwise sparse terminal-reward setting gains a dense signal that assigns credit at the same granularity as the actions the policy actually takes. Every token receives immediate feedback about whether it is drifting from the anchor distribution, while feedback about whether the answer is good arrives only at the end. The final models set β = 0.02 (instructgpt, §\"C.4 Details of RLHF training\", p. 42), keeping this dense term small — enough to shape token-level behavior without dominating the terminal reward that carries the actual preference information."
+    },
+    {
+      "id": "sft-dataset-bootstrapped-the-existence-of-api-prompt-distribution",
+      "type": "bootstrapped-the-existence-of",
+      "source": "sft-dataset",
+      "target": "api-prompt-distribution",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "The API prompt distribution looks like exogenous real-world demand, but it is partly a product of the dataset it now feeds. The Playground traffic the paper harvests was submitted to an earlier InstructGPT model trained via supervised learning on a subset of the demonstration data (instructgpt, §\"3.2 Dataset\", p. 6) — and those demonstrations exist because labelers were asked to write plain, few-shot, and use-case-based prompts themselves, precisely because instruction-style prompts were not often submitted to the regular GPT-3 models on the API (instructgpt, §\"3.2 Dataset\", p. 7). The circularity matters for interpreting the paper: users learned to write instruction-style prompts by interacting with a model that had already been taught, by labelers, what instructions look like. The distribution InstructGPT is trained and evaluated on is therefore not independent of the intervention; it is a co-evolved artifact — demonstrations shaped a model, the model shaped user behavior, and user behavior became the training and evaluation distribution."
+    },
+    {
+      "id": "sft-dataset-trains-the-policies-sampled-for-rm-dataset",
+      "type": "trains-the-policies-sampled-for",
+      "source": "sft-dataset",
+      "target": "rm-dataset",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "The RM dataset's labels are rankings, but its inputs are model completions, and those completions come overwhelmingly from policies trained on the SFT dataset: \"most of our comparison data comes from our supervised policies, with some coming from our PPO policies\" (instructgpt, §\"3.1 High-level methodology\", p. 6). The demonstration data therefore controls not just what the initial policy does but what the reward model ever gets to see. The RM learns human preferences over the neighborhood of SFT-style outputs — its competence is local to that region of output space. This dovetails with the KL penalty's role in the RL stage: keeping the policy near the SFT model also keeps it inside the region where the RM's training data lives, so the constraint that limits over-optimization simultaneously keeps the judge on-distribution. The paper notes that steps 2 and 3 can be iterated, with fresh comparisons collected on the current best policy — the mechanism by which the RM's competent region can track a moving policy — though in this paper most comparison data still comes from the supervised policies."
+    },
+    {
+      "id": "labeler-screening-process-creates-the-question-answered-by-held-out-labeler-generalization",
+      "type": "creates-the-question-answered-by",
+      "source": "labeler-screening-process",
+      "target": "held-out-labeler-generalization",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "Screening is what makes generalization worth testing. Because every training label came from roughly 40 contractors filtered through four criteria — including agreement with the researchers' own judgments (instructgpt, §\"B.1 Labeler selection\", p. 36) — the headline preference results could in principle reflect the tastes of a small, curated, researcher-aligned group rather than anything broader. The held-out experiment is built to break that dependence: the extra labelers come from the same vendors but \"do not undergo a screening test\" (instructgpt, §\"3.4 Human data collection\", p. 8), so passing the filter cannot explain their judgments. They prefer InstructGPT to GPT-3 at roughly the training labelers' rates, and five-fold cross-validated reward models predict held-out labeler groups' preferences at 69.6% versus 72.4% within-group (instructgpt, §\"E.2 Reward model generalization across sets of labelers\", p. 52) — a measurable but small overfitting-to-labelers cost. The test answers the narrow question the screening created; whether 40 contractors represent the broader population of users is a different and harder question."
+    },
+    {
+      "id": "inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process",
+      "type": "was-both-filter-and-audit-for",
+      "source": "inter-annotator-agreement",
+      "target": "labeler-screening-process",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "Agreement statistics enter the pipeline twice, on both sides of the causal arrow. During selection, two of the four screening criteria are agreement measures — candidates had to match researcher labels on sensitive-speech flagging and on output rankings, with soft cutoffs at 75% (instructgpt, §\"B.1 Labeler selection\", p. 36). After training, inter-labeler agreement is reported as evidence the task is well-posed: training labelers agree with each other 72.6 ± 1.5% of the time (instructgpt, §\"3.4 Human data collection\", p. 8). The surprise is that the unscreened held-out labelers agree among themselves more — 77.3 ± 1.3% — than the screened group does. Screening, it turns out, did not select for homogeneity, plausibly because its criteria targeted sensitivity to harmful content across many demographic groups rather than similarity of taste. The comparison also bounds what the numbers can validate: agreement near the 73 ± 4% researcher-researcher rate of prior summarization work shows the ranking task is tractable, not that the selected group's preferences are the right ones to encode."
+    },
+    {
+      "id": "labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset",
+      "type": "filters-uncertain-comparisons-out-of",
+      "source": "labeling-interface",
+      "target": "rm-dataset",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "Two interface decisions shape the RM dataset more than any labeling instruction. First, the interface collects full rankings of K = 4 to 9 completions per prompt rather than isolated pairs, which is why the dataset's comparison count runs an order of magnitude beyond its 33k prompts — each ranking expands into C(K,2) pairs. Second, the interface explicitly encourages ties \"in cases where two outputs seem to be of similar quality\" (instructgpt, §\"B.5 Web interface\", p. 39), and RM training then drops tied pairs entirely (instructgpt, §\"C.2 Details of RM training\", p. 42). Together these make the tie button a quiet confidence filter: whenever a labeler cannot distinguish two outputs, that non-judgment is prevented from ever becoming gradient signal, rather than being forced into an arbitrary 50/50 label that would add noise to the comparison loss. The dataset the reward model sees is therefore not \"what labelers thought\" but the subset of their judgments they were sure about, pre-cleaned by UI affordance rather than by post-hoc filtering."
+    },
+    {
+      "id": "api-prompt-distribution-supplies-label-free-scale-to-ppo-dataset",
+      "type": "supplies-label-free-scale-to",
+      "source": "api-prompt-distribution",
+      "target": "ppo-dataset",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "human-feedback-data-infrastructure",
+      "prose": "The three training datasets embody a declining gradient of human effort per prompt: SFT prompts need a full written demonstration, RM prompts need a ranking of up to nine outputs, and PPO prompts need nothing at all. The PPO dataset is the only one drawn purely from the API, with no labeler-written prompts (instructgpt, §\"3.2 Dataset\", p. 7) — by stage three the bootstrap problem is solved and the raw distribution can be used as-is, because RL rollouts generate their own training signal via the reward model. This is where the economics of RLHF show up concretely: 31k unlabeled prompts support 256k training episodes, roughly eight passes over the prompt set (instructgpt, §\"C.4 Details of RLHF training\", p. 42), while the expensive human stages stay capped at 13k demonstrations and 33k rankings. The reward model functions as an amplifier that converts a bounded stock of human judgment into unbounded per-rollout feedback — the PPO dataset is deliberately the cheapest input in the pipeline because everything costly has been front-loaded into the model that scores it."
+    },
+    {
+      "id": "reward-overoptimization-surfaces-as-excessive-hedging",
+      "type": "surfaces-as",
+      "source": "reward-overoptimization",
+      "target": "excessive-hedging",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-failure-modes",
+      "prose": "Hedging is the paper's clearest concrete instance of its most abstract failure mode. The suspected chain runs entirely through the human data pipeline: labelers were instructed to reward epistemic humility, they consequently tended to reward outputs that hedge, and \"this gets picked up by our reward model\" (instructgpt, §\"4.3 Qualitative results\", p. 17) — after which the policy dutifully maximizes it, producing long non-answers to questions with fairly clear answers. What makes this instructive is which defense it defeats. The per-token KL penalty was added specifically to mitigate over-optimization of the reward model (instructgpt, §\"3.5 Models\", p. 9), but it only guards against the policy drifting into regions where the RM is wrong by extrapolation. Here the RM is wrong at home: its training labels genuinely prefer hedged text, so staying close to the SFT model does not help. Accordingly the paper's proposed remedy is adversarial data collection — fixing the labels — rather than more regularization. Over-optimization, this case shows, includes faithfully optimizing a reward that was mis-specified upstream."
+    },
+    {
+      "id": "excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure",
+      "type": "shares-a-fix-but-not-a-cause-with",
+      "source": "excessive-hedging",
+      "target": "false-premise-failure",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-failure-modes",
+      "prose": "The paper presents these two failures side by side as \"simple mistakes\" (instructgpt, §\"4.3 Qualitative results\", p. 16), but its diagnosis splits them into opposite categories. Hedging is an error of commission by the training signal: labelers were instructed to reward epistemic humility, the reward model absorbed that preference, and the policy learned to overdo it. False-premise acceptance is an error of omission by the data: few training prompts contained false premises, so the model never learned to push back (instructgpt, §\"4.3 Qualitative results\", p. 17). One failure was actively taught; the other was simply never trained against. Yet the paper proposes the same remedy for both — adversarial data collection — which is what makes the pairing instructive: whether the human data pipeline injected a bias or left a gap, the correction happens in the same place, the data, not the algorithm. Neither failure prompts any proposed change to the PPO machinery. In this framework, alignment bugs are data bugs, and the fix for a mis-specified preference and a missing preference is identical in kind."
+    },
+    {
+      "id": "reward-overoptimization-demands-a-different-mitigation-than-alignment-tax",
+      "type": "demands-a-different-mitigation-than",
+      "source": "reward-overoptimization",
+      "target": "alignment-tax",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-failure-modes",
+      "prose": "Both pathologies stem from the same act — PPO pushing the policy hard against a learned objective — but the paper treats them as separate diseases with separate cures, and Equation 2 carries one term for each. The per-token KL penalty (coefficient β) exists to mitigate over-optimization of the reward model, while the pretraining-gradient mix (coefficient γ) exists to fix regressions on public NLP datasets (instructgpt, §\"3.5 Models\", p. 9). The knobs turn out not to be interchangeable: raising β to attack the tax costs validation reward and never fully recovers DROP or SQuADv2, whereas tuning γ reverses the regressions at minimal cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The distinction is about what is being lost. Over-optimization loses fidelity to human preference on the training distribution, so its cure is limiting movement; the tax loses capabilities that live off-distribution, so its cure is re-injecting the pretraining signal. Both worsen with more optimization pressure — training for 512k rather than 256k episodes deepens the benchmark regressions (instructgpt, §\"E.6 Fixing regressions on public NLP datasets\", p. 56)."
+    },
+    {
+      "id": "hallucination-sits-in-tension-with-excessive-hedging",
+      "type": "sits-in-tension-with",
+      "source": "hallucination",
+      "target": "excessive-hedging",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "rlhf-failure-modes",
+      "prose": "These two failure modes bracket a single behavioral dial: how readily the model asserts things it cannot fully support. InstructGPT's headline truthfulness win — hallucinating on closed-domain tasks about half as often as GPT-3, 21% versus 41% (instructgpt, §\"1 Introduction\", p. 3) — sits at one end. At the other, the paper suspects hedging emerged partly because labelers were instructed to reward epistemic humility, a preference the reward model picked up and the policy then overshot (instructgpt, §\"4.3 Qualitative results\", p. 17). The same reluctance to assert that suppresses fabrication, when rewarded without calibration to how clear the answer actually is, produces long non-committal answers to questions with fairly clear answers. The pairing shows why rewarding truthfulness is not a free action: the labeling criteria could not express \"assert exactly as much as the evidence supports,\" only a general preference for humility, and the reward model generalized that preference past its intended scope. Reducing one failure and aggravating the other were plausibly two effects of the same labeling instruction."
+    }
+  ]
+}

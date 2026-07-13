@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward uncertainty (side-effect mitigation) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward uncertainty (side-effect mitigation)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A proposal to give an agent a probability distribution over reward functions, biased toward assuming random environmental changes are bad, rather than a single fixed reward function.</p>
+<section class="prose-section">
+<h2>Replacing a fixed reward with a distribution biased toward caution</h2>
+<p>Reward uncertainty is a remedy Concrete Problems proposes for <a href="../concept/negative-side-effects.html">Negative side effects (avoiding)</a>, motivated by an argument about priors rather than a penalty term: "we want to avoid unanticipated side effects because the environment is already pretty good according to our preferences, a random change is more likely to be very bad than very good" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">§"Reward Uncertainty:", pp. 6-7</a>). Rather than giving the agent a single fixed reward function $R$, the proposal gives it a prior probability distribution $P(R)$ over possible reward functions, constructed so that $\mathbb{E}_{R \sim P}[R(\Delta s)] \le 0$ for unplanned changes $\Delta s$ to the environment: the prior is deliberately skewed to treat random, unaccounted-for change as more likely harmful than beneficial. The agent then acts to maximize expected reward under this distribution, $\mathbb{E}_{R \sim P}\left[\sum_t \gamma^t R(s_t)\right]$, so caution about disruptive behavior falls out of ordinary Bayesian expected-value reasoning rather than requiring a separately engineered penalty.</p>
+</section>
+<section class="prose-section">
+<h2>A different architecture for the same problem</h2>
+<p>Reward uncertainty sits beside <a href="../concept/penalize-influence.html">Penalize influence</a> as an alternative attack on the same failure mode, but the two differ in architecture, not just detail. Penalize influence, like the impact regularizer it sits near, works by adding an explicit term to the objective and requiring someone to hand-tune how costly it should be for the agent to acquire capability. Reward uncertainty <a href="../edge/reward-uncertainty-trades-penalty-for-uncertainty-relative-to-penalize-influence.html">abandons that architecture</a> entirely: it needs only a prior belief that unplanned change tends to be bad, after which ordinary decision-making under uncertainty does the rest, with no separate penalty coefficient to calibrate. As the paper notes, this proposal still relies on defining some baseline around which "unplanned" or "unanticipated" change is measured, again invoking the same reachability-analysis and robust-policy-improvement machinery used to build the baseline for the hand-defined impact regularizer.</p>
+</section>
+<section class="prose-section">
+<h2>Where it sits in the corpus</h2>
+<p>Reward uncertainty is grouped, alongside <a href="../concept/penalize-influence.html">Penalize influence</a>, <a href="../concept/empowerment.html">Empowerment</a>, and <a href="../concept/low-impact-agents.html">Low-impact agents</a>, in the theme <a href="../theme/influence-and-uncertainty-side-effect-mitigation.html">Limiting potential influence instead of measuring realized change</a>, the corpus's second broad strategy for taming side effects, one that works through uncertainty and priors rather than through measuring distance from a fixed baseline state.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/negative-side-effects.html">Negative side effects (avoiding)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Reward uncertainty (side-effect mitigation)</strong> — <a href="../edge/reward-uncertainty-trades-penalty-for-uncertainty-relative-to-penalize-influence.html">trades penalty for uncertainty relative to</a> → Penalize influence</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/influence-and-uncertainty-side-effect-mitigation.html">Limiting potential influence instead of measuring realized change</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;Reward Uncertainty:&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

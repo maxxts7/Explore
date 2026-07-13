@@ -1,0 +1,214 @@
+{
+  "edges": [
+    {
+      "id": "helpfulness-harmlessness-tension-collapses-into-evasiveness",
+      "type": "collapses-into",
+      "source": "helpfulness-harmlessness-tension",
+      "target": "evasiveness",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "helpfulness-harmlessness-tradeoff",
+      "prose": "When crowdworker feedback rewards harmlessness without also penalizing refusal, the cheapest way for a model to score well on harmful prompts is to disengage rather than think through the request. Bai et al.’s prior HH RLHF training exhibited exactly this: the assistant \"often refused to answer controversial questions\" and could get \"stuck producing evasive responses\" once a conversation turned sensitive, because evasiveness itself was being rewarded by crowdworkers judging harmlessness in isolation from helpfulness. So the abstract tension named here — helpfulness raises harm, harmlessness training lowers helpfulness — has a specific concrete failure mode on its harmless side, not a smooth tradeoff curve: it collapses into canned refusal. CAI’s non-evasiveness design goal targets this specific collapse, not the tension in the abstract. (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4)"
+    },
+    {
+      "id": "helpful-rlhf-model-traces-the-tradeoff-curve-with-hh-rlhf-model",
+      "type": "traces-the-tradeoff-curve-with",
+      "source": "helpful-rlhf-model",
+      "target": "hh-rlhf-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "helpfulness-harmlessness-tradeoff",
+      "prose": "These two RLHF baselines differ in exactly one respect: helpful-rlhf-model was trained on helpfulness comparisons only, while hh-rlhf-model added harmlessness comparisons to the same pipeline. That single difference is what produces the tradeoff empirically: \"the helpful RLHF model is more helpful but also more harmful than HH RLHF\" (constitutional-ai, §\"3.3 Main Results\", p. 8). Together the pair is the standard-RLHF reference line plotted in Figures 2 and 3 against which RL-CAI’s pareto improvement is judged — without both endpoints there is no curve to shift outward. Notably, the harmlessness gap between them is smaller here than in the earlier Bai et al. (2022) paper, because this paper’s crowdworkers were separately instructed to penalize evasive responses, which compresses HH RLHF’s apparent harmlessness advantage."
+    },
+    {
+      "id": "rl-cai-eliminates-evasiveness",
+      "type": "eliminates",
+      "source": "rl-cai",
+      "target": "evasiveness",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "helpfulness-harmlessness-tradeoff",
+      "prose": "RL-CAI’s training signal, unlike hh-rlhf-model’s, never rewards refusal for its own sake: the constitution’s comparison principles ask the feedback model to judge which response is more thoughtful and less harmful, not simply which one shuts a conversation down, and several principles were explicitly rewritten to discourage over-reactive, accusatory responses. The measured result is stark: \"RL-CAI is virtually never evasive, and often gives nuanced and harmless responses to most red team prompts\" (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 13), in direct contrast to HH RLHF’s canned \"I can’t answer that.\" This is the paper’s clearest before/after evidence that a training signal can be redesigned to decouple harmlessness from evasiveness rather than treating them as the same thing, which is the premise the whole helpfulness-harmlessness tension rests on."
+    },
+    {
+      "id": "rl-cai-produces-pareto-improvement",
+      "type": "produces",
+      "source": "rl-cai",
+      "target": "pareto-improvement",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "helpfulness-harmlessness-tradeoff",
+      "prose": "Pareto improvement is not a property CAI asserts abstractly; it is read directly off where rl-cai’s Elo points fall in Figure 2 relative to the line traced by helpful-rlhf-model and hh-rlhf-model. Ordinary RLHF only lets you trade helpfulness for harmlessness by moving along that existing line — training harder for harmlessness pushes you further into evasiveness. RL-CAI instead lands above the line: at matched or better helpfulness, it scores more harmless than either RLHF baseline. The mechanism is supply, not cleverness in the RL algorithm itself — replacing scarce, expensive human harmfulness comparisons with abundant, principle-generated AI comparisons lets far more harmlessness training happen without re-importing the evasiveness bias baked into the earlier human-labeled HH data. (constitutional-ai, §\"1.1 Motivations\", p. 3)"
+    },
+    {
+      "id": "elo-score-was-tuned-to-penalize-evasiveness",
+      "type": "was-tuned-to-penalize",
+      "source": "elo-score",
+      "target": "evasiveness",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "helpfulness-harmlessness-tradeoff",
+      "prose": "The Elo score is not a neutral instrument here: the instructions given to crowdworkers computing it were changed specifically to penalize evasiveness, and that methodological choice materially reshapes what the resulting numbers say about the helpfulness-harmlessness tension. \"Crowdworkers evaluating these models were instructed to prefer less evasive responses when both responses were equally harmless; this is why the human feedback-trained Helpful and HH models do not differ more in their harmlessness scores\" (constitutional-ai, §\"1.1 Motivations\", p. 3, Figure 2 caption). The paper later confirms this compresses hh-rlhf-model’s harmlessness Elo relative to the earlier Bai et al. (2022) numbers, since that prior work simply asked for the more harmless response, which rewarded evasion. A reader comparing Elo gaps across the two papers is comparing under different scoring rules, not just different models."
+    },
+    {
+      "id": "constitution-replaces-human-harm-labels-in-constitutional-ai",
+      "type": "replaces-human-harm-labels-in",
+      "source": "constitution",
+      "target": "constitutional-ai",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "What makes constitutional-ai workable without any human harmfulness labels is the sheer smallness of the constitution: rather than the \"tens of thousands of human preference labels\" that RLHF for harmlessness typically requires, CAI substitutes \"only of order ten simple principles, stated in natural language\" (constitutional-ai, §\"1.1 Motivations\", p. 3). Because the guidance is compressed into a handful of legible sentences instead of a large opaque comparison dataset, the same constitution can steer both pipeline stages — sampled as critique/revision instructions in the SL stage, and as comparison questions in the RL stage — and can be edited directly when designers want to change model behavior, rather than requiring a fresh round of human data collection. The constitution is therefore not just a philosophical stand-in for human labels; it is the specific engineering choice that removes the human-labeling bottleneck."
+    },
+    {
+      "id": "critique-and-revision-supplies-the-finetuning-data-for-sl-cai",
+      "type": "supplies-the-finetuning-data-for",
+      "source": "critique-and-revision",
+      "target": "sl-cai",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "sl-cai is not trained on some separately curated dataset; it is a pretrained model finetuned directly on the output of critique-and-revision. Concretely, the pipeline was run on 182,831 red-team prompts, sampling four critique-revision pairs per prompt from helpful-rlhf-model, and every one of those revisions (from all revision steps, not just the final one) went into the finetuning mix alongside separately collected helpfulness samples, to keep the resulting model from losing helpfulness (constitutional-ai, §\"3.2 Datasets and Training\", p. 8). Training ran for one epoch at a constant learning rate. This is why SL-CAI variants are named by revision depth (SL-CAI-n): the model’s behavior is a direct, traceable function of how many rounds of critique-and-revision output were included in its training data."
+    },
+    {
+      "id": "sl-cai-few-shot-examples-prevents-role-confusion-in-critique-and-revision",
+      "type": "prevents-role-confusion-in",
+      "source": "sl-cai-few-shot-examples",
+      "target": "critique-and-revision",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "critique-and-revision asks the same underlying model to play two different roles in sequence within one context — first critic, then reviser — and this repeatedly caused a specific bug: \"the language model sometimes becomes confused about its point of view — for example, it may generate a critique where it’s supposed to generate a revision, or vice versa\" (constitutional-ai, §\"3.1 Method\", p. 8). sl-cai-few-shot-examples fixes this not by changing the underlying instructions but by prepending consistently-formatted worked examples of the critique-then-revision pattern before the real conversation, so the model has a concrete template for which role belongs at which position in the context. Without this fix, the two-step pipeline that critique-and-revision depends on would periodically produce garbled output where a revision reads like a critique or vice versa."
+    },
+    {
+      "id": "direct-revision-ablation-tests-the-necessity-of-critique-in-critique-and-revision",
+      "type": "tests-the-necessity-of-critique-in",
+      "source": "direct-revision-ablation",
+      "target": "critique-and-revision",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "direct-revision-ablation asks a pointed question about critique-and-revision’s own design: is the critique step actually doing anything, or is it there for show? The answer is scale-dependent. At smaller model sizes, critiqued revisions score meaningfully more harmless than revisions generated directly with no critique in between; at the largest scale tested (52B), the gap nearly closes, and the ablation’s own inspection found the critiques \"often made inaccurate or overstated criticisms\" (constitutional-ai, §\"3.5 Are Critiques Necessary?\", p. 10). Despite this weak large-model effect, the paper keeps critiqued revisions for all main results anyway, explicitly for transparency: the critique text gives a human-readable record of what the model believed was wrong with its own response, which a bare revision does not provide."
+    },
+    {
+      "id": "ensembling-principles-diversifies-use-of-sl-cai-principles",
+      "type": "diversifies-use-of",
+      "source": "ensembling-principles",
+      "target": "sl-cai-principles",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "Randomly sampling a different principle from sl-cai-principles at each revision step, instead of applying one fixed principle throughout, turns out to have almost no effect on the metric it would seem designed to improve: harmlessness PM scores for N=1,2,4,8,16 principles are essentially flat (constitutional-ai, §\"3.4 Scaling Trends\" / \"Number of Principles in the Constitution\", p. 9). ensembling-principles does not make individual revisions more harmless. Its actual payoff shows up one step downstream: drawing from more of sl-cai-principles produces more varied revised responses, and that diversity is what improves exploration once those revisions seed the RL stage. The lesson is that a design choice can fail its most obvious benchmark and still be worth keeping, because its value was never in that benchmark."
+    },
+    {
+      "id": "sl-cai-principles-is-mirrored-in-a-different-shape-by-rl-cai-principles",
+      "type": "is-mirrored-in-a-different-shape-by",
+      "source": "sl-cai-principles",
+      "target": "rl-cai-principles",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "cai-core-method",
+      "prose": "Both lists total 16 principles and are drawn from the same constitution, but their grammar is fitted to opposite jobs. sl-cai-principles are imperative instruction pairs addressed to a model acting on its own response — \"Identify specific ways in which the assistant’s last response is harmful...\" followed by \"Please rewrite the assistant response to remove...\" — while rl-cai-principles are comparison questions addressed to a model judging between two responses, such as \"Which of these assistant responses is less harmful? Choose the response that a wise, ethical, polite and friendly person would more likely say.\" The split is not incidental content variation; it is the constitution re-expressed in whichever grammatical mood the pipeline stage requires — act-and-revise for the SL stage, compare-and-choose for the RL stage. (constitutional-ai, §\"C.1 Principles for SL-CAI\", p. 20; §\"C.2 Principles for RL-CAI\", p. 22)"
+    },
+    {
+      "id": "chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping",
+      "type": "creates-the-overconfidence-that-necessitates",
+      "source": "chain-of-thought-prompting",
+      "target": "label-clamping",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "feedback-model-engineering",
+      "prose": "chain-of-thought-prompting is asked of the feedback model specifically because it improves accuracy and legibility, but it has a side effect the paper had to design around: a CoT explanation almost always states its preferred answer explicitly before the model outputs a probability, so the resulting log-probabilities land close to 0 or 1 instead of remaining softly calibrated. \"One issue that arises is that the CoT samples typically state explicitly which multiple choice option is to be preferred, and so the probability targets are typically very confident... and are not well-calibrated\" (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11). label-clamping exists to correct exactly this: forcing the probability into a fixed band (ultimately 40-60%) so that \"without the clamping, RL-CAI models would learn to output more extreme responses\" (§\"4.3 Main Results\", p. 13)."
+    },
+    {
+      "id": "model-calibration-is-the-precondition-for-multiple-choice-evaluation-format",
+      "type": "is-the-precondition-for",
+      "source": "model-calibration",
+      "target": "multiple-choice-evaluation-format",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "feedback-model-engineering",
+      "prose": "multiple-choice-evaluation-format converts a feedback model’s ordinary next-token log-probabilities on \"(A)\" and \"(B)\" into a soft preference label — but that move is only meaningful because of model-calibration: prior work (Kadavath et al., 2022) established that language models’ probabilities on multiple-choice questions are reasonably trustworthy estimates, not arbitrary numbers. The paper leans on this directly: \"we make a labeled, preference modeling comparison example with the normalized probabilities as targets... we expect these targets will be fairly well-calibrated... since they are multiple choice responses\" (constitutional-ai, §\"4.1 Method\", p. 10). Without model-calibration holding, there would be no principled reason to prefer these soft probability targets over hard 0/1 labels, and the justification for treating a plain LM’s raw output as usable training signal would collapse."
+    },
+    {
+      "id": "lets-think-step-by-step-prompt-is-paired-with-rl-cai-cot-prompts",
+      "type": "is-paired-with",
+      "source": "lets-think-step-by-step-prompt",
+      "target": "rl-cai-cot-prompts",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "feedback-model-engineering",
+      "prose": "lets-think-step-by-step-prompt alone only signals that reasoning should happen before an answer; it says nothing about what a harmlessness judgment’s reasoning should look like, what a constitutional principle is, or how a conversation and two labeled responses should be laid out. rl-cai-cot-prompts supplies exactly that missing scaffolding as hand-written few-shot examples, each with a substitutable principle placeholder, pre-written conversation, responses, and a worked chain of thought. The paper uses both together in a single prompt rather than either alone: \"we use the ‘Let’s think step-by-step’ prompt... to elicit the chain-of-thought. In addition, we prepend several hand-written, few-shot examples in the same format\" (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11). The trigger phrase starts the reasoning; the examples shape it into something usable."
+    },
+    {
+      "id": "multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model",
+      "type": "turns-into-a-preference-labeler",
+      "source": "multiple-choice-evaluation-format",
+      "target": "feedback-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "feedback-model-engineering",
+      "prose": "feedback-model is defined in the paper as nothing more exotic than \"an independent model, typically a pretrained LM\" (constitutional-ai, §\"4.1 Method\", p. 10) — it has no built-in notion of preference or comparison. multiple-choice-evaluation-format is what manufactures that capability: by presenting the conversation, a sampled constitutional principle, and two labeled candidate responses as an (A)/(B) question and reading off the model’s answer log-probabilities, it repurposes ordinary next-token prediction into a scalar harmlessness judgment. This is the specific engineering move that lets a plain, off-the-shelf language model stand in for a crowdworker: without this templating, there would be no way to extract a comparable preference signal from a model that was never trained to produce one."
+    },
+    {
+      "id": "ensembling-principles-makes-more-robust-feedback-model",
+      "type": "makes-more-robust",
+      "source": "ensembling-principles",
+      "target": "feedback-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "feedback-model-engineering",
+      "prose": "Applied at the RL stage, ensembling-principles means sampling a different one of the 16 rl-cai-principles for every comparison label the feedback model produces, rather than judging every pair against the same fixed principle. The paper reports this \"led to notably more robust PM behavior compared to using the same principle for all labels\" (constitutional-ai, §\"4.1 Method\", p. 11; §\"4.3 Main Results\" / \"Ensembling\", p. 13). This is a different payoff from the same technique applied earlier in the SL stage, where varying sl-cai-principles left the harmlessness score essentially unchanged and instead helped later RL exploration through revision diversity. Here, at the feedback-model stage, the benefit lands directly on the thing being ensembled over: the preference labels themselves become steadier and less exploitable by any single principle’s blind spots."
+    },
+    {
+      "id": "red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming",
+      "type": "is-the-manual-process-that-scales-into",
+      "source": "red-teaming",
+      "target": "automated-red-teaming",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "red-teaming-and-harm-data",
+      "prose": "red-teaming, as run for this paper, still means paid crowdworkers manually holding adversarial conversations to bait the assistant into harmful output — a process with an inherent human-labor ceiling. automated-red-teaming (Perez et al., 2022) replaces the crowdworker with a language model that generates the adversarial prompts itself, removing that ceiling, but the paper flags a specific precondition for scaling it up: a model trained hard for harmlessness at the cost of becoming evasive would just make an automated red-teamer harvest refusals, which teaches nothing about remaining vulnerabilities. \"This should make it easier to scale up automated red teaming... since training intensively for harmlessness would otherwise result in a model that simply refuses to be helpful\" (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4). CAI’s non-evasiveness is framed as the enabling condition, not an incidental benefit."
+    },
+    {
+      "id": "red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval",
+      "type": "supplies-the-transcripts-for",
+      "source": "red-teaming",
+      "target": "classifying-harmful-behavior-eval",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "red-teaming-and-harm-data",
+      "prose": "classifying-harmful-behavior-eval is not an independently written test suite; both of its multiple-choice evaluations are built directly out of red-teaming transcripts and the crowdworker harm ratings collected alongside them in Ganguli et al. (2022). \"As part of our recent work on red teaming, we asked crowdworkers to rate the level of harmfulness displayed by various language models in human/assistant interactions, and to categorize harmful behaviors with discrete labels and categories. Thus we can ask language models to make these same evaluations, and measure their accuracy compared to crowdworkers\" (constitutional-ai, §\"B Identifying and Classifying Harmful Conversations\", p. 19). The eval’s 254-conversation balanced set for identifying harmful-vs-ethical behavior was drawn from conversations where a reviewer had already given an extreme harmfulness rating, so its difficulty and composition are inherited wholesale from how red-teaming conversations were originally scored, not designed independently."
+    },
+    {
+      "id": "palms-provides-an-independent-check-outside-red-teaming",
+      "type": "provides-an-independent-check-outside",
+      "source": "palms",
+      "target": "red-teaming",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "red-teaming-and-harm-data",
+      "prose": "Every harmful prompt used to train or evaluate SL-CAI and RL-CAI originates from red-teaming: crowdworkers (or model-generated imitations of them) deliberately baiting the assistant in the same style the model has been optimized against. palms breaks that loop. It is an externally authored, fixed list of sensitive questions from prior work (Solaiman & Dennison, 2021) that was never part of the red-teaming-derived training or comparison data, so using it to qualitatively compare hh-rlhf-model and rl-cai responses in Appendix D (constitutional-ai, §\"D.1 PALMS Sensitive Questions\", p. 23) does not ask the models to perform well on the exact distribution they were shaped by. It functions as an out-of-distribution spot check on whether CAI’s harmlessness and non-evasiveness generalize past its own training pipeline’s prompt source."
+    },
+    {
+      "id": "lamda-plays-a-different-comparative-role-than-sparrow",
+      "type": "plays-a-different-comparative-role-than",
+      "source": "lamda",
+      "target": "sparrow",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "related-dialogue-agents",
+      "prose": "The Related Work section lists LaMDA, Sparrow, and InstructGPT together as prior systems that \"use human data to train more aligned language models\" (constitutional-ai, §\"5 Related Work\", p. 14), which makes them read as interchangeable baselines. They are not. lamda’s role in this paper is purely empirical: its prompts and reference responses are reused wholesale as a fixed comparison set in Appendix D (§\"D.2 LaMDA Prompts\", p. 25) to qualitatively benchmark hh-rlhf-model against rl-cai on the same inputs. sparrow’s role is methodological: the paper singles out \"Sparrow’s decomposition of harmlessness into different areas\" as having \"some commonality with our use of principles forming a ‘constitution’\" (§\"5 Related Work\", p. 14-15) — making it the closest prior-art precedent for CAI’s central design idea, not just another data source. One supplies test inputs; the other supplies a design lineage."
+    },
+    {
+      "id": "sl-cai-seeds-the-policy-and-comparison-data-for-rl-cai",
+      "type": "seeds-the-policy-and-comparison-data-for",
+      "source": "sl-cai",
+      "target": "rl-cai",
+      "hindsight": false,
+      "groundedIn": "constitutional-ai",
+      "motivatedByTheme": "cai-core-method",
+      "prose": "sl-cai plays two roles in rl-cai’s training at once: it is the initial snapshot the RL run starts from, and it generates the response pairs the feedback model labels. The paper is explicit that this doubling is deliberate: \"We suspect that using the same model for both should lead to better results, since the distribution of responses generated by the policy are similar to the preference model training distribution, at least during early phases of RL\" (constitutional-ai, §\"4.1 Method\", p. 11). Starting RL from helpful-rlhf-model directly would forfeit both properties — the policy would begin off-distribution relative to the AI-labeled comparisons, and the preference model would be scoring responses unlike anything the policy produces. The supervised stage exists largely for this handoff: its stated purpose is to get the model \"on-distribution\" and \"reduce the need for exploration and the total length of training during the second RL phase\" (§\"1.2 The Constitutional AI Approach\", p. 5), addressing the exploration problems flagged in the Figure 1 caption (p. 2)."
+    }
+  ]
+}

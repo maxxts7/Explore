@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Inter-labeler agreement rate — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Inter-labeler agreement rate</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The measured rate at which independent labelers agree with each other (or with researchers) when ranking or labeling the same outputs, used to validate the feasibility and consistency of the labeling task.</p>
+<section class="prose-section">
+<h2>Measuring agreement, in general</h2>
+<p>Inter-annotator (or inter-labeler) agreement is a standard measurement in any human-labeling pipeline, quantifying how consistently independent annotators assign the same label or ranking to the same item. The simplest form, and the one this paper reports, is raw percent agreement, the fraction of items on which two annotators agree, as opposed to chance-corrected measures such as Cohen's or Fleiss' kappa that subtract out the agreement expected from random guessing. Percent agreement predates this paper as a basic tool of annotation methodology; InstructGPT inherits it as its chosen way to validate that its ranking task is well-posed (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.4 Human data collection", p. 8</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Its double role: filter and audit</h2>
+<p>Agreement enters InstructGPT's pipeline on both sides of a causal arrow, as the <a href="../edge/inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process.html">Inter-labeler agreement rate — was both filter and audit for → Labeler screening and selection process</a> edge details. During selection, two of the four <a href="../concept/labeler-screening-process.html">Labeler screening and selection process</a> criteria are agreement measures against researcher labels, with soft cutoffs at 75% (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=36" target="_blank" rel="noopener">§"B.1 Labeler selection", p. 36</a>). After training, agreement is reported as evidence the labeling task itself is tractable: training labelers agree with each other 72.6 ± 1.5% of the time, comparable to the 73 ± 4% researcher-researcher agreement Stiennon et al. (2020) reported for the narrower task of summarization (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.4 Human data collection", p. 8</a>). Notably, the unscreened held-out labelers agree among themselves more, 77.3 ± 1.3%, than the screened training group does, suggesting the screening criteria selected for sensitivity to harmful content across demographic groups rather than for uniformity of taste.</p>
+</section>
+<section class="prose-section">
+<h2>The floor it puts under every win rate</h2>
+<p>A <a href="../concept/win-rate.html">Win rate (preference against baseline)</a> is a proportion of human choices, so it cannot be more precise than the humans making those choices are internally consistent; the <a href="../edge/inter-annotator-agreement-caps-the-resolution-of-win-rate.html">Inter-labeler agreement rate — caps the resolution of → Win rate (preference against baseline)</a> edge makes this explicit. With roughly a quarter of individual pairwise comparisons behaving like coin flips, the paper's headline 85% preference figure for 175B InstructGPT over GPT-3 (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=11" target="_blank" rel="noopener">§"4.1 Results on the API distribution", p. 11</a>) towers safely over that noise floor, but smaller gaps between adjacent models, such as <a href="../concept/ppo-model.html">PPO (without pretraining mix)</a> versus <a href="../concept/ppo-ptx.html">PPO-ptx (pretraining gradient mixing)</a>, sit inside it and should not be read as firm rankings. This concept belongs to both the <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a> theme, as a validity check on the labeling pipeline, and the <a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a> theme, as the consistency floor underlying every judgment-based metric in the corpus.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Inter-labeler agreement rate</strong> — <a href="../edge/inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process.html">was both filter and audit for</a> → Labeler screening and selection process</li><li><strong>Inter-labeler agreement rate</strong> — <a href="../edge/inter-annotator-agreement-caps-the-resolution-of-win-rate.html">caps the resolution of</a> → Win rate (preference against baseline)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a></li><li><a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.4 Human data collection&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

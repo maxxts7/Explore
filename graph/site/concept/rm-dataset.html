@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>RM (comparison) dataset — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>RM (comparison) dataset</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The set of about 33k training prompts, each with K=4 to 9 model outputs ranked by labelers, used to train the reward model.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>The RM dataset is the second of three human-data artifacts in InstructGPT's <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a>, sitting between the <a href="../concept/sft-dataset.html">SFT dataset</a> that precedes it and the <a href="../concept/ppo-dataset.html">PPO dataset</a> that follows: roughly 33,000 training prompts, each paired with $K=4$ to $9$ model outputs ranked by labelers, used to train the <a href="../concept/reward-model.html">Reward model (RM)</a> (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=7" target="_blank" rel="noopener">§"3.2 Dataset", p. 7</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=33" target="_blank" rel="noopener">§"A.3 Dataset sizes", p. 33</a>). Its comparison count runs an order of magnitude beyond its prompt count because each ranking of $K$ outputs expands into $\binom{K}{2}$ pairwise comparisons via <a href="../concept/k-choose-2-batching.html">K-choose-2 single-batch comparison training</a>.</p>
+</section>
+<section class="prose-section">
+<h2>What shapes it before the reward model ever sees it</h2>
+<p>Two upstream choices determine what the reward model actually learns from this dataset, neither of which is a labeling instruction. First, <a href="../edge/sft-dataset-trains-the-policies-sampled-for-rm-dataset.html">the completions being ranked come overwhelmingly from SFT-trained policies</a> — "most of our comparison data comes from our supervised policies, with some coming from our PPO policies" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.1 High-level methodology", p. 6</a>) — so the reward model's competence is local to the neighborhood of output space SFT-style policies actually produce, not to the full space of possible completions. Second, <a href="../edge/labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset.html">the labeling interface itself filters out uncertain comparisons</a>: it explicitly encourages ties "in cases where two outputs seem to be of similar quality" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=39" target="_blank" rel="noopener">§"B.5 Web interface", p. 39</a>), and RM training then drops tied pairs entirely (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">§"C.2 Details of RM training", p. 42</a>). The tie button functions as a built-in confidence filter — whenever a labeler cannot distinguish two outputs, that non-judgment never becomes gradient signal, rather than being forced into an arbitrary label that would add noise. The dataset the reward model actually trains on is therefore not "everything labelers judged" but the subset of judgments labelers were confident enough about to rank decisively.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>SFT dataset — <a href="../edge/sft-dataset-trains-the-policies-sampled-for-rm-dataset.html">trains the policies sampled for</a> → <strong>RM (comparison) dataset</strong></li><li>Web labeling interface — <a href="../edge/labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset.html">filters uncertain comparisons out of</a> → <strong>RM (comparison) dataset</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3.2 Dataset&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=33" target="_blank" rel="noopener">&sect;&ldquo;A.3 Dataset sizes&rdquo;, p. 33</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,246 @@
+{
+  "pages": [
+    {
+      "id": "constitutional-ai",
+      "sections": [
+        {
+          "heading": "A two-stage alternative to human-labeled harmlessness",
+          "body": "Constitutional AI (CAI) is a training method that produces a helpful and harmless assistant while replacing every human harmfulness *label* with a short written document. The paper states the design directly: \"(Supervised Stage) Critique → Revision → Supervised Learning\" followed by \"(RL Stage) AI Comparison Evaluations → Preference Model → Reinforcement Learning\" (constitutional-ai, §\"1.2 The Constitutional AI Approach\", p. 5). In the first stage, a [[helpful-rlhf-model]] generates a harmful response, critiques it against a sampled principle, and revises it; the [[critique-and-revision]] outputs finetune a pretrained model into [[sl-cai]]. In the second stage, [[rlaif]] uses that same set of principles to have a [[feedback-model]] label which of two responses is more harmless, and RL against the resulting preference model produces [[rl-cai]]. Both stages draw their instructions from a single small [[constitution]] rather than from a large private comparison dataset — \"only of order ten simple principles, stated in natural language\" replace \"tens of thousands of human preference labels\" (constitutional-ai, §\"1.1 Motivations\", p. 3; see [[constitution-replaces-human-harm-labels-in-constitutional-ai]])."
+        },
+        {
+          "heading": "Where it sits in the corpus",
+          "body": "CAI is the corpus's third and final move in the [[scalable-oversight-lineage]]: Concrete Problems names scalable oversight as an open problem in 2016, InstructGPT's [[reward-model]] operationalizes a scaled human-feedback solution via [[rlhf]], and CAI pushes the same lineage one step further by having an AI, not a human, answer the harmlessness comparison question. It also answers a specific documented failure from Anthropic's own prior work: models trained with ordinary human-feedback RLHF for both helpfulness and harmlessness ([[hh-rlhf-model]]) tend to become evasive, retreating into canned refusals. CAI is framed explicitly as an attempt to break that tension (the [[helpfulness-harmlessness-tradeoff]] theme) without simply trading one property for the other, and its headline empirical claim, tracked through the [[evasiveness-empirical-arc]], is that RL-CAI lands above the standard RLHF tradeoff curve rather than sliding along it. The method also instantiates a pattern that recurs at every level of the paper, captured in the [[ai-substitutes-for-the-human-bottleneck]] tissue theme: an AI process substitutes for a human one at exactly the point human throughput was scarce, while the surrounding machinery (preference-model training, PPO, the KL penalty) is left untouched."
+        },
+        {
+          "heading": "The two stages and what each contributes",
+          "body": "CAI's five direct children divide cleanly along its two stages. [[constitution]] is the shared input, the natural-language principles that steer both stages. [[critique-and-revision]] and [[sl-cai]] form the supervised stage: the pipeline itself, and the finetuned model it produces, whose job is to get the policy \"on-distribution\" before RL begins. [[rlaif]] and [[rl-cai]] form the reinforcement-learning stage: the AI-feedback mechanism, and the final policy trained against a preference model that mixes AI-labeled harmlessness comparisons with human-labeled helpfulness comparisons. This grouping is itself part of the [[cai-core-method]] theme. Every one of the eighteen concepts in this batch is a piece of this same machine — a principle list, a prompting fix, an ablation, or a labeling-format decision — which is why CAI, as the root node, is best understood not as one technique but as the sum of these parts operating in sequence."
+        }
+      ]
+    },
+    {
+      "id": "constitution",
+      "sections": [
+        {
+          "heading": "The principles that replace human harm labels",
+          "body": "The constitution is the small set of natural-language principles that supplies the only human guidance Constitutional AI uses for harmlessness. It is deliberately compressed: rather than the \"tens of thousands of human preference labels\" a typical RLHF-for-harmlessness setup requires, CAI substitutes \"only of order ten simple principles, stated in natural language\" (constitutional-ai, §\"1.1 Motivations\", p. 3), and the paper's own instantiation runs to sixteen principles per list. The constitution is not one document but two, matched to the two jobs [[constitutional-ai]]'s stages need done: [[sl-cai-principles]] (Appendix C.1) are imperative critique/revision instruction pairs sampled during [[critique-and-revision]], while [[rl-cai-principles]] (Appendix C.2) are comparison questions the [[feedback-model]] answers during [[rlaif]]. A third child, [[ensembling-principles]], is the technique of sampling a different principle per step rather than reusing one throughout, applied to both lists with different payoffs."
+        },
+        {
+          "heading": "Why smallness is the load-bearing property",
+          "body": "The edge [[constitution-replaces-human-harm-labels-in-constitutional-ai]] makes the mechanism explicit: because the guidance fits in a page of legible sentences rather than a large opaque comparison dataset, the same constitution can steer both pipeline stages, and designers can edit model behavior directly by editing the document rather than collecting a fresh round of human labels. The paper reports doing exactly this qualitatively — rewriting principles to discourage \"over-reactive or overly accusatory responses\" once it noticed [[rl-cai]] over-rewarding harshness (constitutional-ai, §\"4.3 Main Results\", p. 13). This is why the constitution sits inside both the [[ai-substitutes-for-the-human-bottleneck]] tissue theme, as the specific artifact that does the substituting, and the [[scale-asymmetry-and-the-ladder-of-baselines]] tissue theme, as the clearest instance in the corpus of a small hand-built object standing in for a much larger labeled dataset."
+        }
+      ]
+    },
+    {
+      "id": "critique-and-revision",
+      "sections": [
+        {
+          "heading": "The supervised-stage pipeline",
+          "body": "Critique and revision is the mechanism that produces harmlessness training data without any human harmfulness labels. Starting from a harmful response sampled from a [[helpful-rlhf-model]], the model is asked to critique its own output against a randomly sampled principle from [[constitution]], then to revise the response in light of that critique. The paper's own example: a request to help hack a neighbor's wifi, an initial response, a critique (\"hacking into someone else's wifi is an invasion of their privacy and is possibly illegal\"), and a revision that removes the harmful advice while explaining why (constitutional-ai, §\"3.1 Method\", p. 7). Because the revised prompt-response pair is formatted identically to the original, the pipeline can be applied repeatedly, producing a chain of progressively less harmful revisions — the paper reports the first revision \"almost always removed most aspects of harmfulness,\" with later revisions improving results \"less obvious[ly] by inspection\" (constitutional-ai, §\"3.1 Method\", p. 8). Every revision from every step, not just the final one, becomes training data: the pipeline was run on 182,831 red-team prompts, four critique-revision pairs each, and the output finetunes a pretrained model into [[sl-cai]] via the [[critique-and-revision-supplies-the-finetuning-data-for-sl-cai]] edge."
+        },
+        {
+          "heading": "Serving the whole method, and two design checks",
+          "body": "As the supervised half of [[constitutional-ai]], critique-and-revision exists to get the model \"on-distribution\" cheaply, reducing \"the need for exploration and the total length of training during the second RL phase\" (constitutional-ai, §\"1.2 The Constitutional AI Approach\", p. 5) — without it, [[rl-cai]] would have to explore harmlessness behavior from a purely helpful starting point. Two children probe the design. [[sl-cai-few-shot-examples]] fixes a concrete bug: asking one model to play critic then reviser in the same context caused it to occasionally confuse the two roles, and hand-written worked examples resolve this. [[direct-revision-ablation]] asks whether the critique step earns its keep at all, finding a real but shrinking benefit as model scale grows, yet the paper keeps critiques anyway for the transparency a written rationale provides. The paper also reports, as an early qualitative signal that would later motivate [[rl-cai]]'s redesign of the [[rl-cai-principles]], that revised responses were \"rarely evasive,\" in contrast to prior human-feedback-trained harmlessness models (constitutional-ai, §\"3.1 Method\", p. 8)."
+        }
+      ]
+    },
+    {
+      "id": "direct-revision-ablation",
+      "sections": [
+        {
+          "heading": "Testing whether the critique step earns its keep",
+          "body": "Direct revision is an ablation of [[critique-and-revision]] that deletes the middle step: instead of critiquing a harmful response and then revising it, the model is instructed to produce a revision directly, with no critique in between. Comparing preference-model harmlessness scores between critiqued and direct revisions shows a scale-dependent picture: at smaller model sizes, critiqued revisions score meaningfully more harmless, while at the largest scale tested (52B parameters) the gap \"made no noticeable different,\" and inspection of the critiques themselves found they \"often made inaccurate or overstated criticisms\" (constitutional-ai, §\"3.5 Are Critiques Necessary?\", p. 10)."
+        },
+        {
+          "heading": "Why the paper keeps the step anyway",
+          "body": "Despite the weak effect at scale, the paper uses critiqued revisions throughout its main results, \"as it may provide more transparency into the model's reasoning process,\" adding that such reasoning \"may also be useful to help models uncover more subtle harms\" (constitutional-ai, §\"3.5 Are Critiques Necessary?\", p. 10). This makes direct-revision-ablation, captured in the [[direct-revision-ablation-tests-the-necessity-of-critique-in-critique-and-revision]] edge, one instance of a broader pattern in the corpus: a design choice can fail its most obvious quantitative benchmark and still be retained, because its value lies in legibility rather than score. The [[one-mechanism-many-jobs]] tissue theme groups this alongside [[ensembling-principles]], another case where a technique's payoff shows up somewhere other than where it was expected."
+        }
+      ]
+    },
+    {
+      "id": "ensembling-principles",
+      "sections": [
+        {
+          "heading": "One technique, sampled twice, two different payoffs",
+          "body": "Principle ensembling means drawing a different principle from [[constitution]] for each comparison or revision, instead of reusing one principle throughout. The paper applies it at both of CAI's stages, and the payoff differs each time. In the supervised stage, varying which of the [[sl-cai-principles]] is used at each revision step has almost no effect on harmlessness preference-model scores — results for N = 1, 2, 4, 8, 16 principles are \"essentially flat\" (constitutional-ai, §\"3.4 Scaling Trends\", p. 9) — but it does make revised responses more varied, and that diversity improves exploration once the revisions seed the RL stage ([[ensembling-principles-diversifies-use-of-sl-cai-principles]]). In the RL stage, sampling a different one of the sixteen [[rl-cai-principles]] for every comparison label the [[feedback-model]] produces \"led to notably more robust PM behavior compared to using the same principle for all labels\" (constitutional-ai, §\"4.1 Method\", p. 11; §\"4.3 Main Results\", p. 13), a direct improvement in the thing being ensembled over rather than a deferred one."
+        },
+        {
+          "heading": "Two different homes in the theme structure",
+          "body": "This split payoff is why ensembling-principles sits in both [[cai-core-method]], as one of several validated design choices in the supervised pipeline, and [[feedback-model-engineering]], as one of the narrow prompting fixes that make a plain language model usable as a preference labeler. The [[one-mechanism-many-jobs]] tissue theme reads the pair of edges together as a small lesson: identical machinery, applied at two different pipeline stages, can fail its most obvious benchmark in one place while succeeding directly in another."
+        }
+      ]
+    },
+    {
+      "id": "sl-cai-principles",
+      "sections": [
+        {
+          "heading": "The instructions for the supervised stage",
+          "body": "SL-CAI's principles are the sixteen critique/revision instruction pairs (Appendix C.1) that [[critique-and-revision]] samples from at each revision step. Their grammar is imperative and addressed to a model acting on its own output — a critique request such as \"Identify specific ways in which the assistant's last response is harmful, unethical, racist, sexist, toxic, dangerous, or illegal,\" paired with a revision request to \"rewrite the assistant response to remove any and all\" of that content (constitutional-ai, §\"C.1 Principles for SL-CAI\", p. 20). The paper is candid that these were \"selected in a fairly ad hoc manner for research purposes\" rather than carefully engineered (constitutional-ai, §\"C Constitutional Principles Used for This Research\", p. 20)."
+        },
+        {
+          "heading": "Serving the constitution, and its mirror",
+          "body": "As one of three children of [[constitution]], sl-cai-principles supplies the raw material both [[critique-and-revision]] consumes directly and [[ensembling-principles]] samples across. It has a direct counterpart in [[rl-cai-principles]]: both lists total sixteen entries drawn from the same underlying document, but sl-cai-principles is phrased as act-and-revise instructions for a model editing its own text, while rl-cai-principles is phrased as compare-and-choose questions for a model judging between two texts — the same constitution re-expressed in whichever grammatical mood the pipeline stage requires ([[sl-cai-principles-is-mirrored-in-a-different-shape-by-rl-cai-principles]], part of the [[mirror-image-pairs]] tissue theme)."
+        }
+      ]
+    },
+    {
+      "id": "rl-cai-principles",
+      "sections": [
+        {
+          "heading": "The instructions for the AI-feedback stage",
+          "body": "RL-CAI's principles are the sixteen comparison questions (Appendix C.2) that the [[feedback-model]] answers when judging which of two responses is more harmless, as part of [[rlaif]]. Where SL-CAI's principles instruct a model to act on its own text, these instruct a model to compare two pieces of text: \"Which of these assistant responses is less harmful? Choose the response that a wise, ethical, polite and friendly person would more likely say\" is the paper's own example (constitutional-ai, §\"4.1 Method\", p. 11; §\"C.2 Principles for RL-CAI\", p. 22). The paper also reports rewriting some of these principles mid-project to discourage \"over-reactive or overly accusatory responses\" after observing [[rl-cai]] models over-rewarding harshness (constitutional-ai, §\"4.3 Main Results\", p. 13)."
+        },
+        {
+          "heading": "Serving the constitution, and how it is used",
+          "body": "As a child of [[constitution]], rl-cai-principles is the document that gives [[rlaif]] its harmlessness judgments; a different principle is sampled independently for every comparison label, which is exactly the [[ensembling-principles]] technique applied to this list, reported to produce \"notably more robust PM behavior compared to using the same principle for all labels\" (constitutional-ai, §\"4.1 Method\", p. 11). Its sibling relationship to [[sl-cai-principles]] is captured directly in [[sl-cai-principles-is-mirrored-in-a-different-shape-by-rl-cai-principles]]: identical size, identical source document, opposite grammatical mood, one of several such matched pairs gathered in the [[mirror-image-pairs]] tissue theme."
+        }
+      ]
+    },
+    {
+      "id": "sl-cai-few-shot-examples",
+      "sections": [
+        {
+          "heading": "Fixing a point-of-view bug",
+          "body": "Few-shot prompts for SL-CAI (Appendix E.1) are hand-written, consistently formatted examples of the critique-then-revision pattern, prepended to the context before [[critique-and-revision]] runs on a real conversation. They exist to fix a specific failure the paper observed: \"the language model sometimes becomes confused about its point of view — for example, it may generate a critique where it's supposed to generate a revision, or vice versa\" (constitutional-ai, §\"3.1 Method\", p. 8). Because the same underlying model is asked to play critic and then reviser in sequence within one context, without a concrete template for which role belongs where, the two-step pipeline periodically produced garbled output."
+        },
+        {
+          "heading": "A small, narrow fix serving the larger pipeline",
+          "body": "As the child of [[critique-and-revision]] responsible for this one failure mode, sl-cai-few-shot-examples changes nothing about the constitution's instructions themselves — it only supplies formatting scaffolding, captured in the [[sl-cai-few-shot-examples-prevents-role-confusion-in-critique-and-revision]] edge. It belongs to two tissue themes for different reasons: [[calibration-and-prompt-scaffolding]] groups it with other narrow, load-bearing prompt-engineering choices across the feedback pipeline (the multiple-choice format, chain-of-thought triggers, label clamping), while [[pipeline-artifacts-double-duty-or-loop-backward]] notes that this fix exists purely to keep one model's two roles from blurring together within a single pipeline stage, a small but necessary piece of machinery with no other job."
+        }
+      ]
+    },
+    {
+      "id": "sl-cai",
+      "sections": [
+        {
+          "heading": "The finetuned output of the supervised stage",
+          "body": "SL-CAI is the model produced by finetuning a pretrained language model on the output of [[critique-and-revision]]: constitutionally revised harmlessness responses from all revision steps, mixed with separately collected helpfulness samples so the model does not lose helpfulness in the process ([[critique-and-revision-supplies-the-finetuning-data-for-sl-cai]]). Training used 182,831 red-team prompts (four critique-revision pairs sampled per prompt from a [[helpful-rlhf-model]]) and 135,296 helpfulness prompts, for one epoch at a constant learning rate of 0.5 relative to the pretraining rate, batch size 1024 (constitutional-ai, §\"3.2 Datasets and Training\", p. 8). Variants are named by revision depth: SL-CAI-*n* is finetuned on data including up to the *n*-th revision, for *n* = 1, 2, 3, 4 (constitutional-ai, §\"3.4 Scaling Trends\", p. 9). Measured by Elo score, SL-CAI is more helpful and more harmless than a plain pretrained model, but less helpful than either RLHF baseline, and lands between [[helpful-rlhf-model]] and [[hh-rlhf-model]] on harmlessness (constitutional-ai, §\"3.3 Main Results\", p. 8)."
+        },
+        {
+          "heading": "Its one job: seeding RL-CAI",
+          "body": "SL-CAI's entire purpose within [[constitutional-ai]] is to serve as the starting point for the second stage. It fills two roles at once for [[rl-cai]]: it is the initial policy snapshot the RL run begins from, and it is the model that generates the response pairs the [[feedback-model]] labels ([[sl-cai-seeds-the-policy-and-comparison-data-for-rl-cai]]). The paper explains why both roles are given to the same model: \"the distribution of responses generated by the policy are similar to the preference model training distribution, at least during early phases of RL\" (constitutional-ai, §\"4.1 Method\", p. 11). Starting RL directly from a helpful-only RLHF model instead would leave the policy off-distribution relative to the AI-labeled comparisons it is being trained against — which is exactly the exploration cost the supervised stage was built to avoid. This doubled role is one instance of the [[pipeline-artifacts-double-duty-or-loop-backward]] tissue theme, and the handoff itself belongs to the [[assembly-line-pipeline]] tissue theme alongside the analogous SFT-to-RM handoff in InstructGPT."
+        }
+      ]
+    },
+    {
+      "id": "rlaif",
+      "sections": [
+        {
+          "heading": "Swapping the labeler, not the pipeline",
+          "body": "RL from AI Feedback is a variant of [[rlhf]] in which harmlessness preference labels come from an AI [[feedback-model]] instead of human crowdworkers. The paper is explicit that this is a minimal, surgical change: \"the remainder of the training pipeline (i.e., preference model training and RL) is exactly the same as RLHF\" (constitutional-ai, §\"4.1 Method\", p. 10; [[rlhf-swaps-the-labeler-in-rlaif]]). Helpfulness comparisons remain human-labeled throughout, so every RLAIF run produces a [[hybrid-human-ai-preference-model]] rather than a fully AI-supervised one. Mechanically, the [[feedback-model]] is shown a harmful prompt and a pair of responses formatted as a [[multiple-choice-evaluation-format]] question, and its answer log-probabilities become a soft preference label, later adjusted by [[label-clamping]] when chain-of-thought prompting is used ([[rlaif-delegates-harmlessness-comparisons-to-feedback-model]])."
+        },
+        {
+          "heading": "The corpus's clearest instance of scalable oversight, realized",
+          "body": "RLAIF is the point at which the [[scalable-oversight-lineage]] running through the whole three-paper corpus reaches its endpoint: Concrete Problems names scalable oversight as an open problem requiring cheap proxies for expensive true objectives, InstructGPT's [[reward-model]] supplies a human-labeled proxy at scale via [[rlhf]], and RLAIF removes the last remaining human bottleneck for one of the two comparison axes. This is also the concept in this batch most directly relevant to a reader arriving from InstructGPT: RLAIF inherits every mechanical property of [[rlhf]] as InstructGPT built it (preference-model training, PPO, the KL penalty against a reference policy) and differs only in the provenance of the harmlessness half of the comparison data. The paper also flags a natural extension the automation enables but does not itself run: [[iterated-online-training]], periodically refreshing the preference model on the current policy's outputs, is described as newly feasible \"by using AI feedback we can fully automate the process\" (constitutional-ai, §\"6.1 Future Directions\", p. 15; [[rlaif-makes-newly-automatable-iterated-online-training]])."
+        },
+        {
+          "heading": "Its three children",
+          "body": "RLAIF's mechanism is built from three pieces, each a child of this concept. [[feedback-model]] is the AI labeler itself. [[multiple-choice-evaluation-format]] is the prompt template that turns an ordinary pretrained language model into that labeler by repurposing next-token prediction into a scalar judgment. [[label-clamping]] is the correction needed once chain-of-thought reasoning is added to the feedback model, since a CoT explanation that states its answer up front breaks the calibration the labeling scheme depends on. Together these three concepts are the engineering substance behind RLAIF's one-sentence description, and are gathered under the [[feedback-model-engineering]] theme."
+        }
+      ]
+    },
+    {
+      "id": "feedback-model",
+      "sections": [
+        {
+          "heading": "An ordinary language model repurposed as a labeler",
+          "body": "The feedback model is, in the paper's own words, \"an independent model, typically a pretrained LM\" (constitutional-ai, §\"4.1 Method\", p. 10) — nothing architecturally special. It is shown a harmful prompt, a pair of candidate responses, and a principle sampled from [[rl-cai-principles]], formatted as a [[multiple-choice-evaluation-format]] question, and the log-probability it assigns to each option becomes a soft preference label ([[multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model]]). When chain-of-thought prompting is added, the paper swaps in a [[helpful-rlhf-model]] in place of the plain pretrained model, \"which typically writes higher quality chain-of-thought\" (constitutional-ai, §\"4.1 Method\", p. 11) — so \"the feedback model\" names a role filled by different underlying models depending on whether reasoning is elicited."
+        },
+        {
+          "heading": "Supplying half of a hybrid reward, robustly",
+          "body": "As the mechanism at the center of [[rlaif]], the feedback model supplies the harmlessness half of the [[hybrid-human-ai-preference-model]], while human labels continue to supply the helpfulness half ([[feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model]]) — 182,831 AI-generated harmlessness comparisons mixed with 135,296 human helpfulness comparisons (constitutional-ai, §\"4.2 Datasets and Training\", p. 11). Its judgments are made more robust by [[ensembling-principles]], sampling a different principle per label rather than reusing one, which the paper reports gives \"notably more robust PM behavior\" (constitutional-ai, §\"4.1 Method\", p. 11). The feedback model's usability rests on [[model-calibration]] — the pre-existing finding that language-model probabilities on multiple-choice questions are reasonably trustworthy — which is what justifies treating its raw log-probabilities as training targets at all, and which the paper verifies directly on its own [[hhh-eval-benchmark]] questions (constitutional-ai, §\"4.3 Main Results\", Figure 9, p. 12)."
+        }
+      ]
+    },
+    {
+      "id": "multiple-choice-evaluation-format",
+      "sections": [
+        {
+          "heading": "Manufacturing a preference signal from next-token prediction",
+          "body": "The multiple-choice comparison format is the specific prompt template that lets an ordinary language model produce a usable preference judgment. It presents a conversation, a constitutional principle, and two labeled candidate responses, then asks the model to complete \"The answer is:\" (constitutional-ai, §\"4.1 Method\", p. 10). Reading off the model's log-probability for each option token converts unstructured next-token prediction into a scalar comparison: writing $\\ell_A$ and $\\ell_B$ for the model's log-probabilities on \"(A)\" and \"(B)\", the normalized soft label used as a preference-model target is\n$$ p_A = \\frac{\\exp(\\ell_A)}{\\exp(\\ell_A) + \\exp(\\ell_B)}. $$\nWithout this templating there is no way to extract a comparable preference signal from a model that was never trained to produce one ([[multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model]]) — it is what turns a plain pretrained model into the [[feedback-model]]."
+        },
+        {
+          "heading": "Resting on calibration",
+          "body": "This move is only trustworthy because of [[model-calibration]]: prior work established that language-model probabilities on multiple-choice questions are reasonably well-calibrated estimates rather than arbitrary numbers, which is what justifies using the normalized probability $p_A$ directly as a soft training target instead of forcing a hard 0/1 label ([[model-calibration-is-the-precondition-for-multiple-choice-evaluation-format]]; constitutional-ai, §\"4.1 Method\", p. 10). As a child of [[rlaif]], the format is the piece of machinery that sits between an off-the-shelf language model and a working preference labeler, and it belongs to the [[calibration-and-prompt-scaffolding]] tissue theme alongside the other narrow prompt-engineering decisions the feedback pipeline depends on."
+        }
+      ]
+    },
+    {
+      "id": "label-clamping",
+      "sections": [
+        {
+          "heading": "Correcting overconfidence introduced by chain-of-thought",
+          "body": "Preference label clamping compares three ways of turning a [[feedback-model]]'s output into a preference-model training target: raw soft labels (normalized log-probabilities), hard 0/1 labels, and probabilities clamped to a fixed range. Without chain-of-thought reasoning, soft labels work well on their own, because they are \"actually fairly well-calibrated\" (constitutional-ai, §\"4.3 Main Results\", p. 13). But [[chain-of-thought-prompting]] breaks this: a CoT explanation \"typically states explicitly which multiple choice option is to be preferred, and so the probability targets are typically very confident (i.e., close to 0 or 1) and are not well-calibrated\" (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11; [[chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping]]). Clamping forces the probability into a fixed band instead of using it raw: writing $p$ for the raw probability, the clamped label is\n$$ p_{\\text{clamped}} = \\min(\\max(p,\\,0.4),\\,0.6). $$"
+        },
+        {
+          "heading": "Finding the right band",
+          "body": "The paper tested clamping at 20-80% and found it \"slightly improved results,\" then tested 40-60% and found it \"improved results further,\" settling on 40-60% for the main paper (constitutional-ai, §\"4.3 Main Results\", p. 13). The effect is not cosmetic: \"without the clamping, RL-CAI models would learn to output more extreme responses\" (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11). As a child of [[rlaif]], label-clamping exists only because chain-of-thought was added to the feedback pipeline for accuracy and legibility, and it belongs to the [[calibration-and-prompt-scaffolding]] tissue theme as the corrective half of that trade — reasoning improves the judgment but degrades the calibration the labeling scheme needs, and clamping repairs the calibration without discarding the reasoning."
+        }
+      ]
+    },
+    {
+      "id": "rl-cai",
+      "sections": [
+        {
+          "heading": "The final policy of Constitutional AI",
+          "body": "RL-CAI is the policy produced by running reinforcement learning against a preference model trained partly on AI-generated harmlessness labels, starting from the [[sl-cai]] snapshot ([[sl-cai-seeds-the-policy-and-comparison-data-for-rl-cai]]). From this point the training pipeline is identical to ordinary RLHF, except the preference model is now the [[hybrid-human-ai-preference-model]] that [[rlaif]] produces. The paper reports RL-CAI as \"significantly more harmless than the RLHF and SL-CAI models\" (constitutional-ai, §\"4.3 Main Results\", p. 12), with a chain-of-thought variant (RL-CAI w/ CoT) that trades a little helpfulness for a little more harmlessness. Left training too long, RL-CAI can be over-trained into Goodharting behavior — responding to harmful prompts with boilerplate reassurance (\"you are valid, valued, and cared for\") rather than substantive engagement (constitutional-ai, §\"4.3 Main Results\", p. 12), the paper's own explicit naming of the [[goodharts-law]] pattern that the corpus otherwise only instantiates without labeling."
+        },
+        {
+          "heading": "Breaking the tradeoff, not just moving along it",
+          "body": "RL-CAI's headline result is read directly off where its Elo points fall relative to the line traced by [[helpful-rlhf-model]] and [[hh-rlhf-model]]: ordinary RLHF only lets you trade helpfulness for harmlessness by moving along that line, while RL-CAI lands above it — at matched or better helpfulness, more harmless than either baseline ([[rl-cai-produces-pareto-improvement]]). The mechanism is supply, not a cleverer RL algorithm: replacing scarce, expensive human harmfulness comparisons with abundant AI-generated ones lets far more harmlessness training happen without re-importing the evasiveness that saturated the earlier human-labeled data. Concretely, the paper reports RL-CAI is \"virtually never evasive, and often gives nuanced and harmless responses to most red team prompts\" (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 13; [[rl-cai-eliminates-evasiveness]]), in direct contrast to HH RLHF's canned refusals. This is the empirical payoff the entire [[cai-core-method]] pipeline was built to produce, and the [[evasiveness-empirical-arc]] tissue theme traces exactly how redesigned principles and a redesigned Elo-scoring instruction, not a new RL algorithm, produced it."
+        }
+      ]
+    },
+    {
+      "id": "helpful-rlhf-model",
+      "sections": [
+        {
+          "heading": "An RLHF policy, predating this paper",
+          "body": "Reinforcement learning from human feedback (RLHF) trains a policy in three parts: a base language model is finetuned on demonstrations, a reward model is fit to human pairwise comparisons of that policy's outputs, and the policy is then optimized against the reward model with reinforcement learning, typically regularized by a KL penalty against the starting policy so it does not drift into degenerate outputs that exploit the reward model. Given two outputs $y_1, y_2$ for the same input $x$, a reward model $r_\\theta$ is fit so that the probability a human prefers $y_1$ follows a Bradley-Terry form,\n$$ P(y_1 \\succ y_2 \\mid x) = \\frac{\\exp(r_\\theta(x,y_1))}{\\exp(r_\\theta(x,y_1)) + \\exp(r_\\theta(x,y_2))}, $$\nand the policy $\\pi_\\phi$ is trained to maximize $E[\\,r_\\theta(x,y) - \\beta \\log(\\pi_\\phi(y\\mid x)/\\pi_{\\text{ref}}(y\\mid x))\\,]$. This technique predates all three papers in this corpus in its modern form (Christiano et al. 2017) and is refined by InstructGPT for open-ended instruction-following ([[rlhf]]; instructgpt, §\"3.1 High-level methodology\", p. 6); Constitutional AI inherits it directly from Anthropic's own prior work (Bai et al. 2022) rather than introducing it."
+        },
+        {
+          "heading": "What makes it helpful specifically, and its two jobs here",
+          "body": "The helpful RLHF model is the instance of this procedure where the reward model was fit exclusively to helpfulness comparisons, with no harmfulness data included (constitutional-ai, §\"1.4 Models and Data\", p. 6). Within Constitutional AI it plays two roles. First, it is the response-generating starting point for [[critique-and-revision]]: because it was never trained to avoid harm, prompting it with adversarial red-team inputs reliably produces the harmful responses the critique-and-revision pipeline needs to revise. Second, it is one endpoint of the standard-RLHF reference line plotted against [[rl-cai]]'s results: the paper reports \"the helpful RLHF model is more helpful but also more harmful than HH RLHF\" (constitutional-ai, §\"3.3 Main Results\", p. 8), and this single fixed difference between it and [[hh-rlhf-model]] is what traces the tradeoff curve CAI's [[pareto-improvement]] is measured against ([[helpful-rlhf-model-traces-the-tradeoff-curve-with-hh-rlhf-model]])."
+        }
+      ]
+    },
+    {
+      "id": "hh-rlhf-model",
+      "sections": [
+        {
+          "heading": "An RLHF policy trained on two kinds of comparisons, predating this paper",
+          "body": "The HH RLHF model is produced by the same [[rlhf]] procedure as [[helpful-rlhf-model]] — reward model fit to human pairwise comparisons, policy optimized against it under a KL penalty — but with one difference: its reward model is fit to comparisons covering both helpfulness and harmlessness, collected separately by having crowdworkers red-team the model for the latter (constitutional-ai, §\"1.4 Models and Data\", p. 6). Like helpful-rlhf-model, this specific policy predates Constitutional AI: it is inherited from Anthropic's prior paper on training a helpful and harmless assistant with human feedback (Bai et al., 2022), which Constitutional AI cites throughout as the source of both its training procedure and its documented failure mode."
+        },
+        {
+          "heading": "A baseline that motivates the whole paper's redesign",
+          "body": "HH RLHF is the second endpoint of the standard-RLHF tradeoff line, more harmless but less helpful than helpful-rlhf-model ([[helpful-rlhf-model-traces-the-tradeoff-curve-with-hh-rlhf-model]]), and Constitutional AI treats its known behavior as the problem to be solved. Prior work found HH RLHF \"often evasive when presented with sensitive discussions, giving canned responses like 'I can't answer that'\" (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 13), a consequence of crowdworkers having been asked to prefer the more harmless response without being told to penalize refusal. This is the specific failure that motivates [[rl-cai]]'s redesigned [[rl-cai-principles]] and Elo-scoring instructions, and the paper notes that its own re-measurement narrows the harmlessness gap between HH RLHF and helpful-rlhf-model relative to the earlier paper, because crowdworkers here were separately instructed to penalize evasiveness — a methodological choice, not a change in either model, that compresses HH RLHF's apparent advantage (constitutional-ai, §\"3.3 Main Results\", footnote 8, p. 8)."
+        }
+      ]
+    },
+    {
+      "id": "big-bench",
+      "sections": [
+        {
+          "heading": "A large, crowd-built benchmark suite, predating this paper",
+          "body": "BIG-Bench (\"Beyond the Imitation Game Benchmark,\" Srivastava et al. 2022) is a large, collaboratively assembled benchmark suite for language models, contributed to by researchers across many institutions and comprising a broad collection of diverse tasks intended to probe capabilities and limitations that narrower, single-author benchmarks tend to miss. It predates Constitutional AI and is not introduced by any of the three papers in this corpus; Constitutional AI uses it only as a host for one specific evaluation set."
+        },
+        {
+          "heading": "Hosting the original HHH evaluation",
+          "body": "BIG-Bench's relevance to this corpus is narrow but concrete: it is where the original 221-comparison [[hhh-eval-benchmark]], first written by Askell et al. (2021) to test the [[hhh-framework]], was made publicly available ([[hhh-eval-benchmark-is-hosted-as-a-subset-of-big-bench]]; constitutional-ai, §\"B Identifying and Classifying Harmful Conversations\", p. 20). Constitutional AI uses this BIG-Bench-hosted set as a comparison baseline, reporting that models \"can now achieve well over 90% binary accuracy\" on it, which is precisely why the paper goes on to write 217 additional, harder comparisons of its own rather than continuing to rely on the saturated original set. Those 217 new comparisons are not added back into BIG-Bench; they exist only in the paper's own repository, so \"the HHH eval\" as used by Constitutional AI is a composite of a small, versioned public subset hosted inside BIG-Bench and a private extension attached to this one paper, a distinction relevant to anyone trying to reproduce the evaluation later."
+        }
+      ]
+    },
+    {
+      "id": "classifying-harmful-behavior-eval",
+      "sections": [
+        {
+          "heading": "Testing whether a model can replicate crowdworker harm judgments",
+          "body": "This concept covers two multiple-choice evaluations, both built directly from red-teaming transcripts and the harm ratings collected alongside them. The paper explains the motivation plainly: \"we asked crowdworkers to rate the level of harmfulness displayed by various language models in human/assistant interactions, and to categorize harmful behaviors with discrete labels and categories. Thus we can ask language models to make these same evaluations, and measure their accuracy compared to crowdworkers\" (constitutional-ai, §\"B Identifying and Classifying Harmful Conversations\", p. 19). The first evaluation is a balanced 254-conversation set for identifying harmful versus ethical assistant behavior, drawn only from conversations where a reviewer had already given an extreme (minimum or maximum) harmfulness rating. The second is a 287-example, nine-way multiple-choice task classifying a harmful conversation into one of the nine most frequent crowdworker-assigned categories."
+        },
+        {
+          "heading": "Inherited difficulty, and its place in the argument",
+          "body": "Because both evaluations are drawn wholesale from how [[red-teaming]] conversations were originally scored rather than designed independently, their difficulty and composition are inherited from that upstream process ([[red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval]]), part of the [[assembly-line-pipeline]] tissue theme's broader point that each pipeline stage's output becomes the next stage's engineered raw material. Alongside [[palms]] and [[automated-red-teaming]] in the [[red-teaming-and-harm-data]] theme, this evaluation is one piece of evidence the paper marshals for its central premise: that language models are becoming capable enough to supervise other AIs' harmfulness judgments, which is the empirical warrant for building [[rlaif]] on AI-generated labels in the first place."
+        }
+      ]
+    }
+  ]
+}

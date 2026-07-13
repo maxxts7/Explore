@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Weakening statistical assumptions to survive distribution shift — Theme</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-theme">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-theme">theme</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Weakening statistical assumptions to survive distribution shift</h1>
+<section class="prose-section"><p>One family of responses to distributional shift works by relaxing exactly which statistical assumptions a model needs to hold across training and test. The covariate shift assumption licenses reusing training data under importance weighting by assuming only the input distribution moves while the conditional relationship between input and label stays fixed. Partially specified models, drawn mainly from econometrics, go further, requiring assumptions about only some aspects of a data distribution rather than a fully specified model, with the generalized method of moments identifying parameters from moment conditions alone. Unsupervised risk estimation pushes the relaxation to its limit, estimating a model's labeled risk on a test distribution using only unlabeled test data by positing structure in how errors are distributed. Training on multiple distributions takes an empirical rather than assumption-driven route, hoping a model that performs well across several distinct training distributions will generalize to a genuinely novel one. This theme's claim is that these are all variations on the same move: give up a little statistical certainty in exchange for validity under shift.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Members &mdash; a guided walk</h2><ol class="walk"><li><a href="../concept/covariate-shift-assumption.html">Covariate shift assumption</a><div class="walk-prose"><p>Robustness to distributional shift can be bought cheaply if a designer is willing to assume enough: the covariate shift assumption holds that only the input distribution p(x) moves while p(y|x) stays fixed, letting a model reuse training data via importance weighting. This is the strongest assumption in the theme, and the paper flags it as "very strong and also untestable" -- a warning that sets up why every later step in this walk is a retreat from it.</p></div></li><li><a href="../concept/partially-specified-models.html">Partially specified models</a><div class="walk-prose"><p>Partially specified models retreat from that untestable commitment, requiring assumptions about only some aspects of the data distribution, such as a single moment condition, rather than the full conditional p(y|x) covariate shift demands. The paper treats the two as successive fallback positions rather than parallel options: covariate shift is cheap but brittle, partial specification trades some of that cheapness for testability.</p></div></li><li><a href="../concept/generalized-method-of-moments.html">Generalized method of moments</a><div class="walk-prose"><p>The generalized method of moments supplies partially-specified-models' founding example: a linear regression y = <w*,x> + v where only E[v|x] = 0 is assumed about the noise, with no distributional form specified, is already enough to identify w* under distributional shift. It shows concretely what "assuming only some aspects of a distribution" can buy a designer.</p></div></li><li><a href="../concept/unsupervised-risk-estimation.html">Unsupervised risk estimation</a><div class="walk-prose"><p>Unsupervised risk estimation applies the same partial-specification move to a different target: rather than identifying model parameters from moment conditions the way GMM does, it posits structure in how errors are distributed and thereby estimates labeled risk on a test distribution from unlabeled test data alone. It diverges in target from the generalized method of moments even though both are explicitly named instances of the same partially-specified-models family.</p></div></li><li><a href="../concept/training-multiple-distributions.html">Training on multiple distributions</a><div class="walk-prose"><p>Training on multiple distributions abandons assumption-driven relaxation altogether for an empirical bet: train on several distinct distributions and hope performance generalizes to a genuinely novel one. It sits at the opposite pole from the covariate shift assumption that opened this walk, trading one explicit statistical claim for breadth of exposure, so the theme's arc runs from maximal theoretical commitment down to none at all.</p></div></li></ol></section>
+<section class="nav-block"><h2>Superthemes</h2><ul><li><a href="../supertheme/distributional-shift-responses.html">Distributional shift: relax the statistics, or rewrite the contract</a></li></ul></section>
+<section class="nav-block"><h2>Edges explored within this theme</h2><ul><li><a href="../edge/covariate-shift-assumption-untestability-motivates-retreat-to-partially-specified-models.html">Covariate shift assumption — untestability motivates retreat to → Partially specified models</a></li><li><a href="../edge/generalized-method-of-moments-generalizes-the-founding-example-of-partially-specified-models.html">Generalized method of moments — generalizes the founding example of → Partially specified models</a></li><li><a href="../edge/unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models.html">Unsupervised risk estimation — partially specifies error not parameters → Partially specified models</a></li><li><a href="../edge/covariate-shift-assumption-single-invariant-contrasts-with-training-multiple-distributions.html">Covariate shift assumption — single invariant contrasts with → Training on multiple distributions</a></li><li><a href="../edge/generalized-method-of-moments-diverges-in-target-from-unsupervised-risk-estimation.html">Generalized method of moments — diverges in target from → Unsupervised risk estimation</a></li></ul></section>
+<section class="nav-block"><h2>Super edges touching this theme</h2><ul><li><a href="../superedge/statistical-relaxations-for-distributional-shift-is-not-yet-combined-with-formal-methods-imported.html">Weakening statistical assumptions to survive distribution shift — is not yet combined with → Formal verification and control theory recur as safety building blocks</a></li><li><a href="../superedge/statistical-relaxations-for-distributional-shift-supplies-a-route-into-shift-as-contracts-and-causation.html">Weakening statistical assumptions to survive distribution shift — supplies a route into → Reframing distributional shift as broken contracts and causal structure</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind this theme&rsquo;s member concepts.</p><details class="sources-details"><summary>4 source passages in 1 paper</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=17" target="_blank" rel="noopener">&sect;&ldquo;Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.&rdquo;, p. 17</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=17" target="_blank" rel="noopener">&sect;&ldquo;Well-specified models: covariate shift and marginal likelihood.&rdquo;, p. 17</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.&rdquo;, p. 18</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;Training on multiple distributions.&rdquo;, p. 18</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

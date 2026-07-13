@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Cooperative Inverse Reinforcement Learning (CIRL) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Cooperative Inverse Reinforcement Learning (CIRL)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human&#x27;s goals.</p>
+<section class="prose-section">
+<h2>A pre-existing framework for human-agent collaboration</h2>
+<p>Cooperative Inverse Reinforcement Learning, CIRL, predates Concrete Problems; it is a framework introduced by Hadfield-Menell, Dragan, Carroll, and Russell (2016) for structuring interaction between an agent and a human so the agent works to achieve the human's goals rather than a goal fixed in advance (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">§"Multi-Agent Approaches:", p. 6</a>). Concrete Problems inherits it as one concrete instantiation of a broader reframing it calls <a href="../concept/multi-agent-approaches.html">Multi-agent approaches (to side effects)</a>: instead of penalizing environmental change directly, treat side-effect avoidance as a matter of understanding and protecting the interests of the other agents, including humans, that share the environment.</p>
+</section>
+<section class="prose-section">
+<h2>The formalism: a shared-payoff game with a hidden parameter</h2>
+<p>A CIRL problem is formalized as a two-player Markov game between a human $H$ and a robot $R$ sharing a common state space $\mathcal{S}$, each with its own action set, $A^H$ and $A^R$, and a common transition function. The reward is a single function $R(s, a^H, a^R, \theta)$ parameterized by $\theta \in \Theta$, the human's private goal, which is known to the human but not to the robot. Both players receive the same reward, so the game is one of pure common payoff, not of competition, and the robot's problem reduces to a partially observable planning problem: it maintains a belief $b(\theta)$ over the human's goal and updates that belief via Bayesian inference from the human's observed actions, choosing $a^R_t$ to maximize expected discounted return under its current belief, $\mathbb{E}_{\theta \sim b}\left[\sum_t \gamma^t R(s_t, a^H_t, a^R_t, \theta)\right]$. Because both players are trying to help the human's true objective succeed, an optimal human policy under this game will actively teach, demonstrating or clarifying its goal rather than simply pursuing it, whenever teaching improves the robot's eventual behavior more than direct pursuit would.</p>
+</section>
+<section class="prose-section">
+<h2>What the framework buys the paper, twice over</h2>
+<p>CIRL does double duty in Concrete Problems. Within <a href="../theme/side-effects-as-relationship.html">Side effects and control as a relationship with other agents</a>, it is paired with <a href="../concept/reward-autoencoder.html">Reward autoencoder (goal transparency)</a> as a way of making agent-human interaction safer through mutual legibility, but the two <a href="../edge/cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder.html">run legibility in opposite directions</a>: CIRL makes the human's goal legible to the agent, while the reward autoencoder tries to make the agent's goal legible to the human. CIRL also <a href="../edge/cooperative-inverse-reinforcement-learning-supplies-a-candidate-mechanism-for-shutdown-problem.html">supplies a candidate mechanism</a> for the <a href="../concept/shutdown-problem.html">Shutdown / off-switch problem</a>: because the agent infers the human's goal rather than optimizing one fixed in advance, allowing itself to be shut down is simply what a correctly functioning CIRL agent does whenever the human's inferred goal favors shutdown, with no separate off-switch logic required, though the paper still calls shutdown "an interesting problem in its own right" rather than a settled one (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">§"Multi-Agent Approaches:", p. 6</a>). Within the second theme it belongs to, <a href="../theme/demonstrations-not-specification.html">Learning from demonstrations instead of a specified reward</a>, CIRL is grouped with <a href="../concept/use-demonstrations.html">Use demonstrations (safe exploration)</a> as a way of letting human intentions substitute for a hand-specified reward, but it is the <a href="../edge/cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations.html">interactive counterpart</a> of that offline technique: where use-demonstrations mines a fixed, pre-collected dataset of expert trajectories, CIRL sets up an ongoing two-player game in which the agent updates its belief about the human's goal turn by turn, buying it the ability to ask clarifying questions or defer to the human in a way an agent trained once on a fixed dataset cannot.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/multi-agent-approaches.html">Multi-agent approaches (to side effects)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Cooperative Inverse Reinforcement Learning (CIRL)</strong> — <a href="../edge/cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder.html">inverts the legibility direction of</a> → Reward autoencoder (goal transparency)</li><li><strong>Cooperative Inverse Reinforcement Learning (CIRL)</strong> — <a href="../edge/cooperative-inverse-reinforcement-learning-supplies-a-candidate-mechanism-for-shutdown-problem.html">supplies a candidate mechanism for</a> → Shutdown / off-switch problem</li><li><strong>Cooperative Inverse Reinforcement Learning (CIRL)</strong> — <a href="../edge/cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations.html">interactive counterpart of</a> → Use demonstrations (safe exploration)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/demonstrations-not-specification.html">Learning from demonstrations instead of a specified reward</a></li><li><a href="../theme/side-effects-as-relationship.html">Side effects and control as a relationship with other agents</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;Multi-Agent Approaches:&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

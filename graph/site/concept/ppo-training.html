@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>PPO fine-tuning stage (RLHF policy optimization) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>PPO fine-tuning stage (RLHF policy optimization)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The third training step, in which the SFT model is further fine-tuned with the Proximal Policy Optimization algorithm to maximize the scalar reward produced by the reward model.</p>
+<section class="prose-section">
+<h2>Proximal Policy Optimization, in general</h2>
+<p>Proximal Policy Optimization (Schulman et al., 2017) is a policy-gradient reinforcement-learning algorithm that updates a policy while constraining how far a single update can move it from the policy that generated the current batch of data, avoiding the instability of unconstrained large policy updates. Its clipped surrogate objective is
+$$L^{CLIP}(\theta) = \hat{\mathbb{E}}_t\Big[\min\big(r_t(\theta)\hat{A}_t,\ \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\,\hat{A}_t\big)\Big], \qquad r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)},$$
+where $\hat{A}_t$ is an advantage estimate and $\epsilon$ a small clipping range; the clip term discards the incentive to push $r_t(\theta)$ outside $[1-\epsilon,1+\epsilon]$ once the estimated advantage is already being exploited, keeping each update proximal. PPO predates InstructGPT by five years and is inherited here as the RL algorithm InstructGPT uses to implement its third training step, following the same recipe Stiennon et al. (2020) used for summarization.</p>
+</section>
+<section class="prose-section">
+<h2>As InstructGPT&#x27;s third stage</h2>
+<p>PPO fine-tuning takes the <a href="../concept/sft-model.html">Supervised fine-tuned (SFT) model</a> and further trains it by reinforcement learning to maximize the scalar reward produced by the trained <a href="../concept/reward-model.html">Reward model (RM)</a>, within a single-step <a href="../concept/bandit-environment.html">Bandit environment formulation for RLHF</a>: a prompt is presented, the policy generates one response, the reward model scores it, and the episode ends (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">§"3.5 Models", p. 9</a>). Two anchoring relationships tie this stage to what precedes it. The <a href="../edge/sft-model-anchors-as-both-init-and-reference-for-ppo-training.html">Supervised fine-tuned (SFT) model — anchors as both init and reference for → PPO fine-tuning stage (RLHF policy optimization)</a> edge notes that the SFT model plays a double role, supplying the policy's initial weights and serving as the reference distribution the <a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a> measures divergence against, and that these are, subtly, two different SFT checkpoints tuned for different purposes (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">§"C.3 Details of the initialization models for RLHF", p. 42</a>). The <a href="../edge/reward-model-supervises-from-below-ppo-training.html">Reward model (RM) — supervises from below → PPO fine-tuning stage (RLHF policy optimization)</a> edge notes that every PPO policy, including the 175B one, is trained against a single 6B reward model, a forced choice since 175B reward-model training proved unstable (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=41" target="_blank" rel="noopener">§"C.2 Details of RM training", p. 41</a>), which quietly tests whether a smaller judge can usefully steer a larger policy.</p>
+</section>
+<section class="prose-section">
+<h2>Its six working parts</h2>
+<p>Beyond this high-level story, PPO training is a parent concept whose specific engineering choices, gathered under the <a href="../theme/ppo-optimization-mechanics.html">The mechanics that make PPO fine-tuning work</a> theme, are each concepts in their own right. The <a href="../concept/bandit-environment.html">Bandit environment formulation for RLHF</a> supplies the single-step structure described above. The <a href="../concept/value-function.html">PPO value function</a>, a critic network initialized from the reward model's own weights, and <a href="../concept/generalized-advantage-estimation.html">Generalized advantage estimation (GAE)</a>, applied here without discounting, together supply the advantage signal the PPO objective needs. The <a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a>, subtracted per generated token, keeps the policy anchored near the SFT model it started from. Finally, two named model variants instantiate the whole recipe differently: <a href="../concept/ppo-model.html">PPO (without pretraining mix)</a> optimizes reward plus KL penalty alone, while <a href="../concept/ppo-ptx.html">PPO-ptx (pretraining gradient mixing)</a> additionally mixes in pretraining-distribution gradients to counteract capability regressions, and it is the latter that the paper calls InstructGPT by default.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/bandit-environment.html">Bandit environment formulation for RLHF</a></li><li><a href="../concept/generalized-advantage-estimation.html">Generalized advantage estimation (GAE)</a></li><li><a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a></li><li><a href="../concept/ppo-model.html">PPO (without pretraining mix)</a></li><li><a href="../concept/value-function.html">PPO value function</a></li><li><a href="../concept/ppo-ptx.html">PPO-ptx (pretraining gradient mixing)</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Reward model (RM) — <a href="../edge/reward-model-supervises-from-below-ppo-training.html">supervises from below</a> → <strong>PPO fine-tuning stage (RLHF policy optimization)</strong></li><li>Supervised fine-tuned (SFT) model — <a href="../edge/sft-model-anchors-as-both-init-and-reference-for-ppo-training.html">anchors as both init and reference for</a> → <strong>PPO fine-tuning stage (RLHF policy optimization)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/rlhf-three-step-pipeline.html">InstructGPT&#x27;s three-step training pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">&sect;&ldquo;C.4 Details of RLHF training&rdquo;, p. 42</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

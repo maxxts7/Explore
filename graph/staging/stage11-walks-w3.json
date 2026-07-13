@@ -1,0 +1,264 @@
+{
+  "walks": [
+    {
+      "theme": "semi-supervised-reward-learning-proposals",
+      "steps": [
+        {
+          "concept": "scalable-oversight",
+          "prose": "Scalable oversight names the core difficulty this theme addresses: ensuring safe agent behavior when the true objective is too costly to evaluate on every training example, forcing reliance on cheaper proxies. The rest of this walk traces the paper's flagship answer to that difficulty, semi-supervised reinforcement learning, and the family of techniques built to make it work."
+        },
+        {
+          "concept": "semi-supervised-reinforcement-learning",
+          "prose": "Semi-supervised RL operationalizes scalable oversight as a concrete, tunable setup: an agent observes its true reward on only a small fraction of timesteps or episodes, yet is evaluated as if judged throughout. The four proposals that follow are all instantiations of this single framework, each mining the unlabeled majority of experience in a different way."
+        },
+        {
+          "concept": "supervised-reward-learning",
+          "prose": "Supervised reward learning is the baseline instantiation: train a model to predict reward directly from state, then use that prediction, weighted by its own uncertainty, to estimate payoff on episodes that carry no true label at all. It is the most literal reading of semi-supervised RL's promise, learning to fill in the missing reward signal itself."
+        },
+        {
+          "concept": "semi-supervised-active-reward-learning",
+          "prose": "The semi-supervised or active variant extends supervised reward learning by adding the ability to flag salient events and request feedback on them specifically, rather than passively predicting reward everywhere. This turns the scarce true-reward budget into something the agent can spend deliberately instead of receiving at random."
+        },
+        {
+          "concept": "unsupervised-value-iteration",
+          "prose": "Unsupervised value iteration switches strategies entirely: instead of estimating the missing reward, it mines the transitions of unlabeled episodes to make more accurate Bellman updates, extracting a complementary signal to supervised reward learning from the same pool of data. Reward prediction and dynamics-only learning turn out to be two non-overlapping ways of using experience that lacks a label."
+        },
+        {
+          "concept": "unsupervised-model-learning",
+          "prose": "Unsupervised model learning mirrors unsupervised value iteration's trick in model-based form, using the same reward-free transitions to improve a dynamics model instead of a value function. Between them, the model-free and model-based branches of RL each get their own route to squeezing information out of unlabeled episodes."
+        },
+        {
+          "concept": "atari-games-environment",
+          "prose": "Atari games are proposed as the shared toy testbed for all of the above, letting the paper stage a sequence of increasingly demanding oversight-scarcity conditions inside one familiar environment. It closes the walk by grounding four abstract proposals in a single concrete place where they could actually be run and compared."
+        }
+      ]
+    },
+    {
+      "theme": "distant-supervision-and-hierarchical-decomposition",
+      "steps": [
+        {
+          "concept": "scalable-oversight",
+          "prose": "Scalable oversight is the same open problem as before, safe behavior requires checking a true objective that is too costly to evaluate everywhere, but this walk follows the two routes to it that do not rely on training a model to predict reward. Both accept a weaker signal than semi-supervised reward learning in exchange for sidestepping reward prediction altogether."
+        },
+        {
+          "concept": "distant-supervision",
+          "prose": "Distant supervision addresses scalable oversight by importing a strategy from NLP and weak-supervision literature: substitute aggregate statistics or noisy labeling rules for per-example evaluation, keeping the same fine-grained timescale but accepting a weaker signal at each point. The paper flags it as the less experimentally ready of its two non-reward-prediction proposals."
+        },
+        {
+          "concept": "deepdive",
+          "prose": "DeepDive is cited as a working system built on exactly that principle, asking users to supply rules that generate many weak labels rather than hand-labeling data directly. It grounds distant supervision's abstract pitch in an actual knowledge-base-construction tool that already does this at scale."
+        },
+        {
+          "concept": "hierarchical-reinforcement-learning",
+          "prose": "Hierarchical reinforcement learning offers a structurally different route than distant supervision: rather than weakening the signal at every decision, it pushes the expensive true-objective evaluation up to the top level of a delegation hierarchy, letting sub-agents pursue cheap, dense, synthetic reward beneath it. Where distant supervision trades signal quality for coverage, HRL trades decision granularity for the same effect."
+        },
+        {
+          "concept": "feudal-reinforcement-learning",
+          "prose": "Feudal reinforcement learning is the architecture hierarchical RL traces its lineage to, an earlier scheme in which managerial agents set goals for subordinates scored on synthetic reward rather than the manager's real objective. Closing the walk here shows that hierarchical delegation for oversight is not a new idea invented for this problem, but an old mechanism repurposed for it."
+        }
+      ]
+    },
+    {
+      "theme": "demonstrations-not-specification",
+      "steps": [
+        {
+          "concept": "inverse-reinforcement-learning",
+          "prose": "Inverse reinforcement learning infers a reward function or policy from observed expert trajectories rather than from a hand-specified reward, and this walk follows how that basic idea gets repurposed and eventually built into a real training pipeline. IRL is the foundational technique the rest of this theme either extends or operationalizes."
+        },
+        {
+          "concept": "apprenticeship-learning",
+          "prose": "Apprenticeship learning borrows its technique from inverse reinforcement learning but targets a different object: instead of trying to recover an explicit reward function, it lets an agent learn near-optimal behavior directly from expert trajectories, skipping trial-and-error exploration entirely."
+        },
+        {
+          "concept": "use-demonstrations",
+          "prose": "Use demonstrations is the proposed safety remedy that repurposes both prior techniques, IRL and apprenticeship learning, as ways to reduce risky exploration: learn a baseline policy from expert trajectories first, then optionally bound any further exploration around it. It is the umbrella under which the two preceding techniques become a safety intervention rather than just a learning method."
+        },
+        {
+          "concept": "cooperative-inverse-reinforcement-learning",
+          "prose": "Cooperative inverse reinforcement learning is grouped alongside use demonstrations as its interactive counterpart, sharing the goal of letting a human's intentions substitute for a hand-specified reward but working through ongoing collaboration rather than a fixed, pre-collected dataset of trajectories. It marks the edge of what the demonstration-based proposals in Concrete Problems covered, before the walk turns to how one of them was actually built."
+        },
+        {
+          "concept": "supervised-fine-tuning",
+          "prose": "Supervised fine-tuning is InstructGPT's real-world operationalization of use demonstrations: a pretrained GPT-3 model is fine-tuned directly on human-written demonstrations of desired behavior, turning a 2016 proposal into the concrete first stage of a 2022 training pipeline. It is structurally the simplest of InstructGPT's three steps precisely because it inherits use demonstrations' original simplicity."
+        },
+        {
+          "concept": "sft-dataset",
+          "prose": "The SFT dataset is the roughly 13,000 labeler-written and API-sourced demonstrations that supervised fine-tuning actually trains on, the concrete substance behind the abstract phrase human demonstrations. Its construction, including duplicated template instructions, shapes what the resulting model learns."
+        },
+        {
+          "concept": "sft-model",
+          "prose": "The SFT model is what supervised fine-tuning on the SFT dataset produces, and it inherits that dataset's quirks directly: because near-duplicate demonstrations were common early in the project, the model was prone to early overfitting despite being trained for many epochs anyway. It closes this walk as both a standalone baseline and, as later stages of the pipeline depend on, the seed for everything downstream."
+        }
+      ]
+    },
+    {
+      "theme": "scalable-oversight-lineage",
+      "steps": [
+        {
+          "concept": "scalable-oversight",
+          "prose": "Scalable oversight is named as an open problem in 2016: safe behavior requires evaluating a true objective too costly to check on every example. This walk traces how that named-but-unsolved problem was, in hindsight, operationalized and then scaled again across two later papers."
+        },
+        {
+          "concept": "reward-model",
+          "prose": "The reward model is, functionally, a scaled solution to scalable oversight: a learned model trained to predict which of two outputs human labelers would prefer, letting reinforcement learning optimize a cheap, dense proxy for an expensive human judgment across an entire training distribution. InstructGPT itself never uses the term scalable oversight, so this connection is visible only in hindsight."
+        },
+        {
+          "concept": "rlhf",
+          "prose": "RLHF is the fine-tuning technique the reward model exists to serve: its architecture and role are dictated by how policy optimization actually works, since it starts from the same weights as the policy it will later steer and anchors the reward signal RLHF optimizes against. Here the lineage's second link, an algorithm built entirely around a learned preference model, is complete."
+        },
+        {
+          "concept": "rlaif",
+          "prose": "RLAIF swaps the labeler in RLHF, replacing the human who produces preference comparisons with an AI system, while Constitutional AI states plainly that the remainder of the pipeline, preference model training and RL, is exactly the same as RLHF. It is a minimal, surgical modification, not a new algorithm, pushing the same lineage one step further toward automation."
+        },
+        {
+          "concept": "feedback-model",
+          "prose": "The feedback model is what RLAIF delegates harmlessness comparisons to: an independent language model shown a harmful prompt and a pair of responses, formatted as an explicit multiple-choice question, that produces the preference label a human labeler would have produced before. It is the concrete mechanism that makes RLAIF's labeler-swap actually work."
+        },
+        {
+          "concept": "hybrid-human-ai-preference-model",
+          "prose": "The hybrid human/AI preference model is trained on a mixture the feedback model makes possible: human-labeled helpfulness comparisons stitched together with AI-labeled harmlessness comparisons into a single reward signal. It shows the lineage does not have to be all-human or all-AI, human and machine judgment can be blended in the same trained model."
+        },
+        {
+          "concept": "iterated-online-training",
+          "prose": "Iterated online training, periodically refreshing the preference model with new comparisons on the current policy's own outputs, already existed as a valuable technique using human feedback, but RLAIF makes it newly automatable now that an AI rather than a human is doing the labeling. It closes the lineage by pointing at the next place scaling pressure will fall: keeping the preference model itself on-distribution as the policy keeps changing."
+        }
+      ]
+    },
+    {
+      "theme": "rlhf-three-step-pipeline",
+      "steps": [
+        {
+          "concept": "instructgpt",
+          "prose": "InstructGPT names the family of GPT-3 models produced by a specific three-step training procedure, and this walk follows that procedure end to end, from the base model it starts with through to the reinforcement-learning stage that finishes it."
+        },
+        {
+          "concept": "gpt-3",
+          "prose": "GPT-3 is the pretrained autoregressive language model that supplies both the architecture and the initialization for every model in the pipeline. Despite sharing GPT-3's weights as a starting point, InstructGPT models outperform it at 100 times smaller scale, a controlled result since fine-tuning on the human data pipeline is the only thing that differs."
+        },
+        {
+          "concept": "supervised-fine-tuning",
+          "prose": "Supervised fine-tuning is the first of the three steps: the pretrained GPT-3 model is fine-tuned directly on human-written demonstrations of desired behavior using standard supervised learning, no reward model or reinforcement learning involved yet."
+        },
+        {
+          "concept": "sft-model",
+          "prose": "The SFT model is what that first step produces, and it does double duty from here on: it serves as a standalone baseline for comparison, and, as the next two steps show, as the very foundation the reward model and PPO training are both built on."
+        },
+        {
+          "concept": "reward-model",
+          "prose": "The reward model is initialized from the SFT model itself, with its unembedding layer replaced by a scalar output head, and trained to predict which of two outputs human labelers would prefer. Selection pressure actually runs backward through the pipeline here: the SFT checkpoint used was chosen partly because later epochs kept improving the reward model's own downstream score."
+        },
+        {
+          "concept": "reward-model-loss",
+          "prose": "The reward model is trained with a pairwise comparison loss where the reward gap between preferred and dispreferred completions represents the log odds a human would prefer the former. Because that loss only ever sees differences between rewards, it under-determines the model's absolute scale, producing a ranker whose raw output is meaningless on its own, a detail that matters once the ranker is reused as an RL reward."
+        },
+        {
+          "concept": "ppo-training",
+          "prose": "PPO fine-tuning is the third step, further tuning the SFT model with reinforcement learning to maximize the reward model's score; the SFT model anchors both where this optimization begins and, via a KL term, what it is pulled back toward. Every PPO policy here, even the largest, is supervised from below by a reward model roughly 30 times smaller than the policy it steers."
+        },
+        {
+          "concept": "rlhf",
+          "prose": "Reinforcement learning from human feedback is the name for this whole three-step procedure taken together: a learned model of human preference used as a reward signal for reinforcement learning, applied to open-ended instruction following rather than a single fixed task. It is the umbrella this entire walk has been building toward, one term for GPT-3 plus demonstrations plus a reward model plus PPO."
+        }
+      ]
+    },
+    {
+      "theme": "ppo-optimization-mechanics",
+      "steps": [
+        {
+          "concept": "bandit-environment",
+          "prose": "The bandit environment formulation is the RL setup underlying all of PPO fine-tuning: a random customer prompt is presented, the policy produces one response, the reward model assigns a single reward, and the episode ends immediately. Every other mechanic in this walk is a consequence of this one structural choice."
+        },
+        {
+          "concept": "value-function",
+          "prose": "The PPO value function is the critic that estimates expected reward within this single-step environment, and it is initialized from the trained reward model's own weights rather than from scratch, inheriting whatever the reward model already knows about what a good response looks like."
+        },
+        {
+          "concept": "generalized-advantage-estimation",
+          "prose": "Generalized advantage estimation is the technique PPO uses to turn the value function's estimates into a training signal, but the bandit environment renders one of its two usual bias-variance knobs moot: with no future timesteps to discount, GAE is applied here with no discounting at all."
+        },
+        {
+          "concept": "kl-penalty",
+          "prose": "The per-token KL penalty is the one part of the objective that is not terminal: where the bandit environment delivers the reward model's score just once, at the end of the episode, the KL penalty is subtracted at every generated token, densifying an otherwise single-number reward and keeping the policy from drifting too far from the SFT model it started from."
+        },
+        {
+          "concept": "ppo-model",
+          "prose": "PPO without pretraining mix is the ablation variant that optimizes purely reward-model score plus this KL penalty, with the pretraining-gradient coefficient set to zero. It is the baseline against which the next variant is measured."
+        },
+        {
+          "concept": "ppo-ptx",
+          "prose": "PPO-ptx adds gradients from the pretraining language-modeling loss into the same PPO updates, to counteract regressions on public NLP tasks, and it was tested directly against tightening the KL penalty instead, which sacrificed validation reward without fully fixing those regressions. On the paper's own headline preference metric, though, PPO-ptx diverges only off-distribution from plain PPO, the two are nearly the same model on the API distribution they were built for."
+        },
+        {
+          "concept": "k-choose-2-batching",
+          "prose": "K-choose-2 batching closes this walk on the reward-model side of the same engineering effort: it places every pairwise comparison from one ranked set of K outputs into a single batch element, avoiding the overfitting that would result from treating those correlated comparisons as independent shuffled data. Alongside the bandit formulation, the value function, GAE, and the KL penalty, it is one more load-bearing detail behind making RLHF actually work in practice."
+        }
+      ]
+    },
+    {
+      "theme": "human-feedback-data-infrastructure",
+      "steps": [
+        {
+          "concept": "api-prompt-distribution",
+          "prose": "The API prompt distribution is the primary prompt source for this entire theme: text submitted by external users to an earlier, demonstration-only InstructGPT model on the OpenAI Playground, deduplicated, capped per user, and filtered for personally identifiable information. Every dataset in this walk draws its raw prompts from here."
+        },
+        {
+          "concept": "sft-dataset",
+          "prose": "The SFT dataset pairs roughly 13,000 of those prompts with human demonstrations, but the relationship with its source is circular: the Playground traffic behind the API prompt distribution was itself submitted to an earlier model trained on a subset of this same demonstration data, so each partly bootstrapped the other's existence."
+        },
+        {
+          "concept": "rm-dataset",
+          "prose": "The RM dataset trains the reward model on roughly 33,000 prompts, each with several outputs ranked by labelers, and those completions come overwhelmingly from policies trained on the SFT dataset just introduced. It marks a step up in labeling effort, from writing one demonstration per prompt to ranking several model outputs against each other."
+        },
+        {
+          "concept": "ppo-dataset",
+          "prose": "The PPO dataset completes the trio at the opposite extreme of labeling effort: roughly 31,000 prompts drawn purely from the API prompt distribution, with no human labels at all, closing a declining gradient of human effort per prompt that runs from full demonstrations, to rankings, to nothing."
+        },
+        {
+          "concept": "labeler-screening-process",
+          "prose": "None of these three datasets exists without the roughly 40 contractors selected through this four-criterion screening process, covering agreement on sensitive-speech flagging, agreement on rankings, sensitive demonstration writing quality, and self-assessed ability to identify sensitive content across groups. The walk now turns from the data itself to the human infrastructure that produced it."
+        },
+        {
+          "concept": "inter-annotator-agreement",
+          "prose": "Inter-labeler agreement enters this pipeline on both sides of the screening process just described: two of its four criteria are agreement measures used to filter candidates in, and the same statistic is later recomputed as an audit of the labelers who made it through."
+        },
+        {
+          "concept": "labeling-interface",
+          "prose": "The web labeling interface is where screened labelers actually record their judgments, assigning Likert scores, metadata labels, and full rankings; because it collects rankings of four to nine completions per prompt rather than isolated pairs, it is what filters uncertain comparisons out of the RM dataset introduced earlier."
+        },
+        {
+          "concept": "labeler-metadata-taxonomy",
+          "prose": "The labeler metadata annotation taxonomy is the fixed set of fields that interface asks labelers to fill in for every rated output, binary and Likert-scale flags for failures like hallucination or denigration of a protected class, turning each labeling session into structured data rather than just a ranking."
+        },
+        {
+          "concept": "held-out-labeler-generalization",
+          "prose": "The held-out labeler generalization test is the question the screening process creates the need to answer: because every training label came from the same roughly 40 screened contractors, this test checks whether models trained on their preferences hold up for a separate group of labelers who contributed no training data at all, closing the walk by auditing the trustworthiness of everything built on top of this human infrastructure."
+        }
+      ]
+    },
+    {
+      "theme": "rlhf-failure-modes",
+      "steps": [
+        {
+          "concept": "reward-overoptimization",
+          "prose": "Reward-model over-optimization is the general mechanism behind several of this theme's failures: an RL policy exploiting imperfections in a learned reward model to produce outputs that score well without being genuinely preferred by humans. The next several concepts are concrete surface symptoms of, or cross-cutting costs alongside, this one underlying mechanism."
+        },
+        {
+          "concept": "excessive-hedging",
+          "prose": "Excessive hedging is the clearest concrete instance of that mechanism: labelers were instructed to reward epistemic humility, so the reward model picked up a preference for long, noncommittal answers listing multiple possibilities even to questions with a fairly clear single answer, and reward-model over-optimization then surfaces as exactly this behavior."
+        },
+        {
+          "concept": "hallucination",
+          "prose": "Hallucination sits in tension with excessive hedging, the two bracket a single behavioral dial for how readily the model asserts things it cannot fully support. InstructGPT's headline truthfulness win, hallucinating on closed-domain tasks about half as often as GPT-3, sits at one end of that dial, while hedging sits at the other."
+        },
+        {
+          "concept": "false-premise-failure",
+          "prose": "False-premise failure, accepting a false premise embedded in an instruction as true rather than correcting it, is presented alongside excessive hedging as one of the paper's simple mistakes, but the two share a fix without sharing a cause: hedging is an error the training signal actively rewards, while this failure has a different origin."
+        },
+        {
+          "concept": "alignment-tax",
+          "prose": "Alignment tax closes the theme by naming the cost of this whole endeavor in a different currency: measurable regressions on public NLP benchmarks that RLHF fine-tuning introduces as a side effect of steering toward instruction-following. It demands a different mitigation than reward-model over-optimization does, the same underlying training pressure produces two separate diseases that the paper treats with two separate cures."
+        }
+      ]
+    }
+  ]
+}

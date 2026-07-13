@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward autoencoder (goal transparency) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward autoencoder (goal transparency)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A proposed idea to interpret an agent&#x27;s actions as an encoding of its reward function and apply autoencoding techniques so an external observer can decode what the agent is trying to do, implicitly penalizing side effects that obscure intent.</p>
+<section class="prose-section">
+<h2>Making an agent&#x27;s goal legible by decoding its actions</h2>
+<p>The reward autoencoder is a proposal introduced in Concrete Problems, credited in a footnote to Greg Wayne, for creating what the paper calls "goal transparency": treating an agent's actions as an implicit encoding of its reward function, then applying standard autoencoding techniques so that "an external observer can easily infer what the agent is trying to do" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">§"Multi-Agent Approaches:", p. 6</a>). The idea borrows the encoder-decoder structure of a standard autoencoder, which learns to compress an input $x$ into a code $z = E(x)$ and reconstruct it, $\hat x = D(z)$, by minimizing reconstruction error $\|x - D(E(x))\|^2$; here the analogy treats the agent's observed behavior as the code and the agent's underlying goal as the thing that behavior should be decodable back into.</p>
+</section>
+<section class="prose-section">
+<h2>An implicit penalty rather than an explicit one</h2>
+<p>The mechanism is meant to create regularization without a hand-specified impact term: "actions that have lots of side effects might be more difficult to decode uniquely to their original goal, creating a kind of implicit regularization that penalizes side effects" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">§"Multi-Agent Approaches:", p. 6</a>). An agent whose behavior is easy to reconstruct back into a single clean objective, in this framing, is one whose side effects have not obscured its intent; an agent whose actions are ambiguous between many possible goals, because it has disturbed the environment in ways unrelated to any one clean objective, is harder to decode and so implicitly penalized, without the designer ever having to specify what a side effect is.</p>
+</section>
+<section class="prose-section">
+<h2>One half of a two-directional pair</h2>
+<p>As a child of <a href="../concept/multi-agent-approaches.html">Multi-agent approaches (to side effects)</a>, the reward autoencoder is the paper's second concrete instantiation of making side-effect avoidance a matter of legibility between agent and human, alongside <a href="../concept/cooperative-inverse-reinforcement-learning.html">Cooperative Inverse Reinforcement Learning (CIRL)</a>, but it <a href="../edge/cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder.html">runs the legibility in the opposite direction</a>. CIRL makes the human's goal legible to the agent, so the agent can act on inferred human intentions; the reward autoencoder makes the agent's goal legible to the human, so an outside observer can check what the agent is actually trying to do. Both belong to the theme <a href="../theme/side-effects-as-relationship.html">Side effects and control as a relationship with other agents</a>, and together they frame safety, for this part of the paper, as a two-way communication problem between agent and human rather than a one-sided optimization problem for the agent alone.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/multi-agent-approaches.html">Multi-agent approaches (to side effects)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Cooperative Inverse Reinforcement Learning (CIRL) — <a href="../edge/cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder.html">inverts the legibility direction of</a> → <strong>Reward autoencoder (goal transparency)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/side-effects-as-relationship.html">Side effects and control as a relationship with other agents</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;Multi-Agent Approaches:&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

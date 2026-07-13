@@ -1,0 +1,362 @@
+# Prompt: Build a Concept Graph from Research Papers
+
+You are given a set of research papers. The job is to build the graph behind a concept
+wiki — a linked collection of pages that a person will actually read, page by page, to
+understand the papers deeply.
+
+The fact sheet and the algorithm below carry every decision you could not derive on
+your own — every fact is stated there, one per line. Everything else (schemas,
+internal layout, tooling) is deliberately left to you, and any reasonable choice is
+fine. The sections after them explain the ideas. When you hit a case this document
+doesn't cover, decide it by one measure: does this help the reader keep moving — look
+something up, follow a connection, keep digging?
+
+## The graph
+
+**Concepts**
+- one page per named thing in a paper
+- concepts are hierarchical: a concept can be part of a parent concept
+- a sub-concept is split out only when it is nameable on its own and worth a page of
+  its own; most concepts don't split
+- how deep a concept decomposes is set by its relevance: the more central it is to
+  the corpus, the deeper its hierarchy; peripheral concepts stay whole
+- the hierarchy is the reader's vertical movement
+
+**Edges**
+- an edge connects two concepts and says how they relate: a type plus a few sentences
+  of prose
+- the prose must teach something neither endpoint's page says — if it only restates
+  them, cut the edge
+- every edge is its own page: clicking a connection opens something to read
+- types are verb phrases, source → target, named from the situation
+  ("stabilizes-training-of", "was-the-bottleneck-for"); no fixed vocabulary; reuse a
+  name only when the meaning genuinely recurs
+- a relation visible only in hindsight is grounded in the later paper and flagged as
+  hindsight
+- edges are the reader's sideways movement
+
+**Themes**
+- non-exclusive lenses over the whole concept pool
+- a theme makes a claim, not a category — "how the field measured progress and what
+  the benchmarks actually test", never "datasets"
+- each theme carries a short narrative naming its members and stating its claim
+- a concept belongs to every lens that illuminates it; one to three is typical
+- roughly one theme for every five concepts
+- every concept belongs to at least one theme — no page is a dead end
+- each theme is another lens through which the reader explores the corpus
+
+**Superthemes**
+- the same lens idea one level up: lenses over the themes, same rules
+
+**Super edges**
+- edges one level up: theme → theme connections within a supertheme
+- same rules as edges: typed, prose-bearing, its own page, must say something new
+
+**Tissue themes**
+- lenses over the edges, same rules as themes
+- the recursion ends here: no edges between edges
+
+**Writing**
+- objective and foundational: intuition first, then the real math, with rendered
+  equations
+- every name — concept, relation, theme, page section — is a plain descriptive label
+- pages get the sections they need; no fixed template
+- concept page content is written last of all — only after the themes, superthemes,
+  and edges exist
+- a concept page covers: how the concept fits the overall picture, what it enables
+  downstream, and what it actually is
+- a page states its key relations in its own prose; links supplement, never replace
+- every claim grounded in a paper carries a locator: the section heading verbatim
+  plus the page number — never guessed, omitted rather than invented
+
+**Store and site**
+- the extracted data is stored as JSON — the single source of truth
+- the wiki is rendered from it as static HTML: a page per concept, per edge, per lens
+- no graph visualization — the purpose is reading; the graph is walked page by page,
+  never drawn as a diagram
+- the site is always regenerated from the JSON, never hand-edited
+
+## The algorithm
+
+Rules that bind every stage:
+
+- agents do every step; workers never write the shared store — they stage, and a
+  central merge applies the staged work sequentially
+- the merge validates before writing — everything referenced exists, every concept
+  has a theme, every edge has prose, every claim has its locator — and writes nothing
+  if any check fails
+- a human reviews at every stage boundary
+- worker prompts are self-sufficient — the rules, the register, where to stage — a
+  fresh context cannot "follow conventions" it has never seen
+
+```
+start with three papers
+
+1  concepts        one agent per paper, in parallel:
+                     read end to end, extract everything named    (dense paper ⇒ 30–50+)
+                     classify each: introduced / refined / inherited
+                     stage an inventory
+                   review the inventories before any page is written
+                   merge into one canonical registry              (one concept = one page, corpus-wide)
+
+2  themes          one mind — never parallelized — designs the themes
+                   over the whole pooled concept set
+
+3  edges           agents in parallel, one grouping each:
+                     concept → concept edges among co-members of a family or theme
+
+4  superthemes     one mind groups the themes into superthemes
+
+5  super edges     agents in parallel, one supertheme each:
+                     theme → theme edges among its member themes
+
+6  tissue themes   one mind groups all the edges into lenses
+
+7  concept pages   agents in parallel, written only now, with the lenses
+                   and the edges in hand:
+                     how the concept fits the overall picture,
+                     what it enables downstream,
+                     what it actually is                          (inherited ⇒ full page, labeled inherited)
+
+8  render          regenerate the static HTML site from the JSON —
+                   rerun after any change to the data
+
+when a new paper joins:
+                   run stage 1 for it, rebuild the lens layers over the
+                   enlarged pool — the right lenses over three papers are not
+                   the right lenses over twenty — then rerun the stages after
+                   them
+```
+
+Everything below is explanation.
+
+## The graph, explained
+
+### Concepts, and their hierarchy
+
+A concept is anything a paper names that a reader might want to look up: an
+architecture, a mechanism inside it, a training technique, a dataset, a benchmark, a
+baseline it compares against. Every concept gets a page of its own, and those pages
+are the body of the wiki — each one explains its idea from the ground up.
+
+Concepts nest. Papers name things inside other things — an architecture is built from
+components, a component has a particular computation at its core. When such a part is
+genuinely nameable on its own and there is a page's worth of substance to say about
+it, make it its own concept, marked as part of its parent, and let its page say how
+the part serves the whole. When it isn't, it stays a passage inside the parent's page.
+
+How deep to keep going is a judgment about relevance. A concept at the center of the
+corpus — one that later papers build on, that edges keep touching, that the reader
+will arrive at again and again — rewards decomposition level after level, because
+there is real machinery inside it and readers will want it opened up. A concept met
+once, in passing, stays a single page no matter how much could technically be said
+about it. So most concepts don't split at all, a few central ones go deep, and both
+outcomes are correct.
+
+The hierarchy gives the reader vertical movement: descend from a big idea into its
+parts to see the machinery, or climb from a detail to its parent to see what it is
+for.
+
+### Edges
+
+Concept pages alone let the reader move only up and down that hierarchy. But almost
+everything a paper actually argues is a sideways relation: this technique stabilizes
+the training of that architecture; that earlier result was the bottleneck that
+motivated this design; these two methods were ablated against each other. Edges are
+where those relations live.
+
+The prose is the point of an edge. It must teach the reader something real about how
+the two concepts bear on each other, something neither concept's own page already
+says. That is the test of an edge: if its prose only restates the two pages it
+connects, it adds nothing — cut it.
+
+Every edge is a page of its own. When the reader clicks a connection, they don't just
+jump to the other end; they land on the edge's page and read those sentences first. In
+this wiki, connections are not bare links — each one is something you read.
+
+Name each relation from the situation itself, as a verb phrase that reads from source
+to target. There is no fixed list of relation types to choose from. Reuse a name when
+its meaning genuinely recurs; coin a new one when it doesn't. And when a relation is
+only visible in hindsight — something no one could see until a later paper existed —
+ground it in that later paper and flag it, so the reader knows when this understanding
+arrived.
+
+### Themes, and superthemes
+
+Concepts and edges make the wiki walkable, but only one step at a time. What the
+reader still lacks is a way to see concepts together — because some concepts belong to
+the same story even though they sit far apart in the hierarchy and no single edge ties
+the whole group. A benchmark, a metric, a dataset, and an evaluation trick may live
+under four different parents and yet be one story about how the field measures
+progress.
+
+A theme is that story made navigable: a named group of concepts with a short narrative
+that names its members and states its claim.
+
+The word "claim" is doing real work there. A theme is a lens, not a category.
+"Datasets" is a category — it files things and teaches nothing. "How the field
+measured progress, and what the benchmarks actually test" is a lens — it tells the
+reader what they will understand if they read its members together. Every theme must
+earn its place the second way.
+
+Two rules follow from treating themes as lenses. Membership is non-exclusive: a
+concept belongs to every lens that illuminates it. And coverage is total: every
+concept belongs to at least one theme, so no page is ever a dead end with no way
+outward.
+
+How many themes? Roughly one for every five concepts. Fewer, and each lens has to
+stretch over too much ground to keep a single claim; many more, and the lenses shrink
+toward categories with too few members to connect anything. Treat the ratio as a
+target, not a law — it sets the order of magnitude for lenses that both say something
+and hold a real group.
+
+This is what themes buy the reader: different lenses through which to explore the same
+corpus. The hierarchy is one path through the material. Each theme regroups the same
+concepts into another path, and concepts that sit far apart vertically turn out to be
+neighbors when seen through the right lens.
+
+Superthemes are the same move one level up — lenses over the themes, non-exclusive in
+the same way, each making a claim of its own.
+
+### Super edges
+
+Relations do not stop at the concept level. Once themes exist, pairs of themes bear on
+each other the way pairs of concepts do: one theme's story creates the conditions the
+next one's runs on; two lenses explain the same shift from opposite directions. A
+super edge is an ordinary edge moved one level up — it connects two themes, has a
+type, carries prose, renders as its own page, and is held to the same standard: its
+sentences must say something neither theme's narrative already says. Superthemes
+supply the pairs: super edges are written among themes grouped under the same
+supertheme.
+
+### Tissue themes
+
+One pattern is still invisible. The edges themselves, read together, have shapes of
+their own: several edges across the corpus may all be displacement stories, where a
+new method pushes an old one out; several may be stabilization stories; several may
+trace a benchmark slowly losing its meaning. No grouping of concepts can surface this,
+because the pattern lives in the relations, not in the things related.
+
+Tissue themes apply the lens idea to the edges — edges are the wiki's connective
+tissue, hence the name. A tissue theme groups edges under a claim, with the same kind
+of short narrative, so that *how things connect* becomes something the reader can
+browse in its own right.
+
+The recursion ends here. Do not build edges between edges — the tissue theme's
+narrative does that connecting work in prose.
+
+### How everything is written
+
+Write objectively and foundationally: intuition first, then the real mathematics, with
+rendered equations wherever the concept is mathematical. Plain declarative sentences;
+precision over cleverness.
+
+Every name is a plain descriptive label, because names are how the reader navigates.
+Scanning a list of links, they should know what each one is about before clicking; a
+name that needs its own page to decode has already failed.
+
+Give each page the sections it actually needs rather than forcing a template. And keep
+the important relations in the page's own prose — a page says in sentences what it is
+part of, what it works with, and which themes it belongs to. Links supplement that
+prose; they never replace it.
+
+### The store and the site
+
+The extracted data lives in JSON, and the JSON is the single source of truth: the site
+is regenerated from it after any change and never hand-edited, so no fix ever has to
+be made in two places.
+
+What gets rendered is static HTML — a real page for every concept, every edge, every
+lens, linked to each other. Not a graph visualization: a diagram of nodes and lines
+displays the graph's shape but cannot be read, and everything of value here is prose.
+The reader experiences the graph the way this whole design intends — by walking it,
+page to page.
+
+## The algorithm, explained
+
+Why start with three papers rather than the whole corpus? Because the first run
+calibrates everything — granularity, voice, what a good lens looks like — and
+calibration mistakes should be caught while they are cheap. Three papers are enough to
+exercise all the cross-paper machinery (shared concepts, corpus-wide lenses) while
+staying small enough to reread and redo.
+
+### Extraction
+
+Extract everything named. The rule is for the reader, who will meet every one of those
+names in the text and expects each one to lead somewhere — a missing page breaks their
+path. Thirty to fifty concepts from a dense paper is normal, not excessive.
+
+Extraction is the one stage that parallelizes by paper, because at this stage the
+papers are independent: one agent, one paper, staged separately. Where two papers name
+the same thing, the merge resolves it under the corpus rule: one canonical concept,
+one page. A later paper's contribution — its own role for the concept, its own
+specifics — merges into the existing page rather than spawning a near-duplicate, so
+the reader lands on the same page no matter which paper they arrive from.
+
+The inventory is reviewed before any pages are written because it is the cheapest
+review surface in the whole pipeline: an error caught there costs one line, while the
+same error caught after themes, edges, and pages are built on top of it costs a
+rebuild. Inherited concepts — things the papers use but did not invent — get full
+pages written from general knowledge, labeled inherited until their origin paper is
+processed, never a stub. The reader doesn't care where a concept originated; they hit
+an unfamiliar name and want a real explanation.
+
+One consequence of locators for your tooling: whatever cleaning you do to the source
+text must preserve section headings and page markers, or locators become impossible to
+record.
+
+### Lens design
+
+Themes, superthemes, and tissue themes are all the same kind of act: choosing the
+lenses. Two things follow.
+
+First, lens design needs its full material before it starts. A lens is right or wrong
+relative to everything it has to cover — which is why themes wait until every paper's
+concepts are extracted and pooled, and why tissue themes wait until all the edges
+exist. Design lenses over a third of the corpus and you are guessing about the rest.
+
+Second, lens design is one mind, never parallelized. Split the job across workers and
+each invents lenses that overlap and near-duplicate the others', because each judged
+only a fragment — and no merge can reconcile competing lens sets after the fact.
+Parallelize the writing within a settled design as much as you like; the design itself
+is a single global judgment.
+
+### Why edges come after themes
+
+An edge needs a pair, and pairs are the problem: even a hundred concepts offer five
+thousand possible pairs, almost all of them meaningless. The groupings are what make
+the pair space worth working: sub-concepts of one family, concepts sharing a theme,
+themes sharing a supertheme — these are exactly the neighborhoods where real relations
+live. That is why themes are designed before any edge is written (the groupings
+generate the pairs), why super edges wait for superthemes, and why tissue themes come
+last of all: they group the edges, which have to exist first.
+
+### Why concept pages are written last
+
+A concept page written at extraction time can only say what the thing is, because
+that is all that exists yet. Written after the lenses are designed and the tissue is
+in place, the writer holds the whole picture: the themes the concept serves, the edges
+that touch it, everything downstream that was built on it. That is what lets the page
+do its three jobs — say how the concept fits the overall picture, what it enabled
+downstream, and what it actually is. The first two are the ones a reader cannot get
+from the original papers, and they are impossible to write well in isolation.
+
+### Agents and the shared store
+
+Every stage is agent work, so one rule protects everything: workers never write the
+shared store. Each worker stages its additions in its own file. A single central merge
+applies the staged work sequentially, resolves duplicates, and validates before
+writing; if any check fails, the merge writes nothing.
+
+Write each worker's prompt as if for someone who has never seen the project — because
+that is exactly what a fresh agent context is. It cannot follow conventions it has
+never seen, so the prompt itself must carry the rules that govern the task, the
+register to write in, and exactly where to stage the output.
+
+## The test
+
+For every page you build — concept, edge, or theme — ask two questions. **Would a
+motivated reader want to read this? And having read it, can they keep moving toward
+whatever caught their interest?** Validators catch structural problems: broken
+references, missing coverage, absent prose. They cannot catch a page that passes every
+check and is still not worth reading. Only reading catches that. Read what you build.

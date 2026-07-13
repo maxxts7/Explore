@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Generative adversarial networks (GANs) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Generative adversarial networks (GANs)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior neural-network training framework (Goodfellow et al. 2014) that pits a generator against a discriminator, cited as the inspiration for adversarial reward functions.</p>
+<section class="prose-section">
+<h2>A neural-network training framework that predates the paper</h2>
+<p>Generative adversarial networks were introduced by Goodfellow et al. (2014), several years before Concrete Problems, as a framework for training a generative model by pitting it against an adversary; the paper cites this prior work directly as the inspiration for one of its own reward-hacking remedies (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=9" target="_blank" rel="noopener">§"Adversarial Reward Functions:", p. 9</a>).</p>
+</section>
+<section class="prose-section">
+<h2>The mathematics: a minimax game between generator and discriminator</h2>
+<p>A GAN consists of a generator $G$, which maps noise $z \sim p_z$ to samples $G(z)$ intended to resemble real data, and a discriminator $D$, which outputs the probability that a given sample came from the real data distribution $p_{\text{data}}$ rather than from $G$. The two are trained jointly on the minimax objective
+$$\min_G \max_D \; \mathbb{E}_{x \sim p_{\text{data}}}[\log D(x)] + \mathbb{E}_{z \sim p_z}[\log(1 - D(G(z)))],$$
+with $D$ trained to maximize its ability to distinguish real from generated samples and $G$ trained to minimize that same quantity, i.e. to fool $D$. At the game's theoretical equilibrium, $G$'s output distribution matches $p_{\text{data}}$ exactly and $D$ can do no better than chance, $D(x) = 1/2$ everywhere. What makes the framework distinctive is that neither network is a fixed target: both improve together, so the pressure on $G$ to generate convincing samples grows precisely as fast as $D$'s ability to catch it.</p>
+</section>
+<section class="prose-section">
+<h2>What transfers to reward hacking, and what does not</h2>
+<p>Concrete Problems' <a href="../concept/adversarial-reward-functions.html">Adversarial reward functions</a> proposal is explicitly modeled on this shape: instead of a static reward function sitting still to be gamed, a second agent actively searches for scenarios the primary system rates highly but a human would rate poorly, the same generator-versus-discriminator structure (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=9" target="_blank" rel="noopener">§"Adversarial Reward Functions:", p. 9</a>). But the analogy <a href="../edge/generative-adversarial-networks-inspires-but-does-not-transfer-cleanly-to-adversarial-reward-functions.html">does not transfer cleanly</a>. In a GAN, generator and discriminator are trained symmetrically from the same gradient signal and can be arbitrarily matched in capability, part of why the game is stable. The reward-checking agent in adversarial reward functions cannot be symmetric in the same way: the paper notes it "would have to ensure that the reward-checking agent is more powerful, in a somewhat subtle sense, than the agent that is trying to achieve rewards" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=9" target="_blank" rel="noopener">§"Adversarial Reward Functions:", p. 9</a>), an asymmetric power requirement with no GAN analogue and no proposed mechanism for guaranteeing it holds as the reward-seeking agent scales up. Within the theme <a href="../theme/adversarial-ml-for-reward-hacking.html">Borrowing adversarial ML to defend against reward hacking</a>, generative adversarial networks function as the borrowed conceptual template, alongside <a href="../concept/adversarial-examples.html">Adversarial examples</a>, for a family of proposed defenses, <a href="../concept/adversarial-reward-functions.html">Adversarial reward functions</a>, <a href="../concept/adversarial-blinding.html">Adversarial blinding</a>, and <a href="../concept/counterexample-resistance.html">Counterexample resistance</a>, that treat reward hacking as structurally akin to adversarial robustness.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Generative adversarial networks (GANs)</strong> — <a href="../edge/generative-adversarial-networks-inspires-but-does-not-transfer-cleanly-to-adversarial-reward-functions.html">inspires but does not transfer cleanly to</a> → Adversarial reward functions</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/adversarial-ml-for-reward-hacking.html">Borrowing adversarial ML to defend against reward hacking</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;Adversarial Reward Functions:&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

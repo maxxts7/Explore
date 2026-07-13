@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>WMT 2015 French-to-English translation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>WMT 2015 French-to-English translation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A machine-translation benchmark (Bojar et al., 2015) used as one of the public NLP datasets showing performance regressions under PPO fine-tuning.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>WMT 2015 French-to-English translation (Bojar et al., 2015) is a machine-translation benchmark, scored with BLEU, inherited into InstructGPT's <a href="../theme/generation-benchmarks-translation-summarization.html">generation benchmark group</a> to test whether RLHF fine-tuning degrades generative capability with an established public track record (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=3" target="_blank" rel="noopener">§"1 Introduction", p. 3</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=49" target="_blank" rel="noopener">§"WMT Fr En 15", p. 49</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What it revealed</h2>
+<p>This benchmark supplies the corpus's cleanest illustration that the <a href="../concept/alignment-tax.html">Alignment tax</a> tracks distance from the RLHF fine-tuning distribution rather than task difficulty: <a href="../edge/wmt15-fr-en-bears-the-alignment-tax-that-spares-reddit-tldr-summarization.html">it bears the tax that spares Reddit TL;DR summarization</a>, even though both tasks demand fluent, open-ended generation. PPO drops 175B zero-shot BLEU on WMT from 38.92 to 24.16, and even PPO-ptx, the paper's dedicated fix for the alignment tax, recovers only to 34.28 — translation stays on the short list of regressions the paper concedes are not fully fixed, alongside <a href="../concept/drop.html">DROP</a> and <a href="../concept/squadv2.html">SQuAD v2</a> (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=15" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 15</a>). The explanation is distributional rather than about task difficulty: the API prompt data driving RLHF is over 96% English (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=7" target="_blank" rel="noopener">§"3.3 Tasks", p. 7</a>), so French-to-English translation is essentially unrepresented in the fine-tuning distribution, while summarization is both a named API use case and the exact domain in which the underlying RLHF method was originally developed by Stiennon et al. (2020). Generative capability transferred where the evaluation benchmark resembled the training data and was spent where it did not — the clearest single piece of evidence in the corpus that the alignment tax is a distributional artifact, not a uniform tax on generation quality.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>WMT 2015 French-to-English translation</strong> — <a href="../edge/wmt15-fr-en-bears-the-alignment-tax-that-spares-reddit-tldr-summarization.html">bears the alignment tax that spares</a> → Reddit TL;DR summarization</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/generation-benchmarks-translation-summarization.html">Testing generative capability: translation and summarization benchmarks</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=49" target="_blank" rel="noopener">&sect;&ldquo;WMT Fr  En 15&rdquo;, p. 49</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

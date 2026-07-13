@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Semi-supervised reinforcement learning — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Semi-supervised reinforcement learning</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A proposed framework for scalable oversight in which an RL agent observes its true reward on only a small fraction of timesteps/episodes but is still evaluated on all of them.</p>
+<section class="prose-section">
+<h2>Reward on a fraction of episodes</h2>
+<p>Semi-supervised reinforcement learning, proposed by Concrete Problems as its central technical answer to <a href="../concept/scalable-oversight.html">Scalable oversight</a>, is a framework that resembles ordinary RL except that the agent observes its true reward on only a small fraction of timesteps or episodes, while its performance is still evaluated on all of them. A baseline can be defined by simply discarding the unlabeled episodes and running an ordinary RL algorithm on what remains; the paper notes this baseline learns very slowly, and the actual challenge is making productive use of the unlabeled episodes to approach, as closely as possible, the learning speed of a fully labeled setting (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=11" target="_blank" rel="noopener">§"5 Scalable Oversight", pp. 11-12</a>). The framing draws heavily on an informal essay by one of the paper's authors, and includes both a random-labeling variant and an active-learning variant in which the agent itself requests which episodes to see reward for.</p>
+</section>
+<section class="prose-section">
+<h2>Four proposed instantiations</h2>
+<p>The paper offers four concrete techniques as children of this concept, none mutually exclusive. <a href="../concept/supervised-reward-learning.html">Supervised reward learning</a> trains a model to predict reward from state and uses that prediction, weighted by confidence, to estimate payoff on unlabeled episodes; <a href="../concept/semi-supervised-active-reward-learning.html">Semi-supervised or active reward learning</a> adds the ability to request labels for salient events specifically; <a href="../concept/unsupervised-value-iteration.html">Unsupervised value iteration</a> and <a href="../concept/unsupervised-model-learning.html">Unsupervised model learning</a> both ignore reward prediction entirely and instead extract information from the observed state transitions of unlabeled episodes, sharpening Bellman updates or a learned dynamics model respectively — the edge <a href="../edge/unsupervised-value-iteration-is-mirrored-in-model-based-form-by-unsupervised-model-learning.html">Unsupervised value iteration — is mirrored in model based form by → Unsupervised model learning</a> shows these last two are the identical extraction move applied to RL's two dominant paradigms, model-free and model-based. The proposed testbed, per <a href="../edge/atari-games-environment-is-the-proposed-testbed-for-semi-supervised-reinforcement-learning.html">Atari games (as an RL testbed) — is the proposed testbed for → Semi-supervised reinforcement learning</a>, is Atari, chosen specifically because it lets the paper stage a graded ladder of oversight-scarcity conditions — from a small number of direct reward signals down to a handful of explicit reward queries — inside one familiar domain (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=12" target="_blank" rel="noopener">§"5 Scalable Oversight", pp. 12-13</a>). The concept is a child of <a href="../concept/scalable-oversight.html">Scalable oversight</a>, anchors the <a href="../theme/semi-supervised-reward-learning-proposals.html">Scaling oversight by predicting reward on unlabeled episodes</a> theme and the <a href="../tissue/scalable-oversight-operationalized-into-combinable-machinery.html">Turning an abstract oversight worry into dials and pools that can run together</a> tissue theme, and belongs to the <a href="../supertheme/scalable-oversight-to-rlhf-pipeline.html">Scalable oversight made real: from 2016 proposals to InstructGPT&#x27;s RLHF pipeline</a> supertheme.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/scalable-oversight.html">Scalable oversight</a></p></section>
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/semi-supervised-active-reward-learning.html">Semi-supervised or active reward learning</a></li><li><a href="../concept/supervised-reward-learning.html">Supervised reward learning</a></li><li><a href="../concept/unsupervised-model-learning.html">Unsupervised model learning</a></li><li><a href="../concept/unsupervised-value-iteration.html">Unsupervised value iteration</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Atari games (as an RL testbed) — <a href="../edge/atari-games-environment-is-the-proposed-testbed-for-semi-supervised-reinforcement-learning.html">is the proposed testbed for</a> → <strong>Semi-supervised reinforcement learning</strong></li><li>Scalable oversight — <a href="../edge/scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning.html">is operationalized as</a> → <strong>Semi-supervised reinforcement learning</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/semi-supervised-reward-learning-proposals.html">Scaling oversight by predicting reward on unlabeled episodes</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;5 Scalable Oversight&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;5 Scalable Oversight&rdquo;, p. 12</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

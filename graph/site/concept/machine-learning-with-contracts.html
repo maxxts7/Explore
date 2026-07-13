@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Machine learning with contracts — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Machine learning with contracts</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-refined">refined</span></p>
+<p class="lede">A perspective, drawn from software engineering analogy, of building ML systems that satisfy well-defined behavioral contracts rather than the brittle implicit contract that training and test distributions are identical.</p>
+<section class="prose-section">
+<h2>Borrowing design-by-contract from software engineering</h2>
+<p>Machine learning with contracts adapts a software-engineering idea — design by contract, the practice of specifying a component's guaranteed behavior as an explicit, checkable interface — to machine learning systems. Concrete Problems introduces the perspective directly: "one would like to construct machine learning systems that satisfy a well-defined contract on their behavior in analogy with the design of software systems" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=19" target="_blank" rel="noopener">§"A unifying view: counterfactual reasoning and machine learning with contracts.", p. 19</a>). The paper's central diagnosis is that most deployed ML systems implicitly promise only one thing — that training and test distributions will be identical — and that this promise is, in the paper's own words, "extremely brittle": difficult to check and rare to hold exactly in practice. Unlike most of the concepts in its immediate neighborhood, this framing is the paper's own refinement of a borrowed analogy rather than a technique lifted wholesale from prior literature.</p>
+</section>
+<section class="prose-section">
+<h2>A reframing that organizes three other concepts</h2>
+<p>The contracts perspective does real organizing work across <a href="../concept/robustness-distributional-shift.html">Robustness to distributional shift</a>. The edge <a href="../edge/machine-learning-with-contracts-reframes-as-a-specification-failure-robustness-distributional-shift.html">Machine learning with contracts — reframes as a specification failure → Robustness to distributional shift</a> recasts the whole problem: distributional shift is not fundamentally a statistical estimation difficulty but a specification failure, and the fix is not a better estimator but a system built against a weaker, explicit, checkable contract. Paired against <a href="../concept/counterfactual-reasoning.html">Counterfactual reasoning</a> in <a href="../edge/counterfactual-reasoning-is-the-descriptive-counterpart-to-machine-learning-with-contracts.html">Counterfactual reasoning — is the descriptive counterpart to → Machine learning with contracts</a>, the two concepts split the problem along a diagnosis/prescription line — counterfactual reasoning explains what shift <em>is</em>, contracts specify what a fix <em>must guarantee</em>. <a href="../concept/partially-specified-models.html">Partially specified models</a> is offered as one route to a weaker, checkable contract, requiring distributions to match only on the pieces of the model that are explicitly specified rather than everywhere; <a href="../concept/reachability-analysis.html">Reachability analysis</a> and <a href="../concept/model-repair.html">Model repair</a> supply two more, and the edge <a href="../edge/machine-learning-with-contracts-is-restored-post-hoc-by-model-repair.html">Machine learning with contracts — is restored post hoc by → Model repair</a> singles out model repair as the only one of these that operates <em>after</em> training, restoring a violated contract on an already-trained model rather than constraining the search that produced the violation. All four edges sit in the <a href="../tissue/ex-ante-ex-post-contracts.html">Before the fact or after: when a safety property gets enforced</a> tissue theme. The concept is a child of <a href="../concept/robustness-distributional-shift.html">Robustness to distributional shift</a> and parent of <a href="../concept/model-repair.html">Model repair</a>, anchoring the <a href="../theme/shift-as-contracts-and-causation.html">Reframing distributional shift as broken contracts and causal structure</a> theme within the <a href="../supertheme/distributional-shift-responses.html">Distributional shift: relax the statistics, or rewrite the contract</a> supertheme.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/robustness-distributional-shift.html">Robustness to distributional shift</a></p></section>
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/model-repair.html">Model repair</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Counterfactual reasoning — <a href="../edge/counterfactual-reasoning-is-the-descriptive-counterpart-to-machine-learning-with-contracts.html">is the descriptive counterpart to</a> → <strong>Machine learning with contracts</strong></li><li><strong>Machine learning with contracts</strong> — <a href="../edge/machine-learning-with-contracts-is-restored-post-hoc-by-model-repair.html">is restored post hoc by</a> → Model repair</li><li><strong>Machine learning with contracts</strong> — <a href="../edge/machine-learning-with-contracts-reframes-as-a-specification-failure-robustness-distributional-shift.html">reframes as a specification failure</a> → Robustness to distributional shift</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/shift-as-contracts-and-causation.html">Reframing distributional shift as broken contracts and causal structure</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=19" target="_blank" rel="noopener">&sect;&ldquo;A unifying view: counterfactual reasoning and machine learning with contracts.&rdquo;, p. 19</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

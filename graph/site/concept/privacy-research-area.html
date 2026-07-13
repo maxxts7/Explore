@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Privacy (in ML) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Privacy (in ML)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">An adjacent research area concerned with preserving privacy when applying machine learning to sensitive data sources such as medical data.</p>
+<section class="prose-section">
+<h2>Protecting what a model reveals about its training data</h2>
+<p>Privacy in machine learning is a research area concerned with ensuring that applying ML to sensitive data, medical records being the paper's own example, does not leak information about individuals back out through the model's behavior. This concept predates Concrete Problems; the broader field it names includes attacks such as membership inference, determining whether a specific record was in a model's training set from its outputs alone, and defenses such as differential privacy, which bounds how much a randomized computation's output distribution can change due to any single individual's data. Formally, a mechanism $M$ is $(\epsilon, \delta)$-differentially private if for any two datasets $D, D'$ differing in one record and any measurable output set $S$,
+$$P[M(D) \in S] \le e^{\epsilon}\, P[M(D') \in S] + \delta,$$
+giving a quantitative guarantee that no output reveals much about any one person's presence in the data. The paper cites privacy only at the level of the open question, "How can we ensure privacy when applying machine learning to sensitive data sources such as medical data?" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=21" target="_blank" rel="noopener">§"Privacy:", p. 21</a>), without engaging this technical machinery directly.</p>
+</section>
+<section class="prose-section">
+<h2>Why it needs no adversary, unlike its neighbor in the list</h2>
+<p>Privacy sits in <a href="../theme/adjacent-research-areas.html">Drawing the boundary: what accident risk is not</a> next to <a href="../concept/security-ml.html">Security (attacks against ML systems)</a>, and <a href="../edge/privacy-research-area-needs-no-adversary-unlike-security-ml.html">Privacy (in ML) — needs no adversary unlike → Security (attacks against ML systems)</a> notices a gap in the paper's own parallel one-line definitions: security asks "what can a malicious adversary do to a ML system?" while privacy's definition names no adversary at all. That gap tracks a real methodological difference: a privacy failure, a model leaking training-data details through its ordinary outputs, can happen with no attacker present, just an otherwise well-intentioned system trained carelessly on sensitive data, which is closer to <a href="../concept/accidents-in-ml.html">Accidents in machine learning systems</a>'s own no-adversary premise than security research's adversarial framing is.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Privacy (in ML)</strong> — <a href="../edge/privacy-research-area-needs-no-adversary-unlike-security-ml.html">needs no adversary unlike</a> → Security (attacks against ML systems)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/adjacent-research-areas.html">Drawing the boundary: what accident risk is not</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=21" target="_blank" rel="noopener">&sect;&ldquo;Privacy:&rdquo;, p. 21</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

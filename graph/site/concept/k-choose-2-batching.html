@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>K-choose-2 single-batch comparison training — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>K-choose-2 single-batch comparison training</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A reward-model training trick that places all C(K,2) pairwise comparisons from one labeled ranking of K outputs into a single batch element, avoiding the overfitting that results from treating correlated comparisons as independent shuffled data points.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>K-choose-2 batching is a training detail nested one level under the <a href="../concept/reward-model.html">Reward model (RM)</a>, inside the broader <a href="../theme/ppo-optimization-mechanics.html">The mechanics that make PPO fine-tuning work</a> theme that documents the specific engineering choices that make InstructGPT's PPO stage actually work rather than merely describing it at a narrative level. It exists to solve a concrete problem created by how the <a href="../concept/rm-dataset.html">RM (comparison) dataset</a> is collected: labelers rank $K=4$ to $9$ completions per prompt rather than judging isolated pairs, and a natural-seeming way to turn that ranking into training data — enumerate every pairwise comparison and shuffle them all into one flat dataset — turned out to break the reward model.</p>
+</section>
+<section class="prose-section">
+<h2>What it enabled</h2>
+<p>The comparisons drawn from a single ranked set are highly correlated with each other, since they all describe the same $K$ completions to the same prompt. Training on them as independently shuffled data points meant each completion could appear in up to $K-1$ separate gradient updates scattered across an epoch, and this caused the reward model to overfit after a single pass over the data (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.5 Models", p. 8</a>, n. 5). InstructGPT's fix is to place every comparison from one ranking into a single batch element instead: all $\binom{K}{2}$ comparisons from one prompt are processed together. This is not only a fix for overfitting but a compute win, since it requires only one reward-model forward pass per completion rather than one pass per comparison — a $K$-fold reduction, given that $\binom{K}{2}$ grows quadratically in $K$ while the number of completions grows only linearly (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.5 Models", p. 8</a>). The paper reports that batching this way, rather than shuffling, achieves substantially improved validation accuracy and log loss for the reward model that everything downstream, <a href="../edge/reward-model-supervises-from-below-ppo-training.html">PPO training</a> included, depends on.</p>
+</section>
+<section class="prose-section">
+<h2>What it is</h2>
+<p>Concretely, for a ranking of $K$ labeler-ordered completions to a single prompt, there are $\binom{K}{2} = \frac{K(K-1)}{2}$ distinct pairwise comparisons obtainable from that ranking (for $K=4$, six comparisons; for $K=9$, thirty-six). K-choose-2 batching groups all of them, for a given prompt, into one batch element for a single gradient step, rather than distributing them across the training set as if they were independent, identically-distributed examples. This is why the <a href="../concept/rm-dataset.html">RM (comparison) dataset</a>'s comparison count runs an order of magnitude beyond its roughly 33,000 prompts even though each gradient update still only touches one prompt's worth of correlated structure at a time.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/reward-model.html">Reward model (RM)</a></p></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/ppo-optimization-mechanics.html">The mechanics that make PPO fine-tuning work</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

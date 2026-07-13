@@ -1,0 +1,240 @@
+{
+  "walks": [
+    {
+      "theme": "quality-measurement-methods",
+      "steps": [
+        {
+          "concept": "rouge-l",
+          "prose": "ROUGE-L opens this theme as the cheapest available yardstick: an n-gram/longest-common-subsequence overlap score that grades a generated summary against a reference summary on CNN/DM and Reddit TL;DR without needing a human in the loop."
+        },
+        {
+          "concept": "bleu",
+          "prose": "BLEU applies the same reference-overlap logic to a different generation task, scoring WMT 2015 French-to-English translations; like ROUGE-L it is fast and reproducible but only measures surface overlap with one fixed reference, not whether an answer is actually preferred."
+        },
+        {
+          "concept": "f1-score",
+          "prose": "F1 score extends the overlap-metric family to extractive QA on DROP, QuAC, and SQuADv2. Its sharpest role in this theme is negative: it diverges under RLHF from win-rate, collapsing on span-overlap QA even as win-rate climbs, exposing exactly what a reference-overlap score cannot see about preference."
+        },
+        {
+          "concept": "win-rate",
+          "prose": "Win rate is the metric reference-overlap scores cannot substitute for: it directly asks labelers whether they prefer one model's output over a fixed 175B SFT baseline, capturing the human judgment that ROUGE-L, BLEU, and F1 abstract away, becoming InstructGPT's headline number precisely because of that gap."
+        },
+        {
+          "concept": "likert-quality-rating",
+          "prose": "The 1-7 Likert overall-quality rating corroborates win-rate by scoring a single output on an absolute scale, patching win rate's structural weakness of being anchored entirely to one fixed baseline whose choice could rescale every reported number."
+        },
+        {
+          "concept": "elo-score",
+          "prose": "Elo score generalizes win-rate's underlying logic: instead of comparing every model to one designated anchor, it aggregates pairwise preferences across many models and snapshots into a single running rating, which Constitutional AI needs since it tracks helpfulness and harmlessness across a whole training trajectory."
+        },
+        {
+          "concept": "absolute-harmfulness-score",
+          "prose": "Absolute harmfulness score cross-checks Elo score's central limitation: Elo can only rank models against each other, not say whether any of them is safe in absolute terms, and its gaps can shift merely because crowdworker instructions changed, so a model trained on absolute-harm ratings supplies the missing reading."
+        },
+        {
+          "concept": "inter-annotator-agreement",
+          "prose": "Inter-labeler agreement rate closes the theme by naming the assumption every judgment-based measure above has rested on: a win rate, Likert score, Elo rating, or harmfulness score is only as trustworthy as the consistency of the humans who produced it, and it explicitly caps the resolution of win rate itself."
+        }
+      ]
+    },
+    {
+      "theme": "language-understanding-benchmarks",
+      "steps": [
+        {
+          "concept": "drop",
+          "prose": "DROP opens the language-understanding suite as a test of discrete reasoning over paragraphs, counting and sorting facts rather than simply retrieving them, and it is one of two benchmarks the paper elevates from passive evaluation into an active tuning target."
+        },
+        {
+          "concept": "squadv2",
+          "prose": "SQuAD v2 forms the regression testbed together with DROP: both were pulled out of the eight benchmarks to actually judge the pretraining-coefficient and KL-coefficient sweeps during training, so these two shape RLHF's tradeoffs rather than merely observing them afterward."
+        },
+        {
+          "concept": "hellaswag",
+          "prose": "HellaSwag, which asks a model to pick the most plausible continuation of a scenario, appeared alongside DROP on the paper's original list of RLHF regressions, but the two diverge under the fix: PPO-ptx recovers enough to surpass GPT-3 on HellaSwag while still lagging on DROP, showing the alignment tax is uneven."
+        },
+        {
+          "concept": "quac",
+          "prose": "QuAC extends the comprehension battery into dialogue, scoring conversational question answering rather than the single-turn extraction that DROP, SQuAD v2, and HellaSwag test, broadening what this suite of benchmarks counts as language understanding."
+        },
+        {
+          "concept": "sst",
+          "prose": "SST narrows back down to the simplest probe in the suite, binary sentiment classification, rounding out the battery with a task that carries almost none of the multi-step reasoning DROP demands or the plausibility judgment HellaSwag requires."
+        },
+        {
+          "concept": "superglue",
+          "prose": "SuperGLUE is not itself one more task to score but the umbrella suite that supplies the theme's final two benchmarks, RTE and WSC, both drawn in for general-purpose language understanding rather than any of InstructGPT's own instruction-following goals."
+        },
+        {
+          "concept": "rte",
+          "prose": "RTE tests textual entailment, one of SuperGLUE's core tasks, and is the more conventional of the suite's final pair: a binary judgment scored in essentially the same form SuperGLUE originally specifies for it."
+        },
+        {
+          "concept": "wsc",
+          "prose": "WSC closes the theme on a methodological wrinkle: though credited to SuperGLUE, the task InstructGPT actually runs departs from SuperGLUE's canonical binary-judgment format, asking the model to generate the pronoun's referent outright, a reminder that even off-the-shelf benchmarks get reshaped in practice."
+        }
+      ]
+    },
+    {
+      "theme": "generation-benchmarks-translation-summarization",
+      "steps": [
+        {
+          "concept": "wmt15-fr-en",
+          "prose": "WMT 2015 French-to-English translation opens this theme as the hardest case: scored with BLEU, it is the generation benchmark that most clearly bears the alignment tax, with PPO dropping zero-shot BLEU from 38.92 to 24.16 and even PPO-ptx recovering only to 34.28."
+        },
+        {
+          "concept": "reddit-tldr-summarization",
+          "prose": "Reddit TL;DR summarization, scored with ROUGE-L against author-written summaries, sits in direct contrast: the alignment tax that hits translation so hard spares this task, so the same fine-tuning that erodes fluent open-ended translation leaves Reddit summarization largely intact."
+        },
+        {
+          "concept": "cnn-dm-summarization",
+          "prose": "CNN/Daily Mail summarization, prompted with the same TL;DR: format and scored the same way, closes the theme on a reporting quirk rather than a substantive result: its Table 14 numbers duplicate Reddit TL;DR's exactly across all twelve model variants, so the seemingly independent professional-reference check is not one."
+        }
+      ]
+    },
+    {
+      "theme": "safety-bias-truthfulness-benchmarks",
+      "steps": [
+        {
+          "concept": "truthfulqa",
+          "prose": "TruthfulQA opens this theme as a dedicated truthfulness probe: a set of short-answer questions designed so that mimicking common human falsehoods, rather than reasoning correctly, produces a wrong answer, catching a failure mode overlap-based capability metrics would never register."
+        },
+        {
+          "concept": "realtoxicityprompts",
+          "prose": "RealToxicityPrompts shifts the theme from truthfulness to toxicity, supplying sentence-start prompts with varying toxicity to test whether a model continues text toxically, a harm that a fact-oriented benchmark like TruthfulQA was never designed to catch."
+        },
+        {
+          "concept": "perspective-api",
+          "prose": "Perspective API supplies the ground truth for RealToxicityPrompts: since the benchmark ships only prompts, not judgments, every continuation's toxicity score comes from this third-party classifier, cross-checked against human toxicity ratings to confirm the automated score can be trusted."
+        },
+        {
+          "concept": "winogender",
+          "prose": "Winogender pivots the theme again, from toxicity to social bias, while sharing an unusually direct link back: RealToxicityPrompts actually reuses Winogender's exact basic/respectful/biased prompting protocol, and the two evaluations diverge specifically under the 'respectful' variant."
+        },
+        {
+          "concept": "bias-entropy-metric",
+          "prose": "The entropy-based bias metric recasts what Winogender measures: originally a coreference-accuracy diagnostic, it is rebuilt into binary multiple-choice items whose log-probabilities are converted into a Bernoulli distribution, so lower entropy signals a stronger, more biased preference."
+        },
+        {
+          "concept": "crows-pairs",
+          "prose": "CrowS-Pairs closes the theme by receiving the same treatment as Winogender: its native directional scoring, how often a model favors the stereotyping sentence of a pair, is stripped away and replaced by the same entropy-over-probabilities method, giving both bias benchmarks one shared instrument."
+        }
+      ]
+    },
+    {
+      "theme": "cai-core-method",
+      "steps": [
+        {
+          "concept": "constitutional-ai",
+          "prose": "Constitutional AI opens this theme as the whole two-stage method: training a harmless assistant with only a small set of written principles as guidance, combining supervised self-critique and revision with reinforcement learning from AI-generated preference labels, in place of human harmfulness labels."
+        },
+        {
+          "concept": "constitution",
+          "prose": "The constitution is what makes constitutional-ai workable without human harm labels: rather than tens of thousands of preference labels, CAI substitutes only about ten simple natural-language principles, compressed enough to steer both the critique/revision stage and, later, the comparison stage."
+        },
+        {
+          "concept": "sl-cai-principles",
+          "prose": "Principles for SL-CAI is the constitution's first concrete expression: 16 critique/revision instruction pairs, phrased as imperatives addressed to a model acting on its own response, that steer the supervised stage this theme is about to walk through."
+        },
+        {
+          "concept": "sl-cai-few-shot-examples",
+          "prose": "Few-shot prompts for SL-CAI fix a bug that critique-and-revision would otherwise hit: asking one model to play critic then reviser in sequence repeatedly confused its point of view, so hand-written worked examples of the pattern are prepended to keep the two roles straight before the real pipeline runs."
+        },
+        {
+          "concept": "critique-and-revision",
+          "prose": "Critique and revision is the supervised pipeline itself, now equipped with sl-cai-principles to steer it and sl-cai-few-shot-examples to keep its roles from blurring: a model critiques its own harmful response according to a sampled principle, then revises the response to remove the identified harm."
+        },
+        {
+          "concept": "direct-revision-ablation",
+          "prose": "Direct revision, the critique-free ablation, asks a pointed question about critique-and-revision's own design: is the critique step doing anything? At smaller scales critiqued revisions score more harmless, but the gap nearly closes at 52B, and the critiques were kept anyway for the human-readable record they provide."
+        },
+        {
+          "concept": "sl-cai",
+          "prose": "SL-CAI is not trained on any separately curated dataset; it is a pretrained model finetuned directly on critique-and-revision's output, run across 182,831 red-team prompts with four critique-revision pairs each, which is why SL-CAI variants are named by how many rounds of revision they were trained on."
+        },
+        {
+          "concept": "ensembling-principles",
+          "prose": "Principle ensembling, applied back at the revision step, samples a different one of sl-cai-principles for each revision instead of reusing one throughout; it barely moves harmlessness scores on its own, but the resulting diversity in revised responses is what pays off once those revisions seed the RL stage."
+        },
+        {
+          "concept": "rl-cai-principles",
+          "prose": "Principles for RL-CAI close this theme by mirroring sl-cai-principles in a different grammatical shape: the same 16-principle constitution re-expressed as compare-and-choose comparison questions rather than act-and-revise instructions, handing the constitution off to the feedback model's engineering that follows."
+        }
+      ]
+    },
+    {
+      "theme": "feedback-model-engineering",
+      "steps": [
+        {
+          "concept": "model-calibration",
+          "prose": "Model calibration opens this theme as the empirical precondition everything else depends on: prior work established that language models' probabilities on multiple-choice questions are reasonably trustworthy, which is what licenses treating a plain LM's raw output as usable preference signal at all."
+        },
+        {
+          "concept": "multiple-choice-evaluation-format",
+          "prose": "The multiple-choice comparison format is where that calibration gets put to work: it packages a conversation, a sampled constitutional principle, and two labeled candidate responses into an (A)/(B) question, so a model's ordinary next-token log-probabilities become a scalar preference label instead of noise."
+        },
+        {
+          "concept": "feedback-model",
+          "prose": "Feedback model is the entity this format actually manufactures: on its own an independent pretrained LM has no built-in notion of preference, but the multiple-choice template is the specific engineering move that turns it into a preference labeler standing in for a crowdworker."
+        },
+        {
+          "concept": "chain-of-thought-prompting",
+          "prose": "Chain-of-thought prompting is layered onto the feedback model's judgment to make it more accurate and transparent, asking it to reason step by step before committing to the (A)/(B) answer that multiple-choice-evaluation-format extracts from it."
+        },
+        {
+          "concept": "lets-think-step-by-step-prompt",
+          "prose": "The 'let's think step-by-step' trigger is the zero-shot instrument that starts this reasoning: a single phrase borrowed from Kojima et al. that signals reasoning should happen before an answer, though it says nothing yet about what that reasoning should contain."
+        },
+        {
+          "concept": "rl-cai-cot-prompts",
+          "prose": "Chain-of-thought prompts for RL-CAI supply what the trigger phrase alone cannot: hand-written few-shot examples with a substitutable principle placeholder and a worked reasoning chain, giving the feedback model a concrete template for what a harmlessness judgment's reasoning should look like."
+        },
+        {
+          "concept": "label-clamping",
+          "prose": "Label clamping exists because chain-of-thought reasoning creates a side effect it must correct: a CoT explanation almost always states its preferred answer before the model outputs a probability, pushing that probability toward 0 or 1, so clamping forces it back into a fixed band such as 40-60%."
+        },
+        {
+          "concept": "ensembling-principles",
+          "prose": "Principle ensembling closes the theme by hardening the feedback model from a different angle: sampling a different RL-CAI principle for every comparison label rather than reusing one, which the paper reports led to notably more robust preference-model behavior than a fixed principle would."
+        }
+      ]
+    },
+    {
+      "theme": "red-teaming-and-harm-data",
+      "steps": [
+        {
+          "concept": "red-teaming",
+          "prose": "Red teaming opens this theme as the human-driven source of every harmful prompt in the pipeline: crowdworkers hold adversarial conversations designed to bait the assistant into harmful outputs, and this transcript supply feeds both SL-CAI and RL-CAI training directly."
+        },
+        {
+          "concept": "classifying-harmful-behavior-eval",
+          "prose": "Harmful behavior identification and classification evaluations are not independently written; both of their multiple-choice tasks are built directly out of red-teaming transcripts and the crowdworker harm ratings collected alongside them, testing whether a model can replicate those same judgments."
+        },
+        {
+          "concept": "automated-red-teaming",
+          "prose": "Automated red teaming looks past the crowdworker labor ceiling that red teaming runs into, proposing a language model generate the adversarial prompts itself; the paper notes this scaling move depends on non-evasiveness, since a model trained to simply refuse would teach an automated red-teamer nothing."
+        },
+        {
+          "concept": "palms",
+          "prose": "PALMS closes the theme by stepping outside the loop entirely: every harmful prompt discussed so far, real or automated, traces back to red-teaming, but PALMS is an externally authored, fixed list of sensitive questions never part of that data, serving as an out-of-distribution spot check on generalization."
+        }
+      ]
+    },
+    {
+      "theme": "related-dialogue-agents",
+      "steps": [
+        {
+          "concept": "lamda",
+          "prose": "LaMDA opens this theme as the purely empirical comparison point: Google's dialogue language model is cited as related aligned-dialogue-agent work, and its prompts and reference responses are reused wholesale in the paper's appendix to qualitatively benchmark HH-RLHF against RL-CAI on the same inputs."
+        },
+        {
+          "concept": "sparrow",
+          "prose": "Sparrow plays a different, more substantive role than LaMDA: rather than supplying test inputs, DeepMind's dialogue agent supplies a design lineage, since its decomposition of harmlessness into targeted rules is singled out as having genuine commonality with CAI's own use of a written constitution."
+        },
+        {
+          "concept": "context-distillation",
+          "prose": "Context distillation closes the theme as a comparison by absence rather than presence: this prior technique for compressing a lengthy prompt's behavior into model weights was used for RLHF models in earlier work, but is explicitly not used for the RLHF models trained directly here, a deliberate methodological choice."
+        }
+      ]
+    }
+  ]
+}

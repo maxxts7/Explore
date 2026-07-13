@@ -1,0 +1,74 @@
+{
+  "superedges": [
+    {
+      "id": "semi-supervised-reward-learning-proposals-selectively-realized-in-scalable-oversight-lineage",
+      "type": "is-selectively-realized-in",
+      "source": "semi-supervised-reward-learning-proposals",
+      "target": "scalable-oversight-lineage",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "Of the four semi-supervised instantiations this theme proposes, only one survives, in altered form, into the lineage's reward model. Supervised reward learning trains a model to predict scalar reward from state, weighted by its own uncertainty, so a sparse true-reward signal can be interpolated onto unlabeled episodes; InstructGPT's reward model instead predicts relative preference between two full completions via a pairwise comparison loss (instructgpt, §3.5 Models, p. 8), applied uniformly rather than interpolated onto a labeled/unlabeled split, since RLHF's training pool has no directly labeled episodes at all. Active reward learning's request-feedback-on-salient-events mechanism, unsupervised value iteration, and unsupervised model learning, the theme's other three branches, have no counterpart anywhere in the lineage. The 2016 theme is best read not as a blueprint the reward model followed but as a broader menu from which one general idea, a trained stand-in for costly evaluation, was kept and three specific mechanisms were dropped."
+    },
+    {
+      "id": "distant-supervision-and-hierarchical-decomposition-prefigures-rule-driven-labeling-in-scalable-oversight-lineage",
+      "type": "prefigures-the-rule-driven-labeling-in",
+      "source": "distant-supervision-and-hierarchical-decomposition",
+      "target": "scalable-oversight-lineage",
+      "hindsight": true,
+      "groundedIn": "constitutional-ai",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "This theme's two branches fare unevenly against the lineage's later step. Hierarchical decomposition, a top-level agent delegating abstract goals to sub-agents pursuing denser synthetic rewards, has no realized analogue anywhere in the lineage: RLHF and RLAIF remain architecturally flat, a single policy against a single preference model, with no goal-delegating hierarchy. Distant supervision fares differently: its core move, substituting a noisy labeling rule for per-example evaluation, exemplified by DeepDive asking users to supply rules that generate weak labels (concrete-problems, §5 Scalable Oversight, p. 13), is what the feedback model in Constitutional AI's RL from AI Feedback actually does. The feedback model is prompted with a single constitutional principle alongside each response pair and produces a preference label from that principle rather than from independent per-example human judgment (constitutional-ai, §4.1 Method, p. 10), making it a rule-driven labeler in the distant-supervision sense, not a scaled-up version of per-example oversight."
+    },
+    {
+      "id": "demonstrations-not-specification-displaces-exploration-bound-onto-ppo-optimization-mechanics",
+      "type": "displaces-its-exploration-bound-onto",
+      "source": "demonstrations-not-specification",
+      "target": "ppo-optimization-mechanics",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The 2016 proposal pairs demonstration learning with an explicit safety idea absent from this theme's account of SFT: bounding further exploration around the baseline policy that demonstrations produce, so a CIRL- or apprenticeship-trained agent does not wander far from validated behavior. Supervised fine-tuning, the pipeline step this theme's narrative says operationalizes demonstration learning, carries no such bound; it is unconstrained supervised learning with nothing to bound, since there is no exploration at that stage. The bound reappears two pipeline steps later, in a different theme, as the per-token KL penalty subtracted from reward during PPO fine-tuning, which keeps the policy from drifting too far from the SFT model (instructgpt, §3.5 Models, p. 9). The safety property 2016 attached to demonstration learning itself is, in the built pipeline, detached from SFT and re-implemented downstream as a separate PPO-stage regularizer."
+    },
+    {
+      "id": "ppo-optimization-mechanics-reveals-critic-reward-coupling-in-rlhf-three-step-pipeline",
+      "type": "reveals-a-critic-reward-coupling-inside",
+      "source": "ppo-optimization-mechanics",
+      "target": "rlhf-three-step-pipeline",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The three-step account describes PPO fine-tuning as maximizing the reward model's score, as though the optimizer that maximizes and the model that scores were independent components. The mechanics theme shows they are not: the PPO value function, the critic supplying the advantage estimate that drives each policy update, is itself initialized from the trained reward model's own weights, not from the SFT model or trained from scratch (instructgpt, §C.4 Details of RLHF training, p. 42). A systematic bias in the reward model's judgments is therefore present twice in the same optimization loop, once as the reward being chased and once as the critic estimating its future value, rather than once as the pipeline narrative's black-box description implies. The mechanics theme also specifies that this optimization is cast as a single-step bandit, one prompt, one response, one terminal reward, a framing the three-step account never states."
+    },
+    {
+      "id": "human-feedback-data-infrastructure-exposes-noisy-consensus-beneath-rlhf-three-step-pipeline",
+      "type": "exposes-the-noisy-consensus-beneath",
+      "source": "human-feedback-data-infrastructure",
+      "target": "rlhf-three-step-pipeline",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The pipeline theme describes reward-model training as fitting a pairwise comparison loss to which of two outputs human labelers would prefer, language that reads as though labeler preference were a stable ground truth to be recovered. The data-infrastructure theme's own concepts complicate that reading without the pipeline narrative registering it: independent labelers agree with each other only about 73% of the time (instructgpt, §3.4 Human data collection, p. 8), and reward models cross-validated across labeler groups reach roughly 69.6% held-out accuracy versus 72.4% in-group (instructgpt, §E.2 Reward model generalization across sets of labelers, p. 52). What steps two and three of the pipeline actually optimize against, in other words, is a moderately noisy, only partly generalizing consensus among roughly 40 screened contractors, not the singular target the pipeline theme's comparison-loss description suggests."
+    },
+    {
+      "id": "ppo-optimization-mechanics-engineers-partial-countermeasure-for-rlhf-failure-modes",
+      "type": "engineers-a-partial-countermeasure-for",
+      "source": "ppo-optimization-mechanics",
+      "target": "rlhf-failure-modes",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "Two of this theme's engineering choices are named, deliberate responses to two of the failure modes the other theme catalogues. The per-token KL penalty is added specifically to limit reward-model over-optimization, the RL policy exploiting reward-model imperfections rather than genuinely improving. PPO-ptx, mixing pretraining language-modeling gradients into the PPO update, is added specifically to counteract the alignment tax, the regressions on public NLP benchmarks that RLHF otherwise introduces (instructgpt, §3.5 Models, p. 9; §4.2 Results on public NLP datasets, p. 14). No comparable mechanism among this theme's concepts targets the other three failure modes: hallucination, excessive hedging, and false-premise failure have no PPO-stage engineering response at all, attributed instead to properties of the training data and reward-model incentives. The mechanics theme's toolkit is therefore a partial, not general, answer to what the failure-modes theme documents."
+    },
+    {
+      "id": "scalable-oversight-lineage-only-half-operationalized-by-rlhf-three-step-pipeline",
+      "type": "is-only-half-operationalized-by",
+      "source": "scalable-oversight-lineage",
+      "target": "rlhf-three-step-pipeline",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The lineage theme's own arc runs from an open problem to a human reward model to AI feedback, but the three-step pipeline theme's member concepts, GPT-3, SFT model, supervised fine-tuning, reward model, reward-model loss, RLHF, PPO training, stop at the first of those two implementations. Nothing among them varies who or what supplies the preference label; the label is human throughout every step. RLAIF, the feedback model, the hybrid human/AI preference model, and iterated online training, the lineage theme's later concepts, describe a second implementation, Constitutional AI's, that sits entirely outside the three-step pipeline's own concept set. The pipeline theme is therefore not the lineage fully built but its first chapter only; the lineage's claim that scalable oversight gets scaled again through AI feedback describes a different, sibling pipeline the three-step theme does not itself contain."
+    }
+  ]
+}

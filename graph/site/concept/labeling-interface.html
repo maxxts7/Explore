@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Web labeling interface — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Web labeling interface</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The internal web tool used by labelers and researchers to assign Likert quality scores, metadata labels, and full rankings to sets of model outputs for a given prompt.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>The web labeling interface is the internal tool labelers and researchers actually use to assign Likert quality scores, <a href="../concept/labeler-metadata-taxonomy.html">metadata labels</a>, and full rankings to sets of model outputs for a given prompt, part of <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a>. It is introduced in this paper as purpose-built infrastructure rather than an off-the-shelf annotation tool (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=38" target="_blank" rel="noopener">§"B.5 Web interface", p. 38</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What it quietly determines about the data</h2>
+<p>The interface's design choices shape the <a href="../concept/rm-dataset.html">RM (comparison) dataset</a> more than any written labeling instruction does: <a href="../edge/labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset.html">it filters uncertain comparisons out of the RM dataset</a> through one specific affordance. It collects full rankings of $K=4$ to $9$ completions per prompt rather than isolated pairs, which is why the RM dataset's comparison count runs an order of magnitude beyond its roughly 33,000 prompts — each ranking expands into $\binom{K}{2}$ pairs via <a href="../concept/k-choose-2-batching.html">K-choose-2 single-batch comparison training</a>. It also explicitly encourages ties "in cases where two outputs seem to be of similar quality" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=39" target="_blank" rel="noopener">§"B.5 Web interface", p. 39</a>), and RM training then drops tied pairs entirely (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">§"C.2 Details of RM training", p. 42</a>). Together these turn the interface's tie button into a quiet confidence filter: whenever a labeler cannot distinguish two outputs, that non-judgment is prevented from ever becoming gradient signal for the reward model, rather than being forced into an arbitrary label that would inject noise into the <a href="../concept/reward-model-loss.html">comparison loss</a>. The dataset the reward model ultimately learns from is therefore not "everything labelers thought" but the subset of judgments they were confident enough to render decisively — a filtering effect built into UI design rather than into post-hoc data cleaning.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Web labeling interface</strong> — <a href="../edge/labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset.html">filters uncertain comparisons out of</a> → RM (comparison) dataset</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=38" target="_blank" rel="noopener">&sect;&ldquo;B.5 Web interface&rdquo;, p. 38</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

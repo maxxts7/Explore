@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Epsilon-greedy exploration — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Epsilon-greedy exploration</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A standard prior RL exploration policy that takes a random action with some probability and the greedy action otherwise.</p>
+<section class="prose-section">
+<h2>A standard exploration policy older than the paper</h2>
+<p>Epsilon-greedy is one of the oldest and most widely used exploration strategies in reinforcement learning, predating Concrete Problems by decades; the paper cites it via Sutton and Barto's standard RL textbook as a baseline against which its own safe-exploration proposals should be read (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=14" target="_blank" rel="noopener">§"6 Safe Exploration", p. 14</a>). At each timestep the policy takes the current greedy, highest-estimated-value, action with probability $1-\epsilon$ and a uniformly random action with probability $\epsilon$:
+$$a_t = \begin{cases} \arg\max_a Q(s_t, a) &amp; \text{with probability } 1-\epsilon \\ \text{uniform random action} &amp; \text{with probability } \epsilon. \end{cases}$$
+The parameter $\epsilon$ trades off exploitation of current knowledge against exploration of the unknown, and is often annealed toward zero over training.</p>
+</section>
+<section class="prose-section">
+<h2>Why the paper treats it as unsafe by omission</h2>
+<p>Concrete Problems' interest in epsilon-greedy is not the algorithm itself but what it lacks: any notion of catastrophe. The paper groups it with <a href="../concept/r-max.html">R-max</a> as a standard policy that "make[s] no attempt to avoid dangerous situations" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=14" target="_blank" rel="noopener">§"6 Safe Exploration", p. 14</a>), but the two are blind to danger for <a href="../edge/epsilon-greedy-contrasts-in-danger-source-with-r-max.html">different reasons</a>. Epsilon-greedy does not seek out unknown or dangerous states; it simply fails to avoid them when chance happens to select one, since its random action is uniform over the entire action space with no regard for consequence. This makes its hazard incidental rather than structural, which is part of why it serves the paper as a neutral baseline, precisely because it has no exploration strategy sophisticated enough to be actively drawn toward catastrophe, rather than a wrong strategy. As a member of the theme <a href="../theme/exploration-risk-criteria-and-algorithms.html">Exploration policies and the objectives that make them safe or reckless</a>, it stands alongside <a href="../concept/risk-sensitive-performance-criteria.html">Risk-sensitive performance criteria</a> as the piece of prior machinery the paper's safe-exploration remedies are ultimately meant to replace or supplement, not because epsilon-greedy is dangerous by design, but because it was never designed with danger in mind at all.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/safe-exploration.html">Safe exploration</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Epsilon-greedy exploration</strong> — <a href="../edge/epsilon-greedy-contrasts-in-danger-source-with-r-max.html">contrasts in danger source with</a> → R-max</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/exploration-risk-criteria-and-algorithms.html">Exploration policies and the objectives that make them safe or reckless</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;6 Safe Exploration&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,446 @@
+{
+  "overlay": {
+    "id": "root",
+    "name": "From Diagnosis to Machinery: The Accidents Come Back",
+    "narrative": "Three papers, six years apart, trace how AI safety research moved from diagnosis to machinery. Concrete Problems in AI Safety (2016) names five distinct ways a system can cause unintended harm while faithfully optimizing the objective it was given, and answers each almost entirely in the abstract. InstructGPT and Constitutional AI (2022) build out only two of those five proposals into an actual pipeline, RLHF and then RLAIF, using demonstrations and a learned reward model to scale oversight past what a human can check by hand. Building that pipeline does not retire the 2016 diagnoses: Goodhart’s law resurfaces empirically as reward over-optimization and evasiveness, and optimizing a target as fuzzy as ‘helpful and harmless’ forces InstructGPT to define that target and measure it exhaustively, then forces Constitutional AI to answer for the tradeoff between its two halves.",
+    "ref": null,
+    "children": [
+      {
+        "id": "arc-cataloging-accidents",
+        "name": "Drawing the Boundaries of an Accident",
+        "narrative": "What counts as an accident, and what doesn't? Before proposing any fix, Concrete Problems draws its own boundaries: accidents from poor design, not superintelligence or malicious attack, and names the formal-methods toolkit, verification, control theory, it will lean on throughout. It then works through two of its five problem areas end to end. Side effects and unsafe exploration share one strategy, shrink the space of outcomes or actions an agent may reach, whether by penalizing distance from a baseline, limiting influence, protecting other agents' interests, or physically bounding exploration to recoverable regions. Distributional shift gets two more answers, relax the statistics connecting train and test, or reframe the mismatch as a broken contract. Both proposals stay confined to 2016: neither becomes built machinery later in this story, which is exactly what sets them apart from the arcs that follow.",
+        "ref": null,
+        "children": [
+          {
+            "id": "concrete-problems-scope-and-toolkit",
+            "name": "Where Concrete Problems draws its own lines",
+            "narrative": "Opens the whole corpus: what counts as an accident, what doesn't, and the formal-methods toolkit reused by the two problem areas below (this is the toolkit's single canonical home in this tree, even though bounding-impact-and-exploration and distributional-shift-responses both reach for it).",
+            "ref": {
+              "kind": "supertheme",
+              "id": "concrete-problems-scope-and-toolkit"
+            },
+            "children": [
+              {
+                "id": "framing-accidents-vs-speculative-risk",
+                "name": "Framing safety as accidents, not superintelligence",
+                "ref": {
+                  "kind": "theme",
+                  "id": "framing-accidents-vs-speculative-risk"
+                },
+                "children": []
+              },
+              {
+                "id": "adjacent-research-areas",
+                "name": "Drawing the boundary: what accident risk is not",
+                "ref": {
+                  "kind": "theme",
+                  "id": "adjacent-research-areas"
+                },
+                "children": []
+              },
+              {
+                "id": "formal-methods-imported",
+                "name": "Formal verification and control theory recur as safety building blocks",
+                "ref": {
+                  "kind": "theme",
+                  "id": "formal-methods-imported"
+                },
+                "children": [],
+                "narrative": "Kept here as the corpus's one home for this toolkit theme, though it is the shared substrate beneath the side-effects/exploration and distributional-shift remedies that follow."
+              }
+            ]
+          },
+          {
+            "id": "bounding-impact-and-exploration",
+            "name": "Bounding what an agent can change or explore, not just what it's told to want",
+            "narrative": "Two of Concrete Problems' five accident types, negative side effects and unsafe exploration, share one strategy: shrink the space of outcomes or actions rather than perfectly specify a reward. Its formal-methods-imported member stays with concrete-problems-scope-and-toolkit above; its demonstrations-not-specification member is held for the oversight-to-pipeline arc, where the same technique becomes InstructGPT's SFT stage.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "bounding-impact-and-exploration"
+            },
+            "children": [
+              {
+                "id": "impact-regularization-and-baselines",
+                "name": "Penalizing side effects by distance from a baseline",
+                "ref": {
+                  "kind": "theme",
+                  "id": "impact-regularization-and-baselines"
+                },
+                "children": []
+              },
+              {
+                "id": "influence-and-uncertainty-side-effect-mitigation",
+                "name": "Limiting potential influence instead of measuring realized change",
+                "ref": {
+                  "kind": "theme",
+                  "id": "influence-and-uncertainty-side-effect-mitigation"
+                },
+                "children": []
+              },
+              {
+                "id": "side-effects-as-relationship",
+                "name": "Side effects and control as a relationship with other agents",
+                "ref": {
+                  "kind": "theme",
+                  "id": "side-effects-as-relationship"
+                },
+                "children": []
+              },
+              {
+                "id": "exploration-risk-criteria-and-algorithms",
+                "name": "Exploration policies and the objectives that make them safe or reckless",
+                "ref": {
+                  "kind": "theme",
+                  "id": "exploration-risk-criteria-and-algorithms"
+                },
+                "children": []
+              },
+              {
+                "id": "constraining-exploration-to-safe-regions",
+                "name": "Keeping exploration inside a known-recoverable region",
+                "ref": {
+                  "kind": "theme",
+                  "id": "constraining-exploration-to-safe-regions"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "distributional-shift-responses",
+            "name": "Distributional shift: relax the statistics, or rewrite the contract",
+            "narrative": "Concrete Problems' fifth accident type gets two structurally different 2016 answers. Its formal-methods-imported member is kept with concrete-problems-scope-and-toolkit above rather than repeated here.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "distributional-shift-responses"
+            },
+            "children": [
+              {
+                "id": "statistical-relaxations-for-distributional-shift",
+                "name": "Weakening statistical assumptions to survive distribution shift",
+                "ref": {
+                  "kind": "theme",
+                  "id": "statistical-relaxations-for-distributional-shift"
+                },
+                "children": []
+              },
+              {
+                "id": "shift-as-contracts-and-causation",
+                "name": "Reframing distributional shift as broken contracts and causal structure",
+                "ref": {
+                  "kind": "theme",
+                  "id": "shift-as-contracts-and-causation"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "era": "2016"
+      },
+      {
+        "id": "arc-reward-hacking-goodhart",
+        "name": "Goodhart's Law Doesn't Stay in 2016",
+        "narrative": "What makes a proxy so easy to game, and why won't the fix hold past 2016? Reward hacking is Concrete Problems' third problem: an agent that satisfies the letter of its objective while subverting the designer's intent. This arc names the anatomy of why proxies get gamed, partial observability, complicated systems, abstract rewards, feedback loops, an agent's physical embedding in its own reward mechanism, then two 2016 remedy families: borrowing adversarial ML to make the reward function itself hunt for exploits, and conventional engineering fixes like lookahead, capping, and trip wires. It closes on the single principle underneath all of it, Goodhart's law, a measure optimized as a target ceases to be a good measure. That is where this arc stops being 2016-only: the same law resurfaces empirically in both 2022 papers, making this the corpus's pivot from diagnosis to recurring pathology.",
+        "ref": null,
+        "children": [
+          {
+            "id": "reward-hacking-and-goodharts-law",
+            "name": "Reward hacking: how proxies get gamed, and the general law behind it",
+            "narrative": "One diagnosis, two 2016 remedy families, and the general law that outlives all three: named once here, it returns as empirical pathology in every arc that follows.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "reward-hacking-and-goodharts-law"
+            },
+            "children": [
+              {
+                "id": "reward-hacking-causes",
+                "name": "Why reward proxies get gamed: the anatomy of reward hacking",
+                "ref": {
+                  "kind": "theme",
+                  "id": "reward-hacking-causes"
+                },
+                "children": []
+              },
+              {
+                "id": "adversarial-ml-for-reward-hacking",
+                "name": "Borrowing adversarial ML to defend against reward hacking",
+                "ref": {
+                  "kind": "theme",
+                  "id": "adversarial-ml-for-reward-hacking"
+                },
+                "children": []
+              },
+              {
+                "id": "reward-hacking-engineering-remedies",
+                "name": "Non-adversarial engineering fixes for reward hacking",
+                "ref": {
+                  "kind": "theme",
+                  "id": "reward-hacking-engineering-remedies"
+                },
+                "children": []
+              },
+              {
+                "id": "goodhart-across-corpus",
+                "name": "Goodhart's law across three papers: when the proxy becomes the target",
+                "ref": {
+                  "kind": "theme",
+                  "id": "goodhart-across-corpus"
+                },
+                "children": [],
+                "narrative": "The pivot theme of the whole tree: named here as reward hacking's root cause, then returning as InstructGPT's reward over-optimization and hedging, and Constitutional AI's evasiveness."
+              }
+            ]
+          }
+        ],
+        "era": "2016→2022"
+      },
+      {
+        "id": "arc-oversight-to-pipeline",
+        "name": "Scalable Oversight Becomes RLHF",
+        "narrative": "A proposal is easy to write down; turning it into a working pipeline is another matter entirely. Concrete Problems' fourth problem, scalable oversight, is evaluating a true objective too costly to check on every example, and the paper sketches remedies only in the abstract: predicting reward on unlabeled episodes, or scaling oversight without a learned predictor at all via distant supervision or hierarchical decomposition, alongside a separately proposed idea, learning from demonstrations instead of a specification. This arc traces what happens when those proposals actually get built: a lineage from open problem to reward model to AI feedback, InstructGPT's three-step pipeline, SFT, reward model, PPO, that is reward-prediction and demonstration-learning made concrete, the engineering and human-data infrastructure the pipeline depends on, and, as a coda, the failure modes, hallucination, hedging, reward over-optimization, that remain even once it is built. This is the corpus's central hinge from 2016 abstraction to 2022 machinery.",
+        "ref": null,
+        "children": [
+          {
+            "id": "scalable-oversight-to-rlhf-pipeline",
+            "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+            "narrative": "The corpus's central bridge. Demonstrations-not-specification is placed here, not with bounding-impact-and-exploration above, because this is where the demonstration-learning thread actually pays off, as InstructGPT's SFT stage.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "scalable-oversight-to-rlhf-pipeline"
+            },
+            "children": [
+              {
+                "id": "semi-supervised-reward-learning-proposals",
+                "name": "Scaling oversight by predicting reward on unlabeled episodes",
+                "ref": {
+                  "kind": "theme",
+                  "id": "semi-supervised-reward-learning-proposals"
+                },
+                "children": []
+              },
+              {
+                "id": "distant-supervision-and-hierarchical-decomposition",
+                "name": "Scaling oversight without a learned reward predictor",
+                "ref": {
+                  "kind": "theme",
+                  "id": "distant-supervision-and-hierarchical-decomposition"
+                },
+                "children": []
+              },
+              {
+                "id": "demonstrations-not-specification",
+                "name": "Learning from demonstrations instead of a specified reward",
+                "ref": {
+                  "kind": "theme",
+                  "id": "demonstrations-not-specification"
+                },
+                "children": [],
+                "narrative": "A 2016 proposal shared with bounding-impact-and-exploration, placed here because its real payoff is genealogical: it becomes InstructGPT's supervised fine-tuning stage."
+              },
+              {
+                "id": "scalable-oversight-lineage",
+                "name": "From an open problem to reward models to AI feedback",
+                "ref": {
+                  "kind": "theme",
+                  "id": "scalable-oversight-lineage"
+                },
+                "children": []
+              },
+              {
+                "id": "rlhf-three-step-pipeline",
+                "name": "InstructGPT's three-step training pipeline",
+                "ref": {
+                  "kind": "theme",
+                  "id": "rlhf-three-step-pipeline"
+                },
+                "children": []
+              },
+              {
+                "id": "ppo-optimization-mechanics",
+                "name": "The mechanics that make PPO fine-tuning work",
+                "ref": {
+                  "kind": "theme",
+                  "id": "ppo-optimization-mechanics"
+                },
+                "children": []
+              },
+              {
+                "id": "human-feedback-data-infrastructure",
+                "name": "Building the human side of the RLHF pipeline",
+                "ref": {
+                  "kind": "theme",
+                  "id": "human-feedback-data-infrastructure"
+                },
+                "children": []
+              },
+              {
+                "id": "rlhf-failure-modes",
+                "name": "Where RLHF alignment still falls short",
+                "ref": {
+                  "kind": "theme",
+                  "id": "rlhf-failure-modes"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "era": "2016→2022"
+      },
+      {
+        "id": "arc-defining-measuring-target",
+        "name": "Naming the Target, Then Checking Your Aim",
+        "narrative": "A pipeline can hit any target you point it at, so what should this one be aimed at, and how would you know if it landed? Once a pipeline exists, someone must say what it is optimizing for. This arc covers InstructGPT's founding argument that instruction-following, not next-token prediction, is the right objective, the helpful-honest-harmless vocabulary it shares with Constitutional AI, and the helpfulness-harmlessness tradeoff that emerges once that target is actually pursued: pushing one tends to erode the other. It then covers the measurement apparatus built to check any of this: overlap scores versus human judgments, a battery of public NLP benchmarks to catch capability regressions, translation and summarization tests, and purpose-built truthfulness and bias benchmarks the capability suite alone could never catch. Defining the target and measuring it are two halves of one problem: neither the objective nor its cost can be taken on faith.",
+        "ref": null,
+        "children": [
+          {
+            "id": "defining-the-alignment-target",
+            "name": "Defining the target before optimizing for it: instruction-following, HHH, and the tradeoff it creates",
+            "narrative": "States the goal the pipeline built in the previous arc is actually pointed at, and the tradeoff that shows up once it is pursued. Its quality-measurement-methods member is held for measuring-instructgpt-quality-and-safety below, where the corpus's full measurement apparatus is gathered in one place.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "defining-the-alignment-target"
+            },
+            "children": [
+              {
+                "id": "instruction-following-objective",
+                "name": "Instruction following as an alternative to next-token prediction",
+                "ref": {
+                  "kind": "theme",
+                  "id": "instruction-following-objective"
+                },
+                "children": []
+              },
+              {
+                "id": "hhh-framework-and-benchmark",
+                "name": "Helpful, honest, harmless: a shared definition of alignment",
+                "ref": {
+                  "kind": "theme",
+                  "id": "hhh-framework-and-benchmark"
+                },
+                "children": [],
+                "narrative": "Introduced here as the vocabulary InstructGPT and Constitutional AI both reuse; Constitutional AI's own method arc later extends the benchmark this theme defines without re-placing it."
+              },
+              {
+                "id": "helpfulness-harmlessness-tradeoff",
+                "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it",
+                "ref": {
+                  "kind": "theme",
+                  "id": "helpfulness-harmlessness-tradeoff"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "measuring-instructgpt-quality-and-safety",
+            "name": "The evaluation apparatus: measuring quality, capability loss, and safety together",
+            "narrative": "The instruments built to check whether the target defined above was actually hit, and at what cost to general capability.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "measuring-instructgpt-quality-and-safety"
+            },
+            "children": [
+              {
+                "id": "quality-measurement-methods",
+                "name": "Automatic overlap scores versus human and preference judgments",
+                "ref": {
+                  "kind": "theme",
+                  "id": "quality-measurement-methods"
+                },
+                "children": [],
+                "narrative": "Placed here, as the founding instrument of the corpus's full measurement apparatus, rather than under defining-the-alignment-target where it is also a member."
+              },
+              {
+                "id": "language-understanding-benchmarks",
+                "name": "The public NLP benchmark suite used to catch regressions",
+                "ref": {
+                  "kind": "theme",
+                  "id": "language-understanding-benchmarks"
+                },
+                "children": []
+              },
+              {
+                "id": "generation-benchmarks-translation-summarization",
+                "name": "Testing generative capability: translation and summarization benchmarks",
+                "ref": {
+                  "kind": "theme",
+                  "id": "generation-benchmarks-translation-summarization"
+                },
+                "children": []
+              },
+              {
+                "id": "safety-bias-truthfulness-benchmarks",
+                "name": "Operationalizing truthfulness and social bias into measurable benchmarks",
+                "ref": {
+                  "kind": "theme",
+                  "id": "safety-bias-truthfulness-benchmarks"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "era": "2022"
+      },
+      {
+        "id": "arc-cai-answer",
+        "name": "A Constitution Closes the Tradeoff",
+        "narrative": "Can a model get more helpful and more harmless at once, or is that a contradiction in terms? The tradeoff named in the previous arc, and the evasiveness Goodhart's law predicts under harmlessness training, are exactly what Constitutional AI sets out to fix. This arc covers its method end to end: a small written constitution standing in for human harm labels, used to critique and revise the model's own outputs in a supervised stage; the prompting and calibration engineering that turns a plain language model into a usable AI preference labeler for the RL stage, RLAIF being scalable oversight's own lineage pushed one step further; the red-teaming pipeline that supplies harmful training data; and the prior dialogue agents, LaMDA, Sparrow, context distillation, the method positions itself against. The corpus's closing claim is empirical: Constitutional RL shifts the entire helpfulness-harmlessness frontier outward rather than trading one side for the other.",
+        "ref": null,
+        "children": [
+          {
+            "id": "constitutional-ai-method-and-grounding",
+            "name": "Constitutional AI's method: a written constitution, AI feedback, and its place among prior agents",
+            "narrative": "Its hhh-framework-and-benchmark member is placed with defining-the-alignment-target in the previous arc, where the helpful-honest-harmless definition is first introduced as vocabulary shared by both 2022 papers.",
+            "ref": {
+              "kind": "supertheme",
+              "id": "constitutional-ai-method-and-grounding"
+            },
+            "children": [
+              {
+                "id": "cai-core-method",
+                "name": "Constitutional AI's method: principles, critique, and revision",
+                "ref": {
+                  "kind": "theme",
+                  "id": "cai-core-method"
+                },
+                "children": []
+              },
+              {
+                "id": "feedback-model-engineering",
+                "name": "Engineering a language model into a usable preference labeler",
+                "ref": {
+                  "kind": "theme",
+                  "id": "feedback-model-engineering"
+                },
+                "children": []
+              },
+              {
+                "id": "red-teaming-and-harm-data",
+                "name": "Sourcing and classifying harmful prompts",
+                "ref": {
+                  "kind": "theme",
+                  "id": "red-teaming-and-harm-data"
+                },
+                "children": []
+              },
+              {
+                "id": "related-dialogue-agents",
+                "name": "Prior dialogue-agent systems Constitutional AI positions itself against",
+                "ref": {
+                  "kind": "theme",
+                  "id": "related-dialogue-agents"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "era": "2022"
+      }
+    ],
+    "claim": "AI safety named five accidents in the abstract in 2016, then spent six years building the one real pipeline that reproduces two of them, partially answers them, and watches the rest come back anyway."
+  }
+}

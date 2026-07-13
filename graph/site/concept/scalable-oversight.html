@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Scalable oversight — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Scalable oversight</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-introduced">introduced</span>; <a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-refined">refined</span></p>
+<p class="lede">The problem of ensuring safe agent behavior when the true objective function is too costly to evaluate on every training example, forcing reliance on cheaper proxies.</p>
+<section class="prose-section">
+<h2>The problem: a true objective too costly to check everywhere</h2>
+<p>Scalable oversight, introduced by Concrete Problems in 2016, names the difficulty of ensuring safe agent behavior when the objective a designer actually cares about is too expensive to evaluate on every training example, forcing reliance on cheaper proxies instead. The paper's own illustration is its recurring cleaning robot: the objective a designer really wants is something like "if the user spent a few hours looking at the result in detail, how happy would they be?", but training requires relying on cheap approximations like "does the user seem happy when they see the office?" or "is there visible dirt on the floor?" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=11" target="_blank" rel="noopener">§"5 Scalable Oversight", p. 11</a>). Called "scalable supervision" in the paper's abstract, the concept is presented as more than a standalone problem: the divergence between cheap proxy and expensive true objective is said to <em>exacerbate</em> both <a href="../concept/negative-side-effects.html">Negative side effects (avoiding)</a> (which the complex objective might penalize but the cheap approximation omits) and reward hacking (which thorough oversight would recognize as undesirable, but a proxy will not).</p>
+</section>
+<section class="prose-section">
+<h2>The paper&#x27;s own proposals</h2>
+<p>Concrete Problems sketches three structurally different routes to scalable oversight, all children of this concept. <a href="../concept/semi-supervised-reinforcement-learning.html">Semi-supervised reinforcement learning</a> is the paper's primary technical answer, per the edge <a href="../edge/scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning.html">Scalable oversight — is operationalized as → Semi-supervised reinforcement learning</a>, converting the abstract worry into a literal, tunable labeled-fraction dial that can be dialed from fully supervised toward almost unsupervised and tested on toy domains like cartpole and Atari. <a href="../concept/distant-supervision.html">Distant supervision</a> and <a href="../concept/hierarchical-reinforcement-learning.html">Hierarchical reinforcement learning (HRL)</a> are offered as complementary alternatives that do not depend on training a reward predictor at all — the former making each oversight check cheaper, the latter making checks rarer by restricting the expensive true-objective evaluation to a small number of abstract, top-level decisions. All three live inside the <a href="../theme/semi-supervised-reward-learning-proposals.html">Scaling oversight by predicting reward on unlabeled episodes</a> and <a href="../theme/distant-supervision-and-hierarchical-decomposition.html">Scaling oversight without a learned reward predictor</a> themes.</p>
+</section>
+<section class="prose-section">
+<h2>What it became: reward models and RLAIF</h2>
+<p>This is the single concept in the batch with the clearest throughline across all three papers in the corpus, and it earns that status entirely in hindsight. Neither the 2016 paper nor InstructGPT ever states the connection directly; it becomes visible only once Constitutional AI revives the term explicitly under the label "Scaling Supervision" and observes that "work on reinforcement learning from human feedback... has already taken a step in the direction of scaled supervision, since the reward signal in RL actually comes from an AI preference model (PM) rather than from immediate human oversight" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">§"Scaling Supervision", p. 2</a>). Read backward through that later framing, the edge <a href="../edge/scalable-oversight-is-retroactively-operationalized-by-reward-model.html">Scalable oversight — is retroactively operationalized by → Reward model (RM)</a> identifies InstructGPT's <a href="../concept/reward-model.html">Reward model (RM)</a> as exactly the cheap, densely-queryable proxy for an expensive true objective that scalable oversight called for six years earlier — a retrospective match documented in the <a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a> tissue theme and the <a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a> theme, which traces the fuller arc from reward models through <a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a> to Constitutional AI's <a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a> and <a href="../concept/feedback-model.html">Feedback Model</a>. Within the 2016 paper itself, the concept also sits at the root of the <a href="../tissue/scalable-oversight-operationalized-into-combinable-machinery.html">Turning an abstract oversight worry into dials and pools that can run together</a> tissue theme, and it gives its name to the entire <a href="../supertheme/scalable-oversight-to-rlhf-pipeline.html">Scalable oversight made real: from 2016 proposals to InstructGPT&#x27;s RLHF pipeline</a> supertheme — the single clearest case in this corpus of a problem named once, in the abstract, and then genuinely built, twice, six years apart.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/distant-supervision.html">Distant supervision</a></li><li><a href="../concept/hierarchical-reinforcement-learning.html">Hierarchical reinforcement learning (HRL)</a></li><li><a href="../concept/semi-supervised-reinforcement-learning.html">Semi-supervised reinforcement learning</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Scalable oversight</strong> — <a href="../edge/scalable-oversight-is-addressed-by-adapting-distant-supervision.html">is addressed by adapting</a> → Distant supervision</li><li><strong>Scalable oversight</strong> — <a href="../edge/scalable-oversight-is-addressed-by-hierarchical-reinforcement-learning.html">is addressed by</a> → Hierarchical reinforcement learning (HRL)</li><li><strong>Scalable oversight</strong> — <a href="../edge/scalable-oversight-is-retroactively-operationalized-by-reward-model.html">is retroactively operationalized by</a> → Reward model (RM) <span class="tag hindsight">hindsight</span></li><li><strong>Scalable oversight</strong> — <a href="../edge/scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning.html">is operationalized as</a> → Semi-supervised reinforcement learning</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a></li><li><a href="../theme/semi-supervised-reward-learning-proposals.html">Scaling oversight by predicting reward on unlabeled episodes</a></li><li><a href="../theme/distant-supervision-and-hierarchical-decomposition.html">Scaling oversight without a learned reward predictor</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2 Overview of Research Problems&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;5 Scalable Oversight&rdquo;, p. 11</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;Scaling Supervision&rdquo;, p. 2</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

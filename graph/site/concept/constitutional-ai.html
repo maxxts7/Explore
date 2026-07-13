@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Constitutional AI (CAI) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Constitutional AI (CAI)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A two-stage method for training a harmless language model assistant using only a set of written principles rather than human harmfulness labels, combining supervised self-critique/revision with reinforcement learning from AI-generated preference labels.</p>
+<section class="prose-section">
+<h2>A two-stage alternative to human-labeled harmlessness</h2>
+<p>Constitutional AI (CAI) is a training method that produces a helpful and harmless assistant while replacing every human harmfulness <em>label</em> with a short written document. The paper states the design directly: "(Supervised Stage) Critique → Revision → Supervised Learning" followed by "(RL Stage) AI Comparison Evaluations → Preference Model → Reinforcement Learning" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">§"1.2 The Constitutional AI Approach", p. 5</a>). In the first stage, a <a href="../concept/helpful-rlhf-model.html">Helpful RLHF Model</a> generates a harmful response, critiques it against a sampled principle, and revises it; the <a href="../concept/critique-and-revision.html">Critique and Revision</a> outputs finetune a pretrained model into <a href="../concept/sl-cai.html">SL-CAI (Supervised-Learning Constitutional AI model)</a>. In the second stage, <a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a> uses that same set of principles to have a <a href="../concept/feedback-model.html">Feedback Model</a> label which of two responses is more harmless, and RL against the resulting preference model produces <a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a>. Both stages draw their instructions from a single small <a href="../concept/constitution.html">Constitution (set of principles)</a> rather than from a large private comparison dataset — "only of order ten simple principles, stated in natural language" replace "tens of thousands of human preference labels" (constitutional-ai, §"1.1 Motivations", p. 3; see <a href="../edge/constitution-replaces-human-harm-labels-in-constitutional-ai.html">Constitution (set of principles) — replaces human harm labels in → Constitutional AI (CAI)</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Where it sits in the corpus</h2>
+<p>CAI is the corpus's third and final move in the <a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a>: Concrete Problems names scalable oversight as an open problem in 2016, InstructGPT's <a href="../concept/reward-model.html">Reward model (RM)</a> operationalizes a scaled human-feedback solution via <a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a>, and CAI pushes the same lineage one step further by having an AI, not a human, answer the harmlessness comparison question. It also answers a specific documented failure from Anthropic's own prior work: models trained with ordinary human-feedback RLHF for both helpfulness and harmlessness (<a href="../concept/hh-rlhf-model.html">HH RLHF Model</a>) tend to become evasive, retreating into canned refusals. CAI is framed explicitly as an attempt to break that tension (the <a href="../theme/helpfulness-harmlessness-tradeoff.html">The helpfulness-harmlessness tradeoff and CAI&#x27;s claim to beat it</a> theme) without simply trading one property for the other, and its headline empirical claim, tracked through the <a href="../tissue/evasiveness-empirical-arc.html">One paper&#x27;s central result, traced edge by edge</a>, is that RL-CAI lands above the standard RLHF tradeoff curve rather than sliding along it. The method also instantiates a pattern that recurs at every level of the paper, captured in the <a href="../tissue/ai-substitutes-for-the-human-bottleneck.html">Replacing the human in the loop at exactly the point it was the bottleneck</a> tissue theme: an AI process substitutes for a human one at exactly the point human throughput was scarce, while the surrounding machinery (preference-model training, PPO, the KL penalty) is left untouched.</p>
+</section>
+<section class="prose-section">
+<h2>The two stages and what each contributes</h2>
+<p>CAI's five direct children divide cleanly along its two stages. <a href="../concept/constitution.html">Constitution (set of principles)</a> is the shared input, the natural-language principles that steer both stages. <a href="../concept/critique-and-revision.html">Critique and Revision</a> and <a href="../concept/sl-cai.html">SL-CAI (Supervised-Learning Constitutional AI model)</a> form the supervised stage: the pipeline itself, and the finetuned model it produces, whose job is to get the policy "on-distribution" before RL begins. <a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a> and <a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a> form the reinforcement-learning stage: the AI-feedback mechanism, and the final policy trained against a preference model that mixes AI-labeled harmlessness comparisons with human-labeled helpfulness comparisons. This grouping is itself part of the <a href="../theme/cai-core-method.html">Constitutional AI&#x27;s method: principles, critique, and revision</a> theme. Every one of the eighteen concepts in this batch is a piece of this same machine — a principle list, a prompting fix, an ablation, or a labeling-format decision — which is why CAI, as the root node, is best understood not as one technique but as the sum of these parts operating in sequence.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/constitution.html">Constitution (set of principles)</a></li><li><a href="../concept/critique-and-revision.html">Critique and Revision</a></li><li><a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a></li><li><a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a></li><li><a href="../concept/sl-cai.html">SL-CAI (Supervised-Learning Constitutional AI model)</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Constitution (set of principles) — <a href="../edge/constitution-replaces-human-harm-labels-in-constitutional-ai.html">replaces human harm labels in</a> → <strong>Constitutional AI (CAI)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/cai-core-method.html">Constitutional AI&#x27;s method: principles, critique, and revision</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Constitutional AI: Harmlessness from AI Feedback&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;1.2 The Constitutional AI Approach&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

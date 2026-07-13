@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Unsupervised risk estimation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Unsupervised risk estimation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A formalism (introduced by Donmez, Lebanon &amp; Balasubramanian 2010) that estimates a model&#x27;s labeled risk on a test distribution using only unlabeled test data, by positing structure in the error distribution.</p>
+<section class="prose-section">
+<h2>Estimating risk without labels</h2>
+<p>Unsupervised risk estimation, a formalism introduced by Donmez, Lebanon, and Balasubramanian in 2010, addresses a narrower but more tractable question than most of its neighbors in the partially-specified-models family: given a fixed, already-trained model and unlabeled data from a test distribution, estimate the model's labeled risk — how badly it is doing — without ever observing true labels on that test distribution. The formalism works by positing structure in how the model's <em>errors</em> are distributed rather than modeling the full data-generating process; one route posits conditional independence among multiple noisy predictors and uses it to estimate the error distribution from unlabeled data alone, and an alternative assumes errors are Gaussian conditioned on the true output, reducing the estimation problem to fitting a Gaussian mixture model (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=18" target="_blank" rel="noopener">§"Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", p. 18</a>). Because the technique focuses only on model errors and ignores the rest of the data distribution, the paper classifies it as an instance of partial model specification, predating this paper by six years.</p>
+</section>
+<section class="prose-section">
+<h2>A narrower target than the rest of its family</h2>
+<p>The concept's narrower question is also, paradoxically, what gives it wider reach than techniques aimed at full parameter identification. The edge <a href="../edge/unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models.html">Unsupervised risk estimation — partially specifies error not parameters → Partially specified models</a> notes that because the goal is only to output a large risk estimate when something has gone badly wrong, the technique can in principle handle test distributions too different from training for accurate prediction to even be a coherent goal — it never needs to say what the <em>right</em> answer would have been, only that the current model is unreliable. Contrasted with <a href="../concept/generalized-method-of-moments.html">Generalized method of moments</a> in <a href="../edge/generalized-method-of-moments-diverges-in-target-from-unsupervised-risk-estimation.html">Generalized method of moments — diverges in target from → Unsupervised risk estimation</a>, the two techniques are shown to answer genuinely different questions despite sharing a partial-specification strategy: "what is the true model" versus "how wrong is this model." The concept is a child of <a href="../concept/partially-specified-models.html">Partially specified models</a>, sits in the <a href="../theme/statistical-relaxations-for-distributional-shift.html">Weakening statistical assumptions to survive distribution shift</a> theme and the <a href="../tissue/partial-specification-family-different-targets.html">One umbrella idea, aimed at different targets each time it&#x27;s used</a> tissue theme, and belongs to the <a href="../supertheme/distributional-shift-responses.html">Distributional shift: relax the statistics, or rewrite the contract</a> supertheme.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/partially-specified-models.html">Partially specified models</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Generalized method of moments — <a href="../edge/generalized-method-of-moments-diverges-in-target-from-unsupervised-risk-estimation.html">diverges in target from</a> → <strong>Unsupervised risk estimation</strong></li><li><strong>Unsupervised risk estimation</strong> — <a href="../edge/unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models.html">partially specifies error not parameters</a> → Partially specified models</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/statistical-relaxations-for-distributional-shift.html">Weakening statistical assumptions to survive distribution shift</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.&rdquo;, p. 18</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

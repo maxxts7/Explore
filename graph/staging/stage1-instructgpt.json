@@ -1,0 +1,518 @@
+{
+  "paper": {"id": "instructgpt", "title": "Training language models to follow instructions with human feedback", "arxiv": "2203.02155", "pdf": "papers/instructgpt.pdf", "pages": 68},
+  "concepts": [
+    {
+      "id": "instructgpt",
+      "name": "InstructGPT",
+      "role": "introduced",
+      "summary": "The family of GPT-3 models fine-tuned with the paper's three-step demonstration-plus-RLHF pipeline, referred to by default as the PPO-ptx model unless otherwise specified.",
+      "parent": null,
+      "locators": [{"section": "Abstract", "page": 1}, {"section": "3.5 Models", "page": 9}],
+      "notes": "1.3B InstructGPT outputs are preferred to 175B GPT-3 outputs despite having over 100x fewer parameters."
+    },
+    {
+      "id": "gpt-3",
+      "name": "GPT-3 (pretrained language model)",
+      "role": "inherited",
+      "summary": "The autoregressive pretrained language model from Brown et al. (2020) that serves as the starting point and architecture for all SFT, reward, and PPO models in this paper.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 8}, {"section": "C Additional model details", "page": 40}],
+      "notes": "All model sizes studied (1.3B, 6B, 175B) share the GPT-3 architecture; GPT-3 is also the main un-fine-tuned baseline."
+    },
+    {
+      "id": "sft-model",
+      "name": "Supervised fine-tuned (SFT) model",
+      "role": "refined",
+      "summary": "A GPT-3 model fine-tuned on labeler demonstrations via supervised learning, used both as a standalone baseline and as the initialization for reward-model and PPO training.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 8}, {"section": "C.1 Details of SFT training", "page": 40}],
+      "notes": "Trained for 16 epochs with cosine LR decay and residual dropout 0.2; overfits validation loss after 1 epoch but more epochs still improve RM score and human preference, so final checkpoint is chosen by RM score, not validation loss."
+    },
+    {
+      "id": "reward-model",
+      "name": "Reward model (RM)",
+      "role": "refined",
+      "summary": "A model initialized from the SFT model with its unembedding layer replaced by a scalar output head, trained to predict which of two model outputs human labelers would prefer.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 8}, {"section": "C.2 Details of RM training", "page": 41}],
+      "notes": "Only trained at 6B scale because 175B RM training was unstable and too costly to use as the PPO value-function initialization; its output is normalized to a mean of 0 over demonstrations before RL."
+    },
+    {
+      "id": "reward-model-loss",
+      "name": "Reward model pairwise comparison loss",
+      "role": "inherited",
+      "summary": "A cross-entropy loss over pairs of ranked completions in which the reward difference between preferred and dispreferred outputs represents the log odds a human would prefer the former.",
+      "parent": "reward-model",
+      "locators": [{"section": "3.5 Models", "page": 8}],
+      "notes": "Formula given as Equation 1; attributed to the comparison-based RM training approach of Stiennon et al. (2020)."
+    },
+    {
+      "id": "k-choose-2-batching",
+      "name": "K-choose-2 single-batch comparison training",
+      "role": "introduced",
+      "summary": "A reward-model training trick that places all C(K,2) pairwise comparisons from one labeled ranking of K outputs into a single batch element, avoiding the overfitting that results from treating correlated comparisons as independent shuffled data points.",
+      "parent": "reward-model",
+      "locators": [{"section": "3.5 Models", "page": 8}],
+      "notes": "Also more compute-efficient, needing only one RM forward pass per completion instead of one per comparison; motivated by observed overfitting when a naive shuffle-and-single-pass scheme was used."
+    },
+    {
+      "id": "ppo-training",
+      "name": "PPO fine-tuning stage (RLHF policy optimization)",
+      "role": "inherited",
+      "summary": "The third training step, in which the SFT model is further fine-tuned with the Proximal Policy Optimization algorithm to maximize the scalar reward produced by the reward model.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 9}, {"section": "C.4 Details of RLHF training", "page": 42}],
+      "notes": "Uses the PPO algorithm of Schulman et al. (2017), following the RLHF recipe of Stiennon et al. (2020)."
+    },
+    {
+      "id": "ppo-model",
+      "name": "PPO (without pretraining mix)",
+      "role": "introduced",
+      "summary": "The RLHF policy variant trained purely to maximize reward-model score plus a KL penalty, with the pretraining-gradient coefficient set to zero, used as an ablation against PPO-ptx.",
+      "parent": "ppo-training",
+      "locators": [{"section": "3.5 Models", "page": 9}, {"section": "4.1 Results on the API distribution", "page": 11}],
+      "notes": "Shows larger performance regressions on public NLP datasets than PPO-ptx, illustrating the alignment tax before mitigation."
+    },
+    {
+      "id": "ppo-ptx",
+      "name": "PPO-ptx (pretraining gradient mixing)",
+      "role": "introduced",
+      "summary": "A modification of PPO fine-tuning that mixes gradients from the language-modeling loss on the pretraining distribution into the PPO updates, to counteract performance regressions on public NLP tasks.",
+      "parent": "ppo-training",
+      "locators": [{"section": "3.5 Models", "page": 9}, {"section": "C.4 Details of RLHF training", "page": 42}],
+      "notes": "Controlled by a pretraining-loss coefficient gamma (=27.8 in the final models, Equation 2); this is what the paper calls InstructGPT by default and greatly reduces the alignment tax, even surpassing GPT-3 on HellaSwag."
+    },
+    {
+      "id": "kl-penalty",
+      "name": "Per-token KL penalty from the SFT model",
+      "role": "inherited",
+      "summary": "A term subtracted from the reward at every generated token, proportional to the KL divergence between the RL policy and the SFT model, used to keep the policy close to the SFT model and limit reward over-optimization.",
+      "parent": "ppo-training",
+      "locators": [{"section": "3.5 Models", "page": 9}, {"section": "E.7 Optimal KL reward coefficient", "page": 56}],
+      "notes": "Coefficient beta is set to 0 for pure PPO; ablations show both beta=0 and very large beta hurt human Likert scores, with an optimum near 0.01-0.02."
+    },
+    {
+      "id": "value-function",
+      "name": "PPO value function",
+      "role": "inherited",
+      "summary": "The critic network used in PPO advantage estimation, initialized from the trained reward model's weights.",
+      "parent": "ppo-training",
+      "locators": [{"section": "C.4 Details of RLHF training", "page": 42}],
+      "notes": "A single 6B value function (matching the 6B RM) is reused across policies of all sizes so that policy size can be compared in isolation."
+    },
+    {
+      "id": "bandit-environment",
+      "name": "Bandit environment formulation for RLHF",
+      "role": "inherited",
+      "summary": "The RL environment used for PPO fine-tuning, in which a random customer prompt is presented, the policy produces one response, a reward is assigned by the reward model, and the episode ends immediately.",
+      "parent": "ppo-training",
+      "locators": [{"section": "3.5 Models", "page": 9}],
+      "notes": "Single-step formulation (no multi-turn credit assignment) distinguishes this from classic sequential-decision RL settings."
+    },
+    {
+      "id": "generalized-advantage-estimation",
+      "name": "Generalized advantage estimation (GAE)",
+      "role": "inherited",
+      "summary": "The advantage-estimation technique of Schulman et al. (2016) used within PPO training, applied here with no discounting.",
+      "parent": "ppo-training",
+      "locators": [{"section": "C.4 Details of RLHF training", "page": 42}],
+      "notes": "Minor implementation detail of the PPO training recipe."
+    },
+    {
+      "id": "rlhf",
+      "name": "Reinforcement learning from human feedback (RLHF)",
+      "role": "refined",
+      "summary": "A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 2}, {"section": "3.1 High-level methodology", "page": 6}],
+      "notes": "Prior applications (Christiano et al. 2017, Ziegler et al. 2019, Stiennon et al. 2020) were on simulated control, Atari, or narrow domains like summarization; this paper extends RLHF to the much broader and more diverse API prompt distribution."
+    },
+    {
+      "id": "supervised-fine-tuning",
+      "name": "Supervised fine-tuning (SFT)",
+      "role": "inherited",
+      "summary": "The first training step, in which a pretrained language model is fine-tuned directly on human-written demonstrations of desired output behavior using standard supervised learning.",
+      "parent": null,
+      "locators": [{"section": "3.1 High-level methodology", "page": 6}, {"section": "3.5 Models", "page": 8}],
+      "notes": "Provides the initialization for both the reward model and the RL policy."
+    },
+    {
+      "id": "alignment-tax",
+      "name": "Alignment tax",
+      "role": "introduced",
+      "summary": "The performance cost, in terms of regressions on public NLP benchmarks, incurred as a side effect of an alignment fine-tuning procedure such as RLHF.",
+      "parent": null,
+      "locators": [{"section": "4.2 Results on public NLP datasets", "page": 14}, {"section": "5.1 Implications for alignment research", "page": 17}],
+      "notes": "Motivates the PPO-ptx pretraining-mix technique; the paper frames low alignment tax as important so that aligned models remain competitive and get adopted."
+    },
+    {
+      "id": "hallucination",
+      "name": "Hallucination (closed-domain fabrication)",
+      "role": "refined",
+      "summary": "The failure mode in which a model states information not present in, or unsupported by, the input on closed-domain tasks such as summarization or closed-domain QA.",
+      "parent": null,
+      "locators": [{"section": "3.6 Evaluation", "page": 10}, {"section": "4.1 Results on the API distribution", "page": 11}],
+      "notes": "Operationalized as a binary labeler-annotated metadata field (Table 3); InstructGPT hallucinates about 21% of the time versus 41% for GPT-3 on closed-domain tasks."
+    },
+    {
+      "id": "reward-overoptimization",
+      "name": "Reward model over-optimization",
+      "role": "inherited",
+      "summary": "The tendency of an RL policy to exploit imperfections in a learned reward model, producing outputs that score highly under the RM but are not actually preferred by humans.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 9}],
+      "notes": "Motivates the per-token KL penalty from the SFT model added to the RL reward."
+    },
+    {
+      "id": "excessive-hedging",
+      "name": "Excessive hedging on simple questions",
+      "role": "introduced",
+      "summary": "A qualitative failure mode in which InstructGPT gives long, non-committal answers listing multiple possibilities to simple questions that have a fairly clear single answer.",
+      "parent": null,
+      "locators": [{"section": "4.3 Qualitative results", "page": 16}],
+      "notes": "Hypothesized to emerge because labelers were instructed to reward epistemic humility, which the reward model then picks up on."
+    },
+    {
+      "id": "false-premise-failure",
+      "name": "Failure to detect false-premise instructions",
+      "role": "introduced",
+      "summary": "A qualitative failure mode in which the model incorrectly assumes a false premise embedded in an instruction is true and answers as if it were, rather than correcting it.",
+      "parent": null,
+      "locators": [{"section": "4.3 Qualitative results", "page": 16}],
+      "notes": "Attributed to few training examples containing false premises; the paper suggests adversarial data collection as a potential fix."
+    },
+    {
+      "id": "sft-dataset",
+      "name": "SFT dataset",
+      "role": "introduced",
+      "summary": "The set of about 13k training prompts (labeler-written and API-sourced) paired with human demonstrations, used to train the supervised fine-tuned models.",
+      "parent": null,
+      "locators": [{"section": "3.2 Dataset", "page": 7}, {"section": "A.3 Dataset sizes", "page": 33}],
+      "notes": "Contains far more labeler-written than customer prompts because early on labelers wrote template instructions with few-shot examples that were expanded into multiple SFT datapoints."
+    },
+    {
+      "id": "rm-dataset",
+      "name": "RM (comparison) dataset",
+      "role": "introduced",
+      "summary": "The set of about 33k training prompts, each with K=4 to 9 model outputs ranked by labelers, used to train the reward model.",
+      "parent": null,
+      "locators": [{"section": "3.2 Dataset", "page": 7}, {"section": "A.3 Dataset sizes", "page": 33}],
+      "notes": "The number of pairwise comparisons is an order of magnitude larger than the number of prompts because each ranking yields C(K,2) comparisons."
+    },
+    {
+      "id": "ppo-dataset",
+      "name": "PPO dataset",
+      "role": "introduced",
+      "summary": "The set of about 31k API-only prompts, without any human labels, used as rollout inputs for RLHF fine-tuning.",
+      "parent": null,
+      "locators": [{"section": "3.2 Dataset", "page": 7}, {"section": "A.3 Dataset sizes", "page": 33}],
+      "notes": "Unlike the SFT and RM datasets, contains no labeler-written prompts."
+    },
+    {
+      "id": "api-prompt-distribution",
+      "name": "API prompt distribution",
+      "role": "introduced",
+      "summary": "The paper's primary prompt source: text prompts submitted by external users to an earlier, demonstration-only InstructGPT model on the OpenAI Playground, deduplicated, capped per user, and filtered for personally identifiable information.",
+      "parent": null,
+      "locators": [{"section": "3.2 Dataset", "page": 6}, {"section": "A.2 API user prompts", "page": 26}],
+      "notes": "Splits are constructed by user/organization ID so validation and test sets contain no training users; used as the basis of the SFT, RM, and PPO datasets and of the main human-preference evaluations."
+    },
+    {
+      "id": "truthfulqa",
+      "name": "TruthfulQA",
+      "role": "inherited",
+      "summary": "A benchmark of short-answer questions (Lin et al., 2021) designed to test whether a model generates truthful and informative answers rather than mimicking common human falsehoods.",
+      "parent": null,
+      "locators": [{"section": "4.2 Results on public NLP datasets", "page": 13}, {"section": "TruthfulQA", "page": 46}],
+      "notes": "Used with both a plain QA prompt and a helpful 'Instruction+QA' prompt that permits 'I have no comment' answers."
+    },
+    {
+      "id": "realtoxicityprompts",
+      "name": "RealToxicityPrompts",
+      "role": "inherited",
+      "summary": "A benchmark dataset (Gehman et al., 2020) of sentence-start prompts with varying toxicity, used to evaluate a model's propensity to continue text toxically.",
+      "parent": null,
+      "locators": [{"section": "3.6 Evaluation", "page": 10}, {"section": "RealToxicityPrompts", "page": 45}],
+      "notes": "Evaluated via both the Perspective API and human ratings; prompts are sampled roughly uniformly by toxicity rather than the dataset's default distribution, inflating absolute toxicity numbers relative to standard use."
+    },
+    {
+      "id": "winogender",
+      "name": "Winogender",
+      "role": "inherited",
+      "summary": "A benchmark dataset (Rudinger et al., 2018) of paired sentences used to probe gender bias in coreference-style completions, adapted here into a binary multiple-choice entropy evaluation.",
+      "parent": null,
+      "locators": [{"section": "4.2 Results on public NLP datasets", "page": 14}, {"section": "Winogender", "page": 45}],
+      "notes": "InstructGPT does not significantly improve over GPT-3 on this benchmark."
+    },
+    {
+      "id": "crows-pairs",
+      "name": "CrowS-Pairs",
+      "role": "inherited",
+      "summary": "A benchmark dataset (Nangia et al., 2020) of paired sentences designed to measure social bias (stereotype vs. anti-stereotype) in language models.",
+      "parent": null,
+      "locators": [{"section": "4.2 Results on public NLP datasets", "page": 14}, {"section": "CrowS-Pairs", "page": 45}],
+      "notes": "Evaluated with the same entropy-based bias metric as Winogender."
+    },
+    {
+      "id": "drop",
+      "name": "DROP (Discrete Reasoning Over the content of Paragraphs)",
+      "role": "inherited",
+      "summary": "A reading-comprehension benchmark (Dua et al., 2019) requiring discrete reasoning (e.g., counting, sorting) over paragraphs, used as one of the public NLP datasets showing PPO regressions.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 3}, {"section": "DROP (Discrete Reasoning Over the Content of Paragraphs)", "page": 46}],
+      "notes": "One of the tasks where the PPO-ptx model still lags behind GPT-3 despite the pretraining-mix fix."
+    },
+    {
+      "id": "squadv2",
+      "name": "SQuAD v2",
+      "role": "inherited",
+      "summary": "A reading-comprehension QA benchmark (Rajpurkar et al., 2018) that includes unanswerable questions, used as one of the public NLP datasets showing PPO regressions.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 3}, {"section": "SquadV2 (Stanford Question Answering Dataset)", "page": 47}],
+      "notes": "Along with DROP, used as the primary target of the pretraining-loss-coefficient and KL-coefficient ablations."
+    },
+    {
+      "id": "hellaswag",
+      "name": "HellaSwag",
+      "role": "inherited",
+      "summary": "A commonsense-reasoning benchmark (Zellers et al., 2019) requiring selection of the most plausible sentence continuation, used as one of the public NLP evaluation datasets.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 3}, {"section": "Hellaswag", "page": 48}],
+      "notes": "The PPO-ptx model surpasses GPT-3 on this benchmark, unlike on DROP/SQuAD."
+    },
+    {
+      "id": "quac",
+      "name": "QuAC (Question Answering in Context)",
+      "role": "inherited",
+      "summary": "A conversational question-answering benchmark (Choi et al., 2018) evaluated in the paper's automatic evaluation suite.",
+      "parent": null,
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "QuAC (Question Answering in Context)", "page": 47}],
+      "notes": null
+    },
+    {
+      "id": "sst",
+      "name": "SST (Stanford Sentiment Treebank)",
+      "role": "inherited",
+      "summary": "A binary sentiment-classification benchmark (Socher et al., 2013) included in the automatic public NLP evaluation suite.",
+      "parent": null,
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "SST (Stanford Sentiment Treebank)", "page": 48}],
+      "notes": null
+    },
+    {
+      "id": "rte",
+      "name": "RTE (Recognizing Textual Entailment)",
+      "role": "inherited",
+      "summary": "A binary textual-entailment benchmark, part of SuperGLUE, included in the automatic evaluation suite.",
+      "parent": "superglue",
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "RTE (Recognizing Textual Entailment)", "page": 48}],
+      "notes": null
+    },
+    {
+      "id": "wsc",
+      "name": "WSC (Winograd Schema Challenge)",
+      "role": "inherited",
+      "summary": "A pronoun-coreference-resolution benchmark, part of SuperGLUE, included in the automatic evaluation suite.",
+      "parent": "superglue",
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "WSC (Winograd Schema Challenge)", "page": 49}],
+      "notes": "Converted to a binary answer format by checking whether the sampled completion contains the target pronoun's referent."
+    },
+    {
+      "id": "superglue",
+      "name": "SuperGLUE",
+      "role": "inherited",
+      "summary": "A benchmark suite (Wang et al., 2019) for general-purpose language understanding, from which the RTE and WSC tasks used in this paper are drawn.",
+      "parent": null,
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}],
+      "notes": null
+    },
+    {
+      "id": "wmt15-fr-en",
+      "name": "WMT 2015 French-to-English translation",
+      "role": "inherited",
+      "summary": "A machine-translation benchmark (Bojar et al., 2015) used as one of the public NLP datasets showing performance regressions under PPO fine-tuning.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 3}, {"section": "WMT Fr  En 15", "page": 49}],
+      "notes": "Evaluated with the BLEU metric; PPO-ptx still lags GPT-3 on this task."
+    },
+    {
+      "id": "cnn-dm-summarization",
+      "name": "CNN/Daily Mail summarization",
+      "role": "inherited",
+      "summary": "A news-summarization benchmark (Nallapati et al., 2016) using a 'TL;DR:' prompting format, included in the automatic evaluation suite.",
+      "parent": null,
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "CNN/DM Summarization", "page": 49}],
+      "notes": "Judged via ROUGE-L against reference summaries."
+    },
+    {
+      "id": "reddit-tldr-summarization",
+      "name": "Reddit TL;DR summarization",
+      "role": "inherited",
+      "summary": "A summarization benchmark (Volske et al., 2017) of Reddit posts with author-written TL;DR summaries, included in the automatic evaluation suite.",
+      "parent": null,
+      "locators": [{"section": "D Automatic evaluation details", "page": 44}, {"section": "TLDR Summarization", "page": 50}],
+      "notes": "Judged via ROUGE-L against reference summaries; same underlying domain used in the earlier RLHF summarization work of Stiennon et al. (2020)."
+    },
+    {
+      "id": "flan",
+      "name": "FLAN (instruction-tuned baseline)",
+      "role": "inherited",
+      "summary": "A compilation of NLP tasks with natural-language instructions (Wei et al., 2021) that the paper fine-tunes 175B GPT-3 on to produce a cross-task-instruction-tuning baseline for comparison against InstructGPT.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 4}, {"section": "C.5 FLAN and T0 models", "page": 42}],
+      "notes": "InstructGPT is preferred over the FLAN baseline 78% of the time; best checkpoint selected via RM score on a validation set."
+    },
+    {
+      "id": "t0",
+      "name": "T0 (instruction-tuned baseline)",
+      "role": "inherited",
+      "summary": "A compilation of NLP tasks with natural-language instructions (Sanh et al., 2021), specifically the T0++ variant, fine-tuned into a 175B GPT-3 baseline for comparison against InstructGPT.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 4}, {"section": "C.5 FLAN and T0 models", "page": 42}],
+      "notes": "T0's 96M datapoints were subsampled to 1M to match FLAN's training data scale; InstructGPT is preferred over T0 79% of the time."
+    },
+    {
+      "id": "gpt3-prompted-baseline",
+      "name": "GPT-3 (prompted) baseline",
+      "role": "refined",
+      "summary": "GPT-3 given a hand-crafted few-shot prefix intended to coax it into an instruction-following mode, used as a stronger baseline than raw GPT-3.",
+      "parent": null,
+      "locators": [{"section": "3.5 Models", "page": 9}],
+      "notes": "The winning prefix was chosen from an internal 'prefix-finding competition' by selecting the prefix that achieved the highest RM score on the validation set."
+    },
+    {
+      "id": "win-rate",
+      "name": "Win rate (preference against baseline)",
+      "role": "inherited",
+      "summary": "The primary human-evaluation metric: the fraction of times labelers prefer one model's output over that of a fixed baseline policy (the 175B SFT model) on matched prompts.",
+      "parent": null,
+      "locators": [{"section": "3.6 Evaluation", "page": 10}, {"section": "4.1 Results on the API distribution", "page": 11}],
+      "notes": "175B InstructGPT is preferred to 175B GPT-3 85% of the time and to few-shot GPT-3 71% of the time."
+    },
+    {
+      "id": "likert-quality-rating",
+      "name": "Likert overall-quality rating",
+      "role": "inherited",
+      "summary": "A 1-7 scale on which labelers rate the overall quality of a single model output, collected alongside pairwise rankings and metadata.",
+      "parent": null,
+      "locators": [{"section": "3.6 Evaluation", "page": 10}, {"section": "E.4 Likert scores", "page": 53}],
+      "notes": null
+    },
+    {
+      "id": "labeler-metadata-taxonomy",
+      "name": "Labeler metadata annotation taxonomy",
+      "role": "introduced",
+      "summary": "A fixed set of binary and Likert-scale metadata fields (e.g., fails to follow instruction, hallucination, denigrates a protected class, contains sexual/violent content) that labelers record for each rated output.",
+      "parent": null,
+      "locators": [{"section": "3.6 Evaluation", "page": 9}],
+      "notes": "Defined in Table 3; replaced an earlier discontinued 'potentially harmful' label that required too much speculation about downstream use."
+    },
+    {
+      "id": "perspective-api",
+      "name": "Perspective API",
+      "role": "inherited",
+      "summary": "A third-party automatic toxicity-scoring service used to obtain toxicity scores for model outputs on RealToxicityPrompts, cross-checked against human toxicity ratings.",
+      "parent": null,
+      "locators": [{"section": "4.2 Results on public NLP datasets", "page": 13}],
+      "notes": "Automatic and human toxicity judgments broadly agree in this paper's experiments."
+    },
+    {
+      "id": "bias-entropy-metric",
+      "name": "Entropy-based bias metric",
+      "role": "introduced",
+      "summary": "A bias measurement that converts a model's relative probability of producing each sentence in a Winogender/CrowS-Pairs pair into a binary distribution and reports its entropy in bits, where lower entropy indicates stronger (more biased) preference for one completion.",
+      "parent": null,
+      "locators": [{"section": "D.1 Toxicity and bias evaluation details", "page": 44}],
+      "notes": "A perfectly unbiased model has maximum entropy (no preference between paired sentences)."
+    },
+    {
+      "id": "rouge-l",
+      "name": "ROUGE-L",
+      "role": "inherited",
+      "summary": "A standard n-gram/longest-common-subsequence overlap metric used to score generated summaries against reference summaries on CNN/DM and Reddit TL;DR.",
+      "parent": null,
+      "locators": [{"section": "CNN/DM Summarization", "page": 49}],
+      "notes": null
+    },
+    {
+      "id": "bleu",
+      "name": "BLEU",
+      "role": "inherited",
+      "summary": "A standard machine-translation quality metric used to evaluate model outputs on the WMT 2015 French-to-English translation task.",
+      "parent": null,
+      "locators": [{"section": "WMT Fr  En 15", "page": 49}],
+      "notes": null
+    },
+    {
+      "id": "f1-score",
+      "name": "F1 score (span-overlap QA metric)",
+      "role": "inherited",
+      "summary": "A token-overlap-based scoring metric used to evaluate model-generated answers against target completions on DROP, QuAC, and SQuAD v2.",
+      "parent": null,
+      "locators": [{"section": "DROP (Discrete Reasoning Over the Content of Paragraphs)", "page": 46}],
+      "notes": null
+    },
+    {
+      "id": "inter-annotator-agreement",
+      "name": "Inter-labeler agreement rate",
+      "role": "inherited",
+      "summary": "The measured rate at which independent labelers agree with each other (or with researchers) when ranking or labeling the same outputs, used to validate the feasibility and consistency of the labeling task.",
+      "parent": null,
+      "locators": [{"section": "3.4 Human data collection", "page": 8}],
+      "notes": "Training labelers agree with each other 72.6% of the time and held-out labelers 77.3% of the time, comparable to the 73% researcher-researcher agreement reported by Stiennon et al. (2020)."
+    },
+    {
+      "id": "hhh-framework",
+      "name": "Helpful, honest, harmless (HHH) alignment framework",
+      "role": "inherited",
+      "summary": "A framework, adapted from Askell et al. (2021), that defines an aligned model as one that is helpful (follows user intent), honest (does not fabricate or mislead), and harmless (avoids causing harm).",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 2}, {"section": "3.6 Evaluation", "page": 9}],
+      "notes": "Honesty is operationalized as truthfulness (via TruthfulQA and hallucination rate) since a model's actual internal 'beliefs' cannot be directly inspected."
+    },
+    {
+      "id": "language-modeling-objective",
+      "name": "Language modeling (next-token prediction) objective",
+      "role": "inherited",
+      "summary": "The standard pretraining objective of predicting the next token on internet text, which the paper argues is misaligned with the objective of helpfully and safely following user instructions.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 2}],
+      "notes": "Framed as the root cause motivating the paper's alignment fine-tuning approach."
+    },
+    {
+      "id": "instruction-following",
+      "name": "Instruction following (as a fine-tuning objective)",
+      "role": "refined",
+      "summary": "The capability of a language model to carry out natural-language task instructions across an open-ended range of tasks, which this paper trains and measures directly via RLHF on real user-submitted prompts rather than via a fixed compilation of formatted NLP tasks.",
+      "parent": null,
+      "locators": [{"section": "1 Introduction", "page": 1}, {"section": "2 Related work", "page": 5}],
+      "notes": "Contrasted with prior cross-task-generalization instruction tuning (FLAN, T0), which is trained and evaluated on public NLP task compilations rather than a broad organic prompt distribution."
+    },
+    {
+      "id": "labeler-screening-process",
+      "name": "Labeler screening and selection process",
+      "role": "introduced",
+      "summary": "A four-criterion screening procedure (agreement on sensitive-speech flagging, agreement on rankings, sensitive demonstration writing quality, and self-assessed ability to identify sensitive content across groups) used to select the roughly 40 contractors who produced the paper's training data.",
+      "parent": null,
+      "locators": [{"section": "B.1 Labeler selection", "page": 36}],
+      "notes": "Soft cutoffs of 75% agreement on sensitive-speech flagging/comparisons and a 6/7 demonstration score were used."
+    },
+    {
+      "id": "held-out-labeler-generalization",
+      "name": "Held-out labeler generalization test",
+      "role": "introduced",
+      "summary": "An experiment measuring whether models and reward models trained on one group of labelers' preferences generalize to a separate group of labelers who contributed no training data, via both a held-out labeler evaluation and 5-fold cross-validated reward models.",
+      "parent": null,
+      "locators": [{"section": "3.4 Human data collection", "page": 8}, {"section": "E.2 Reward model generalization across sets of labelers", "page": 52}],
+      "notes": "Held-out labelers prefer InstructGPT to GPT-3 at rates similar to training labelers; cross-validated RMs achieve 69.6% held-out accuracy versus 72.4% in-group accuracy."
+    },
+    {
+      "id": "labeling-interface",
+      "name": "Web labeling interface",
+      "role": "introduced",
+      "summary": "The internal web tool used by labelers and researchers to assign Likert quality scores, metadata labels, and full rankings to sets of model outputs for a given prompt.",
+      "parent": null,
+      "locators": [{"section": "B.5 Web interface", "page": 38}],
+      "notes": "Ties between outputs are explicitly encouraged when quality seems similar."
+    }
+  ]
+}

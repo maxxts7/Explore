@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Elo Score (helpfulness/harmlessness) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Elo Score (helpfulness/harmlessness)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A rating computed from crowdworker pairwise model-comparison preferences, used throughout the paper to track relative helpfulness and harmlessness of model snapshots during training.</p>
+<section class="prose-section">
+<h2>What an Elo rating is</h2>
+<p>The Elo rating system predates Constitutional AI: it was devised by Arpad Elo for ranking chess players from pairwise game outcomes and has since been adopted broadly for ranking anything compared only in pairs, including language models. Each competitor $i$ has a rating $R_i$, and the probability that $i$ beats $j$ is modeled as a logistic function of the rating gap:
+$$P(i \text{ beats } j) = \frac{1}{1 + 10^{(R_j - R_i)/400}}.$$
+After an outcome is observed, ratings move toward the gap between the observed score $S_i \in \{0, 0.5, 1\}$ and the expected score $E_i = P(i \text{ beats } j)$: $R_i \leftarrow R_i + K(S_i - E_i)$ for some step size $K$. Only differences between Elo scores carry meaning; the scale has no intrinsic zero, so one snapshot's rating has to be pinned by convention — Constitutional AI pins its SL-CAI initial snapshot to zero.</p>
+</section>
+<section class="prose-section">
+<h2>How Constitutional AI uses it</h2>
+<p>Constitutional AI computes separate helpfulness and harmlessness Elo scores from crowdworker pairwise model-comparison preferences, following the same procedure as Bai et al. (2022), to track 24 model snapshots across training (10,274 helpfulness and 8,135 harmlessness comparisons collected in total) (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">§"3.3 Main Results", p. 8</a>). Plotting harmlessness Elo against RL training sequence produces the paper's Figure 3, and plotting harmlessness against helpfulness for all snapshots at once produces Figure 2, the plot on which <a href="../concept/pareto-improvement.html">Pareto Improvement (helpfulness vs. harmlessness)</a> is read off directly (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=12" target="_blank" rel="noopener">§"4.3 Main Results", p. 12</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A generalized, and not fully neutral, instrument</h2>
+<p>Where InstructGPT's <a href="../concept/win-rate.html">Win rate (preference against baseline)</a> compares each model against one fixed anchor, Constitutional AI needs to compare many training trajectories at once, so the Elo score generalizes win rate onto a single shared interval scale (<a href="../edge/elo-score-generalizes-win-rate.html">Elo Score (helpfulness/harmlessness) — generalizes → Win rate (preference against baseline)</a>) — at the cost of that arbitrary zero point and a scale that moves with elicitation instructions. Concretely, crowdworkers computing the harmlessness Elo were newly instructed to prefer less evasive responses whenever two replies were equally harmless, which the paper credits with shrinking the harmlessness gap between the Helpful and HH RLHF baselines relative to Bai et al.'s (2022) earlier numbers under the old instructions (<a href="../edge/elo-score-was-tuned-to-penalize-evasiveness.html">Elo Score (helpfulness/harmlessness) — was tuned to penalize → Evasiveness</a>, constitutional-ai, §"1.1 Motivations", p. 3). Because Elo alone cannot say whether any model is safe in absolute terms, <a href="../concept/absolute-harmfulness-score.html">Absolute Harmfulness Score</a> is trained as an independently-anchored check, and the two instruments are shown agreeing on the paper's central claim in Figure 10 (<a href="../edge/absolute-harmfulness-score-cross-checks-elo-score.html">Absolute Harmfulness Score — cross checks → Elo Score (helpfulness/harmlessness)</a>). These three edges sit inside the <a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a> and <a href="../theme/helpfulness-harmlessness-tradeoff.html">The helpfulness-harmlessness tradeoff and CAI&#x27;s claim to beat it</a> themes, and the <a href="../tissue/independent-checks-and-instrument-blind-spots.html">A primary metric, and a second instrument built to catch what it can&#x27;t</a>, <a href="../tissue/evasiveness-empirical-arc.html">One paper&#x27;s central result, traced edge by edge</a>, and <a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a> tissue threads.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Absolute Harmfulness Score — <a href="../edge/absolute-harmfulness-score-cross-checks-elo-score.html">cross checks</a> → <strong>Elo Score (helpfulness/harmlessness)</strong></li><li><strong>Elo Score (helpfulness/harmlessness)</strong> — <a href="../edge/elo-score-was-tuned-to-penalize-evasiveness.html">was tuned to penalize</a> → Evasiveness</li><li><strong>Elo Score (helpfulness/harmlessness)</strong> — <a href="../edge/elo-score-generalizes-win-rate.html">generalizes</a> → Win rate (preference against baseline) <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a></li><li><a href="../theme/helpfulness-harmlessness-tradeoff.html">The helpfulness-harmlessness tradeoff and CAI&#x27;s claim to beat it</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.3 Main Results&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;4.3 Main Results&rdquo;, p. 12</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

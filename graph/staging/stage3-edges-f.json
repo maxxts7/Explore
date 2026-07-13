@@ -1,0 +1,144 @@
+{
+  "edges": [
+    {
+      "id": "inter-annotator-agreement-caps-the-resolution-of-win-rate",
+      "type": "caps-the-resolution-of",
+      "source": "inter-annotator-agreement",
+      "target": "win-rate",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "quality-measurement-methods",
+      "prose": "A win rate is a proportion of human choices, so it can never be more precise than the humans making those choices are consistent. InstructGPT's training labelers agree with one another 72.6 ± 1.5% of the time, and held-out labelers 77.3 ± 1.3% (instructgpt, §\"3.4 Human data collection\", p. 8), meaning roughly a quarter of individual comparisons are effectively coin flips. This sets an interpretive floor under every win-rate figure in the paper: the headline result — 175B InstructGPT preferred to GPT-3 85% of the time (instructgpt, §\"4.1 Results on the API distribution\", p. 11) — towers over the noise, but small gaps between adjacent models, such as PPO versus PPO-ptx, sit inside it and should not be read as rankings. Agreement also bounds the ceiling: a model cannot be preferred more consistently than evaluators agree on what \"better\" means. The paper leans on the comparison to Stiennon et al. (2020)'s 73 ± 4% researcher-researcher agreement to argue that its much broader, more subjective task distribution did not degrade label quality below usability."
+    },
+    {
+      "id": "likert-quality-rating-corroborates-win-rate",
+      "type": "corroborates",
+      "source": "likert-quality-rating",
+      "target": "win-rate",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "quality-measurement-methods",
+      "prose": "Win rate has a structural weakness: every number is relative to a designated anchor, the 175B SFT baseline, and changing the anchor rescales everything. The 1-7 Likert rating covers this flank by scoring single outputs on an absolute scale that needs no anchor. InstructGPT uses the redundancy deliberately: Appendix E reports that Likert results largely track the preference results (instructgpt, §\"E.4 Likert scores\", p. 53), confirming the headline ordering is not an artifact of the baseline choice. But the Likert score also does independent work the win rate cannot. It is the scale on which the FLAN and T0 baselines are placed against GPT-3 variants (instructgpt, §\"4.1 Results on the API distribution\", p. 12); it served as the guardrail metric in the pretraining-coefficient ablation, where it proved insensitive to the coefficient's exact value (instructgpt, §\"E.6 Fixing regressions on public NLP datasets\", p. 53); and the final checkpoints in the learning-rate scans were selected by highest Likert score (instructgpt, §\"E.9 Learning rate optimization for PPO models\", p. 58). The nominally secondary metric quietly chose the shipped models."
+    },
+    {
+      "id": "elo-score-generalizes-win-rate",
+      "type": "generalizes",
+      "source": "elo-score",
+      "target": "win-rate",
+      "hindsight": true,
+      "groundedIn": "constitutional-ai",
+      "motivatedByTheme": "quality-measurement-methods",
+      "prose": "Both metrics compress the same raw material — pairwise human preferences — but aggregate it differently, and the difference tracks what each paper needed. InstructGPT compares a handful of models against one fixed anchor, so a per-model win rate against the 175B SFT baseline suffices. Constitutional AI must compare 24 model snapshots spanning multiple training runs, with 10,274 helpfulness and 8,135 harmlessness comparisons collected across them (constitutional-ai, §\"3.3 Main Results\", p. 8), and no single anchor is natural when the objects of interest are whole training trajectories. Elo solves this by placing every snapshot on one shared interval scale, so harmlessness can be plotted as a curve against RL training sequences (constitutional-ai, §\"4.3 Main Results\", p. 12). The generalization has costs a win rate avoids: the zero point is arbitrary — the SL-CAI initial snapshot is simply pinned to zero — and the scale silently moves when elicitation changes. The paper attributes its unusually small helpful-versus-HH harmlessness gap to new instructions telling crowdworkers to prefer thoughtfully harmless over evasively harmless responses (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 14)."
+    },
+    {
+      "id": "absolute-harmfulness-score-cross-checks-elo-score",
+      "type": "cross-checks",
+      "source": "absolute-harmfulness-score",
+      "target": "elo-score",
+      "hindsight": false,
+      "groundedIn": "constitutional-ai",
+      "motivatedByTheme": "quality-measurement-methods",
+      "prose": "An Elo score can only order models against each other; it cannot say whether any of them is safe in absolute terms, and it drifts with the elicitation — Constitutional AI's harmlessness Elo gaps shrank relative to prior work simply because crowdworkers were newly instructed to penalize evasive responses (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 14). The absolute harmfulness score covers exactly these blind spots. It comes from a model finetuned with L2 loss on 0-4 red-team success ratings collected earlier, in Ganguli et al. (2022), so it is anchored to a fixed historical standard rather than the current comparison protocol, and it is evaluated on 64 held-out red-team prompts with 256 responses each (constitutional-ai, §\"4.5 Absolute Harmfulness Score\", p. 14). The two instruments agree on the paper's central claim — RL-CAI grows steadily less harmful while the helpful-only RLHF model grows more harmful over training (Figure 10) — which matters because each is individually suspect: Elo has no absolute zero, and the paper concedes the absolute scores may be poorly calibrated because workers grade the 0-4 scale with their own personal biases."
+    },
+    {
+      "id": "f1-score-diverges-under-rlhf-from-win-rate",
+      "type": "diverges-under-rlhf-from",
+      "source": "f1-score",
+      "target": "win-rate",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "quality-measurement-methods",
+      "prose": "These two metrics deliver opposite verdicts on the same intervention, and InstructGPT's methodology is largely a negotiation between them. PPO fine-tuning pushes win rate to its headline heights — 85% preference over GPT-3 — while collapsing span-overlap F1 on extractive QA: zero-shot SQuADv2 falls from 64.30 for 175B GPT-3 to 43.68 for PPO, and DROP from 27.53 to 13.08 (instructgpt, §\"E.1 Performance on public NLP datasets\", Table 14, p. 56). The paper resolves the disagreement asymmetrically: win rate is treated as the objective and F1 as a constraint. The pretraining-mix coefficient that defines PPO-ptx was tuned specifically to recover SQuADv2 and DROP F1 while leaving validation reward and Likert scores intact (instructgpt, §\"E.6 Fixing regressions on public NLP datasets\", p. 53). In effect, F1 is demoted within a single paper from a quality measure to a regression alarm: it no longer adjudicates which model is better — human preference does — but it still detects when alignment quietly spends capability that preference evaluation cannot see."
+    },
+    {
+      "id": "squadv2-forms-the-regression-testbed-with-drop",
+      "type": "forms-the-regression-testbed-with",
+      "source": "squadv2",
+      "target": "drop",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "language-understanding-benchmarks",
+      "prose": "Of the eight understanding benchmarks in InstructGPT's suite, these two were quietly promoted from evaluation to tuning: both the pretraining-coefficient sweep and the KL-coefficient sweep were judged on \"SQuADv2 and DROP (the datasets we used for testing)\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The pair behaves as a single instrument throughout. A pretraining loss coefficient of 20 or more recovers their regressions on the 1.3B model, and the adopted value of 27.8 was validated against them (instructgpt, §\"E.6 Fixing regressions on public NLP datasets\", p. 53); raising the KL coefficient even 100-fold never fully recovers either (p. 15); and doubling RL training to 512k episodes re-opens the regression on exactly these two, with performance starting above GPT-3 and sinking back below it (instructgpt, §\"E.6 Fixing regressions on public NLP datasets\", p. 56). The consequence is easy to miss: \"the alignment tax was mostly mitigated\" operationally means \"F1 was restored on these two extractive QA sets,\" so the claim inherits whatever the pair idiosyncratically demands — exact-span answers scored by token overlap — rather than measuring general capability loss."
+    },
+    {
+      "id": "hellaswag-escapes-the-regression-that-persists-in-drop",
+      "type": "escapes-the-regression-that-persists-in",
+      "source": "hellaswag",
+      "target": "drop",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "language-understanding-benchmarks",
+      "prose": "Both benchmarks appear on the paper's original casualty list of RLHF regressions (instructgpt, §\"1 Introduction\", p. 3), but they part ways under the fix: PPO-ptx \"even surpasses GPT-3 on HellaSwag\" while it \"still lags behind GPT-3 on DROP, SQuADv2, and translation\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The mechanical difference between the two tasks is a plausible reason. HellaSwag is scored by ranking the given candidate endings by average per-token log probability — the model never generates text — whereas DROP requires sampling a free-form answer at temperature zero and scoring its token overlap with the target (instructgpt, §\"D Automatic evaluation details\", p. 44). Across the suite the split repeats: the multiple-choice accuracy tasks recover to or above GPT-3 under PPO-ptx (HellaSwag 0.807 versus 0.781 zero-shot at 175B), while the tasks requiring sampled text and overlap scoring stay below baseline (Table 14, p. 56). The recoverable part of the alignment tax, in other words, sat in the model's likelihood rankings; the persistent part lives in what the model actually chooses to write."
+    },
+    {
+      "id": "wsc-departs-from-the-canonical-format-of-superglue",
+      "type": "departs-from-the-canonical-format-of",
+      "source": "wsc",
+      "target": "superglue",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "language-understanding-benchmarks",
+      "prose": "WSC is credited to SuperGLUE, but the task InstructGPT actually runs is not the one on the SuperGLUE leaderboard. SuperGLUE poses WSC as a binary judgment — \"the pronoun she refers to Joan, True or False?\" — while InstructGPT asks the model to generate the pronoun's referent outright and then recovers a binary answer with a substring heuristic: it checks whether the sampled completion contains the referent or vice versa, answering True if so and False otherwise (instructgpt, §\"WSC (Winograd Schema Challenge)\", p. 49). Two things follow. First, the reported accuracies are not comparable to published SuperGLUE WSC results, because both the task format and the answer-extraction rule differ. Second, the contains-check can misfire on verbose or hedged completions that mention both candidate referents. RTE, the other task imported from the same suite, was kept in its native multiple-choice form — so of the two SuperGLUE imports, one measures the model's judgments directly while the other measures its generations filtered through string matching, on a sample of just 104 questions, the smallest evaluation in the entire automatic suite."
+    },
+    {
+      "id": "cnn-dm-summarization-duplicates-the-reported-results-of-reddit-tldr-summarization",
+      "type": "duplicates-the-reported-results-of",
+      "source": "cnn-dm-summarization",
+      "target": "reddit-tldr-summarization",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "generation-benchmarks-translation-summarization",
+      "prose": "The two summarization benchmarks were meant to be independent checks — news articles with professional reference summaries versus Reddit posts with author-written ones — but the paper's reporting collapses them into one. In Table 14, the CNN/DM and TLDR rows are numerically identical across all twelve models, to three decimal places (0.182 through 0.220), which is implausible for two distinct datasets and almost certainly a duplicated row (instructgpt, §\"E.1 Performance on public NLP datasets\", p. 56). The copy-paste trail extends into Appendix D: the dataset-features boxes for both benchmarks describe their few-shot setting as containing \"15 additional French / English pairs\" — text carried over from the WMT translation figure (instructgpt, §\"CNN/DM Summarization\", p. 49; §\"TLDR Summarization\", p. 50). The practical lesson for a reader: the paper's ROUGE-L evidence on summarization is one measurement, not two independent confirmations, and at least one of the two reported rows cannot be what its label claims. Anyone citing InstructGPT's summarization scores should first establish which dataset the surviving numbers actually belong to."
+    },
+    {
+      "id": "wmt15-fr-en-bears-the-alignment-tax-that-spares-reddit-tldr-summarization",
+      "type": "bears-the-alignment-tax-that-spares",
+      "source": "wmt15-fr-en",
+      "target": "reddit-tldr-summarization",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "generation-benchmarks-translation-summarization",
+      "prose": "Both tasks demand fluent open-ended generation, yet RLHF taxes one and helps the other, and the split maps onto distance from the fine-tuning distribution rather than onto difficulty. PPO drops 175B zero-shot BLEU on WMT from 38.92 to 24.16, and even PPO-ptx recovers only to 34.28 — translation stays on the short list of unfixed regressions alongside DROP and SQuADv2 (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15) — while TL;DR ROUGE-L rises above the GPT-3 baseline under the same training, 0.196 to 0.227 for PPO (Table 14, p. 56). The asymmetry is explicable: the API prompt data that drives RLHF is over 96% English (instructgpt, §\"3.3 Tasks\", p. 7), and summarization is a named API use-case whose TL;DR prompt format mirrors real usage — Table 1 lists it at 4.2% of prompts (p. 6) — indeed Reddit TL;DR is the very domain where the paper's RLHF method was developed by Stiennon et al. (2020). French-to-English translation is essentially unrepresented in that distribution. Generative capability transferred where the benchmark resembled the tuning data, and was spent where it did not."
+    },
+    {
+      "id": "perspective-api-supplies-the-ground-truth-for-realtoxicityprompts",
+      "type": "supplies-the-ground-truth-for",
+      "source": "perspective-api",
+      "target": "realtoxicityprompts",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "safety-bias-truthfulness-benchmarks",
+      "prose": "RealToxicityPrompts ships prompts, not judgments: whether a continuation counts as toxic is decided by the Perspective API, and the paper calls running samples through it \"the standard evaluation procedure for this dataset\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). The benchmark's ground truth is thus outsourced to a proprietary third-party classifier that is retrained over time, so its verdicts are neither inspectable nor stable across papers. InstructGPT is unusual in auditing that dependency: samples for 1,729 prompts were also rated by human labelers — for absolute toxicity, toxicity relative to the prompt, continuity, and overall preference — and the human and automatic evaluations agreed on the qualitative pattern, namely that InstructGPT beats GPT-3 only when given a \"respectful\" instruction (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). A further caveat compounds the dependency: prompts were sampled approximately uniformly by prompt toxicity rather than by the dataset's natural distribution, so the paper's absolute Perspective scores are inflated and cannot be compared against other published RealToxicityPrompts numbers (p. 14)."
+    },
+    {
+      "id": "bias-entropy-metric-recasts-the-task-of-winogender",
+      "type": "recasts-the-task-of",
+      "source": "bias-entropy-metric",
+      "target": "winogender",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "safety-bias-truthfulness-benchmarks",
+      "prose": "Winogender was designed as a coreference diagnostic: bias shows up as an accuracy asymmetry when only the pronoun's gender changes. InstructGPT rebuilds it into something else — 120 binary multiple-choice items where the model's log probabilities over the two completions are converted into a Bernoulli distribution whose entropy, in bits, is the reported score (instructgpt, §\"Winogender\", p. 45). The recast discards both correctness and direction. A model that reliably resolves pronouns to the stereotypical referent and a model that reliably resolves them to the anti-stereotypical one produce the same low entropy, and both read as \"biased\"; what the metric actually measures is decisiveness between paired sentences. The paper's own interpretation concedes the slippage: \"the instructed models are more certain of their outputs regardless of whether or not their outputs exhibit stereotypical behavior\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). So the finding that InstructGPT does not improve on Winogender is a statement about confidence under this recasting, not about the occupational-gender coreference errors the benchmark was originally created to expose."
+    },
+    {
+      "id": "bias-entropy-metric-strips-the-direction-from-crows-pairs",
+      "type": "strips-the-direction-from",
+      "source": "bias-entropy-metric",
+      "target": "crows-pairs",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "safety-bias-truthfulness-benchmarks",
+      "prose": "CrowS-Pairs' native scoring is directional: it reports how often a model assigns higher likelihood to the stereotyping sentence of a pair, with 50% as the unbiased ideal. InstructGPT instead scores it \"using entropy over multiple choice probabilities, the same as was done for Winogender\" (instructgpt, §\"CrowS-Pairs\", p. 45), keeping only how strongly the model prefers one sentence and discarding which one. Under this scoring, an intervention that flipped a model from consistently stereotypical to consistently anti-stereotypical would register as zero change — or as increased bias, if the flip came with more confidence. The consequence is visible in Table 14: the \"respectful\" instruction drives 175B PPO-ptx entropy on CrowS-Pairs from 0.413 down to 0.243 (instructgpt, §\"E.1 Performance on public NLP datasets\", p. 56), which the metric reports as sharply increased bias, when the more parsimonious mechanism is that instruction-following makes the model more decisive about everything. The paper's negative bias result is therefore partly an artifact of a measurement that cannot tell prejudice from confidence."
+    },
+    {
+      "id": "realtoxicityprompts-diverges-under-respectful-prompting-from-winogender",
+      "type": "diverges-under-respectful-prompting-from",
+      "source": "realtoxicityprompts",
+      "target": "winogender",
+      "hindsight": false,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "safety-bias-truthfulness-benchmarks",
+      "prose": "These two evaluations share an unusually clean experimental link: RealToxicityPrompts reuses Winogender's exact instruction protocol — the same basic, \"respectful,\" and \"biased\" prompt variants, with the RealToxicityPrompts appendix figure stating its prompting structure is \"Same as for Winogender\" (instructgpt, §\"RealToxicityPrompts\", p. 45). That shared protocol turns the pair into a controlled test of one intervention, and the intervention splits them. Under the respectful instruction, toxicity falls: InstructGPT generates measurably less toxic continuations than GPT-3, an advantage that disappears without the instruction (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). On Winogender the same instruction lowers entropy, which the paper's metric reports as stronger bias (p. 14). One safety benchmark rewards precisely the prompt that makes the other worse. Part of the divergence is the entropy metric's confidence confound, but the headline survives independently in the paper's framing — small improvements in toxicity, but not bias — and it teaches that safety benchmarks do not form a single axis: an instruction that buys a toxicity reduction can simultaneously degrade a bias measure."
+    }
+  ]
+}

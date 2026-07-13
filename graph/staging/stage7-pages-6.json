@@ -1,0 +1,258 @@
+{
+  "pages": [
+    {
+      "id": "absolute-harmfulness-score",
+      "sections": [
+        {
+          "heading": "What it measures",
+          "body": "The absolute harmfulness score is a single-conversation harmfulness metric on a 0-4 scale, predicted by a model fine-tuned with L2 loss on crowdworker absolute-harm ratings. It differs from a pairwise comparison in kind, not just in scale: instead of asking \"which of two responses is worse,\" the underlying data collection in the companion paper (Ganguli et al., 2022) has a crowdworker converse with a single model and directly rate their own success at baiting it into harmful content, on an integer 0-4 scale. Constitutional AI reuses those ratings to fine-tune a dedicated scorer (constitutional-ai, §\"4.5 Absolute Harmfulness Score\", p. 14). Writing the conversation as $c$ and the crowdworker's self-rated success as $s \\in \\{0,1,2,3,4\\}$, the scorer $f_\\theta$ is trained with\n$$\\mathcal{L}(\\theta) = \\mathbb{E}_{(c,s)\\sim D}\\left[\\big(f_\\theta(c) - s\\big)^2\\right].$$"
+        },
+        {
+          "heading": "Why a second instrument, not just a bigger Elo",
+          "body": "An [[elo-score]] can only order models against each other; it has no absolute zero and, as the paper shows elsewhere, it drifts when the elicitation instructions given to crowdworkers change. The absolute harmfulness score is built to cover exactly that blind spot: it is anchored to a fixed historical rating standard from Ganguli et al. (2022) rather than to the paper's own comparison protocol, and it is evaluated on 64 held-out red-team prompts with 256 responses per prompt (constitutional-ai, §\"4.5 Absolute Harmfulness Score\", p. 14). The two instruments are shown agreeing on the paper's central claim in Figure 10 — RL-CAI grows steadily less harmful over training while the helpful-only RLHF model grows more harmful — which is worth noting precisely because each is individually suspect on its own: Elo has no absolute zero, and the paper concedes the absolute scores \"may not be well-calibrated, as different workers may have their own personal biases about how to grade the result on 0-4 scale\" (p. 14). This pairing is the [[absolute-harmfulness-score-cross-checks-elo-score]] edge, and it sits inside the [[quality-measurement-methods]] theme and the [[independent-checks-and-instrument-blind-spots]] tissue theme, both concerned with how the corpus pairs a primary metric with an independently-sourced check."
+        }
+      ]
+    },
+    {
+      "id": "automated-red-teaming",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Automated red teaming replaces the human adversary in adversarial testing with a language model that itself searches for prompts that elicit harmful, offensive, or otherwise undesired behavior from a target model. The technique predates Constitutional AI: it was introduced by Perez et al. (2022), \"Red Teaming Language Models with Language Models,\" which the paper cites directly rather than reimplementing. Constitutional AI mentions it only in passing, as a related future direction, not as something its own experiments run (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4)."
+        },
+        {
+          "heading": "Why non-evasiveness has to come first",
+          "body": "The concept's place in this corpus is defined entirely by one dependency the paper flags explicitly. [[red-teaming]], as run here, means paid crowdworkers manually holding adversarial conversations to bait the assistant — a process with an inherent human-labor ceiling. Automating it removes that ceiling ([[red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming]]), but only if the target model is not [[evasiveness|evasive]]: a model trained hard for harmlessness at the cost of becoming evasive would just teach an automated red-teamer to harvest canned refusals, which reveals nothing about remaining vulnerabilities. \"This should make it easier to scale up automated red teaming...since training intensively for harmlessness would otherwise result in a model that simply refuses to be helpful\" (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4). Constitutional AI's reduced evasiveness is framed as the enabling condition for scaling this technique, not an incidental benefit. As the named child of [[red-teaming]], automated red teaming's contribution to the parent is exactly this: inheriting red teaming's goal of surfacing harmful behavior while replacing its throughput bottleneck. Both concepts sit inside the [[red-teaming-and-harm-data]] theme, and this substitution is one instance of the [[ai-substitutes-for-the-human-bottleneck]] tissue theme's recurring pattern: an AI process taking over at precisely the point human labor was scarce."
+        }
+      ]
+    },
+    {
+      "id": "chain-of-thought-prompting",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Chain-of-thought (CoT) prompting is a technique for eliciting intermediate, step-by-step reasoning from a language model before its final answer. It predates Constitutional AI, introduced by Wei et al. (2022), \"Chain-of-Thought Prompting Elicits Reasoning in Large Language Models.\" Rather than sampling an answer $y$ directly from a query $x$, the model is conditioned to first generate a reasoning trace $r$ and then condition its final answer on both: $r \\sim p_\\theta(\\cdot \\mid x)$, followed by $y \\sim p_\\theta(\\cdot \\mid x, r)$, in place of sampling $y \\sim p_\\theta(\\cdot \\mid x)$ directly. The reasoning trace is elicited either by worked few-shot exemplars in the prompt or, in the zero-shot variant, by a fixed trigger phrase appended to the query."
+        },
+        {
+          "heading": "Two jobs inside Constitutional AI",
+          "body": "Constitutional AI uses CoT prompting for two purposes: eliciting more careful critiques during the supervised critique-and-revision stage, and, more centrally, making the RL [[feedback-model|feedback model]]'s harmlessness judgments more accurate and legible before it commits to a multiple-choice preference label (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11; §\"5 Related Work\", p. 15). CoT reasoning \"significantly improves the performance\" of models at picking the better of two responses on the HHH comparisons (Figure 4), with the trend suggesting larger models will match human-feedback-trained preference models at this task (constitutional-ai, §\"2 Evaluating the Potential for AI Supervision of HHH\", p. 6)."
+        },
+        {
+          "heading": "Two children, and a side effect they cause together",
+          "body": "CoT prompting by itself only signals that reasoning should happen before an answer, so Constitutional AI splits the implementation into two children with different jobs. [[lets-think-step-by-step-prompt]] is the zero-shot trigger phrase \"Let's think step-by-step,\" borrowed from Kojima et al. (2022), which starts the reasoning; [[rl-cai-cot-prompts]] is a set of hand-written few-shot examples with a substitutable principle placeholder that shape what that reasoning should actually contain for a harmlessness judgment. The paper uses both together in one prompt, never either alone ([[lets-think-step-by-step-prompt-is-paired-with-rl-cai-cot-prompts]]). This engineering has a cost the paper had to design around: because a CoT explanation almost always states its preferred answer before the model outputs a probability, the resulting soft labels land close to 0 or 1 instead of remaining usefully calibrated, which is why [[label-clamping]] exists ([[chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping]]). The whole apparatus sits inside the [[feedback-model-engineering]] theme and the [[calibration-and-prompt-scaffolding]] tissue theme, both concerned with turning a plain pretrained model into a usable preference labeler."
+        }
+      ]
+    },
+    {
+      "id": "context-distillation",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Context distillation is a fine-tuning technique that predates Constitutional AI (Askell et al., 2021; Snell et al., 2022). A model is fine-tuned on its own completions, generated under a long, carefully engineered prompt or instruction context, so that the behavior the prompt induces is absorbed into the weights themselves via ordinary supervised fine-tuning; the prompt can then be discarded at inference time, since the model has already learned to act as if it were still present."
+        },
+        {
+          "heading": "A deliberate non-use",
+          "body": "Constitutional AI is explicit that this concept is a comparison point by contrast rather than a component of its own pipeline. Bai et al.'s (2022) earlier RLHF models were fine-tuned starting from context-distilled checkpoints, but Constitutional AI's own RLHF models are fine-tuned directly from pre-trained models instead: \"we didn't see much benefit to using context distillation since the improvement from RL was much more significant\" (constitutional-ai, §\"4.2 Datasets and Training\", p. 11). It sits in the [[related-dialogue-agents]] theme alongside [[lamda]] and [[sparrow]] as one of the paper's explicit points of comparison against prior aligned-dialogue-agent work, though unlike those two it names a technique rather than a system — the paper's point in mentioning it is methodological, marking what it chose not to do and why."
+        }
+      ]
+    },
+    {
+      "id": "elo-score",
+      "sections": [
+        {
+          "heading": "What an Elo rating is",
+          "body": "The Elo rating system predates Constitutional AI: it was devised by Arpad Elo for ranking chess players from pairwise game outcomes and has since been adopted broadly for ranking anything compared only in pairs, including language models. Each competitor $i$ has a rating $R_i$, and the probability that $i$ beats $j$ is modeled as a logistic function of the rating gap:\n$$P(i \\text{ beats } j) = \\frac{1}{1 + 10^{(R_j - R_i)/400}}.$$\nAfter an outcome is observed, ratings move toward the gap between the observed score $S_i \\in \\{0, 0.5, 1\\}$ and the expected score $E_i = P(i \\text{ beats } j)$: $R_i \\leftarrow R_i + K(S_i - E_i)$ for some step size $K$. Only differences between Elo scores carry meaning; the scale has no intrinsic zero, so one snapshot's rating has to be pinned by convention — Constitutional AI pins its SL-CAI initial snapshot to zero."
+        },
+        {
+          "heading": "How Constitutional AI uses it",
+          "body": "Constitutional AI computes separate helpfulness and harmlessness Elo scores from crowdworker pairwise model-comparison preferences, following the same procedure as Bai et al. (2022), to track 24 model snapshots across training (10,274 helpfulness and 8,135 harmlessness comparisons collected in total) (constitutional-ai, §\"3.3 Main Results\", p. 8). Plotting harmlessness Elo against RL training sequence produces the paper's Figure 3, and plotting harmlessness against helpfulness for all snapshots at once produces Figure 2, the plot on which [[pareto-improvement]] is read off directly (constitutional-ai, §\"4.3 Main Results\", p. 12)."
+        },
+        {
+          "heading": "A generalized, and not fully neutral, instrument",
+          "body": "Where InstructGPT's [[win-rate]] compares each model against one fixed anchor, Constitutional AI needs to compare many training trajectories at once, so the Elo score generalizes win rate onto a single shared interval scale ([[elo-score-generalizes-win-rate]]) — at the cost of that arbitrary zero point and a scale that moves with elicitation instructions. Concretely, crowdworkers computing the harmlessness Elo were newly instructed to prefer less evasive responses whenever two replies were equally harmless, which the paper credits with shrinking the harmlessness gap between the Helpful and HH RLHF baselines relative to Bai et al.'s (2022) earlier numbers under the old instructions ([[elo-score-was-tuned-to-penalize-evasiveness]], constitutional-ai, §\"1.1 Motivations\", p. 3). Because Elo alone cannot say whether any model is safe in absolute terms, [[absolute-harmfulness-score]] is trained as an independently-anchored check, and the two instruments are shown agreeing on the paper's central claim in Figure 10 ([[absolute-harmfulness-score-cross-checks-elo-score]]). These three edges sit inside the [[quality-measurement-methods]] and [[helpfulness-harmlessness-tradeoff]] themes, and the [[independent-checks-and-instrument-blind-spots]], [[evasiveness-empirical-arc]], and [[hindsight-seams-2016-to-2022]] tissue threads."
+        }
+      ]
+    },
+    {
+      "id": "evasiveness",
+      "sections": [
+        {
+          "heading": "What the failure looks like",
+          "body": "Evasiveness names a canned-refusal failure mode: a harmlessness-trained assistant answers sensitive queries with boilerplate like \"I can't answer that\" instead of engaging, sacrificing transparency and helpfulness for the appearance of safety. Constitutional AI introduces the name and traces the cause to its own predecessor system directly: in Bai et al.'s (2022) prior HH RLHF training, the assistant \"often refused to answer controversial questions\" and could get \"stuck producing evasive responses...for the remainder of the conversation,\" because \"evasiveness was rewarded as a response to harmful inputs by our crowdworkers,\" who were told only to pick the more harmless of two responses with no penalty for disengagement (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4)."
+        },
+        {
+          "heading": "A Goodhart failure present from the first label",
+          "body": "Evasiveness is the corpus's clearest instance of Goodhart's law running a variant pattern. Concrete Problems' original formulation describes a proxy that starts correlated with a goal and decorrelates once optimized ([[goodharts-law]]); evasiveness shows a proxy miscorrelated with the goal from its very first labeled example, since the crowdworker instructions rewarded disengagement outright rather than a policy learning to exploit an initially-good measure ([[goodharts-law-is-instantiated-through-mislabeled-proxy-in-evasiveness]]). It also has a structural mirror one paper earlier: InstructGPT's [[excessive-hedging]] is the same over-rewarded-proxy move on the helpfulness axis, wearing the opposite surface form — more words instead of fewer — since InstructGPT's labelers over-rewarded epistemic caution the way Constitutional AI's crowdworkers over-rewarded refusal ([[excessive-hedging-is-the-harmlessness-axis-mirror-of-evasiveness]]). And where InstructGPT's analogous fix, the [[kl-penalty]], intervenes downstream inside PPO optimization, evasiveness could not be patched that way: its cause was upstream, in the labeling instructions, so the real fix touched the data rather than the optimizer ([[kl-penalty-was-not-the-fix-applied-to-evasiveness]])."
+        },
+        {
+          "heading": "How Constitutional AI removes it, and what that costs the metrics",
+          "body": "The [[helpfulness-harmlessness-tension]] documented throughout the paper collapses specifically into evasiveness whenever harmlessness is rewarded without penalizing refusal ([[helpfulness-harmlessness-tension-collapses-into-evasiveness]]). RL-CAI's constitutional principles were rewritten so the feedback model judges which response is more thoughtful and less harmful rather than which one shuts the conversation down, and the measured result is stark: \"RL-CAI is virtually never evasive, and often gives nuanced and harmless responses to most red team prompts\" (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 13), eliminating the failure directly ([[rl-cai-eliminates-evasiveness]]). Because this fix changes what counts as harmless, it also changes what the paper's own measuring instrument reports: crowdworkers computing the [[elo-score]] were separately instructed to penalize evasive responses, which the paper credits with shrinking the harmlessness gap between the Helpful and HH RLHF baselines relative to Bai et al.'s (2022) earlier numbers ([[elo-score-was-tuned-to-penalize-evasiveness]]). Evasiveness therefore sits at the center of the paper's headline empirical arc — tension into evasiveness, evasiveness eliminated, elimination measured by a metric tuned for exactly this — traced across the [[evasiveness-empirical-arc]] and [[goodhart-across-corpus]] themes and the [[goodhart-names-itself-across-six-years]], [[mirror-image-pairs]], [[hindsight-seams-2016-to-2022]], and [[fix-lives-upstream-in-the-data]] tissue threads."
+        }
+      ]
+    },
+    {
+      "id": "helpfulness-harmlessness-tension",
+      "sections": [
+        {
+          "heading": "The tradeoff, in general",
+          "body": "This is the general dynamic observed across RLHF-trained dialogue assistants: pushing a model to be more willing to help widens the range of requests it will act on, including harmful ones, while pushing it to refuse or hedge on anything risky tends to make it less useful even on ordinary requests. The tension predates Constitutional AI — it is documented in the authors' own earlier work training a helpful-and-harmless assistant with human feedback (Bai et al., 2022) — and Constitutional AI states it as the paper's motivating premise: \"there was a significant tension between helpfulness and harmlessness\" (constitutional-ai, §\"1.1 Motivations\", p. 2)."
+        },
+        {
+          "heading": "Its specific failure mode, and its child finding",
+          "body": "The tension is not a smooth tradeoff curve in practice; it has a concrete collapse point on its harmless side. When crowdworker feedback rewards harmlessness without also penalizing refusal, the cheapest way for a policy to score well on a harmful prompt is to disengage rather than think the request through, and Constitutional AI names this specific collapse [[evasiveness]] ([[helpfulness-harmlessness-tension-collapses-into-evasiveness]]). The paper's headline finding is presented as a child of this tension rather than a separate topic: [[pareto-improvement]] is the claim that Constitutional RL shifts the entire helpfulness-harmlessness frontier outward, rather than simply moving along the tradeoff line the way ordinary RLHF does, so that harmlessness gains do not have to be paid for in evasive, unhelpful behavior. Both concepts sit inside the [[helpfulness-harmlessness-tradeoff]] theme, and the tension's collapse into evasiveness is the first step of the [[evasiveness-empirical-arc]] tissue theme's account of how that headline result was actually built."
+        }
+      ]
+    },
+    {
+      "id": "hhh-eval-benchmark",
+      "sections": [
+        {
+          "heading": "What it tests, and where it comes from",
+          "body": "The HHH evaluation set is a benchmark of binary response-comparison questions: given a conversation and two candidate assistant replies, the task is to pick the one that is more helpful, honest, and harmless. It operationalizes the qualitative [[hhh-framework]] into something a model's accuracy can be scored against, turning a definition into an instrument ([[hhh-framework-is-operationalized-as-hhh-eval-benchmark]]). Its original 221 comparisons come from Askell et al. (2021) and are hosted publicly as a subset of [[big-bench]] ([[hhh-eval-benchmark-is-hosted-as-a-subset-of-big-bench]], constitutional-ai, §\"B Identifying and Classifying Harmful Conversations\", p. 20); Constitutional AI extends this with 217 new, deliberately harder comparisons, because models were already scoring \"well over 90% binary accuracy\" on the original set, with the new items \"primarily focusing on more subtle tests of harmlessness, including examples where an evasive response is disfavored over a harmless and helpful message\" (constitutional-ai, §\"2 Evaluating the Potential for AI Supervision of HHH\", p. 6). The extension is distributed only through the paper's own repository rather than folded into BIG-Bench itself, so \"the HHH eval\" as Constitutional AI uses it is really a public core plus a private harder addendum."
+        },
+        {
+          "heading": "What it is used to check",
+          "body": "The benchmark does double duty in the paper. It is where [[chain-of-thought-prompting]] is shown to significantly improve a model's ability to pick the better response (Figure 4), and it is where [[model-calibration]] moves from an assumed property to a demonstrated one: \"we show calibration of the RL-CAI labels...on our new HHH eval. We find that the feedback model's log-probabilities are reasonably well-calibrated\" (constitutional-ai, §\"4.3 Main Results\", p. 12) ([[model-calibration-is-empirically-verified-on-hhh-eval-benchmark]]). Both uses sit inside the [[hhh-framework-and-benchmark]] theme, while the benchmark's own two-stage life, public core plus private harder extension, is one instance of the [[benchmark-reused-with-hidden-alterations]] tissue theme's broader pattern of the corpus repurposing existing benchmarks until models saturate them."
+        }
+      ]
+    },
+    {
+      "id": "hybrid-human-ai-preference-model",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "The hybrid human/AI preference model is architecturally an ordinary [[reward-model|reward model]] — a scalar-output model trained with a pairwise ranking loss — with nothing changed about its structure or training procedure. Given a prompt $x$ and a preferred/dispreferred response pair $(y_w, y_l)$, it is trained with the standard Bradley-Terry preference loss:\n$$\\mathcal{L}(\\theta) = -\\mathbb{E}_{(x,y_w,y_l)\\sim D}\\left[\\log \\sigma\\big(r_\\theta(x,y_w) - r_\\theta(x,y_l)\\big)\\right].$$\nThe innovation is entirely in what $D$ is built from: 135,296 human-labeled helpfulness comparisons stitched together with 182,831 harmlessness comparisons generated entirely by the [[feedback-model|feedback model]], one per SL-CAI prompt (constitutional-ai, §\"4.2 Datasets and Training\", p. 11; introduced at §\"1.2 The Constitutional AI Approach\", p. 5). Once trained, the resulting model cannot itself distinguish which half of its training data any given judgment traces back to; helpfulness and harmlessness are fused into a single scalar reward."
+        },
+        {
+          "heading": "Its place in the scalable-oversight lineage",
+          "body": "This concept is the specific mechanism by which Constitutional AI keeps helpfulness supervision human while making harmlessness supervision synthetic, and it is best read as the point where two separate supervision lineages converge: the human-labeled comparisons descend from ordinary RLHF, while the AI-labeled half is what the [[feedback-model|feedback model]] supplies as its output ([[feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model]]). It is a direct descendant, in spirit, of [[reward-model]] generally, inheriting its architecture and loss wholesale while changing only where the training signal originates. The concept sits inside the [[scalable-oversight-lineage]] theme, which traces Concrete Problems' 2016 naming of scalable oversight as an open problem through InstructGPT's reward model to this hybrid design, and inside the [[assembly-line-pipeline]] tissue theme, since it is the specific stage where two differently-provenanced comparison datasets are stitched into one training signal for the RL stage that follows."
+        }
+      ]
+    },
+    {
+      "id": "iterated-online-training",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Iterated (online) training is a refresh loop for a preference model that predates Constitutional AI, attributed by the paper to Bai et al. (2022): new comparison data is periodically collected on the current policy's own outputs and used to retrain or update the preference model, keeping it evaluating the same distribution of responses the policy is actually producing rather than an older, increasingly stale distribution."
+        },
+        {
+          "heading": "Why it's flagged rather than used",
+          "body": "Constitutional AI does not implement this in its own experiments; it names it as a future direction made newly practical by [[rlaif|RL from AI Feedback]]: \"we should be able to perform iterated 'online' training...with AI supervision, where we update the preference model with new AI feedback in order to keep it on the same distribution as the policy produces...by using AI feedback we can fully automate the process\" (constitutional-ai, §\"6.1 Future Directions\", p. 15). RLAIF's contribution here is not the refresh idea itself but removing its bottleneck: once an AI feedback model rather than a human crowdworker supplies the comparisons, the refresh loop no longer needs continuous human labor and can in principle run indefinitely ([[rlaif-makes-newly-automatable-iterated-online-training]]). This sits at the far end of the [[scalable-oversight-lineage]] theme's throughline from a named open problem to a scaled solution, and is one more instance of the [[ai-substitutes-for-the-human-bottleneck]] tissue theme's recurring move: an AI process substituting for a human one at exactly the point human throughput was the constraint."
+        }
+      ]
+    },
+    {
+      "id": "lamda",
+      "sections": [
+        {
+          "heading": "What LaMDA is",
+          "body": "LaMDA (Language Models for Dialog Applications) is Google's family of Transformer-based language models specialized for open-ended dialogue, introduced by Thoppilan et al. (2022) and predating Constitutional AI. It is fine-tuned on human-annotated conversational data to improve response quality along axes including sensibleness, specificity, and interestingness, and separately fine-tuned toward safety and factual grounding, including a variant that consults external information-retrieval tools before answering factual questions."
+        },
+        {
+          "heading": "Its two uses in Constitutional AI",
+          "body": "Constitutional AI cites LaMDA alongside [[sparrow|Sparrow]] and InstructGPT as related work that \"use[s] human data to train more aligned language models\" (constitutional-ai, §\"5 Related Work\", p. 14), but its concrete role in the paper is narrower and purely empirical: LaMDA's own prompts and reference responses are reused wholesale as a fixed comparison set in Appendix D to qualitatively benchmark [[hh-rlhf-model|HH RLHF]] against [[rl-cai|RL-CAI]] on identical inputs (constitutional-ai, §\"D.2 LaMDA Prompts\", p. 25). This is a different kind of contribution than Sparrow's in the same related-work sentence: LaMDA supplies literal test inputs, while Sparrow supplies a design lineage the paper's own method partially follows ([[lamda-plays-a-different-comparative-role-than-sparrow]]). The two are grouped together with [[context-distillation]] in the [[related-dialogue-agents]] theme as the paper's explicit points of comparison, and the pairing is one instance of the [[list-invites-conflation-but-roles-differ]] tissue theme: a related-work sentence names two systems together as if interchangeable, while their actual roles in the paper are not."
+        }
+      ]
+    },
+    {
+      "id": "lets-think-step-by-step-prompt",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "\"Let's think step-by-step\" is the specific zero-shot chain-of-thought trigger phrase introduced by Kojima et al. (2022), \"Large Language Models are Zero-Shot Reasoners,\" and predates Constitutional AI. Kojima et al. showed that appending this instruction alone, with no worked examples, is often enough to make a language model produce intermediate reasoning before its final answer and thereby improve accuracy on reasoning tasks, without any task-specific prompt engineering."
+        },
+        {
+          "heading": "Its narrow job inside the feedback model's prompt",
+          "body": "Constitutional AI borrows the phrase verbatim to trigger reasoning in the feedback model before it commits to a multiple-choice harmlessness judgment, formatted as \"Assistant: Let's think step-by-step: [CHAIN-OF-THOUGHT]\" following the presented conversation, principle, and two labeled responses (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11). As a child of [[chain-of-thought-prompting]], its contribution to the parent technique is narrow and specific: it signals only that reasoning should occur, saying nothing about what a harmlessness judgment's reasoning should contain, what a constitutional principle is, or how the comparison should be laid out. That missing content is supplied by its sibling, [[rl-cai-cot-prompts]], a set of hand-written few-shot examples used in the same prompt ([[lets-think-step-by-step-prompt-is-paired-with-rl-cai-cot-prompts]]): the trigger phrase starts the reasoning, the examples shape it. Both sit inside the [[feedback-model-engineering]] theme and the [[calibration-and-prompt-scaffolding]] tissue theme."
+        }
+      ]
+    },
+    {
+      "id": "model-calibration",
+      "sections": [
+        {
+          "heading": "What calibration means",
+          "body": "Calibration is a general property of probabilistic predictors that predates Constitutional AI. A model is well-calibrated if, among all the times it outputs a given confidence level $p$ for its prediction, the predictions are correct a fraction $p$ of the time:\n$$P\\big(Y = \\hat{Y} \\mid \\hat{P}(\\hat{Y}) = p\\big) = p \\quad \\text{for all } p \\in [0,1].$$\nA model can be highly accurate yet poorly calibrated, systematically over- or under-confident, so calibration is checked separately from accuracy, typically by binning predictions by confidence and comparing each bin's average confidence to its empirical accuracy, summarized in a single number as expected calibration error, $\\text{ECE} = \\sum_m \\frac{|B_m|}{n}\\,|\\text{acc}(B_m) - \\text{conf}(B_m)|$. For language models specifically, Kadavath et al. (2022) established that a model's next-token probabilities on multiple-choice questions are reasonably well-calibrated in this sense, a finding Constitutional AI relies on directly."
+        },
+        {
+          "heading": "The load-bearing assumption behind soft preference labels",
+          "body": "Constitutional AI invokes calibration to justify a specific design choice: treating the feedback model's raw output probabilities on a multiple-choice comparison as usable soft preference-label targets rather than noise, since such targets \"will be fairly well-calibrated...since they are multiple choice responses\" (constitutional-ai, §\"4.1 Method\", p. 10) ([[model-calibration-is-the-precondition-for-multiple-choice-evaluation-format]]). Without this property holding, there would be no principled reason to prefer soft probability targets over hard 0/1 labels. The paper does not leave this an unverified assumption: it is empirically checked on the [[hhh-eval-benchmark]], where \"the feedback model's log-probabilities are reasonably well-calibrated\" (constitutional-ai, §\"4.3 Main Results\", p. 12) ([[model-calibration-is-empirically-verified-on-hhh-eval-benchmark]]), closing the loop between premise and evidence. Both edges sit inside the [[hhh-framework-and-benchmark]] and [[feedback-model-engineering]] themes and the [[calibration-and-prompt-scaffolding]] tissue theme, which traces the chain of narrow prompting and calibration choices the feedback-model pipeline depends on end to end."
+        }
+      ]
+    },
+    {
+      "id": "palms",
+      "sections": [
+        {
+          "heading": "What PALMS is",
+          "body": "PALMS (Process for Adapting Language Models to Society) is a methodology introduced by Solaiman & Dennison (2021), predating Constitutional AI, for steering a language model's behavior on sensitive topics through targeted fine-tuning on a small, carefully curated dataset of demonstrations reflecting desired values, paired with a fixed set of \"sensitive questions\" spanning categories such as injury, abuse, and controversial social topics, used to evaluate whether the adaptation worked."
+        },
+        {
+          "heading": "Its role as an outside check",
+          "body": "Constitutional AI uses only the question set, not the fine-tuning methodology, as a fixed, externally-authored prompt list for qualitatively comparing [[hh-rlhf-model|HH RLHF]] and [[rl-cai|RL-CAI]] responses side by side (constitutional-ai, §\"D.1 PALMS Sensitive Questions\", p. 23). Its value in the paper comes specifically from being external to Constitutional AI's own data pipeline: every harmful prompt used to train or evaluate SL-CAI and RL-CAI otherwise originates from [[red-teaming]], so PALMS breaks that loop and functions as an out-of-distribution spot check on whether CAI's harmlessness and non-evasiveness generalize past the exact prompt distribution the models were shaped by ([[palms-provides-an-independent-check-outside-red-teaming]]). It sits in the [[red-teaming-and-harm-data]] theme as the one prompt source in that theme not derived from red-teaming, and in the [[independent-checks-and-instrument-blind-spots]] tissue theme alongside the paper's other paired primary-metric/second-check instruments."
+        }
+      ]
+    },
+    {
+      "id": "pareto-improvement",
+      "sections": [
+        {
+          "heading": "What a Pareto improvement is",
+          "body": "The term is borrowed from the general concept of Pareto efficiency in economics and multi-objective optimization: given several objectives to be maximized simultaneously, a candidate $y$ Pareto-dominates another $x$ if it is at least as good on every objective and strictly better on at least one,\n$$f_i(y) \\ge f_i(x) \\ \\text{for all } i, \\qquad f_i(y) > f_i(x) \\ \\text{for some } i,$$\nand a Pareto improvement is any move from $x$ to such a $y$. An ordinary tradeoff curve, by contrast, only lets you move along a fixed frontier, trading one objective for another with no dominance in either direction."
+        },
+        {
+          "heading": "Constitutional AI's introduced finding",
+          "body": "Constitutional AI introduces this specific empirical claim as its headline result: with helpfulness and harmlessness as the two objectives, [[rl-cai|RL-CAI]] does not simply move along the tradeoff curve traced by ordinary RLHF, it lands strictly above it, achieving matched or better helpfulness at higher harmlessness than either the [[helpful-rlhf-model|Helpful RLHF]] or [[hh-rlhf-model|HH RLHF]] baseline ([[rl-cai-produces-pareto-improvement]]). The claim is read directly off Figure 2, where it is labeled in the caption itself, and the paper attributes the mechanism to supply rather than algorithmic cleverness: replacing scarce, expensive human harmfulness comparisons with abundant, principle-generated AI comparisons lets far more harmlessness training happen without re-importing the evasiveness bias baked into the earlier human-labeled HH data (constitutional-ai, §\"1.1 Motivations\", p. 3)."
+        },
+        {
+          "heading": "Its place as the child of the tension it resolves",
+          "body": "As the named child of [[helpfulness-harmlessness-tension]], pareto-improvement is the paper's answer to that tension rather than a separate topic: the parent concept documents the tradeoff as an empirical regularity across RLHF training, and this concept is the specific claim that Constitutional RL breaks it. It sits inside the [[helpfulness-harmlessness-tradeoff]] theme and is a late step in the [[evasiveness-empirical-arc]] tissue theme's account of how the paper's central result was built, from tension, through evasiveness, through its elimination, to this frontier-level outcome."
+        }
+      ]
+    },
+    {
+      "id": "red-teaming",
+      "sections": [
+        {
+          "heading": "What red teaming is",
+          "body": "Red teaming is a general adversarial-testing practice that predates Constitutional AI: deliberately adopting an adversarial role against a system to find its failure modes before deployment, with roots in military wargaming and long-standing use in cybersecurity. It was adapted for language models specifically in the companion paper Ganguli et al. (2022), \"Red Teaming Language Models to Reduce Harms,\" which Constitutional AI's own harmful-data pipeline draws on directly."
+        },
+        {
+          "heading": "How Constitutional AI runs it",
+          "body": "In this paper, red teaming means paid crowdworkers holding back-and-forth adversarial conversations designed to bait the assistant into generating harmful content, one prompt per human turn (constitutional-ai, §\"3.1 Method\", p. 7). The resulting prompts source the harmful training data for both stages of the pipeline: 182,831 red-team prompts in total (42,496 human-written plus 140,335 generated by few-shot prompting a pretrained model) build SL-CAI's critique-and-revision data, and a further 491,142 model-generated red-team prompts feed RL-CAI (constitutional-ai, §\"3.2 Datasets and Training\", p. 8). The same underlying transcripts, together with the crowdworker harm ratings collected alongside them, are reused directly to build [[classifying-harmful-behavior-eval]]'s two multiple-choice tests ([[red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval]])."
+        },
+        {
+          "heading": "Its child, and its one external check",
+          "body": "Manual red teaming has an inherent human-labor ceiling, and its named child, [[automated-red-teaming]], is the paper's flagged solution: replacing the crowdworker with a language model that generates the adversarial prompts itself, a move the paper explicitly ties to [[evasiveness]] being eliminated first, since an evasive target model would just teach an automated red-teamer to harvest refusals rather than real vulnerabilities ([[red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming]]). Because every red-team-derived prompt shares one pipeline, [[palms]] is used as an independent, externally-authored prompt set precisely because it falls outside this loop ([[palms-provides-an-independent-check-outside-red-teaming]]). Red teaming's central role in the [[red-teaming-and-harm-data]] theme, and its recurrence across the [[independent-checks-and-instrument-blind-spots]], [[ai-substitutes-for-the-human-bottleneck]], and [[assembly-line-pipeline]] tissue themes, reflects that nearly every harmful-content mechanism in the paper — training data, evaluation, and comparison baseline alike — traces back to this one human-driven process."
+        }
+      ]
+    },
+    {
+      "id": "rl-cai-cot-prompts",
+      "sections": [
+        {
+          "heading": "What it is",
+          "body": "Introduced by Constitutional AI in Appendix E.2 (constitutional-ai, §\"E.2 Chain-of-Thought Prompts for RL-CAI\", p. 31): a set of hand-written few-shot examples used to prompt the feedback model, each consisting of a pre-written conversation, a constitutional principle with a substitutable placeholder, two labeled candidate responses, and a fully worked chain-of-thought explanation ending in a multiple-choice judgment, all formatted identically to the live comparisons the feedback model is actually asked to judge."
+        },
+        {
+          "heading": "Its job alongside the generic trigger",
+          "body": "As a child of [[chain-of-thought-prompting]], its contribution is to supply exactly the domain-specific scaffolding that the generic zero-shot trigger [[lets-think-step-by-step-prompt]] cannot: what a harmlessness judgment's reasoning should look like, what a constitutional principle is, and how a conversation and two labeled responses should be laid out. The paper uses both in a single prompt, never either alone: \"we use the 'Let's think step-by-step' prompt...to elicit the chain-of-thought. In addition, we prepend several hand-written, few-shot examples in the same format\" (constitutional-ai, §\"Chain-of-Thought Prompting\", p. 11) ([[lets-think-step-by-step-prompt-is-paired-with-rl-cai-cot-prompts]]). The trigger phrase starts the reasoning; these examples shape it into something usable as a preference label. The concept sits inside the [[feedback-model-engineering]] theme, which covers the full chain of prompting and calibration choices that make an otherwise plain language model usable as a harmlessness labeler, and the [[calibration-and-prompt-scaffolding]] tissue theme."
+        }
+      ]
+    },
+    {
+      "id": "sparrow",
+      "sections": [
+        {
+          "heading": "What Sparrow is",
+          "body": "Sparrow is DeepMind's dialogue agent, introduced by Glaese et al. (2022), \"Improving Alignment of Dialogue Agents via Targeted Human Judgements,\" and predates Constitutional AI. It is trained with reinforcement learning from human preference judgments and is grounded with live search-engine queries to support factual claims with evidence, and its harmlessness training is organized around roughly two dozen hand-specified rules targeting particular failure categories — for example, rules against offering specific financial, medical, or legal advice, or claiming to have a body or to feel emotions."
+        },
+        {
+          "heading": "Why Constitutional AI treats it as design lineage, not a mere baseline",
+          "body": "Constitutional AI's related-work section lists Sparrow alongside [[lamda|LaMDA]] and InstructGPT as prior work that \"use[s] human data to train more aligned language models\" (constitutional-ai, §\"5 Related Work\", p. 14), a phrasing that makes the three sound interchangeable. Sparrow's actual role is narrower and more specific: the paper singles out \"Sparrow's decomposition of harmlessness into different areas\" as having \"some commonality with our use of principles forming a 'constitution'\" (constitutional-ai, §\"5 Related Work\", p. 14-15), making it the closest prior-art precedent for Constitutional AI's central design idea — targeted written rules standing in for a mass of individual human labels — rather than just another comparison point. This is a genuinely different contribution than LaMDA's in the same sentence, which supplies literal test prompts rather than a design lineage ([[lamda-plays-a-different-comparative-role-than-sparrow]]). Both sit inside the [[related-dialogue-agents]] theme, and their pairing in one related-work sentence is an instance of the [[list-invites-conflation-but-roles-differ]] tissue theme's broader pattern: a related-work list implies an equivalence that a closer reading dispels."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Partially specified models — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Partially specified models</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A family of approaches, developed mainly in econometrics, that make assumptions about only some aspects of a data distribution rather than requiring a fully well-specified model.</p>
+<section class="prose-section">
+<h2>Specifying only part of a distribution</h2>
+<p>Partially specified models are a family of statistical approaches, developed mainly in econometrics well before Concrete Problems was written, that assume something about only some aspects of a data-generating distribution rather than committing to a fully specified model family. The paper introduces the idea through a single worked example: a linear regression $y = \langle w^*, x \rangle + v$ where the only assumption made about the noise $v$ is that $\mathbb{E}[v \mid x] = 0$, with no further claim about its distributional form. This partial commitment is already enough to identify the true parameter $w^*$, and the resulting estimator still minimizes squared prediction error even if the distribution over $x$ shifts between training and test — because the identifying condition, $\mathbb{E}[v \mid x] = 0$, never referenced the marginal distribution of $x$ in the first place (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=17" target="_blank" rel="noopener">§"Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.", p. 17</a>). This generalizes into a large econometric toolkit including <a href="../concept/generalized-method-of-moments.html">Generalized method of moments</a>, limited-information maximum likelihood, and instrumental-variables estimation.</p>
+</section>
+<section class="prose-section">
+<h2>A family with two children and one motivating retreat</h2>
+<p>This concept functions as a genuine hub in the paper's distributional-shift response. The edge <a href="../edge/covariate-shift-assumption-untestability-motivates-retreat-to-partially-specified-models.html">Covariate shift assumption — untestability motivates retreat to → Partially specified models</a> frames it as a direct response to a specific weakness of <a href="../concept/covariate-shift-assumption.html">Covariate shift assumption</a>: covariate shift's single, sweeping invariant is "very strong and also untestable," so partial specification trades the scope of the guarantee for the ability to check, in principle, whether the (smaller) assumption underlying it actually held. Two children instantiate the family toward different ends. <a href="../concept/generalized-method-of-moments.html">Generalized method of moments</a> generalizes the founding regression example into full machinery for parameter identification, per <a href="../edge/generalized-method-of-moments-generalizes-the-founding-example-of-partially-specified-models.html">Generalized method of moments — generalizes the founding example of → Partially specified models</a>; <a href="../concept/unsupervised-risk-estimation.html">Unsupervised risk estimation</a> instead partially specifies the distribution of a model's <em>errors</em>, per <a href="../edge/unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models.html">Unsupervised risk estimation — partially specifies error not parameters → Partially specified models</a>, answering "how wrong is this model" rather than "what is the true model." A companion edge, <a href="../edge/generalized-method-of-moments-diverges-in-target-from-unsupervised-risk-estimation.html">Generalized method of moments — diverges in target from → Unsupervised risk estimation</a>, notes the paper treats parameter identification and risk estimation as genuinely separate problems that happen to admit the same partial-specification strategy, rather than one subsuming the other. The paper's own summary is candid about the family's immaturity for ML: it calls partially specified models "potentially promising" but currently underdeveloped outside econometrics, with an open question of whether they can scale past simple, conservative cases (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=19" target="_blank" rel="noopener">§"A unifying view: counterfactual reasoning and machine learning with contracts.", p. 19</a>). The concept is a child of <a href="../concept/robustness-distributional-shift.html">Robustness to distributional shift</a>, anchors the <a href="../theme/statistical-relaxations-for-distributional-shift.html">Weakening statistical assumptions to survive distribution shift</a> theme, sits in the <a href="../tissue/cross-disciplinary-imports-partial-fit.html">Borrowed machinery that doesn&#x27;t fully transfer, and says so</a> and <a href="../tissue/partial-specification-family-different-targets.html">One umbrella idea, aimed at different targets each time it&#x27;s used</a> tissue themes, and belongs to the <a href="../supertheme/distributional-shift-responses.html">Distributional shift: relax the statistics, or rewrite the contract</a> supertheme.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/robustness-distributional-shift.html">Robustness to distributional shift</a></p></section>
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/generalized-method-of-moments.html">Generalized method of moments</a></li><li><a href="../concept/unsupervised-risk-estimation.html">Unsupervised risk estimation</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Covariate shift assumption — <a href="../edge/covariate-shift-assumption-untestability-motivates-retreat-to-partially-specified-models.html">untestability motivates retreat to</a> → <strong>Partially specified models</strong></li><li>Generalized method of moments — <a href="../edge/generalized-method-of-moments-generalizes-the-founding-example-of-partially-specified-models.html">generalizes the founding example of</a> → <strong>Partially specified models</strong></li><li>Unsupervised risk estimation — <a href="../edge/unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models.html">partially specifies error not parameters</a> → <strong>Partially specified models</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/statistical-relaxations-for-distributional-shift.html">Weakening statistical assumptions to survive distribution shift</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=17" target="_blank" rel="noopener">&sect;&ldquo;Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.&rdquo;, p. 17</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;Partially specified models: method of moments, unsupervised risk estimation, causal identification, and limited-information maximum likelihood.&rdquo;, p. 18</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

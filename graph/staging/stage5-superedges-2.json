@@ -1,0 +1,54 @@
+{
+  "superedges": [
+    {
+      "id": "causes-supply-exploit-surface-for-adversarial-ml",
+      "type": "supplies-the-exploit-surface-for",
+      "source": "reward-hacking-causes",
+      "target": "adversarial-ml-for-reward-hacking",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "reward-hacking-and-goodharts-law",
+      "prose": "Only two of the taxonomy's five causes get an adversarial-ML answer, and the match is explicit in the source text. Counterexample resistance is proposed specifically because abstract rewards make learned reward components vulnerable to adversarial counterexamples, \"as in the case of abstract rewards\" (concrete-problems, §\"Counterexample Resistance:\", p. 10). Adversarial blinding targets environmental embedding by name, aiming to prevent an agent from \"understanding how its reward is generated\" (concrete-problems, §\"Adversarial Blinding:\", p. 10), attacking the physical tamperability behind wireheading rather than the value distribution reward hacking exploits. Partially observed goals, complicated systems, and feedback loops receive no adversarial-ML remedy in this pairing; whatever answers they get come from the engineering family instead. Adversarial reward functions is the exception that proves the rule: it targets reward hacking generically, via a GAN-style structure, rather than any one named cause."
+    },
+    {
+      "id": "causes-supply-weak-points-for-engineering-remedies",
+      "type": "supplies-the-structural-weak-points-for",
+      "source": "reward-hacking-causes",
+      "target": "reward-hacking-engineering-remedies",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "reward-hacking-and-goodharts-law",
+      "prose": "Two of the taxonomy's causes are named explicitly as the engineering remedies' targets; two others are named as unsolved. Reward pretraining is proposed as \"a possible defense against cases where the agent can influence its own reward function (e.g. feedback or environmental embedding)\" (concrete-problems, §\"Reward Pretraining:\", p. 10), naming feedback loops and environmental embedding directly. Model lookahead attacks the same embedding-driven failure from another angle, penalizing an agent for planning to overwrite its reward function before the plan executes (concrete-problems, §\"Model Lookahead:\", p. 9). Partially observed goals and complicated systems get no targeted fix in this family: the POMDP-to-belief-state-MDP reduction that would solve partial observability is called \"prohibitively hard to use in practice,\" and complicated systems, a byproduct of an agent's sheer combinatorial complexity, is addressed only by generic hardening (capping, multiple rewards) that names no specific cause."
+    },
+    {
+      "id": "adversarial-ml-needs-a-more-powerful-referee",
+      "type": "needs-a-more-powerful-referee-than",
+      "source": "adversarial-ml-for-reward-hacking",
+      "target": "reward-hacking-engineering-remedies",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "reward-hacking-and-goodharts-law",
+      "prose": "The two remedy families differ in what they presuppose, not just in technique. Adversarial reward functions requires building a second learned system explicitly more capable than the one it polices: the paper concedes \"we would have to ensure that the reward-checking agent is more powerful (in a somewhat subtle sense) than the agent that is trying to achieve rewards\" (concrete-problems, §\"Adversarial Reward Functions:\", p. 9), a dependency the proposal never discharges. Counterexample resistance inherits the same trust problem, since it hardens a learned component rather than removing the need to trust one. The engineering family avoids this: sandboxing, capping, multiple independent implementations, trip wires, and pretraining a reward function before interaction all work without positing any second agent smarter than the first. The adversarial family buys generality at the price of a capability assumption the engineering family never has to make."
+    },
+    {
+      "id": "kl-penalty-automates-capping-and-indifference",
+      "type": "reappears-as-an-automated-hybrid-in",
+      "source": "reward-hacking-engineering-remedies",
+      "target": "goodhart-across-corpus",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "reward-hacking-and-goodharts-law",
+      "prose": "No single 2016 engineering remedy matches InstructGPT's per-token KL penalty, but it functions like two of them fused and automated. Reward capping bounds a reward's maximum payoff; variable indifference tries to route optimization pressure away from a sensitive variable, naming \"its own reward function\" as an example case. The KL penalty does both at once without either being separately implemented: it bounds how far the policy's output distribution may drift from the SFT model at every token, which caps the practical payoff of exploiting reward-model imperfections while continuously pulling optimization pressure back toward a trusted baseline rather than a named variable. Where the 2016 proposals are static, one-off constraints, the deployed 2022 mechanism is differentiable and applied continuously during training. The resemblance is visible only after seeing what InstructGPT actually built, not by reading either proposal in isolation."
+    },
+    {
+      "id": "feedback-loops-is-a-special-case-of-goodhart",
+      "type": "generalizes-the-feedback-loop-half-of",
+      "source": "goodhart-across-corpus",
+      "target": "reward-hacking-causes",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "reward-hacking-and-goodharts-law",
+      "prose": "Within Concrete Problems' own taxonomy, one cause is explicitly nested inside another, a relation neither theme's narrative states on its own. The paper's Feedback Loops bullet closes by noting that the phenomenon \"can be considered a special case of Goodhart's law, in which the correlation breaks specifically because the objective function has a self-amplifying component\" (concrete-problems, §\"Feedback Loops:\", p. 8). Goodhart's law appears in the source as its own numbered cause, distinct from feedback loops, partially observed goals, complicated systems, abstract rewards, and environmental embedding, yet the text collapses the feedback-loop cause into it rather than treating the two as siblings. The other four causes in this theme keep their independent status; feedback loops alone is demoted, in the paper's own account, from a peer cause to a named instance of the general law this theme's other members track empirically across 2022."
+    }
+  ]
+}

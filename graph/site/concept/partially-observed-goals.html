@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Partially observed goals — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Partially observed goals</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A cause of reward hacking in which the agent can only imperfectly perceive whether the true world-state objective has been achieved, forcing designers to use hackable proxy rewards.</p>
+<section class="prose-section">
+<h2>Why designers reach for hackable proxies at all</h2>
+<p>Partially observed goals is the first cause Concrete Problems names in its <a href="../concept/reward-hacking.html">Reward hacking (avoiding)</a> taxonomy, and arguably the deepest: most RL formalisms assume reward is directly experienced, but real tasks involve bringing the external world into some objective state that the agent "can only ever confirm through imperfect perceptions" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=8" target="_blank" rel="noopener">§"Partially Observed Goals:", p. 8</a>). Because agents lack access to a perfect measure of task performance, designers are "often forced to design rewards that represent a partial or imperfect measure," such as rewarding a cleaning robot for how many messes its camera sees rather than for the office actually being clean, a proxy the robot can satisfy by simply closing its eyes.</p>
+</section>
+<section class="prose-section">
+<h2>A fix that exists in theory and fails in practice</h2>
+<p>The underlying structure is a partially observable Markov decision process (POMDP): the agent does not observe the true state $s \in S$ directly, only an observation $o \in \Omega$ drawn from $O(o \mid s, a)$. A standard result shows that any POMDP can be reduced to a belief-state MDP, an MDP whose state is the agent's posterior belief $b(s)$ over $S$ given its full observation history, and this reduction yields a reward function defined over actions and observations that is provably equivalent to optimizing the true, unobserved objective (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=8" target="_blank" rel="noopener">§"Partially Observed Goals:", p. 8</a>). <a href="../edge/partially-observed-goals-has-an-impractical-theoretical-fix-in-pomdp-belief-state-mdp.html">Partially observed goals — has an impractical theoretical fix in → POMDP-to-belief-state-MDP reduction</a> documents why this closes the problem only on paper: the resulting reward typically involves "complicated long-term dependencies" over the agent's entire observation history and is "prohibitively hard to use in practice" (concrete-problems, <a class="cite" href="../assets/papers/concrete-problems.pdf#page=8" target="_blank" rel="noopener">§"Partially Observed Goals:", p. 8</a>). Designers keep using cheap, hackable proxies not from carelessness but because the theoretically correct alternative, <a href="../concept/pomdp-belief-state-mdp.html">POMDP-to-belief-state-MDP reduction</a>, is known to exist and simultaneously known to be unusable at the scale real systems operate at, a pairing documented in <a href="../tissue/paper-concedes-its-own-remedies-limits.html">The paper names exactly where its own fix stops working</a>.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/reward-hacking.html">Reward hacking (avoiding)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Partially observed goals</strong> — <a href="../edge/partially-observed-goals-has-an-impractical-theoretical-fix-in-pomdp-belief-state-mdp.html">has an impractical theoretical fix in</a> → POMDP-to-belief-state-MDP reduction</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/reward-hacking-causes.html">Why reward proxies get gamed: the anatomy of reward hacking</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;Partially Observed Goals:&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

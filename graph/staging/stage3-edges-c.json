@@ -1,0 +1,244 @@
+{
+  "edges": [
+    {
+      "id": "use-demonstrations-operationalized-as-supervised-fine-tuning",
+      "type": "operationalized-as",
+      "source": "use-demonstrations",
+      "target": "supervised-fine-tuning",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "demonstrations-not-specification",
+      "prose": "Concrete Problems proposes \"use demonstrations\" as one of several routes to avoid unsafe\nexploration: learn a baseline policy from expert trajectories via inverse RL or apprenticeship\nlearning, then explore only around that baseline (concrete-problems, §\"Use Demonstrations:\", p. 15).\nInstructGPT's supervised fine-tuning step realizes this proposal almost exactly, but by the simplest\npossible mechanism the 2016 paper considered: instead of first recovering a reward function or\nmatching feature expectations, as IRL and apprenticeship learning do, SFT fine-tunes GPT-3 directly\non demonstrations with ordinary supervised learning, no reward inference or policy-matching\nmachinery involved (instructgpt, §\"3.1 High-level methodology\", p. 6). The exploration-safety\nmotivation also drops out: SFT is not framed as bounding a later RL exploration phase but as a\nfree-standing baseline and initializer for the stages that follow. What survives is the core wager\n— that a policy learned from demonstrations can substitute for a hand-specified objective."
+    },
+    {
+      "id": "apprenticeship-learning-borrows-technique-from-inverse-reinforcement-learning",
+      "type": "borrows-technique-from",
+      "source": "apprenticeship-learning",
+      "target": "inverse-reinforcement-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "demonstrations-not-specification",
+      "prose": "Concrete Problems lists inverse reinforcement learning and apprenticeship learning side by\nside as the two techniques that can implement \"use demonstrations\" (concrete-problems,\n§\"Use Demonstrations:\", p. 15), but they target different objects. Inverse RL, in its classical form,\ntries to recover an explicit reward function (or a policy derived from one) that rationalizes the\nexpert's trajectories. Apprenticeship learning, as introduced by Abbeel and Ng, does not aim to\nrecover the true reward; it searches for a policy whose long-run feature expectations match the\nexpert's, using an IRL-style optimization only as an internal subroutine toward that behavioral-\nmatching goal. The distinction matters for safety: a technique that outputs a reward function can\nbe inspected, reused, or checked for hacking vulnerabilities, while one that outputs only a matching\npolicy cannot be interrogated for its implicit objective in the same way."
+    },
+    {
+      "id": "inverse-reinforcement-learning-repurposed-for-use-demonstrations",
+      "type": "repurposed-for",
+      "source": "inverse-reinforcement-learning",
+      "target": "use-demonstrations",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "demonstrations-not-specification",
+      "prose": "Concrete Problems cites inverse reinforcement learning twice, for two structurally different\npurposes. Under Reward Pretraining, IRL is proposed as a defense against reward hacking: train a\nfixed reward function from demonstrations before any interaction with the environment, so the agent\ncannot later manipulate its own reward signal (concrete-problems, §\"Reward Pretraining:\", p. 10).\nUnder Use Demonstrations, the same technique is repurposed to address a different problem, unsafe\nexploration: the trajectories are used not to lock down a reward function but to build a baseline\npolicy that lets the agent skip risky trial-and-error learning, or bound further exploration around\nit (concrete-problems, §\"Use Demonstrations:\", p. 15). The tool is identical; what changes is which\nfailure mode — hacking versus exploration risk — the resulting policy or reward is meant to guard\nagainst."
+    },
+    {
+      "id": "cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations",
+      "type": "interactive-counterpart-of",
+      "source": "cooperative-inverse-reinforcement-learning",
+      "target": "use-demonstrations",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "demonstrations-not-specification",
+      "prose": "CIRL is grouped with the demonstration-based remedies because it shares their goal of letting\na human's intentions substitute for a hand-specified reward, but the mechanism is different in kind,\nnot degree. Use Demonstrations (via inverse RL or apprenticeship learning) works from a fixed,\npre-collected dataset of expert trajectories, recorded once and then mined offline (concrete-problems,\n§\"Use Demonstrations:\", p. 15). CIRL instead sets up an ongoing two-player game in which the human\nand the agent act simultaneously, and the agent updates its belief about the human's goal from the\nhuman's behavior turn by turn (concrete-problems, §\"Multi-Agent Approaches:\", p. 6). This buys CIRL\nagents the ability to ask clarifying questions or defer to the human, something that is structurally\nunavailable to an agent trained once on a fixed demonstration set."
+    },
+    {
+      "id": "sft-dataset-duplication-underlies-early-overfitting-of-sft-model",
+      "type": "duplication-underlies-early-overfitting-of",
+      "source": "sft-dataset",
+      "target": "sft-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "demonstrations-not-specification",
+      "prose": "The SFT dataset's roughly 13k examples are not 13k independent demonstrations of desired\nbehavior. Because customer prompts resembling instructions were scarce early in the project,\nlabelers were asked to write template instructions together with several few-shot examples, and\nmultiple SFT datapoints were then synthetically constructed by resampling different subsets of\nthose few-shot examples from the same template (instructgpt, §\"A.3 Dataset sizes\", p. 33) — hence\n11,295 labeler-written training examples against only 1,430 customer-derived ones. This inflates\napparent dataset size without adding proportionate behavioral diversity, a plausible contributor to\nthe SFT model's finding that validation loss overfits after just one epoch even though sixteen\nepochs of training keep improving RM score and human preference ratings (instructgpt,\n§\"C.1 Details of SFT training\", p. 40). It is also why final SFT checkpoints are selected by RM\nscore rather than validation loss."
+    },
+    {
+      "id": "epsilon-greedy-contrasts-in-danger-source-with-r-max",
+      "type": "contrasts-in-danger-source-with",
+      "source": "epsilon-greedy",
+      "target": "r-max",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "exploration-risk-criteria-and-algorithms",
+      "prose": "Concrete Problems names epsilon-greedy and R-max together as standard exploration policies\nthat \"make no attempt to avoid dangerous situations\" (concrete-problems, §\"6 Safe Exploration\",\np. 14), but the two are blind to danger for opposite reasons. Epsilon-greedy takes a uniformly\nrandom action with fixed probability; it does not seek out unknown states, it simply fails to avoid\nthem when chance selects one. R-max, by contrast, is built on optimism in the face of uncertainty\n— it treats every unvisited state-action pair as if it yields maximum possible reward, which is\nprecisely what gives it its near-optimal learning guarantee. That same optimism actively steers the\nagent toward whatever is unexplored, including states that are unexplored because they are\ncatastrophic. R-max's efficiency guarantee and its exploration hazard come from the same mechanism,\nwhereas epsilon-greedy's hazard is incidental to its lack of one."
+    },
+    {
+      "id": "r-max-targets-the-objective-risk-sensitivity-revises",
+      "type": "targets-the-objective-risk-sensitivity-revises",
+      "source": "r-max",
+      "target": "risk-sensitive-performance-criteria",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "exploration-risk-criteria-and-algorithms",
+      "prose": "R-max's headline guarantee is near-optimal performance, but \"optimal\" there means optimal\nwith respect to expected total reward — the same objective risk-sensitive-performance-criteria was\nproposed to move away from. R-max's optimism ensures it eventually converges to the expected-\nreward-maximizing policy in the fewest possible exploratory steps; it says nothing about the\nvariance of outcomes along the way or the probability of a rare catastrophic episode, because\nthose are not part of what it is proven to optimize. Risk-sensitive-performance-criteria instead\nreplaces the expected-total-reward objective itself with worst-case guarantees, bounded probability\nof very bad outcomes, or variance penalties, precisely to catch what an expected-value optimality\nproof like R-max's cannot (concrete-problems, §\"Risk-Sensitive Performance Criteria:\", p. 14). The\ntwo are not competing algorithms; one is an algorithm whose proof target the other argues is the\nwrong target."
+    },
+    {
+      "id": "babi-tasks-is-the-benchmarking-template-for-safe-exploration",
+      "type": "is-the-benchmarking-template-for",
+      "source": "babi-tasks",
+      "target": "safe-exploration",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "exploration-risk-criteria-and-algorithms",
+      "prose": "bAbI is invoked not as a technique but as a structural template for a benchmark that safe\nexploration research still lacks. bAbI tests language understanding by decomposing it into a broad\nset of small, diagnostic tasks, each isolating one prerequisite skill (counting, negation, indirect\nreference, and so on), so that a single architecture's coverage across the whole suite becomes a\nmeaningful measure of progress (concrete-problems, §\"6 Safe Exploration\", p. 16). The paper\nenvisions an analogous suite of toy environments covering conceptually distinct catastrophe types,\nphysical and abstract, against which a safe-exploration architecture could be scored the same way.\nThe disanalogy is instructive too: bAbI scores correctness of an output, while the envisioned suite\nwould have to score the absence of a bad outcome, a harder thing to benchmark since an agent can\ntrivially avoid catastrophe by avoiding action altogether."
+    },
+    {
+      "id": "bounded-exploration-borrows-its-worst-case-framing-from-h-infinity-control",
+      "type": "borrows-its-worst-case-framing-from",
+      "source": "bounded-exploration",
+      "target": "h-infinity-control",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "constraining-exploration-to-safe-regions",
+      "prose": "The paper flags bounded exploration as \"related to\" H-infinity control without spelling out\nthe analogy (concrete-problems, §\"Bounded Exploration:\", p. 15); the connection is that both frame\nsafety as a worst-case guarantee over a bounded set of futures rather than an average-case one.\nH-infinity control asks: given that disturbances to the system are bounded in magnitude, what\npolicy minimizes the worst possible deviation from desired behavior? Bounded exploration asks a\nstructurally similar question in RL terms: given a region of state space where even the worst\naction is known to be recoverable or low-harm, can the agent be allowed to act freely inside it?\nBoth substitute a guarantee over a constrained set of possibilities for a guarantee over the single\nactual outcome, trading generality (the bound must be known in advance) for a hard safety floor\nthat holds regardless of which action within the bound is taken."
+    },
+    {
+      "id": "trusted-policy-oversight-operationalizes-the-recoverability-check-in-bounded-exploration",
+      "type": "operationalizes-the-recoverability-check-in",
+      "source": "trusted-policy-oversight",
+      "target": "bounded-exploration",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "constraining-exploration-to-safe-regions",
+      "prose": "Bounded exploration states the general requirement abstractly: an agent should be confined\nto a region of state space where \"even the worst action... can be recovered from or bounded in\nharm,\" checked, if a model is available, by extrapolating forward to see whether a candidate action\nwould exit that region (concrete-problems, §\"Bounded Exploration:\", p. 15). Trusted policy oversight\nsupplies one concrete way to run that check: instead of an agent verifying recoverability against\nits own model, a separate trusted policy paired with an environment model makes the call, and\nexploration is limited to actions that trusted policy believes are recoverable (concrete-problems,\n§\"Trusted Policy Oversight:\", p. 15). The difference is who does the checking — trusted policy\noversight delegates the safety judgment to a second, presumably more conservative, policy rather\nthan folding it into the exploring agent itself."
+    },
+    {
+      "id": "human-oversight-safe-exploration-scalability-limit-motivates-trusted-policy-oversight",
+      "type": "scalability-limit-motivates",
+      "source": "human-oversight-safe-exploration",
+      "target": "trusted-policy-oversight",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "constraining-exploration-to-safe-regions",
+      "prose": "Human oversight and trusted policy oversight are structurally the same proposal — check a\ncandidate exploratory action against a gatekeeper before taking it — with the gatekeeper swapped\nfrom a person to a policy. The paper introduces human oversight first and immediately flags its\nlimit: the agent may generate exploratory actions too numerous or too fast for a human to review,\nthe scalable oversight problem (concrete-problems, §\"Human Oversight:\", p. 15). Trusted policy\noversight sidesteps exactly that bottleneck by replacing the human reviewer with a trusted policy\nand environment model that can render a recoverability judgment at machine speed. This trades away\nwhatever richer, harder-to-formalize judgment a human reviewer could bring — the paper notes a good\nhuman overseer still needs to distinguish genuinely risky actions from safe ones it could approve\nunilaterally — for throughput."
+    },
+    {
+      "id": "use-demonstrations-supplies-the-baseline-that-anchors-bounded-exploration",
+      "type": "supplies-the-baseline-that-anchors",
+      "source": "use-demonstrations",
+      "target": "bounded-exploration",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "constraining-exploration-to-safe-regions",
+      "prose": "These two remedies are presented as a pipeline, not independent alternatives. The Use\nDemonstrations paragraph ends by noting that a baseline policy learned from expert trajectories can\nitself define the region exploration is bounded around: \"even if further learning is necessary,\nexploration away from the baseline policy can be limited in magnitude\" (concrete-problems,\n§\"Use Demonstrations:\", p. 15). Bounded exploration needs some prior notion of a safe region or a\nknown-safe policy to check candidate actions against; without one, there is nothing to bound\nexploration around. Demonstrations supply exactly that starting point cheaply, from data the\ndesigner already needed to collect, rather than requiring a hand-specified safe region or a learned\ndynamics model built for the purpose. The combination lets an agent both start safer, by imitating\na baseline, and stay safer, by exploring only in its vicinity."
+    },
+    {
+      "id": "covariate-shift-assumption-untestability-motivates-retreat-to-partially-specified-models",
+      "type": "untestability-motivates-retreat-to",
+      "source": "covariate-shift-assumption",
+      "target": "partially-specified-models",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "statistical-relaxations-for-distributional-shift",
+      "prose": "The paper treats these as successive fallback positions, not parallel options. Covariate\nshift buys reusable training data and retrained models cheaply, but only by assuming p(y|x) is\nidentical across training and test — an assumption the paper flags as \"very strong and also\nuntestable,\" which it calls \"particularly problematic from a safety perspective, since it could lead\nto silent failures\" (concrete-problems, §\"Well-specified models: covariate shift and marginal\nlikelihood.\", p. 17). Partially specified models respond directly to that untestability, not to a\nperformance shortfall: rather than committing to one exact invariant across the whole distribution\nand hoping it holds, they commit to assumptions about only some aspects of the distribution, of the\nanalyst's choosing, so what must be checked is smaller and more explicit. The move trades the scope\nof the guarantee for the ability to know, in principle, whether the assumption underlying it\nactually held."
+    },
+    {
+      "id": "generalized-method-of-moments-generalizes-the-founding-example-of-partially-specified-models",
+      "type": "generalizes-the-founding-example-of",
+      "source": "generalized-method-of-moments",
+      "target": "partially-specified-models",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "statistical-relaxations-for-distributional-shift",
+      "prose": "Partially specified models are introduced through a single worked example: a linear\nregression y = <w*,x> + v where only E[v|x] = 0 is assumed about the noise, with no distributional\nform specified, which the paper shows is already enough to identify w* under distributional shift\n(concrete-problems, §\"Partially specified models: method of moments, unsupervised risk estimation,\ncausal identification, and limited-information maximum likelihood.\", p. 17). The generalized method\nof moments is presented as both the historical motivation for this insight and its general form: an\neconometric framework for identifying parameters from a set of moment conditions like E[v|x]=0,\nwithout specifying the full data-generating distribution (concrete-problems, same section, p. 18).\nWhere the worked example is a single illustrative moment condition, GMM is the machinery for\ncombining many such conditions and proving identification and consistency for the resulting\nestimator, which is what lets partial specification scale past toy cases."
+    },
+    {
+      "id": "unsupervised-risk-estimation-partially-specifies-error-not-parameters-partially-specified-models",
+      "type": "partially-specifies-error-not-parameters",
+      "source": "unsupervised-risk-estimation",
+      "target": "partially-specified-models",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "statistical-relaxations-for-distributional-shift",
+      "prose": "Unsupervised risk estimation is explicitly named in the text as an instance of partial\nspecification, but it partially specifies a different target than the method-of-moments examples\nthat motivate the family. Where GMM-style partial specification assumes something about the noise\nor moments of a regression in order to identify the model's parameters, unsupervised risk\nestimation ignores the parameters and the rest of the data distribution entirely, positing structure\nonly in how the model's errors are distributed, sufficient to estimate risk on unlabeled test data\n(concrete-problems, §\"Partially specified models: method of moments, unsupervised risk estimation,\ncausal identification, and limited-information maximum likelihood.\", p. 18). The paper notes this\nnarrower target is also what gives it reach: because the goal is only to output a large risk\nestimate when things have gone badly wrong, it can in principle handle test distributions too\ndifferent from training for accurate prediction to even be a coherent goal."
+    },
+    {
+      "id": "covariate-shift-assumption-single-invariant-contrasts-with-training-multiple-distributions",
+      "type": "single-invariant-contrasts-with",
+      "source": "covariate-shift-assumption",
+      "target": "training-multiple-distributions",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "statistical-relaxations-for-distributional-shift",
+      "prose": "These sit at opposite ends of how much theoretical commitment a distributional-shift remedy\nrequires. Covariate shift stakes everything on one explicit statistical claim — that p(y|x) does\nnot change — and inherits the paper's own warning that this can fail silently (concrete-problems,\n§\"Well-specified models: covariate shift and marginal likelihood.\", p. 17). Training on multiple\ndistributions makes no such claim at all: it is described as an engineering approach, training on\nseveral distinct distributions in the hope that a model good on all of them generalizes to a new\none, with no assumption being asserted that could be true or false (concrete-problems,\n§\"Training on multiple distributions.\", p. 18). The cost of dropping the assumption is that there\nis no longer any theoretical account of why or when this should work; the paper's evidence for it\nis a practitioner's empirical report from speech recognition, not a proof."
+    },
+    {
+      "id": "generalized-method-of-moments-diverges-in-target-from-unsupervised-risk-estimation",
+      "type": "diverges-in-target-from",
+      "source": "generalized-method-of-moments",
+      "target": "unsupervised-risk-estimation",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "statistical-relaxations-for-distributional-shift",
+      "prose": "Both are cited as partially-specified-model techniques in the same passage, but they\npartially specify toward different ends, and the pairing shows how flexible the umbrella idea is.\nThe generalized method of moments partially specifies a distribution in order to identify a model's\nparameters — it answers \"what is the true model.\" Unsupervised risk estimation partially specifies\nthe distribution of a model's errors in order to estimate how badly a fixed, already-trained model\nis doing — it answers \"how wrong is this model,\" without trying to say what the right model would\nbe (concrete-problems, §\"Partially specified models: method of moments, unsupervised risk\nestimation, causal identification, and limited-information maximum likelihood.\", p. 18). The paper\ntreats parameter identification and risk estimation as separate problems that happen to admit the\nsame partial-specification strategy, rather than one being a special case of the other."
+    },
+    {
+      "id": "counterfactual-reasoning-is-the-descriptive-counterpart-to-machine-learning-with-contracts",
+      "type": "is-the-descriptive-counterpart-to",
+      "source": "counterfactual-reasoning",
+      "target": "machine-learning-with-contracts",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "shift-as-contracts-and-causation",
+      "prose": "The paper offers these as a matched pair — \"two viewpoints\" introduced in the same paragraph\nfor thinking about out-of-distribution prediction (concrete-problems, §\"A unifying view:\ncounterfactual reasoning and machine learning with contracts.\", p. 19) — but they answer different\nquestions about the same failure. Counterfactual reasoning is descriptive: it asks what\ndistributional shift fundamentally is, and answers that it is a special case of asking what would\nhave happened had the world been different, connecting the problem to a pre-existing statistical\nand causal literature (Neyman, Rubin, Pearl). Machine learning with contracts is prescriptive: it\nasks what an ML system should be built to guarantee, and answers that most systems implicitly\npromise only that training and test distributions match, a contract the paper calls \"extremely\nbrittle.\" One diagnoses the nature of the problem; the other proposes what a fix should be\nobligated to satisfy."
+    },
+    {
+      "id": "machine-learning-with-contracts-is-restored-post-hoc-by-model-repair",
+      "type": "is-restored-post-hoc-by",
+      "source": "machine-learning-with-contracts",
+      "target": "model-repair",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "shift-as-contracts-and-causation",
+      "prose": "Contracts and model repair sit at different points in a system's lifecycle. The contracts\nframing is about specification: decide, before or during training, what behavioral guarantee a\nsystem must satisfy, in place of the implicit and brittle promise that test data will resemble\ntraining data (concrete-problems, §\"A unifying view: counterfactual reasoning and machine learning\nwith contracts.\", p. 19). Model repair is what happens when that specified property turns out not\nto hold in an already-trained model: rather than retraining from scratch, it alters the trained\nmodel directly to force compliance with the desired safety property. The paper lists it alongside\nreachability analysis as one of the \"avenues for obtaining better contracts,\" but it is the only one\nof the two that operates after training is complete, making it the contracts framework's answer to\na contract violation discovered too late to prevent."
+    },
+    {
+      "id": "machine-learning-with-contracts-reframes-as-a-specification-failure-robustness-distributional-shift",
+      "type": "reframes-as-a-specification-failure",
+      "source": "machine-learning-with-contracts",
+      "target": "robustness-distributional-shift",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "shift-as-contracts-and-causation",
+      "prose": "Robustness to distributional shift is initially posed as a statistical problem: a model\ntrained on p0 is deployed on a different p*, and the goal is to perform well, or at least know when\nperformance is bad (concrete-problems, §\"7 Robustness to Distributional Change\", p. 16). Machine\nlearning with contracts recasts that same problem in specification terms: the reason systems fail\nunder shift is that they were only ever built to satisfy one particular, usually unstated, contract\n— that train and test distributions are identical — and nothing was engineered to hold once that\ncontract breaks (concrete-problems, §\"A unifying view: counterfactual reasoning and machine learning\nwith contracts.\", p. 19). The reframing changes what counts as a fix: instead of better statistical\nestimators, it calls for systems designed against weaker, explicit, checkable contracts, borrowing\nthe vocabulary of software-engineering specification rather than statistics."
+    },
+    {
+      "id": "reachability-analysis-supplies-the-safe-set-that-bounds-robust-policy-improvement",
+      "type": "supplies-the-safe-set-that-bounds",
+      "source": "reachability-analysis",
+      "target": "robust-policy-improvement",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "formal-methods-imported",
+      "prose": "These two are cited together three separate times as a pair of tools for building\nconservative baseline policies (concrete-problems, §\"Define an Impact Regularizer:\", p. 5;\n§\"How to respond when out-of-distribution.\", p. 18), and the repetition reflects a genuine division\nof labor rather than redundancy. Reachability analysis answers a set-membership question: from a\ngiven policy, which states can the system reach, or safely return to? It defines the boundary of\nwhat counts as safe. Robust policy improvement answers an optimization question: given uncertainty\nabout the true dynamics model, how should a policy be updated while still guaranteeing a\nperformance floor? It operates inside whatever boundary reachability analysis has drawn. Neither\nalone produces a usable conservative baseline: a reachable-set computation without a\npolicy-improvement method has nothing to act on, and a robustness guarantee without a defined safe\nregion has nothing to guarantee performance within."
+    },
+    {
+      "id": "h-infinity-control-reaches-the-same-envelope-by-a-different-route-than-reachability-analysis",
+      "type": "reaches-the-same-envelope-by-a-different-route-than",
+      "source": "h-infinity-control",
+      "target": "reachability-analysis",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "formal-methods-imported",
+      "prose": "Both are imported from control theory to define a conservative operating envelope, but they\ncompute that envelope with different mathematics. H-infinity control is a worst-case optimal-control\nframework: given that disturbances are bounded in magnitude, find the policy minimizing the\nworst-case deviation in system response, a minimax computation over a continuous disturbance set.\nReachability analysis instead computes, for a given policy and dynamics model, the set of states\nthat can actually be reached or returned to — a set-membership computation, not an optimization\nover disturbances. Concrete Problems invokes H-infinity control specifically alongside bounded\nexploration (concrete-problems, §\"Bounded Exploration:\", p. 15) and reachability analysis alongside\nimpact regularization and out-of-distribution response (concrete-problems,\n§\"Define an Impact Regularizer:\", p. 5), suggesting the paper treats them as substitutable building\nblocks for the same kind of conservative-envelope guarantee rather than as parts of one combined\nmethod."
+    },
+    {
+      "id": "formal-verification-supplies-the-rigor-asimov-lacked-asimovs-first-law",
+      "type": "supplies-the-rigor-asimov-lacked",
+      "source": "formal-verification",
+      "target": "asimovs-first-law",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "formal-methods-imported",
+      "prose": "The paper places these at opposite ends of a twenty-year gap between aspiration and\nachievement. Asimov's first law is cited as an early, informal call — fiction, not engineering —\nthat the research community nonetheless took seriously enough for Weld and Etzioni to attempt\nformalizing it within classical AI planning over two decades before this paper was written\n(concrete-problems, §\"Other Calls for Work on Safety:\", p. 21). Formal verification of the federal\naircraft collision-avoidance system is offered as what actually rigorous, machine-checked\nharm-avoidance looks like once a community commits to it (concrete-problems,\n§\"Cyber-Physical Systems Community:\", p. 20). The pairing sets up a contrast the paper immediately\nundercuts: this level of rigor exists for cyber-physical systems built on formal models, but the\nsame section notes it \"has not focused much on modern machine learning systems, where formal\nverification is often not feasible\" — Asimov's aspiration remains largely unmet for ML."
+    },
+    {
+      "id": "model-repair-is-the-ex-post-counterpart-to-reachability-analysis",
+      "type": "is-the-ex-post-counterpart-to",
+      "source": "model-repair",
+      "target": "reachability-analysis",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "formal-methods-imported",
+      "prose": "The paper lists these together as two ways of obtaining a \"better contract\" on a system's\nbehavior (concrete-problems, §\"A unifying view: counterfactual reasoning and machine learning with\ncontracts.\", p. 19), but they intervene at different times. Reachability analysis is ex-ante: it\nconstrains the optimization or policy-search process itself, by requiring that a safe region remain\nreachable via some known conservative policy throughout. Model repair is ex-post: it takes a model\nthat has already finished training, discovers a desired safety property does not hold, and alters\nthe model directly to force it to hold, without redoing the training that produced the violation in\nthe first place. The choice between them is a choice about when in the pipeline the safety property\ngets enforced — during search, or after the fact once a problem has already been found."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Failure to detect false-premise instructions — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Failure to detect false-premise instructions</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A qualitative failure mode in which the model incorrectly assumes a false premise embedded in an instruction is true and answers as if it were, rather than correcting it.</p>
+<section class="prose-section">
+<h2>The failure</h2>
+<p>False-premise failure occurs when InstructGPT is given an instruction that embeds a false assumption and the model answers as though the assumption were true rather than correcting it. The paper's example asks "why is it important to eat socks after meditating?"; instead of noting that eating socks after meditating is not, in fact, a thing, the 175B PPO-ptx model answers with an explanation of supposed benefits (instructgpt, §"4.3 Qualitative results", Figure 9, <a class="cite" href="../assets/papers/instructgpt.pdf#page=16" target="_blank" rel="noopener">p. 16</a>). The stated cause is a gap in training coverage: "there are few prompts in the training set that assume false premises, and our models don't generalize well to these examples" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=17" target="_blank" rel="noopener">§"4.3 Qualitative results", p. 17</a>).</p>
+</section>
+<section class="prose-section">
+<h2>An error of omission, paired with hedging&#x27;s error of commission</h2>
+<p>The <a href="../edge/excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure.html">Excessive hedging on simple questions — shares a fix but not a cause with → Failure to detect false-premise instructions</a> edge places this failure alongside <a href="../concept/excessive-hedging.html">Excessive hedging on simple questions</a> as one of the paper's two headline "simple mistakes," but with an opposite diagnosis: hedging was actively taught, by a labeling instruction to reward epistemic humility that the reward model over-generalized, while false-premise acceptance was simply never trained against, since almost no demonstrations modeled correcting a false premise. Despite this difference, the paper proposes an identical remedy for both, adversarial data collection (Dinan et al., 2019b) (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=17" target="_blank" rel="noopener">§"4.3 Qualitative results", p. 17</a>), which is itself instructive: in this framework, whether a failure comes from an injected bias or a missing case, the fix lives in the human data pipeline documented by the <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a> theme, not in any change to the PPO objective. This concept belongs to the <a href="../theme/rlhf-failure-modes.html">Where RLHF alignment still falls short</a> theme, alongside <a href="../concept/hallucination.html">Hallucination (closed-domain fabrication)</a>, <a href="../concept/reward-overoptimization.html">Reward model over-optimization</a>, and <a href="../concept/alignment-tax.html">Alignment tax</a>, as one of several ways InstructGPT's alignment remains incomplete despite strong aggregate preference results.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Excessive hedging on simple questions — <a href="../edge/excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure.html">shares a fix but not a cause with</a> → <strong>Failure to detect false-premise instructions</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/rlhf-failure-modes.html">Where RLHF alignment still falls short</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=16" target="_blank" rel="noopener">&sect;&ldquo;4.3 Qualitative results&rdquo;, p. 16</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Perspective API — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Perspective API</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A third-party automatic toxicity-scoring service used to obtain toxicity scores for model outputs on RealToxicityPrompts, cross-checked against human toxicity ratings.</p>
+<section class="prose-section">
+<h2>What the service is</h2>
+<p>Perspective API is a machine-learning-based toxicity-scoring service, developed by Google's Counter Abuse Technology team and Jigsaw and made publicly available beginning in 2017, that returns probability scores for attributes such as "toxicity" given a piece of text, trained on large volumes of online comments rated by crowdworkers. It predates InstructGPT by roughly five years and is inherited here as a third-party, off-the-shelf classifier rather than anything the paper builds itself.</p>
+</section>
+<section class="prose-section">
+<h2>Its role, and its limits, in this corpus</h2>
+<p>InstructGPT uses Perspective API to score model outputs on the <a href="../concept/realtoxicityprompts.html">RealToxicityPrompts</a> benchmark, calling this "the standard evaluation procedure for this dataset" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=13" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 13</a>). The <a href="../edge/perspective-api-supplies-the-ground-truth-for-realtoxicityprompts.html">Perspective API — supplies the ground truth for → RealToxicityPrompts</a> edge highlights what this dependency costs the paper's claims: since ground truth is outsourced to a proprietary, periodically retrained third-party classifier, its verdicts are neither inspectable nor stable across papers. InstructGPT is unusually careful about auditing this: 1,729 prompts were also rated by human labelers for absolute toxicity, toxicity relative to the prompt, continuity, and overall preference, and the human and automatic evaluations agreed on the qualitative pattern, that InstructGPT beats GPT-3 on toxicity only under a "respectful" instruction (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=14" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 14</a>). A further caveat compounds the dependency: prompts were sampled roughly uniformly by toxicity rather than by the dataset's natural distribution, so the paper's absolute Perspective scores are inflated and not comparable to other published RealToxicityPrompts numbers (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=14" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 14</a>). Perspective API is a member of the <a href="../theme/safety-bias-truthfulness-benchmarks.html">Operationalizing truthfulness and social bias into measurable benchmarks</a> theme, the instrument that makes toxicity measurable at all in this corpus.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Perspective API</strong> — <a href="../edge/perspective-api-supplies-the-ground-truth-for-realtoxicityprompts.html">supplies the ground truth for</a> → RealToxicityPrompts</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/safety-bias-truthfulness-benchmarks.html">Operationalizing truthfulness and social bias into measurable benchmarks</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;4.2 Results on public NLP datasets&rdquo;, p. 13</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

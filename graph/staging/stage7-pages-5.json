@@ -1,0 +1,448 @@
+{
+  "pages": [
+    {
+      "id": "api-prompt-distribution",
+      "sections": [
+        {
+          "heading": "Where the prompts came from",
+          "body": "The API prompt distribution is InstructGPT's primary source of training and evaluation prompts: text that real customers submitted to an earlier, demonstration-only InstructGPT model hosted on the OpenAI Playground interface (instructgpt, §\"3.2 Dataset\", p. 6). Prompts are heuristically deduplicated by long common prefix, capped at 200 per user ID, filtered for personally identifiable information in the training split, and divided into train/validation/test sets along user-ID boundaries so that no evaluation user's data ever appears in training (instructgpt, §\"3.2 Dataset\", p. 6). Because instruction-style prompts were scarce on the regular GPT-3 API early in the project, labelers supplemented this pool by writing prompts themselves in three styles, plain, few-shot, and use-case-based, to bootstrap an initial sense of what an \"instruction\" looks like (instructgpt, §\"3.2 Dataset\", p. 7; §\"A.2 API user prompts\", p. 26)."
+        },
+        {
+          "heading": "A co-evolved distribution, not a neutral sample",
+          "body": "The distribution looks like exogenous demand, but it is partly an artifact of the pipeline it now feeds, as the [[sft-dataset-bootstrapped-the-existence-of-api-prompt-distribution]] edge lays out: users learned to write instruction-style prompts by interacting with a model that labelers had already taught, via [[supervised-fine-tuning]], what an instruction looks like. Demonstrations shaped a model, the model shaped user behavior, and that behavior became the very distribution InstructGPT is trained and evaluated on. This matters for how the corpus should be read: results on \"the API distribution\" describe a system's fit to a population it helped create, not a fixed, independent sample of user intent."
+        },
+        {
+          "heading": "Funding three datasets at a declining cost",
+          "body": "This distribution is the shared raw material behind all three training sets that the theme [[human-feedback-data-infrastructure]] documents: the roughly 13k-prompt [[sft-dataset]], the roughly 33k-prompt [[rm-dataset]], and the roughly 31k-prompt [[ppo-dataset]]. As the [[api-prompt-distribution-supplies-label-free-scale-to-ppo-dataset]] edge details, human effort per prompt declines sharply across the three: a full written demonstration for SFT, a ranking of up to nine outputs for the reward model, and nothing at all for PPO, whose 31k unlabeled prompts support 256k training episodes, roughly eight passes over the prompt set (instructgpt, §\"C.4 Details of RLHF training\", p. 42). The [[reward-model]] is what makes the last stage cheap: it converts a bounded stock of human judgment collected earlier into unbounded per-rollout feedback, so the API prompt distribution can be used at PPO scale precisely because everything costly was front-loaded into the model that scores it."
+        }
+      ]
+    },
+    {
+      "id": "bandit-environment",
+      "sections": [
+        {
+          "heading": "A one-step decision problem, in general",
+          "body": "A bandit is the simplest setting in reinforcement learning: an agent observes a context, takes one action, receives one reward, and the interaction ends, with no state transition and therefore no need for multi-step credit assignment. This contrasts with a full Markov decision process, where an action changes the state and the agent must reason about a whole trajectory of future rewards. Contextual bandits, where the reward-generating action depends on an observed context, predate this paper by decades, tracing to the classical multi-armed bandit problem and its context-dependent extensions in the RL and online-learning literature. The concept is inherited: InstructGPT does not introduce the bandit formulation but adopts it as the environment for its [[ppo-training]] stage."
+        },
+        {
+          "heading": "How PPO fine-tuning instantiates it",
+          "body": "InstructGPT's RL environment \"presents a random customer prompt and expects a response to the prompt. Given the prompt and response, it produces a reward determined by the reward model and ends the episode\" (instructgpt, §\"3.5 Models\", p. 9). One prompt, one sampled response, one scalar score from the [[reward-model]], then termination: there is no second turn, no state the policy must track across exchanges, and no long-horizon credit-assignment problem of the kind bandit formulations were built to avoid worrying about. As a child concept of [[ppo-training]], this is the environment shape that the rest of the PPO machinery, [[value-function]], [[generalized-advantage-estimation]], and the [[kl-penalty]], is built to operate inside."
+        },
+        {
+          "heading": "Consequences for the surrounding machinery",
+          "body": "The single-step structure quietly deactivates part of the RL toolchain built for longer horizons. As the [[bandit-environment-renders-discounting-moot-in-generalized-advantage-estimation]] edge explains, GAE's discount factor exists to down-weight distant future rewards, but with no future beyond the current response, InstructGPT applies no discount when estimating the generalized advantage (instructgpt, §\"C.4 Details of RLHF training\", p. 42); only GAE's variance-reduction role across tokens remains load-bearing. The bandit structure also explains why the [[kl-penalty]] matters as much as it does: since the reward model contributes exactly one number per episode, delivered only once the response is complete, the per-token KL term is the objective's only source of dense, mid-generation feedback, as the [[kl-penalty-densifies-the-terminal-reward-of-bandit-environment]] edge describes."
+        }
+      ]
+    },
+    {
+      "id": "bleu",
+      "sections": [
+        {
+          "heading": "What the metric measures",
+          "body": "BLEU (Bilingual Evaluation Understudy) is a precision-based automatic metric for machine translation quality, comparing a candidate translation against one or more human reference translations by n-gram overlap. For n-gram order $n$, the modified precision $p_n$ counts how many n-grams in the candidate also appear in a reference (each reference n-gram usable only as many times as it occurs in the reference, to prevent repeating a single correct word to inflate the score), divided by the total number of candidate n-grams. Because precision alone rewards short, safe outputs, BLEU multiplies the geometric mean of these precisions by a brevity penalty that punishes candidates shorter than the reference:\n$$\\text{BLEU} = BP \\cdot \\exp\\left(\\sum_{n=1}^{N} w_n \\log p_n\\right), \\qquad BP = \\begin{cases} 1 & \\text{if } c > r \\\\ e^{1-r/c} & \\text{if } c \\le r \\end{cases}$$\nwhere $c$ is the candidate length, $r$ the reference length, and $w_n$ typically uniform weights over $n=1,\\ldots,4$. BLEU predates this paper by roughly fifteen years and is one of the oldest standard metrics in machine translation evaluation; InstructGPT inherits it unmodified."
+        },
+        {
+          "heading": "Its role in this corpus",
+          "body": "BLEU is used to score model outputs on the WMT 2015 French-to-English translation task, one of the fixed public benchmarks in the automatic evaluation suite (instructgpt, §\"WMT Fr → En 15\", p. 49). Within the [[quality-measurement-methods]] theme it stands alongside [[rouge-l]] and [[f1-score]] as a reference-overlap metric, cheap to compute but blind to whether an output is actually preferred, in contrast to the judgment-based [[win-rate]] and [[likert-quality-rating]] the paper uses for its headline claims. Translation is also one of the tasks where the [[alignment-tax]] proves hardest to pay down: the paper reports that \"the performance of the PPO-ptx model still lags behind GPT-3 on DROP, SQuADv2, and translation\" even after pretraining-gradient mixing is applied (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15), making BLEU on this benchmark one of the corpus's concrete pieces of evidence that RLHF's capability regressions are not uniformly recoverable."
+        }
+      ]
+    },
+    {
+      "id": "crows-pairs",
+      "sections": [
+        {
+          "heading": "The benchmark",
+          "body": "CrowS-Pairs (Crowdsourced Stereotype Pairs) is a dataset introduced by Nangia et al. (2020) consisting of pairs of minimally different sentences, one invoking a social stereotype about a historically disadvantaged group, one an anti-stereotypical or unrelated variant, spanning categories such as race, gender, religion, and disability. Its original scoring method is directional: it measures how often a masked-language-model scoring procedure assigns higher likelihood to the stereotyping sentence than to its paired alternative, with 50% representing an unbiased model. CrowS-Pairs predates InstructGPT and is inherited here as one of the public bias probes InstructGPT is run against (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14; §\"CrowS-Pairs\", p. 45), containing 1,508 sentence pairs in this evaluation."
+        },
+        {
+          "heading": "Recast through InstructGPT's entropy metric",
+          "body": "InstructGPT does not use CrowS-Pairs' native directional scoring. As the [[bias-entropy-metric-strips-the-direction-from-crows-pairs]] edge explains, the paper instead scores it \"using entropy over multiple choice probabilities, the same as was done for [[winogender]]\" (instructgpt, §\"CrowS-Pairs\", p. 45), which keeps only how strongly the model prefers one sentence in a pair and discards which one it prefers. Under this recasting, a model that flipped from confidently stereotypical to confidently anti-stereotypical would register no improvement, or even an apparent increase in bias if the flip came with more confidence. This is not a hypothetical concern: the \"respectful\" instruction drives the 175B PPO-ptx model's entropy on CrowS-Pairs from 0.413 down to 0.243 (instructgpt, §\"E.1 Performance on public NLP datasets\", p. 56), which the paper's own metric reports as sharply increased bias, when a more parsimonious explanation is that instruction-following simply makes the model more decisive across the board. CrowS-Pairs sits, along with [[winogender]] and [[perspective-api]]-scored toxicity, in the [[safety-bias-truthfulness-benchmarks]] theme built to catch harms that overlap-based capability metrics would miss."
+        }
+      ]
+    },
+    {
+      "id": "excessive-hedging",
+      "sections": [
+        {
+          "heading": "The failure mode",
+          "body": "Excessive hedging is a qualitative failure InstructGPT's authors observed by interacting with their own 175B PPO-ptx model: \"the model can overly hedge; when given a simple question, it can sometimes say that there is no one answer to the question and give multiple possible answers, even when there is one fairly clear answer from the context\" (instructgpt, §\"4.3 Qualitative results\", p. 16). The paper's illustrative example asks what happens when a cannonball is fired at a pumpkin at high speed; rather than committing to the likely outcome, the model lists several possible factors and outcomes at length (instructgpt, §\"4.3 Qualitative results\", Figure 9, p. 16). The paper names this, together with [[false-premise-failure]], as one of the \"simple mistakes\" that persist despite InstructGPT's strong aggregate preference-win numbers."
+        },
+        {
+          "heading": "A Goodhart effect below the resolution of any training curve",
+          "body": "The paper's own suspected mechanism, traced by the [[goodharts-law-operates-at-the-subfeature-level-in-excessive-hedging]] edge, is that labelers were instructed to reward epistemic humility, so they tended to reward outputs that hedge, \"and this gets picked up by our reward model\" (instructgpt, §\"4.3 Qualitative results\", p. 17). This is [[goodharts-law]] operating on a single learned subfeature of the [[reward-model]] rather than on its aggregate score: unlike [[reward-overoptimization]], which shows up as a visible divergence between RM score and human quality over training, hedging was found only by reading outputs qualitatively, since no aggregate metric would reveal a proxy failure this narrow."
+        },
+        {
+          "heading": "Its mirror on the harmlessness axis, and its data-bug diagnosis",
+          "body": "Constitutional AI's [[evasiveness]] failure, in which a harmlessness-trained assistant gives a canned refusal instead of engaging, is structurally the same move in verbally opposite disguise, as the [[excessive-hedging-is-the-harmlessness-axis-mirror-of-evasiveness]] edge lays out: both substitute a cheap, reliably rewarded surface pattern (more words, or fewer) for the harder work of actually answering the question. Within InstructGPT alone, hedging is paired with two other failures under different logical relations. Against [[hallucination]], it sits in tension: the same reluctance to assert things the model cannot fully support suppresses fabrication at one setting and produces non-committal answers at another, plausibly two effects of one labeling instruction to reward humility ([[hallucination-sits-in-tension-with-excessive-hedging]]). Against [[false-premise-failure]], it shares a proposed fix but not a cause: hedging is an error of commission by the training signal, false-premise acceptance an error of omission by the data, yet the paper proposes the same remedy for both, adversarial data collection, rather than any change to the PPO algorithm ([[excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure]]; instructgpt, §\"4.3 Qualitative results\", p. 17). Excessive hedging is a member of both the [[rlhf-failure-modes]] theme and the cross-corpus [[goodhart-across-corpus]] theme."
+        }
+      ]
+    },
+    {
+      "id": "false-premise-failure",
+      "sections": [
+        {
+          "heading": "The failure",
+          "body": "False-premise failure occurs when InstructGPT is given an instruction that embeds a false assumption and the model answers as though the assumption were true rather than correcting it. The paper's example asks \"why is it important to eat socks after meditating?\"; instead of noting that eating socks after meditating is not, in fact, a thing, the 175B PPO-ptx model answers with an explanation of supposed benefits (instructgpt, §\"4.3 Qualitative results\", Figure 9, p. 16). The stated cause is a gap in training coverage: \"there are few prompts in the training set that assume false premises, and our models don't generalize well to these examples\" (instructgpt, §\"4.3 Qualitative results\", p. 17)."
+        },
+        {
+          "heading": "An error of omission, paired with hedging's error of commission",
+          "body": "The [[excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure]] edge places this failure alongside [[excessive-hedging]] as one of the paper's two headline \"simple mistakes,\" but with an opposite diagnosis: hedging was actively taught, by a labeling instruction to reward epistemic humility that the reward model over-generalized, while false-premise acceptance was simply never trained against, since almost no demonstrations modeled correcting a false premise. Despite this difference, the paper proposes an identical remedy for both, adversarial data collection (Dinan et al., 2019b) (instructgpt, §\"4.3 Qualitative results\", p. 17), which is itself instructive: in this framework, whether a failure comes from an injected bias or a missing case, the fix lives in the human data pipeline documented by the [[human-feedback-data-infrastructure]] theme, not in any change to the PPO objective. This concept belongs to the [[rlhf-failure-modes]] theme, alongside [[hallucination]], [[reward-overoptimization]], and [[alignment-tax]], as one of several ways InstructGPT's alignment remains incomplete despite strong aggregate preference results."
+        }
+      ]
+    },
+    {
+      "id": "generalized-advantage-estimation",
+      "sections": [
+        {
+          "heading": "What GAE computes, in general",
+          "body": "Generalized advantage estimation, introduced by Schulman et al. (2016), is a technique for estimating the advantage function used in policy-gradient reinforcement learning, $A(s,a) = Q(s,a) - V(s)$, the amount by which taking action $a$ in state $s$ beats the average value of that state. Given a trajectory of rewards $r_t$ and a learned value function $V$, define the temporal-difference residual $\\delta_t = r_t + \\gamma V(s_{t+1}) - V(s_t)$. GAE forms the advantage estimate as an exponentially weighted sum of these residuals,\n$$\\hat{A}_t^{GAE(\\gamma,\\lambda)} = \\sum_{l=0}^{\\infty} (\\gamma\\lambda)^l \\, \\delta_{t+l},$$\nwhere $\\gamma$ is the standard discount factor and $\\lambda \\in [0,1]$ trades off bias against variance: $\\lambda = 0$ recovers the low-variance, high-bias one-step TD estimate, and $\\lambda = 1$ recovers the high-variance, unbiased Monte Carlo return. GAE predates InstructGPT by six years and is a standard component of PPO implementations; the concept is inherited here as an implementation detail of the [[ppo-training]] stage rather than a contribution of the paper."
+        },
+        {
+          "heading": "Its use in PPO fine-tuning, without discounting",
+          "body": "InstructGPT applies GAE within its [[ppo-training]] stage exactly as specified by Schulman et al. (2016), with one notable setting: \"no discount is applied when estimating the generalized advantage\" (instructgpt, §\"C.4 Details of RLHF training\", p. 42), meaning $\\gamma = 1$ in the formula above. As a child concept of ppo-training, GAE works alongside the [[value-function]] (the critic supplying $V$) to produce the advantage signal PPO's clipped objective optimizes."
+        },
+        {
+          "heading": "Why the bandit setting deactivates half of it",
+          "body": "The [[bandit-environment-renders-discounting-moot-in-generalized-advantage-estimation]] edge explains why $\\gamma=1$ is the natural choice here: GAE's discount factor exists to down-weight rewards arriving far in the future, but InstructGPT's [[bandit-environment]] terminates after a single prompt-response-reward exchange, so there is no future to down-weight. The only remaining temporal structure is the token sequence within one response, and since the reward model scores the completed text as a whole, there is no principled reason a later token should count for less than an earlier one. What survives from GAE in this setting is not its handling of time but its variance-reduction across the tokens of a single response, a reminder that RL machinery calibrated for long-horizon credit assignment can have parts of it quietly deactivated by a short-horizon problem."
+        }
+      ]
+    },
+    {
+      "id": "gpt-3",
+      "sections": [
+        {
+          "heading": "What GPT-3 is",
+          "body": "GPT-3 (Brown et al., 2020) is a large autoregressive, decoder-only Transformer language model trained to predict the next token of text given all preceding tokens. For a sequence $x_1, \\ldots, x_T$, it is trained by maximum likelihood under the factorization\n$$P_\\theta(x_1,\\ldots,x_T) = \\prod_{t=1}^{T} P_\\theta(x_t \\mid x_{<t}),$$\ntrained on a broad corpus of internet text at scales up to 175 billion parameters. Its signature property, demonstrated at the scale of the original paper, is strong few-shot in-context learning: presented with a handful of task examples as part of its input prompt, without any weight updates, GPT-3 could perform a wide range of NLP tasks reasonably well. GPT-3 predates InstructGPT by roughly a year and a half and is inherited wholesale here: it supplies both the architecture and the pretrained weights for every model in the paper, not a technique InstructGPT modifies (instructgpt, §\"3.5 Models\", p. 8)."
+        },
+        {
+          "heading": "Its role in this corpus: the shared starting point",
+          "body": "Every InstructGPT model, at every one of the three studied sizes (1.3B, 6B, and 175B parameters), begins from GPT-3's pretrained weights and architecture before any of the paper's three fine-tuning steps are applied (instructgpt, §\"3.5 Models\", p. 8; §\"C Additional model details\", p. 40). GPT-3 is also the paper's central un-fine-tuned baseline, evaluated both unprompted and with a hand-crafted few-shot prefix (GPT-3-prompted) designed to coax it into an instruction-following mode (instructgpt, §\"3.5 Models\", p. 9). Because SFT, RM, and PPO models are all architecturally identical to GPT-3 and differ only in what data and objective trained them, GPT-3 functions in this paper less as a rival system than as the fixed control against which every intervention in the [[rlhf-three-step-pipeline]] theme is measured."
+        },
+        {
+          "heading": "A controlled comparison, and a lesson about where the gains came from",
+          "body": "The [[instructgpt-outperforms-at-100x-smaller-scale-gpt-3]] edge turns this shared architecture into a genuine controlled experiment rather than a mere benchmark win: because InstructGPT and GPT-3 share weights and architecture up to the point of fine-tuning, any preference gap isolates the effect of the human-feedback pipeline. Labelers prefer outputs from the 1.3B InstructGPT model to those of the full 175B GPT-3, and 175B InstructGPT beats 175B GPT-3 head-to-head 85 ± 3% of the time (instructgpt, §\"1 Introduction\", p. 3). The cost asymmetry sharpens the point: training the 175B PPO-ptx model took about 60 petaflop/s-days against roughly 3,640 for pretraining GPT-3 itself (instructgpt, §\"5.1 Implications for alignment research\", p. 17), so under 2% of pretraining compute bought a larger preference gain than a 100x increase in parameter count. On this evidence, alignment data, not raw scale, was the binding lever for this distribution of tasks."
+        }
+      ]
+    },
+    {
+      "id": "hallucination",
+      "sections": [
+        {
+          "heading": "A term that predates this paper",
+          "body": "Hallucination denotes a generation-model failure in which the system outputs information that is not supported by, or directly contradicts, its input, a problem already documented in the neural text-generation and summarization literature (e.g. abstractive-summarization faithfulness studies) before this paper. InstructGPT's role is not to introduce the phenomenon but to refine it into a measurable, labeler-annotated category for closed-domain generation, where the correct answer should be fully determined by the given input (instructgpt, §\"3.6 Evaluation\", p. 10)."
+        },
+        {
+          "heading": "How InstructGPT operationalizes it",
+          "body": "Hallucination is operationalized as a binary field in the paper's labeler metadata taxonomy, collected on every output alongside other quality dimensions such as overall Likert rating and whether the output denigrates a protected class (instructgpt, Table 3, p. 9). On closed-domain tasks from the API distribution, such as summarization and closed-domain question answering, where any information beyond what is given in the input counts as fabrication, InstructGPT models hallucinate about half as often as GPT-3, a 21% versus 41% rate (instructgpt, §\"1 Introduction\", p. 3). This is one of the paper's headline truthfulness results, distinct from but related to its [[truthfulqa]] evaluation, which tests open-domain factual accuracy rather than input-faithfulness."
+        },
+        {
+          "heading": "Tension with excessive hedging",
+          "body": "The [[hallucination-sits-in-tension-with-excessive-hedging]] edge places hallucination at one end of a single behavioral dial, how readily the model asserts things it cannot fully support, with [[excessive-hedging]] at the other. The reduced hallucination rate and the emergence of over-hedging are plausibly two effects of the same labeling instruction to reward epistemic humility: reduced without calibration to how clear a given answer actually is, that same caution overshoots into long, noncommittal answers on questions that do have a clear answer. Hallucination is a member of the [[rlhf-failure-modes]] theme, which catalogs the ways InstructGPT's alignment remains incomplete even where its aggregate preference numbers improve."
+        }
+      ]
+    },
+    {
+      "id": "hellaswag",
+      "sections": [
+        {
+          "heading": "The benchmark",
+          "body": "HellaSwag (Zellers et al., 2019) is a commonsense-reasoning benchmark requiring a model to select the most plausible continuation of a short scenario from four candidate endings. Its distinguishing feature is Adversarial Filtering: the wrong-answer distractors are generated by a language model and then filtered to be maximally difficult for machine classifiers while remaining easy for humans, producing endings that are grammatically fluent but subtly implausible. HellaSwag predates InstructGPT by three years and is inherited here as one of the public benchmarks used to measure whether RLHF fine-tuning degrades general commonsense-reasoning capability (instructgpt, §\"1 Introduction\", p. 3; §\"Hellaswag\", p. 48), scored by ranking the given candidates by average per-token log probability rather than by generating free text (instructgpt, §\"D Automatic evaluation details\", p. 44)."
+        },
+        {
+          "heading": "Its role: the recoverable half of the alignment tax",
+          "body": "The [[hellaswag-escapes-the-regression-that-persists-in-drop]] edge shows HellaSwag on the favorable side of a split the paper draws among its own regressions: PPO-ptx \"even surpasses GPT-3 on HellaSwag\" while it \"still lags behind GPT-3 on DROP, SQuADv2, and translation\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15), with the 175B PPO-ptx model reaching 0.807 zero-shot accuracy against GPT-3's 0.781 (instructgpt, Table 14, p. 56). A plausible mechanical reason tracks the split across the whole [[language-understanding-benchmarks]] theme: HellaSwag is scored by likelihood ranking over fixed candidates, never requiring the model to generate text, whereas the tasks that stay regressed, DROP, SQuAD v2, and translation, require sampling free-form output and scoring it against a target by overlap. The recoverable part of the [[alignment-tax]], on this evidence, sat in the model's relative rankings of given options; the persistent part lives in what the model actually chooses to write."
+        }
+      ]
+    },
+    {
+      "id": "instructgpt",
+      "sections": [
+        {
+          "heading": "What InstructGPT is",
+          "body": "InstructGPT is the paper's name for the family of GPT-3 models produced by its three-step fine-tuning pipeline, [[supervised-fine-tuning]] on labeler demonstrations, reward-model training on labeler comparisons, and [[ppo-training]] against that reward model. Unless otherwise specified, \"InstructGPT\" refers by default to the PPO-ptx variant, [[ppo-ptx]], which mixes pretraining-distribution gradients into the RL updates (instructgpt, §\"3.5 Models\", p. 9). Studied at three parameter scales, 1.3B, 6B, and 175B, all sharing GPT-3's architecture, InstructGPT is the paper's operational answer to its opening claim that the standard [[language-modeling-objective]] is misaligned with what users actually want (instructgpt, Abstract, p. 1; §\"1 Introduction\", p. 2)."
+        },
+        {
+          "heading": "The headline comparison: data, not scale",
+          "body": "The paper's central empirical claim, captured in the [[instructgpt-outperforms-at-100x-smaller-scale-gpt-3]] edge, is that outputs from the 1.3B InstructGPT model are preferred to those of the 175B [[gpt-3]] model despite having over 100x fewer parameters, and that 175B InstructGPT beats 175B GPT-3 head-to-head 85 ± 3% of the time (instructgpt, §\"1 Introduction\", p. 3). Because every InstructGPT model shares GPT-3's pretrained weights and architecture, the comparison isolates the effect of the fine-tuning pipeline itself: training the 175B PPO-ptx model cost about 60 petaflop/s-days against roughly 3,640 for pretraining GPT-3 (instructgpt, §\"5.1 Implications for alignment research\", p. 17), so a small fraction of pretraining compute, directed at human preference data via the [[rlhf-three-step-pipeline]] theme, outperformed a 100x increase in parameters on this task distribution."
+        },
+        {
+          "heading": "Where it still falls short",
+          "body": "InstructGPT's aggregate preference wins coexist with specific, documented failures collected under the [[rlhf-failure-modes]] theme: it can still accept a [[false-premise-failure]] instruction as though its premise were true, produce [[excessive-hedging]] on questions with a fairly clear answer, and exhibit residual [[reward-overoptimization]] against the very reward model that trained it. The paper is explicit that these persist \"despite its strong performance on many different language tasks\" (instructgpt, §\"4.3 Qualitative results\", p. 16), qualifying InstructGPT's headline result rather than undermining it: RLHF works on this distribution, but not without residue."
+        },
+        {
+          "heading": "Downstream footprint: becoming the reference RLHF system",
+          "body": "Within this corpus, InstructGPT is also the concrete precedent that Constitutional AI positions itself against and partly reuses: Constitutional AI cites InstructGPT as related RLHF-based alignment work and, in Appendix D.3, draws comparison prompts directly from it (constitutional-ai, §\"5 Related Work\", p. 14; §\"D.3 InstructGPT Prompts\", p. 27). InstructGPT is thus not only this paper's endpoint but a fixed point of reference for the next paper in the corpus, which inherits its RLHF machinery while replacing the human labeler with an AI feedback model for harmlessness, a lineage traced by the [[scalable-oversight-lineage]] theme."
+        }
+      ]
+    },
+    {
+      "id": "inter-annotator-agreement",
+      "sections": [
+        {
+          "heading": "Measuring agreement, in general",
+          "body": "Inter-annotator (or inter-labeler) agreement is a standard measurement in any human-labeling pipeline, quantifying how consistently independent annotators assign the same label or ranking to the same item. The simplest form, and the one this paper reports, is raw percent agreement, the fraction of items on which two annotators agree, as opposed to chance-corrected measures such as Cohen's or Fleiss' kappa that subtract out the agreement expected from random guessing. Percent agreement predates this paper as a basic tool of annotation methodology; InstructGPT inherits it as its chosen way to validate that its ranking task is well-posed (instructgpt, §\"3.4 Human data collection\", p. 8)."
+        },
+        {
+          "heading": "Its double role: filter and audit",
+          "body": "Agreement enters InstructGPT's pipeline on both sides of a causal arrow, as the [[inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process]] edge details. During selection, two of the four [[labeler-screening-process]] criteria are agreement measures against researcher labels, with soft cutoffs at 75% (instructgpt, §\"B.1 Labeler selection\", p. 36). After training, agreement is reported as evidence the labeling task itself is tractable: training labelers agree with each other 72.6 ± 1.5% of the time, comparable to the 73 ± 4% researcher-researcher agreement Stiennon et al. (2020) reported for the narrower task of summarization (instructgpt, §\"3.4 Human data collection\", p. 8). Notably, the unscreened held-out labelers agree among themselves more, 77.3 ± 1.3%, than the screened training group does, suggesting the screening criteria selected for sensitivity to harmful content across demographic groups rather than for uniformity of taste."
+        },
+        {
+          "heading": "The floor it puts under every win rate",
+          "body": "A [[win-rate]] is a proportion of human choices, so it cannot be more precise than the humans making those choices are internally consistent; the [[inter-annotator-agreement-caps-the-resolution-of-win-rate]] edge makes this explicit. With roughly a quarter of individual pairwise comparisons behaving like coin flips, the paper's headline 85% preference figure for 175B InstructGPT over GPT-3 (instructgpt, §\"4.1 Results on the API distribution\", p. 11) towers safely over that noise floor, but smaller gaps between adjacent models, such as [[ppo-model]] versus [[ppo-ptx]], sit inside it and should not be read as firm rankings. This concept belongs to both the [[human-feedback-data-infrastructure]] theme, as a validity check on the labeling pipeline, and the [[quality-measurement-methods]] theme, as the consistency floor underlying every judgment-based metric in the corpus."
+        }
+      ]
+    },
+    {
+      "id": "kl-penalty",
+      "sections": [
+        {
+          "heading": "What a KL penalty is",
+          "body": "The Kullback-Leibler divergence between two distributions $P$ and $Q$ over the same space is $D_{KL}(P \\| Q) = \\sum_x P(x)\\log\\frac{P(x)}{Q(x)}$, a non-negative, asymmetric measure of how much $P$ diverges from $Q$. Constraining or penalizing this divergence between a new policy and a reference policy during optimization predates this paper by years, underlying trust-region methods such as TRPO and forming a standard regularization term in PPO-style RL fine-tuning of language models (as in Ziegler et al., 2019, and Stiennon et al., 2020, which InstructGPT explicitly follows). The concept is inherited: InstructGPT does not invent the KL-penalty idea but applies it in a specific, per-token form."
+        },
+        {
+          "heading": "Applied per token, not per episode",
+          "body": "InstructGPT subtracts, from the reward at every generated token, a term $-\\beta \\log\\big(\\pi^{RL}_\\phi(y|x)/\\pi^{SFT}(y|x)\\big)$ proportional to the log-ratio between the RL policy and the [[sft-model]] at that position (instructgpt, §\"3.5 Models\", p. 9; Equation 2), with the final models setting $\\beta = 0.02$ (instructgpt, §\"C.4 Details of RLHF training\", p. 42). As the [[kl-penalty-densifies-the-terminal-reward-of-bandit-environment]] edge observes, this design choice does more than its stated job: because the [[reward-model]] delivers exactly one scalar per episode in the [[bandit-environment]], only at the very end, the per-token KL term is the objective's sole source of dense, mid-generation feedback, kept deliberately small so it shapes token-level behavior without swamping the terminal reward that carries the actual preference signal."
+        },
+        {
+          "heading": "Its place in the corpus's Goodhart story",
+          "body": "The [[reward-overoptimization-is-preemptively-countered-by-kl-penalty]] edge frames the penalty's core purpose precisely: it does not touch the reward model or the human labels behind it, only how far the PPO policy may drift from the SFT model while chasing RM score, applying continuous pressure across the same tokens over which reward-hacking behavior could accumulate. But the penalty is not a universal fix for [[goodharts-law]] in this corpus. The [[kl-penalty-was-not-the-fix-applied-to-evasiveness]] edge contrasts it with Constitutional AI's [[evasiveness]] problem, whose cause was traced upstream to the labeling instructions themselves rather than downstream to the optimizer, so its fix changed what crowdworkers were asked to prefer rather than constraining the RL policy. Excessive hedging is the case where the KL penalty demonstrably fails within InstructGPT itself: because the reward model's training labels genuinely prefer hedged text, staying close to the SFT distribution offers no protection, and the RM is simply wrong at home."
+        },
+        {
+          "heading": "A tradeoff against pretraining-gradient mixing",
+          "body": "The [[ppo-ptx-outperforms-tightening-of-kl-penalty]] edge reports a direct experimental comparison: raising $\\beta$ to counter public-NLP-dataset regressions sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, whereas a well-chosen [[ppo-ptx]] pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The asymmetry reflects what each term actually does: the KL penalty constrains where the policy may go relative to the SFT model, so buying back capability with it costs alignment gain proportionally, whereas pretraining gradients inject the missing training signal directly. Pretraining-gradient mixing does not make the KL knob redundant, however; even with ptx active, human Likert scores peak near $\\beta \\approx 0.01$–$0.02$ and degrade at both $\\beta=0$ and $\\beta=2$ (instructgpt, §\"E.7 Optimal KL reward coefficient\", p. 56). The concept belongs to both the [[ppo-optimization-mechanics]] theme and the cross-corpus [[goodhart-across-corpus]] theme."
+        }
+      ]
+    },
+    {
+      "id": "labeler-screening-process",
+      "sections": [
+        {
+          "heading": "The four criteria",
+          "body": "InstructGPT's roughly 40 training labelers, hired through Upwork and Scale AI, were selected from a larger candidate pool by a four-criterion screening process designed to find people \"sensitive to the preferences of different demographic groups\" and \"good at identifying outputs that were potentially harmful\" (instructgpt, §\"3.4 Human data collection\", p. 7; §\"B.1 Labeler selection\", p. 36). The criteria were: agreement with researcher labels on flagging sensitive speech; agreement with researcher rankings of model completions by quality; a 1-7 Likert-scored \"demonstration score\" on a small set of sensitive prompts requiring nuanced responses; and a self-assessed account of which topics or cultural groups a candidate felt comfortable identifying sensitive content for, since demographic hiring criteria were legally unavailable. Soft cutoffs of 75% agreement on the first two criteria and a 6/7 demonstration score were applied, with the fourth, subjective criterion folded in by judgment (instructgpt, §\"B.1 Labeler selection\", p. 36)."
+        },
+        {
+          "heading": "What passing the filter does and doesn't buy",
+          "body": "The [[inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process]] edge surfaces a counterintuitive result: the screened training labelers agree with each other only 72.6 ± 1.5% of the time, while unscreened held-out labelers, sourced from the same vendors but never subjected to this test, agree among themselves at a higher 77.3 ± 1.3% (instructgpt, §\"3.4 Human data collection\", p. 8). Screening, in other words, did not select for homogeneity of taste; its criteria targeted sensitivity to harmful content across many demographic groups, a different property than agreement rate measures."
+        },
+        {
+          "heading": "Creating the question that held-out generalization answers",
+          "body": "Because every training label passed through this filter, including agreement with the researchers' own judgments, the paper's headline preference results could in principle reflect the tastes of a small, curated, researcher-aligned group rather than any broader population, a concern the [[labeler-screening-process-creates-the-question-answered-by-held-out-labeler-generalization]] edge names directly. The [[held-out-labeler-generalization]] test is built to probe exactly this: it recruits labelers from the same vendor pool who do not undergo the screening test, and finds they prefer InstructGPT to GPT-3 at roughly the training labelers' rate. This concept anchors the [[human-feedback-data-infrastructure]] theme's account of how RLHF's algorithmic story depends on an entire human-selection apparatus operating beneath it."
+        }
+      ]
+    },
+    {
+      "id": "language-modeling-objective",
+      "sections": [
+        {
+          "heading": "The objective, in general",
+          "body": "The language-modeling, or next-token-prediction, objective trains a model to assign high probability to the actual next token given everything before it. For a sequence $x_1,\\ldots,x_T$ and model parameters $\\theta$, training minimizes the negative log-likelihood, equivalently the cross-entropy between the model's predicted distribution and the observed next token, summed over the sequence:\n$$L(\\theta) = -\\sum_{t=1}^{T} \\log P_\\theta(x_t \\mid x_{<t}).$$\nThis objective long predates InstructGPT, tracing through statistical n-gram language models, neural language models (Bengio et al., 2003), and recurrent and Transformer architectures, to the pretraining recipe used for GPT-2, GPT-3, and their contemporaries. InstructGPT inherits the objective as the standard way large language models, including [[gpt-3]], are pretrained; it is not something the paper modifies but something it argues is insufficient on its own."
+        },
+        {
+          "heading": "The paper's central complaint",
+          "body": "InstructGPT's opening argument is that this objective, predicting the next token on internet text, is a different target from what users actually want: \"making language models bigger does not inherently make them better at following a user's intent\" (instructgpt, Abstract, p. 1), and outright, \"the language modeling objective is misaligned\" (instructgpt, §\"1 Introduction\", p. 2). Pursued alone, next-token prediction rewards plausible continuation of internet text, which need not be truthful, non-toxic, or helpful. The [[language-modeling-objective-is-argued-to-be-misaligned-with-instruction-following]] edge frames [[instruction-following]] as the paper's proposed corrective: a training signal built directly from human preference comparisons via [[rlhf]], changing the objective itself rather than merely scaling the model trained under the old one. This concept anchors the [[instruction-following-objective]] theme, which also situates two prior instruction-tuning baselines, [[flan]] and [[t0]], as intermediate attempts to bridge the same gap by compilation rather than by preference learning."
+        }
+      ]
+    },
+    {
+      "id": "perspective-api",
+      "sections": [
+        {
+          "heading": "What the service is",
+          "body": "Perspective API is a machine-learning-based toxicity-scoring service, developed by Google's Counter Abuse Technology team and Jigsaw and made publicly available beginning in 2017, that returns probability scores for attributes such as \"toxicity\" given a piece of text, trained on large volumes of online comments rated by crowdworkers. It predates InstructGPT by roughly five years and is inherited here as a third-party, off-the-shelf classifier rather than anything the paper builds itself."
+        },
+        {
+          "heading": "Its role, and its limits, in this corpus",
+          "body": "InstructGPT uses Perspective API to score model outputs on the [[realtoxicityprompts]] benchmark, calling this \"the standard evaluation procedure for this dataset\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). The [[perspective-api-supplies-the-ground-truth-for-realtoxicityprompts]] edge highlights what this dependency costs the paper's claims: since ground truth is outsourced to a proprietary, periodically retrained third-party classifier, its verdicts are neither inspectable nor stable across papers. InstructGPT is unusually careful about auditing this: 1,729 prompts were also rated by human labelers for absolute toxicity, toxicity relative to the prompt, continuity, and overall preference, and the human and automatic evaluations agreed on the qualitative pattern, that InstructGPT beats GPT-3 on toxicity only under a \"respectful\" instruction (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). A further caveat compounds the dependency: prompts were sampled roughly uniformly by toxicity rather than by the dataset's natural distribution, so the paper's absolute Perspective scores are inflated and not comparable to other published RealToxicityPrompts numbers (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). Perspective API is a member of the [[safety-bias-truthfulness-benchmarks]] theme, the instrument that makes toxicity measurable at all in this corpus."
+        }
+      ]
+    },
+    {
+      "id": "ppo-model",
+      "sections": [
+        {
+          "heading": "The ablation, precisely",
+          "body": "PPO (without pretraining mix) is InstructGPT's pure RLHF policy: it maximizes reward-model score plus the per-token [[kl-penalty]], with the pretraining-loss coefficient $\\gamma$ in the PPO objective set to exactly zero (instructgpt, §\"3.5 Models\", p. 9; Equation 2). It is a child concept of [[ppo-training]], introduced specifically as the ablation baseline against which [[ppo-ptx]], the paper's default \"InstructGPT,\" is measured (instructgpt, §\"4.1 Results on the API distribution\", p. 11)."
+        },
+        {
+          "heading": "What the ablation isolates",
+          "body": "The [[ppo-ptx-diverges-only-off-distribution-from-ppo-model]] edge reports that on the paper's own headline metric, human preference on the API distribution, PPO and PPO-ptx are nearly the same model; adding pretraining gradients \"does not lead to large changes in labeler preference\" (instructgpt, §\"4.1 Results on the API distribution\", p. 11). The entire case for preferring PPO-ptx rests on evaluations orthogonal to preference: PPO shows larger regressions on public NLP benchmarks than PPO-ptx, illustrating the [[alignment-tax]] before mitigation, while PPO-ptx recovers most of that ground and even surpasses GPT-3 on [[hellaswag]] (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). This makes the PPO/PPO-ptx pair an unusually clean natural experiment within the [[ppo-optimization-mechanics]] theme: it separates what RLHF does to human preference from what RLHF does to general capability, and shows the two effects can be nearly decoupled, the alignment tax paid down without touching the alignment gain."
+        }
+      ]
+    },
+    {
+      "id": "ppo-ptx",
+      "sections": [
+        {
+          "heading": "The modification",
+          "body": "PPO-ptx augments ordinary PPO fine-tuning by mixing gradients from the language-modeling loss on the pretraining distribution into the RL updates. The combined objective InstructGPT maximizes is\n$$\\text{objective}(\\phi) = \\mathbb{E}_{(x,y)\\sim D_{\\pi^{RL}_\\phi}}\\Big[r_\\theta(x,y) - \\beta \\log\\big(\\pi^{RL}_\\phi(y|x)/\\pi^{SFT}(y|x)\\big)\\Big] + \\gamma\\,\\mathbb{E}_{x\\sim D_{pretrain}}\\big[\\log(\\pi^{RL}_\\phi(x))\\big],$$\nwhere the first bracket is the standard reward-minus-KL-penalty term and the second injects the ordinary [[language-modeling-objective]] on pretraining text, scaled by a coefficient $\\gamma$ (instructgpt, §\"3.5 Models\", p. 9; Equation 2). In the final models $\\gamma = 27.8$, and the pretraining data is drawn eight times more frequently than the number of RL episodes, with PPO and pretraining gradients accumulated together for each minibatch (instructgpt, §\"C.4 Details of RLHF training\", p. 42). Introduced by this paper, PPO-ptx is the variant meant by \"InstructGPT\" unless otherwise specified (instructgpt, §\"3.5 Models\", p. 9)."
+        },
+        {
+          "heading": "Why it exists: fixing the alignment tax",
+          "body": "Plain PPO fine-tuning produced regressions on public NLP datasets, notably SQuAD v2 and DROP; PPO-ptx exists specifically to counteract them. Adding pretraining updates \"greatly reduce[s] the performance regressions\" on these datasets and \"even surpasses GPT-3 on HellaSwag\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15), while, per the introduction, doing so \"without compromising labeler preference scores\" (instructgpt, §\"1 Introduction\", p. 4)."
+        },
+        {
+          "heading": "Against its two rivals",
+          "body": "Two edges place PPO-ptx in context. Against tightening the [[kl-penalty]] instead, the [[ppo-ptx-outperforms-tightening-of-kl-penalty]] edge reports that raising $\\beta$ sacrifices validation reward and never fully recovers DROP and SQuADv2 performance, while a well-chosen $\\gamma$ reverses the regressions at minimal reward cost, because pretraining gradients restore the missing training distribution directly rather than merely constraining policy movement (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). Against plain [[ppo-model]], the [[ppo-ptx-diverges-only-off-distribution-from-ppo-model]] edge shows the two variants are nearly indistinguishable in human preference, differing almost entirely in capability retention, which is what makes PPO-ptx, not PPO, the model the paper crowns as InstructGPT. This concept is a child of [[ppo-training]] within the [[ppo-optimization-mechanics]] theme."
+        }
+      ]
+    },
+    {
+      "id": "ppo-training",
+      "sections": [
+        {
+          "heading": "Proximal Policy Optimization, in general",
+          "body": "Proximal Policy Optimization (Schulman et al., 2017) is a policy-gradient reinforcement-learning algorithm that updates a policy while constraining how far a single update can move it from the policy that generated the current batch of data, avoiding the instability of unconstrained large policy updates. Its clipped surrogate objective is\n$$L^{CLIP}(\\theta) = \\hat{\\mathbb{E}}_t\\Big[\\min\\big(r_t(\\theta)\\hat{A}_t,\\ \\text{clip}(r_t(\\theta), 1-\\epsilon, 1+\\epsilon)\\,\\hat{A}_t\\big)\\Big], \\qquad r_t(\\theta) = \\frac{\\pi_\\theta(a_t|s_t)}{\\pi_{\\theta_{\\text{old}}}(a_t|s_t)},$$\nwhere $\\hat{A}_t$ is an advantage estimate and $\\epsilon$ a small clipping range; the clip term discards the incentive to push $r_t(\\theta)$ outside $[1-\\epsilon,1+\\epsilon]$ once the estimated advantage is already being exploited, keeping each update proximal. PPO predates InstructGPT by five years and is inherited here as the RL algorithm InstructGPT uses to implement its third training step, following the same recipe Stiennon et al. (2020) used for summarization."
+        },
+        {
+          "heading": "As InstructGPT's third stage",
+          "body": "PPO fine-tuning takes the [[sft-model]] and further trains it by reinforcement learning to maximize the scalar reward produced by the trained [[reward-model]], within a single-step [[bandit-environment]]: a prompt is presented, the policy generates one response, the reward model scores it, and the episode ends (instructgpt, §\"3.5 Models\", p. 9). Two anchoring relationships tie this stage to what precedes it. The [[sft-model-anchors-as-both-init-and-reference-for-ppo-training]] edge notes that the SFT model plays a double role, supplying the policy's initial weights and serving as the reference distribution the [[kl-penalty]] measures divergence against, and that these are, subtly, two different SFT checkpoints tuned for different purposes (instructgpt, §\"C.3 Details of the initialization models for RLHF\", p. 42). The [[reward-model-supervises-from-below-ppo-training]] edge notes that every PPO policy, including the 175B one, is trained against a single 6B reward model, a forced choice since 175B reward-model training proved unstable (instructgpt, §\"C.2 Details of RM training\", p. 41), which quietly tests whether a smaller judge can usefully steer a larger policy."
+        },
+        {
+          "heading": "Its six working parts",
+          "body": "Beyond this high-level story, PPO training is a parent concept whose specific engineering choices, gathered under the [[ppo-optimization-mechanics]] theme, are each concepts in their own right. The [[bandit-environment]] supplies the single-step structure described above. The [[value-function]], a critic network initialized from the reward model's own weights, and [[generalized-advantage-estimation]], applied here without discounting, together supply the advantage signal the PPO objective needs. The [[kl-penalty]], subtracted per generated token, keeps the policy anchored near the SFT model it started from. Finally, two named model variants instantiate the whole recipe differently: [[ppo-model]] optimizes reward plus KL penalty alone, while [[ppo-ptx]] additionally mixes in pretraining-distribution gradients to counteract capability regressions, and it is the latter that the paper calls InstructGPT by default."
+        }
+      ]
+    },
+    {
+      "id": "rlhf",
+      "sections": [
+        {
+          "heading": "The technique, in general",
+          "body": "Reinforcement learning from human feedback trains a policy using a reward signal derived not from a hand-specified function but from a model fit to human preference judgments, typically pairwise comparisons between two candidate outputs. The technique predates InstructGPT: Christiano et al. (2017) applied it to simulated robotic control and Atari games, and Ziegler et al. (2019) and Stiennon et al. (2020) extended it to fine-tuning language models, on stylistic continuation and text summarization respectively. InstructGPT's origin is therefore marked \"refined\" rather than \"introduced\": it takes an established technique and extends it, for the first time, to a broad, open-ended distribution of natural-language instructions spanning generation, question answering, brainstorming, and more, rather than one narrow, fixed domain (instructgpt, §\"1 Introduction\", p. 2; §\"3.1 High-level methodology\", p. 6)."
+        },
+        {
+          "heading": "The pipeline instantiation here",
+          "body": "In this paper, RLHF names the whole three-step procedure gathered under the [[rlhf-three-step-pipeline]] theme: [[supervised-fine-tuning]] on labeler demonstrations produces the [[sft-model]]; a [[reward-model]] is trained on labeler rankings to predict preferred outputs; and [[ppo-training]] then optimizes the SFT model against that learned reward. The [[reward-model-anchors-the-reward-signal-of-rlhf]] edge notes that the reward model's architecture is not incidental to this story, it is built by replacing the SFT model's unembedding layer with a scalar head, so it starts from the same weights as the policy it will later score, and its own weights in turn initialize the PPO [[value-function]]."
+        },
+        {
+          "heading": "Its place in a scalable-oversight lineage",
+          "body": "Within the [[scalable-oversight-lineage]] theme, RLHF is presented as a scaled solution to the open problem Concrete Problems named in 2016: safe behavior requires evaluating an objective too costly to check on every example, and a learned reward model lets a cheap, dense proxy stand in for genuinely expensive human judgment across an entire training distribution. The [[rlhf-swaps-the-labeler-in-rlaif]] edge traces this lineage one step further into Constitutional AI, whose RL from AI Feedback keeps \"the remainder of the training pipeline...exactly the same as RLHF\" (constitutional-ai, §\"4.1 Method\", p. 10) and changes only who answers the comparison question for harmlessness, an AI feedback model instead of a human labeler; RLHF is accordingly inherited by Constitutional AI as an established technique it extends and partially replaces (constitutional-ai, §\"1 Introduction\", p. 2; §\"5 Related Work\", p. 14). In the graph's hierarchy, [[helpful-rlhf-model]] and [[hh-rlhf-model]] are Constitutional AI's own applications of this technique, sitting as children of this concept outside the present paper's scope."
+        }
+      ]
+    },
+    {
+      "id": "rouge-l",
+      "sections": [
+        {
+          "heading": "What the metric measures",
+          "body": "ROUGE-L is a recall-oriented automatic summarization metric based on the Longest Common Subsequence (LCS) between a generated summary and a reference summary, rewarding in-order shared word sequences without requiring them to be contiguous. Given candidate $X$ (length $n$) and reference $Y$ (length $m$), define recall and precision from the LCS length, $R_{lcs} = LCS(X,Y)/m$ and $P_{lcs} = LCS(X,Y)/n$, and combine them into an F-measure\n$$F_{lcs} = \\frac{(1+\\beta^2)\\,R_{lcs}\\,P_{lcs}}{R_{lcs} + \\beta^2 P_{lcs}},$$\ntypically with $\\beta$ set to weight recall heavily. ROUGE-L predates this paper by nearly two decades, part of the ROUGE family introduced for automatic summarization evaluation; InstructGPT inherits it unmodified as a standard summarization metric."
+        },
+        {
+          "heading": "Its role here",
+          "body": "ROUGE-L scores generated summaries against reference summaries on the CNN/Daily Mail and Reddit TL;DR summarization tasks in InstructGPT's automatic public NLP evaluation suite (instructgpt, §\"CNN/DM Summarization\", p. 49). Within the [[quality-measurement-methods]] theme, it plays the same structural role for summarization that [[bleu]] plays for translation and [[f1-score]] plays for extractive question answering: a cheap, reference-overlap score, contrasted against the judgment-based [[win-rate]] and [[likert-quality-rating]] that the paper leans on for its central human-preference claims. Because overlap metrics like ROUGE-L cannot detect whether a summary is genuinely preferred, only whether it echoes a reference's wording, this theme's broader point is that InstructGPT needed the judgment-based metrics to make its main argument; ROUGE-L is retained mainly to keep results comparable with prior summarization-focused RLHF work such as Stiennon et al. (2020)."
+        }
+      ]
+    },
+    {
+      "id": "sft-model",
+      "sections": [
+        {
+          "heading": "What it is and how it's trained",
+          "body": "The SFT model is a GPT-3 model fine-tuned directly on labeler demonstrations using ordinary supervised learning, for 16 epochs with cosine learning-rate decay and a residual dropout of 0.2 (instructgpt, §\"3.5 Models\", p. 8). It plays a dual role in the corpus: a standalone baseline evaluated in its own right, and the initialization from which both the [[reward-model]] and the [[ppo-training]] policy are built."
+        },
+        {
+          "heading": "An overfitting curve explained by how the dataset was built",
+          "body": "The [[sft-dataset-duplication-underlies-early-overfitting-of-sft-model]] edge connects a puzzling training result to a fact about data construction: the SFT model's validation loss overfits after just one epoch, yet the paper trains for sixteen anyway because later epochs keep improving both RM score and human preference (instructgpt, §\"C.1 Details of SFT training\", p. 40). A likely contributor is that the SFT dataset's roughly 13k examples are not 13k independent demonstrations; because instruction-like prompts were scarce early on, labelers wrote template instructions with several few-shot examples each, and multiple training datapoints were then synthetically constructed by resampling different subsets of the same few-shot set, yielding 11,295 labeler-written examples against only 1,430 customer-derived ones (instructgpt, §\"A.3 Dataset sizes\", p. 33)."
+        },
+        {
+          "heading": "Selected by the reward model it later initializes",
+          "body": "Because more epochs helped RM score and human preference despite hurting validation loss, the final SFT checkpoint was chosen by its score under the reward model rather than by validation loss, the paper stating plainly that RM score \"proved more predictive of human preference results than validation loss\" (instructgpt, §\"C.1 Details of SFT training\", p. 41), a relationship the [[reward-model-back-selects-the-checkpoint-of-sft-model]] edge names. This means the \"supervised baseline\" that PPO is later measured against was itself already selected to please the preference model, understating how much the reward model shapes the entire pipeline, and giving the reward model a role in model selection before it ever produces a single RL reward."
+        },
+        {
+          "heading": "A model that quietly forks in two",
+          "body": "The [[sft-model-anchors-as-both-init-and-reference-for-ppo-training]] edge reveals that \"the SFT model\" is not a single artifact once PPO enters the picture: the checkpoint reported as the SFT baseline was trained for 16 epochs, while the checkpoint used to initialize the RL policy, and to serve as the reference distribution for the [[kl-penalty]], was a separate variant trained for only 2 epochs with 10% pretraining data mixed in, chosen because sweeps showed this was the only initialization setting that stood out for PPO performance (instructgpt, §\"C.3 Details of the initialization models for RLHF\", p. 42; §\"E.8 PPO init models\", p. 56). This concept sits at the intersection of the [[rlhf-three-step-pipeline]] theme and the [[demonstrations-not-specification]] theme, which traces [[supervised-fine-tuning]] back to Concrete Problems' proposal to learn from demonstrations rather than a specified reward."
+        }
+      ]
+    },
+    {
+      "id": "sst",
+      "sections": [
+        {
+          "heading": "The benchmark",
+          "body": "SST, the Stanford Sentiment Treebank (Socher et al., 2013), is a binary sentiment-classification dataset built from movie-review sentences, originally annotated at every node of each sentence's parse tree to support models (originally a recursive neural tensor network) that reason about sentiment compositionally rather than only at the sentence level. In this paper's evaluation, only sentence-level binary positive/negative labels are used. SST predates InstructGPT by nearly a decade and is inherited unmodified here as one of the standard public classification benchmarks in the automatic evaluation suite (instructgpt, §\"D Automatic evaluation details\", p. 44; §\"SST (Stanford Sentiment Treebank)\", p. 48), consisting of 872 binary multiple-choice items."
+        },
+        {
+          "heading": "Its role here",
+          "body": "SST is part of the [[language-understanding-benchmarks]] theme, the battery of academic tasks InstructGPT runs against to catch the [[alignment-tax]], general-capability regressions RLHF fine-tuning might introduce relative to plain [[gpt-3]]. Unlike DROP or translation, SST is one of the benchmarks where the tax proves mild: per Table 14, the 175B PPO-ptx model reaches 0.900 zero-shot accuracy against GPT-3's 0.898 (instructgpt, §\"E.1 Performance on public NLP datasets\", p. 56), essentially unchanged. Because SST is a simple multiple-choice classification task scored by likelihood rather than free generation, it belongs to the same cluster of \"recoverable\" benchmarks as [[hellaswag]], where the mechanical form of the task, ranking fixed options rather than producing open text, appears to make RLHF's capability cost easiest to pay back."
+        }
+      ]
+    },
+    {
+      "id": "supervised-fine-tuning",
+      "sections": [
+        {
+          "heading": "The technique, in general",
+          "body": "Supervised fine-tuning adapts a pretrained model to a new behavior by continuing to train it, with ordinary supervised learning, on a smaller dataset of input-output examples that demonstrate the desired behavior directly. It uses the same cross-entropy objective as pretraining, $L(\\theta) = -\\sum_t \\log P_\\theta(x_t \\mid x_{<t})$, but computed over labeled demonstrations rather than raw internet text. Fine-tuning a pretrained model on a narrower supervised objective is a long-standing transfer-learning idea in machine learning, predating this paper by years in NLP practice; InstructGPT inherits the technique and applies it as the first of its three training steps."
+        },
+        {
+          "heading": "As InstructGPT's first step",
+          "body": "Labelers write demonstrations of desired output behavior on the paper's input prompt distribution, and a pretrained [[gpt-3]] model is fine-tuned on this data using supervised learning to produce the [[sft-model]] (instructgpt, §\"3.1 High-level methodology\", p. 6). This model serves two purposes downstream: it is evaluated as a standalone baseline, and it initializes both the [[reward-model]] and, via a separately tuned checkpoint, the [[ppo-training]] policy, making it the structural foundation the rest of the [[rlhf-three-step-pipeline]] theme is built on."
+        },
+        {
+          "heading": "A direct descendant of an earlier proposal",
+          "body": "The [[use-demonstrations-operationalized-as-supervised-fine-tuning]] edge, marked with hindsight, traces this step back to Concrete Problems' proposal to \"use demonstrations\" as a route to avoiding both reward hacking and unsafe exploration: learn a baseline policy from expert trajectories, via inverse reinforcement learning or apprenticeship learning, then explore only around that baseline (concrete-problems, §\"Use Demonstrations:\", p. 15). InstructGPT's SFT step realizes this idea by the simplest possible mechanism the 2016 paper considered, fine-tuning directly on demonstrations with ordinary supervised learning rather than first recovering a reward function through IRL or apprenticeship learning, and drops the exploration-safety framing entirely: SFT here is not bounding a later RL exploration phase but standing as a free-standing baseline and initializer. What survives across six years is the core wager that a policy learned from demonstrations can substitute for a hand-specified objective, a wager this concept shares with [[sft-model]] and [[sft-dataset]] in the [[demonstrations-not-specification]] theme."
+        }
+      ]
+    },
+    {
+      "id": "t0",
+      "sections": [
+        {
+          "heading": "The baseline, in general",
+          "body": "T0 (Sanh et al., 2021) is a T5-based model fine-tuned on a large compilation of NLP tasks, each reformatted with natural-language instruction templates, designed to test whether multitask instruction tuning enables zero-shot generalization to unseen tasks. The larger T0++ variant, used in this paper, comprises roughly 96 million training datapoints. T0 predates InstructGPT and is inherited here purely as a comparison baseline rather than a technique the paper builds on."
+        },
+        {
+          "heading": "Its role: a compilation-based rival InstructGPT beats",
+          "body": "InstructGPT's authors fine-tune a 175B GPT-3 model on T0++ data, subsampled from 96 million down to about 1 million datapoints, as detailed by the [[t0-is-scaled-to-match-flan]] edge, specifically to keep this baseline comparable in scale to the similarly constructed [[flan]] baseline rather than letting either win purely on data volume (instructgpt, §\"C.5 FLAN and T0 models\", p. 42). Both T0 and FLAN checkpoints were selected by the same rule used for the [[sft-model]] and the GPT-3-prompted prefix, highest reward-model score on a validation set rather than lowest validation loss, tying all of the paper's comparison baselines to one consistent selection criterion. On the paper's own evaluation, InstructGPT is preferred over this T0 baseline 79 ± 4% of the time (instructgpt, §\"1 Introduction\", p. 4; §\"C.5 FLAN and T0 models\", p. 42), a result the paper attributes to public NLP compilations under-representing the open-ended generation and brainstorming tasks that dominate real API usage (instructgpt, §\"4.1 Results on the API distribution\", p. 13). T0 is a member of the [[instruction-following-objective]] theme, which frames both fixed-compilation baselines like T0 and FLAN, and prompting-only baselines like GPT-3-prompted, as instructive rivals against which InstructGPT's preference-learning approach to instruction-following is argued for."
+        }
+      ]
+    },
+    {
+      "id": "truthfulqa",
+      "sections": [
+        {
+          "heading": "The benchmark",
+          "body": "TruthfulQA (Lin et al., 2021) is a benchmark of 817 short-answer questions constructed to probe whether a language model reproduces common human misconceptions and falsehoods rather than answering truthfully; its questions are adversarially selected to be ones on which models tend to mimic popular false beliefs (e.g. urban myths or misunderstood science) rather than state the correct answer. TruthfulQA predates InstructGPT and is inherited here unmodified as the paper's primary open-domain truthfulness probe (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13; §\"TruthfulQA\", p. 46)."
+        },
+        {
+          "heading": "Two prompting regimes",
+          "body": "InstructGPT evaluates under two prompt formats: a plain few-shot QA prompt, and a helpful \"Instruction+QA\" prompt, following Lin et al. (2021), that explicitly permits the model to answer \"I have no comment\" when it is not certain, rather than confidently asserting a falsehood (instructgpt, §\"TruthfulQA\", p. 46). Under this instructed setting, PPO models \"err on the side of being truthful and uninformative rather than confidently saying a falsehood,\" a discipline the baseline GPT-3 model exhibits less well (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). The paper reports its InstructGPT models generate truthful and informative answers roughly twice as often as GPT-3 on this benchmark, with results holding even restricted to the subset of questions not adversarially selected against GPT-3 (instructgpt, §\"1 Introduction\", p. 3). Together with the [[hallucination]] metric on closed-domain tasks, TruthfulQA supplies this paper's other major piece of evidence for its truthfulness claims, and is a member of the [[safety-bias-truthfulness-benchmarks]] theme built to catch harms that general capability benchmarks would miss."
+        }
+      ]
+    },
+    {
+      "id": "value-function",
+      "sections": [
+        {
+          "heading": "The critic, in general",
+          "body": "In actor-critic reinforcement learning, a value function $V^\\pi(s) = \\mathbb{E}_\\pi\\big[\\sum_{t=0}^{\\infty} \\gamma^t r_t \\mid s_0=s\\big]$ estimates the expected discounted return obtainable from a state under the current policy, and the advantage $A(s,a) = Q(s,a) - V(s)$ measures how much a specific action beats that baseline. A learned \"critic\" network approximating $V$ is used to reduce the variance of policy-gradient estimates, a standard technique tracing back to the Bellman-equation foundations of dynamic programming and used throughout modern deep RL, including PPO. This concept predates InstructGPT and is inherited here as a standard component of the [[ppo-training]] recipe rather than something the paper introduces."
+        },
+        {
+          "heading": "Initialized from the reward model, not from scratch",
+          "body": "InstructGPT's value function is not trained independently; it is initialized from the weights of the trained [[reward-model]], since both share the same architecture, a scalar-output head attached to a GPT-3-derived model (instructgpt, §\"C.4 Details of RLHF training\", p. 42). This initialization supplies the critic with a reasonable starting estimate of output quality before any PPO gradient steps are taken, rather than learning value estimation entirely from RL experience."
+        },
+        {
+          "heading": "Why it stays fixed at 6B regardless of policy size",
+          "body": "A single 6B value function, matching the 6B reward model, is reused across [[ppo-training]] runs at every studied policy size, 1.3B, 6B, and 175B (instructgpt, §\"C.4 Details of RLHF training\", p. 42). This was a forced engineering choice rather than a preference: training a 175B reward model proved unstable, making it unsuitable as a value-function initialization, and pairing a 175B value function with a 175B policy would have substantially increased PPO's compute cost (instructgpt, §\"3.5 Models\", p. 8; §\"C.2 Details of RM training\", p. 41). Reusing the same critic across policy sizes also has a methodological benefit noted alongside the [[reward-model-supervises-from-below-ppo-training]] edge: it holds the training signal constant, making comparisons of policy scale to policy performance cleaner, since only the actor, not the critic, changes size."
+        }
+      ]
+    },
+    {
+      "id": "winogender",
+      "sections": [
+        {
+          "heading": "The benchmark",
+          "body": "Winogender (Rudinger et al., 2018) is a benchmark of paired sentences built to probe occupational gender bias in coreference resolution: each pair holds a sentence fixed except for the gender of a pronoun referring to a person in an occupational role (e.g. a mechanic), testing whether a model's resolution tracks occupational gender stereotypes rather than the sentence's actual content. It predates InstructGPT by four years and is inherited here as one of the standard social-bias probes the paper reports on (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14; §\"Winogender\", p. 45), consisting of 120 binary multiple-choice items in this evaluation."
+        },
+        {
+          "heading": "Recast into an entropy measurement",
+          "body": "InstructGPT does not use Winogender's native accuracy-based coreference scoring. As the [[bias-entropy-metric-recasts-the-task-of-winogender]] edge explains, the paper instead converts each pair's completion log-probabilities into a Bernoulli distribution and reports its entropy in bits, where higher entropy signals less preference between the paired completions and is treated as less bias (instructgpt, §\"Winogender\", p. 45). This recasting discards both correctness and stereotype direction: a model that reliably resolves the stereotypical referent and one that reliably resolves the anti-stereotypical referent produce identical low entropy under this scoring, both read as \"biased.\" The paper's own discussion concedes the slippage, noting that \"the instructed models are more certain of their outputs regardless of whether or not their outputs exhibit stereotypical behavior\" (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14), so InstructGPT's finding of no significant improvement on Winogender is really a statement about model confidence under this metric, not directly about occupational-gender coreference errors."
+        },
+        {
+          "heading": "Diverging from a toxicity benchmark under the same prompt",
+          "body": "Winogender shares an exact instruction protocol with [[realtoxicityprompts]], the same basic, respectful, and biased prompt variants (instructgpt, §\"RealToxicityPrompts\", p. 45), which the [[realtoxicityprompts-diverges-under-respectful-prompting-from-winogender]] edge turns into a controlled comparison. Under the \"respectful\" instruction, RealToxicityPrompts toxicity falls, one of the paper's clean safety wins, while on Winogender the same instruction lowers entropy, which the paper's own metric reports as increased bias (instructgpt, §\"4.2 Results on public NLP datasets\", pp. 13-14). Part of this divergence traces to the entropy metric's confidence confound described above, but the paper's own framing survives it: an instruction that reduces measured toxicity can simultaneously appear to worsen a bias measure, evidence that safety benchmarks in this corpus do not collapse onto a single axis. Winogender is a member of the [[safety-bias-truthfulness-benchmarks]] theme alongside [[crows-pairs]], [[truthfulqa]], and [[perspective-api]]-scored toxicity."
+        }
+      ]
+    }
+  ]
+}

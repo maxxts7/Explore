@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>PPO-ptx (pretraining gradient mixing) — outperforms tightening of → Per-token KL penalty from the SFT model — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-edge">edge</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>PPO-ptx (pretraining gradient mixing) — outperforms tightening of → Per-token KL penalty from the SFT model</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/ppo-optimization-mechanics.html">The mechanics that make PPO fine-tuning work</a></p>
+<section class="prose-section"><p>Both of these are knobs on the same objective (β and γ in Equation 2), and both were candidate fixes for the public-NLP-dataset regressions. The paper tested them against each other: raising the KL coefficient sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, while a well-chosen pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=15" target="_blank" rel="noopener">§"4.2 Results on public NLP datasets", p. 15</a>). The asymmetry is instructive about what each term actually does. The KL penalty constrains where the policy can go relative to the SFT model, so buying back capabilities with it means giving up alignment gains proportionally. Pretraining gradients instead inject the missing training signal directly — the lost capabilities live in the pretraining distribution, so restoring them requires that distribution, not just less movement. Notably, ptx does not make the KL knob redundant: even with the pretraining mix, β must still be tuned, with human Likert scores peaking near 0.01-0.02 and degrading at both 0 and 2 (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">§"E.7 Optimal KL reward coefficient", p. 56</a>).</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/ppo-ptx.html">PPO-ptx (pretraining gradient mixing)</a> and <a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a></p></section>
+<section class="nav-block"><h2>Appears in tissue themes</h2><ul><li><a href="../tissue/ppo-objective-as-interacting-knobs.html">The training objective is a small system of knobs, not one number</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">&sect;&ldquo;C.4 Details of RLHF training&rdquo;, p. 42</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">&sect;&ldquo;E.7 Optimal KL reward coefficient&rdquo;, p. 56</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

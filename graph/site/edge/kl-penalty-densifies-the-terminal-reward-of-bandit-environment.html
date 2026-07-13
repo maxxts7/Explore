@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Per-token KL penalty from the SFT model — densifies the terminal reward of → Bandit environment formulation for RLHF — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-edge">edge</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Per-token KL penalty from the SFT model — densifies the terminal reward of → Bandit environment formulation for RLHF</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/ppo-optimization-mechanics.html">The mechanics that make PPO fine-tuning work</a></p>
+<section class="prose-section"><p>In the bandit formulation the reward model contributes exactly one number per episode, delivered when the response is complete. The KL penalty is the objective's only per-token component: it is subtracted at every generated token, proportional to the log-ratio between the policy and the SFT model at that position (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">§"3.5 Models", p. 9</a>). So beyond its stated purpose — mitigating over-optimization of the reward model — the penalty changes the shape of the learning problem: an otherwise sparse terminal-reward setting gains a dense signal that assigns credit at the same granularity as the actions the policy actually takes. Every token receives immediate feedback about whether it is drifting from the anchor distribution, while feedback about whether the answer is good arrives only at the end. The final models set β = 0.02 (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">§"C.4 Details of RLHF training", p. 42</a>), keeping this dense term small — enough to shape token-level behavior without dominating the terminal reward that carries the actual preference information.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a> and <a href="../concept/bandit-environment.html">Bandit environment formulation for RLHF</a></p></section>
+<section class="nav-block"><h2>Appears in tissue themes</h2><ul><li><a href="../tissue/ppo-objective-as-interacting-knobs.html">The training objective is a small system of knobs, not one number</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">&sect;&ldquo;E.7 Optimal KL reward coefficient&rdquo;, p. 56</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

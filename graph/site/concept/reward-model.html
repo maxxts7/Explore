@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward model (RM) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward model (RM)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-refined">refined</span>; <a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A model initialized from the SFT model with its unembedding layer replaced by a scalar output head, trained to predict which of two model outputs human labelers would prefer.</p>
+<section class="prose-section">
+<h2>Why the corpus needs a stand-in for human judgment</h2>
+<p>The reward model is the load-bearing joint of the corpus's <a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a>: it is the concrete, working answer to a problem Concrete Problems in AI Safety could only name in 2016 (<a href="../concept/scalable-oversight.html">Scalable oversight</a>, the difficulty of evaluating a true objective too costly to check on every example). InstructGPT never uses that phrase itself, but the match is drawn explicitly once Constitutional AI revisits the idea under the label "Scaling Supervision" and states that RLHF "has already taken a step in the direction of scaled supervision, since the reward signal in RL actually comes from an AI preference model (PM) rather than from immediate human oversight" (<a href="../edge/scalable-oversight-is-retroactively-operationalized-by-reward-model.html">Scalable oversight — is retroactively operationalized by → Reward model (RM)</a>; constitutional-ai, §"Scaling Supervision", p. 2). The reward model is therefore the single concept in this batch that a reader arriving from any of the three papers needs: Concrete Problems supplies the open problem it answers, InstructGPT supplies its first working implementation, and Constitutional AI both inherits it wholesale and renames it — the same object is called the reward model (RM) in InstructGPT and the preference model (PM) in Constitutional AI (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">§"1.2 The Constitutional AI Approach", p. 5</a>), where it is explicitly built "following the process in [Bai et al., 2022]" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">§"4.1 Method", p. 10</a>). Constitutional AI's own reward signal, the <a href="../concept/hybrid-human-ai-preference-model.html">Hybrid Human/AI Preference Model</a>, is a child of this same concept: a preference model trained on human-labeled helpfulness comparisons mixed with AI-labeled harmlessness comparisons, still the identical architecture and training recipe, just fed a differently-sourced comparison set.</p>
+</section>
+<section class="prose-section">
+<h2>What it enabled downstream</h2>
+<p>Inside InstructGPT's own pipeline, the reward model does more than score rollouts. Its weights initialize the PPO value function, so the same learned preference judgment appears twice in the RL loop, once as the reward being chased and once as the critic estimating future value (<a href="../superedge/ppo-optimization-mechanics-reveals-critic-reward-coupling-in-rlhf-three-step-pipeline.html">The mechanics that make PPO fine-tuning work — reveals a critic reward coupling inside → InstructGPT&#x27;s three-step training pipeline</a>). Because 175B RM training proved unstable, this shared-initialization requirement is the specific reason every InstructGPT policy, including the 175B one, was trained against a single 6B reward model, supervision from a judge nearly 30 times smaller than the policy it steers (<a href="../edge/reward-model-supervises-from-below-ppo-training.html">Reward model (RM) — supervises from below → PPO fine-tuning stage (RLHF policy optimization)</a>; instructgpt, §"C.2 Details of RM training", p. 41). The RM also reaches backward in the pipeline: the final <a href="../concept/sft-model.html">SFT</a> checkpoint was chosen by its score under the reward model rather than by validation loss, since RM score proved more predictive of human preference than validation loss (<a href="../edge/reward-model-back-selects-the-checkpoint-of-sft-model.html">Reward model (RM) — back selects the checkpoint of → Supervised fine-tuned (SFT) model</a>; instructgpt, §"3.5 Models", p. 8; §"C.1 Details of SFT training", p. 41). And it anchors <a href="../edge/reward-model-anchors-the-reward-signal-of-rlhf.html">RLHF</a>'s reward signal directly: a per-token <a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a> against the SFT model, not the RM, keeps PPO from over-optimizing this imperfect proxy, the specific countermeasure engineered against <a href="../concept/reward-overoptimization.html">Reward model over-optimization</a>.</p>
+</section>
+<section class="prose-section">
+<h2>What it is</h2>
+<p>Architecturally, the reward model is built by taking the trained SFT model and replacing its final unembedding layer with a scalar output head, so it starts from the same weights as the policy it will later score (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.5 Models", p. 8</a>). It takes a prompt and a candidate response and outputs a single scalar reward. It is trained with a pairwise comparison loss over rankings of $K=4$ to $9$ labeler-ranked completions per prompt — the full mathematical form is <a href="../concept/reward-model-loss.html">Reward model pairwise comparison loss</a> — using the <a href="../concept/k-choose-2-batching.html">K-choose-2 single-batch comparison training</a> trick to avoid overfitting on correlated comparisons drawn from the same ranking. Because that loss is invariant to any additive shift in reward, the model's raw output is only ever meaningful up to an arbitrary constant; InstructGPT fixes this by normalizing so that labeler demonstrations score a mean of 0 before RL begins, making "positive reward" mean literally better-than-demonstration (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">§"3.5 Models", p. 9</a>). Constitutional AI's preference model keeps this exact architecture and loss but changes only where the comparison labels come from: helpfulness comparisons still come from human crowdworkers, while harmlessness comparisons are generated by a separate <a href="../concept/feedback-model.html">Feedback Model</a> evaluating response pairs against constitutional principles (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">§"4.1 Method", p. 10</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/hybrid-human-ai-preference-model.html">Hybrid Human/AI Preference Model</a></li><li><a href="../concept/k-choose-2-batching.html">K-choose-2 single-batch comparison training</a></li><li><a href="../concept/reward-model-loss.html">Reward model pairwise comparison loss</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Reward model (RM)</strong> — <a href="../edge/reward-model-supervises-from-below-ppo-training.html">supervises from below</a> → PPO fine-tuning stage (RLHF policy optimization)</li><li><strong>Reward model (RM)</strong> — <a href="../edge/reward-model-anchors-the-reward-signal-of-rlhf.html">anchors the reward signal of</a> → Reinforcement learning from human feedback (RLHF)</li><li>Reward model pairwise comparison loss — <a href="../edge/reward-model-loss-under-determines-the-scale-of-reward-model.html">under determines the scale of</a> → <strong>Reward model (RM)</strong></li><li>Scalable oversight — <a href="../edge/scalable-oversight-is-retroactively-operationalized-by-reward-model.html">is retroactively operationalized by</a> → <strong>Reward model (RM)</strong> <span class="tag hindsight">hindsight</span></li><li><strong>Reward model (RM)</strong> — <a href="../edge/reward-model-back-selects-the-checkpoint-of-sft-model.html">back selects the checkpoint of</a> → Supervised fine-tuned (SFT) model</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/scalable-oversight-lineage.html">From an open problem to reward models to AI feedback</a></li><li><a href="../theme/rlhf-three-step-pipeline.html">InstructGPT&#x27;s three-step training pipeline</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=41" target="_blank" rel="noopener">&sect;&ldquo;C.2 Details of RM training&rdquo;, p. 41</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;1.2 The Constitutional AI Approach&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;4.1 Method&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

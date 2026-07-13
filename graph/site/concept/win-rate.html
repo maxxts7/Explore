@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Win rate (preference against baseline) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Win rate (preference against baseline)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The primary human-evaluation metric: the fraction of times labelers prefer one model&#x27;s output over that of a fixed baseline policy (the 175B SFT model) on matched prompts.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>Win rate is InstructGPT's primary human-evaluation metric and, within <a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a>, the central instrument the corpus uses to say quantitatively that one model is preferred to another: the fraction of times labelers prefer one model's output over a fixed baseline policy, the 175B <a href="../concept/sft-model.html">SFT model</a>, on matched prompts. It is inherited rather than invented here — pairwise preference-rate evaluation predates this paper — and the headline result it produces, 175B InstructGPT preferred to 175B GPT-3 85% of the time and to few-shot GPT-3 71% of the time, is the paper's single most-cited number (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=10" target="_blank" rel="noopener">§"3.6 Evaluation", p. 10</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=11" target="_blank" rel="noopener">§"4.1 Results on the API distribution", p. 11</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What bounds it, what confirms it, and what it misses</h2>
+<p>Win rate's precision has a hard floor set by the humans producing it: <a href="../edge/inter-annotator-agreement-caps-the-resolution-of-win-rate.html">inter-annotator agreement caps its resolution</a>, since training labelers agree with each other only 72.6±1.5% of the time and held-out labelers 77.3±1.3% (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.4 Human data collection", p. 8</a>) — meaning roughly a quarter of individual comparisons are effectively coin flips, and small gaps between adjacent models should not be read as reliable rankings even though the 85% headline result comfortably clears that noise floor. Two further instruments extend win rate rather than merely repeating it. <a href="../edge/likert-quality-rating-corroborates-win-rate.html">The Likert quality rating corroborates it</a> on an anchor-free scale, confirming the ordering is not an artifact of the chosen baseline. And in Constitutional AI, <a href="../edge/elo-score-generalizes-win-rate.html">the Elo score generalizes win rate</a> to handle 24 model snapshots across multiple training runs at once, something a single-anchor win rate cannot do, at the cost of an arbitrary zero point Elo must separately calibrate (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">§"3.3 Main Results", p. 8</a>; <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=12" target="_blank" rel="noopener">§"4.3 Main Results", p. 12</a>). Win rate's most consequential limitation surfaces against a very different kind of instrument: <a href="../edge/f1-score-diverges-under-rlhf-from-win-rate.html">it diverges sharply under RLHF from F1 score</a>. PPO fine-tuning pushes win rate to its 85% headline while collapsing F1 on extractive QA benchmarks such as <a href="../concept/drop.html">DROP</a> and <a href="../concept/squadv2.html">SQuAD v2</a> (instructgpt, §"E.1 Performance on public NLP datasets", Table 14, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">p. 56</a>). InstructGPT resolves the disagreement asymmetrically, treating win rate as the actual training objective and F1 as a constraint to be satisfied afterward — a methodological choice that makes win rate the metric the entire pipeline is ultimately built to optimize, and everything else a check against what it cannot see.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Elo Score (helpfulness/harmlessness) — <a href="../edge/elo-score-generalizes-win-rate.html">generalizes</a> → <strong>Win rate (preference against baseline)</strong> <span class="tag hindsight">hindsight</span></li><li>F1 score (span-overlap QA metric) — <a href="../edge/f1-score-diverges-under-rlhf-from-win-rate.html">diverges under rlhf from</a> → <strong>Win rate (preference against baseline)</strong></li><li>Inter-labeler agreement rate — <a href="../edge/inter-annotator-agreement-caps-the-resolution-of-win-rate.html">caps the resolution of</a> → <strong>Win rate (preference against baseline)</strong></li><li>Likert overall-quality rating — <a href="../edge/likert-quality-rating-corroborates-win-rate.html">corroborates</a> → <strong>Win rate (preference against baseline)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;3.6 Evaluation&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;4.1 Results on the API distribution&rdquo;, p. 11</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

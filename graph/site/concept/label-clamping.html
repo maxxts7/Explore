@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Preference Label Clamping (Soft vs. Hard vs. Clamped) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Preference Label Clamping (Soft vs. Hard vs. Clamped)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A technique for constructing PM training targets from feedback-model outputs, comparing raw soft (normalized log-probability) labels, hard 0/1 labels, and probabilities clamped to a fixed range (e.g. 40-60%) to counteract CoT-induced overconfidence.</p>
+<section class="prose-section">
+<h2>Correcting overconfidence introduced by chain-of-thought</h2>
+<p>Preference label clamping compares three ways of turning a <a href="../concept/feedback-model.html">Feedback Model</a>'s output into a preference-model training target: raw soft labels (normalized log-probabilities), hard 0/1 labels, and probabilities clamped to a fixed range. Without chain-of-thought reasoning, soft labels work well on their own, because they are "actually fairly well-calibrated" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">§"4.3 Main Results", p. 13</a>). But <a href="../concept/chain-of-thought-prompting.html">Chain-of-Thought (CoT) Prompting</a> breaks this: a CoT explanation "typically states explicitly which multiple choice option is to be preferred, and so the probability targets are typically very confident (i.e., close to 0 or 1) and are not well-calibrated" (constitutional-ai, §"Chain-of-Thought Prompting", p. 11; <a href="../edge/chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping.html">Chain-of-Thought (CoT) Prompting — creates the overconfidence that necessitates → Preference Label Clamping (Soft vs. Hard vs. Clamped)</a>). Clamping forces the probability into a fixed band instead of using it raw: writing $p$ for the raw probability, the clamped label is
+$$ p_{\text{clamped}} = \min(\max(p,\,0.4),\,0.6). $$</p>
+</section>
+<section class="prose-section">
+<h2>Finding the right band</h2>
+<p>The paper tested clamping at 20-80% and found it "slightly improved results," then tested 40-60% and found it "improved results further," settling on 40-60% for the main paper (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">§"4.3 Main Results", p. 13</a>). The effect is not cosmetic: "without the clamping, RL-CAI models would learn to output more extreme responses" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=11" target="_blank" rel="noopener">§"Chain-of-Thought Prompting", p. 11</a>). As a child of <a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a>, label-clamping exists only because chain-of-thought was added to the feedback pipeline for accuracy and legibility, and it belongs to the <a href="../tissue/calibration-and-prompt-scaffolding.html">Engineering the exact prompt or format needed to manufacture a model behavior</a> tissue theme as the corrective half of that trade — reasoning improves the judgment but degrades the calibration the labeling scheme needs, and clamping repairs the calibration without discarding the reasoning.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/rlaif.html">RL from AI Feedback (RLAIF)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Chain-of-Thought (CoT) Prompting — <a href="../edge/chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping.html">creates the overconfidence that necessitates</a> → <strong>Preference Label Clamping (Soft vs. Hard vs. Clamped)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/feedback-model-engineering.html">Engineering a language model into a usable preference labeler</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;4.3 Main Results&rdquo;, p. 13</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

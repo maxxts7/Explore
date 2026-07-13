@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>SFT dataset — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>SFT dataset</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The set of about 13k training prompts (labeler-written and API-sourced) paired with human demonstrations, used to train the supervised fine-tuned models.</p>
+<section class="prose-section">
+<h2>How it fits — the concrete descendant of a 2016 proposal</h2>
+<p>The SFT dataset is where Concrete Problems' abstract 2016 proposal to learn from demonstrations instead of a hand-specified reward becomes, six years later, the concrete first stage of a real alignment pipeline. Concrete Problems considers inverse reinforcement learning, apprenticeship learning, and cooperative inverse reinforcement learning as ways an agent might learn a policy from expert trajectories rather than trial-and-error optimization of a specified objective. InstructGPT operationalizes exactly this idea, in its structurally simplest form, as <a href="../concept/supervised-fine-tuning.html">Supervised fine-tuning (SFT)</a>: training a pretrained GPT-3 model directly on roughly 13,000 human-written demonstrations of desired behavior to produce the <a href="../concept/sft-model.html">Supervised fine-tuned (SFT) model</a>, used both as a standalone baseline and as the initialization for everything downstream (<a href="../theme/demonstrations-not-specification.html">Learning from demonstrations instead of a specified reward</a> theme; instructgpt, §"3.2 Dataset", p. 7). Notably, the safety property the 2016 paper attached to demonstration learning — bounding further exploration around the resulting baseline policy — does not travel with it into SFT itself; supervised fine-tuning has no exploration to bound, and that bound reappears two pipeline stages later as the PPO-stage <a href="../concept/kl-penalty.html">Per-token KL penalty from the SFT model</a> instead (<a href="../superedge/demonstrations-not-specification-displaces-exploration-bound-onto-ppo-optimization-mechanics.html">Learning from demonstrations instead of a specified reward — displaces its exploration bound onto → The mechanics that make PPO fine-tuning work</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What it enabled downstream, and a data quirk worth knowing</h2>
+<p>The SFT dataset does more than train one model: <a href="../edge/sft-dataset-trains-the-policies-sampled-for-rm-dataset.html">it trains the policies whose outputs get sampled to build the RM dataset</a>, since most comparison data for reward-model training comes from these supervised policies (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.1 High-level methodology", p. 6</a>). This means the reward model's competence is local to the neighborhood of outputs SFT-style policies actually produce — a fact the later KL penalty depends on, since keeping PPO's policy near the SFT model also keeps it inside the region where the reward model's training data lives. The dataset also <a href="../edge/sft-dataset-bootstrapped-the-existence-of-api-prompt-distribution.html">bootstrapped the API prompt distribution</a> InstructGPT is now evaluated on: users learned to submit instruction-style prompts by interacting with an earlier InstructGPT model that had already been supervised-fine-tuned on labeler demonstrations, making the "real usage" distribution a co-evolved artifact rather than independent ground truth (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.2 Dataset", p. 6-7</a>). One further wrinkle: <a href="../edge/sft-dataset-duplication-underlies-early-overfitting-of-sft-model.html">roughly two-thirds of the dataset&#x27;s apparent 13k examples are synthetic resamples</a> of the same labeler-written templates rather than independent demonstrations, since customer prompts resembling instructions were scarce early on and labelers instead wrote template instructions with several few-shot examples that were then split into multiple training points — a plausible contributor to the SFT model overfitting validation loss after just one epoch, and the reason final SFT checkpoints are selected by RM score rather than validation loss (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=33" target="_blank" rel="noopener">§"A.3 Dataset sizes", p. 33</a>; <a class="cite" href="../assets/papers/instructgpt.pdf#page=40" target="_blank" rel="noopener">§"C.1 Details of SFT training", p. 40</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>SFT dataset</strong> — <a href="../edge/sft-dataset-bootstrapped-the-existence-of-api-prompt-distribution.html">bootstrapped the existence of</a> → API prompt distribution</li><li><strong>SFT dataset</strong> — <a href="../edge/sft-dataset-trains-the-policies-sampled-for-rm-dataset.html">trains the policies sampled for</a> → RM (comparison) dataset</li><li><strong>SFT dataset</strong> — <a href="../edge/sft-dataset-duplication-underlies-early-overfitting-of-sft-model.html">duplication underlies early overfitting of</a> → Supervised fine-tuned (SFT) model</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></li><li><a href="../theme/demonstrations-not-specification.html">Learning from demonstrations instead of a specified reward</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3.2 Dataset&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=33" target="_blank" rel="noopener">&sect;&ldquo;A.3 Dataset sizes&rdquo;, p. 33</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

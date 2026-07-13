@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>F1 score (span-overlap QA metric) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>F1 score (span-overlap QA metric)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A token-overlap-based scoring metric used to evaluate model-generated answers against target completions on DROP, QuAC, and SQuAD v2.</p>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>F1 score is the automatic overlap metric InstructGPT uses to score free-response span-extraction tasks — <a href="../concept/drop.html">DROP</a>, <a href="../concept/quac.html">QuAC</a>, and <a href="../concept/squadv2.html">SQuAD v2</a> — inside the broader <a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a> family that spans both InstructGPT and Constitutional AI, alongside <a href="../concept/rouge-l.html">ROUGE-L</a> for summarization and <a href="../concept/bleu.html">BLEU</a> for translation. It is inherited rather than invented here: F1, the harmonic mean of precision and recall over predicted-versus-target token overlap, is a standard information-retrieval and QA metric that long predates this paper (instructgpt, §"DROP (Discrete Reasoning Over the Content of Paragraphs)", p. 46).</p>
+</section>
+<section class="prose-section">
+<h2>What it revealed and what it enabled</h2>
+<p>Inside InstructGPT, F1's most consequential role is not scoring per se but disagreeing sharply with the paper's primary metric: <a href="../edge/f1-score-diverges-under-rlhf-from-win-rate.html">F1 diverges under RLHF from win rate</a>. PPO fine-tuning pushes win rate to its headline heights, 85% preference over GPT-3, while simultaneously collapsing F1 on extractive QA — zero-shot SQuADv2 falls from 64.30 to 43.68, and DROP from 27.53 to 13.08 (instructgpt, §"E.1 Performance on public NLP datasets", Table 14, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">p. 56</a>). The paper resolves this disagreement asymmetrically rather than symmetrically: win rate is treated as the actual training objective and F1 as a constraint to be satisfied afterward, and the pretraining-mix coefficient defining PPO-ptx was tuned specifically to recover SQuADv2 and DROP F1 while leaving validation reward and Likert scores untouched (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=53" target="_blank" rel="noopener">§"E.6 Fixing regressions on public NLP datasets", p. 53</a>). Within a single paper, F1 is thereby demoted from a metric that adjudicates model quality to a regression alarm: it no longer decides which model is better, but it still catches capability loss that human preference evaluation, by construction, cannot see.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>F1 score (span-overlap QA metric)</strong> — <a href="../edge/f1-score-diverges-under-rlhf-from-win-rate.html">diverges under rlhf from</a> → Win rate (preference against baseline)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=46" target="_blank" rel="noopener">&sect;&ldquo;DROP (Discrete Reasoning Over the Content of Paragraphs)&rdquo;, p. 46</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

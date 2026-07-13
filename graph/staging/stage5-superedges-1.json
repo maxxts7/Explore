@@ -1,0 +1,44 @@
+{
+  "superedges": [
+    {
+      "id": "exploration-bounding-reaches-same-envelope-as-impact-regularization",
+      "type": "reaches-the-same-safety-envelope-by-a-different-route-than",
+      "source": "constraining-exploration-to-safe-regions",
+      "target": "impact-regularization-and-baselines",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "bounding-impact-and-exploration",
+      "prose": "Bounded exploration and impact regularization are built for different failure modes, exploration risk versus side effects, yet both cash out as the same control-theoretic move borrowed from prior work: bound the worst case rather than model consequences exactly. Impact regularizers measure distance from a baseline policy built via reachability analysis and robust policy improvement (concrete-problems, §\"Define an Impact Regularizer:\", p. 5); bounded exploration checks whether a candidate action would exit a safe region, a check related to H-infinity control's minimization of worst-case response to bounded disturbance (concrete-problems, §\"Bounded Exploration:\", p. 15). Neither theme's own account states the parallel directly: impact regularization treats reachability analysis as a specification aid for penalizing change already made, while bounded exploration treats H-infinity control as a fence against action not yet taken. The convergence is structural, not causal, two independently motivated bounding strategies reaching the same robust-control guarantee from opposite temporal directions."
+    },
+    {
+      "id": "cirl-interactive-counterpart-to-demonstration-bounded-exploration",
+      "type": "is-the-interactive-counterpart-to",
+      "source": "side-effects-as-relationship",
+      "target": "constraining-exploration-to-safe-regions",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "bounding-impact-and-exploration",
+      "prose": "Cooperative Inverse Reinforcement Learning, this theme's central mechanism for treating safety as a relationship rather than a penalty term, is explicitly named the interactive counterpart of use-demonstrations, the mechanism the other theme relies on to learn an offline baseline policy and bound further exploration around it (concrete-problems, §\"Multi-Agent Approaches:\", p. 6; §\"Use Demonstrations:\", p. 15). Both avoid hand-specifying a reward by grounding the agent's behavior in a human's goals rather than an objective function. But CIRL keeps the human in the loop continuously, the agent queries and updates its model of the human's goal throughout the interaction, while demonstration-bounded exploration front-loads all human involvement into a fixed set of trajectories collected once, before exploration begins, and then only mechanically checks new actions against that static reference. The tradeoff neither narrative names on its own: continuous interactive correction versus one-time specification with cheap enforcement afterward."
+    },
+    {
+      "id": "cirl-relational-half-left-behind-by-sft-genealogy",
+      "type": "passes-on-only-its-demonstration-half-to",
+      "source": "side-effects-as-relationship",
+      "target": "demonstrations-not-specification",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "bounding-impact-and-exploration",
+      "prose": "CIRL belongs to both themes because it does two things at once: it is a demonstration-adjacent technique for avoiding hand-specified rewards, and it is a relational framing in which safety depends on modeling another agent's goals and interests, a framing this theme also applies to the shutdown problem and to the reward autoencoder's legibility proposal. InstructGPT's supervised fine-tuning stage, the concrete descendant the other theme traces from demonstration-learning, inherits only the first half. It clones behavior from roughly 13,000 static human demonstrations offline (instructgpt, §\"3.1 High-level methodology\", p. 6); it does not query a human interactively, infer a latent goal, or carry any analogue of the shutdown problem or reward-autoencoder legibility that CIRL's relational half was meant to address. The genealogy from demonstration-learning to SFT is real but partial: the collaborative, human-modeling character this theme built around CIRL has no realized counterpart in the pipeline the other theme documents."
+    },
+    {
+      "id": "demonstrations-only-bounding-mechanism-to-persist-into-sft",
+      "type": "is-the-only-one-of-its-mechanisms-to-persist-into",
+      "source": "constraining-exploration-to-safe-regions",
+      "target": "demonstrations-not-specification",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "bounding-impact-and-exploration",
+      "prose": "This theme proposes five mechanisms for physically constraining exploration: simulated exploration, bounded regions, trusted-policy oversight, human oversight, and use of demonstrations. Only the last has a documented afterlife in this corpus. It is exactly demonstration-based bounding, singled out in the source paper as reducing the need for risky exploration altogether, that the other theme traces forward into InstructGPT's supervised fine-tuning stage, trained directly on roughly 13,000 human demonstrations (instructgpt, §\"3.1 High-level methodology\", p. 6). Simulated exploration, bounded regions, and the two oversight mechanisms have no comparable descendant documented anywhere else in this wiki; they remain confined to the 2016 paper's own toolkit. Neither theme states this asymmetry on its own: this theme presents all five mechanisms as parallel options, and the demonstrations theme describes its genealogy without noting that it is the exception rather than the rule among this theme's proposals."
+    }
+  ]
+}

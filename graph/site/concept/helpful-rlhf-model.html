@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Helpful RLHF Model — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-concept">concept</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Helpful RLHF Model</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">An RLHF policy trained using only helpfulness human-feedback comparisons, used as the harmful-response-generating starting point for the SL-CAI critique/revision pipeline.</p>
+<section class="prose-section">
+<h2>An RLHF policy, predating this paper</h2>
+<p>Reinforcement learning from human feedback (RLHF) trains a policy in three parts: a base language model is finetuned on demonstrations, a reward model is fit to human pairwise comparisons of that policy's outputs, and the policy is then optimized against the reward model with reinforcement learning, typically regularized by a KL penalty against the starting policy so it does not drift into degenerate outputs that exploit the reward model. Given two outputs $y_1, y_2$ for the same input $x$, a reward model $r_\theta$ is fit so that the probability a human prefers $y_1$ follows a Bradley-Terry form,
+$$ P(y_1 \succ y_2 \mid x) = \frac{\exp(r_\theta(x,y_1))}{\exp(r_\theta(x,y_1)) + \exp(r_\theta(x,y_2))}, $$
+and the policy $\pi_\phi$ is trained to maximize $E[\,r_\theta(x,y) - \beta \log(\pi_\phi(y\mid x)/\pi_{\text{ref}}(y\mid x))\,]$. This technique predates all three papers in this corpus in its modern form (Christiano et al. 2017) and is refined by InstructGPT for open-ended instruction-following (<a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a>; instructgpt, §"3.1 High-level methodology", p. 6); Constitutional AI inherits it directly from Anthropic's own prior work (Bai et al. 2022) rather than introducing it.</p>
+</section>
+<section class="prose-section">
+<h2>What makes it helpful specifically, and its two jobs here</h2>
+<p>The helpful RLHF model is the instance of this procedure where the reward model was fit exclusively to helpfulness comparisons, with no harmfulness data included (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=6" target="_blank" rel="noopener">§"1.4 Models and Data", p. 6</a>). Within Constitutional AI it plays two roles. First, it is the response-generating starting point for <a href="../concept/critique-and-revision.html">Critique and Revision</a>: because it was never trained to avoid harm, prompting it with adversarial red-team inputs reliably produces the harmful responses the critique-and-revision pipeline needs to revise. Second, it is one endpoint of the standard-RLHF reference line plotted against <a href="../concept/rl-cai.html">RL-CAI (RLAIF-trained Constitutional AI model)</a>'s results: the paper reports "the helpful RLHF model is more helpful but also more harmful than HH RLHF" (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=8" target="_blank" rel="noopener">§"3.3 Main Results", p. 8</a>), and this single fixed difference between it and <a href="../concept/hh-rlhf-model.html">HH RLHF Model</a> is what traces the tradeoff curve CAI's <a href="../concept/pareto-improvement.html">Pareto Improvement (helpfulness vs. harmlessness)</a> is measured against (<a href="../edge/helpful-rlhf-model-traces-the-tradeoff-curve-with-hh-rlhf-model.html">Helpful RLHF Model — traces the tradeoff curve with → HH RLHF Model</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Helpful RLHF Model</strong> — <a href="../edge/helpful-rlhf-model-traces-the-tradeoff-curve-with-hh-rlhf-model.html">traces the tradeoff curve with</a> → HH RLHF Model</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/helpfulness-harmlessness-tradeoff.html">The helpfulness-harmlessness tradeoff and CAI&#x27;s claim to beat it</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;1.4 Models and Data&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

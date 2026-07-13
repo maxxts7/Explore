@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>F1 score (span-overlap QA metric) — diverges under rlhf from → Win rate (preference against baseline) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="kind-badge kind-edge">edge</span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>F1 score (span-overlap QA metric) — diverges under rlhf from → Win rate (preference against baseline)</h1>
+<p class="edge-meta">grounded in <a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &middot; explored within the theme <a href="../theme/quality-measurement-methods.html">Automatic overlap scores versus human and preference judgments</a></p>
+<section class="prose-section"><p>These two metrics deliver opposite verdicts on the same intervention, and InstructGPT's methodology is largely a negotiation between them. PPO fine-tuning pushes win rate to its headline heights — 85% preference over GPT-3 — while collapsing span-overlap F1 on extractive QA: zero-shot SQuADv2 falls from 64.30 for 175B GPT-3 to 43.68 for PPO, and DROP from 27.53 to 13.08 (instructgpt, §"E.1 Performance on public NLP datasets", Table 14, <a class="cite" href="../assets/papers/instructgpt.pdf#page=56" target="_blank" rel="noopener">p. 56</a>). The paper resolves the disagreement asymmetrically: win rate is treated as the objective and F1 as a constraint. The pretraining-mix coefficient that defines PPO-ptx was tuned specifically to recover SQuADv2 and DROP F1 while leaving validation reward and Likert scores intact (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=53" target="_blank" rel="noopener">§"E.6 Fixing regressions on public NLP datasets", p. 53</a>). In effect, F1 is demoted within a single paper from a quality measure to a regression alarm: it no longer adjudicates which model is better — human preference does — but it still detects when alignment quietly spends capability that preference evaluation cannot see.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/f1-score.html">F1 score (span-overlap QA metric)</a> and <a href="../concept/win-rate.html">Win rate (preference against baseline)</a></p></section>
+<section class="nav-block"><h2>Appears in tissue themes</h2><ul><li><a href="../tissue/benchmarks-promoted-to-tuning-target.html">When a benchmark stops measuring and starts being optimized against</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;3.6 Evaluation&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;4.1 Results on the API distribution&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=46" target="_blank" rel="noopener">&sect;&ldquo;DROP (Discrete Reasoning Over the Content of Paragraphs)&rdquo;, p. 46</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>
