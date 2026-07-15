@@ -1,0 +1,219 @@
+{
+  "intros": [
+    {
+      "kind": "concept",
+      "id": "inter-annotator-agreement",
+      "intro": "When several people are asked to rank or label the same model outputs, they will not always agree, and inter-labeler agreement is simply the rate at which they do. It works as a basic sanity check on whether a labeling task is well defined.\n\nThe page walks through what the measure does in general, then its two uses here as both a quality filter and an ongoing audit, before closing on the ceiling it sets under any reported win rate. It then links out to the labeler screening process and the win-rate concept it bounds."
+    },
+    {
+      "kind": "concept",
+      "id": "hhh-framework",
+      "intro": "Helpful, honest, and harmless is a short way of saying what a well-behaved AI assistant should look like: it should do what you ask, not make things up, and avoid causing harm. The three-part framework was proposed before either paper covered here, and both simply adopt it as their working definition of an aligned model.\n\nThe page first traces how the same definition threads through both papers, then how it gets put into practice and measured. It leads to the evaluation set built to score against it, and belongs to the lens on this shared definition of alignment."
+    },
+    {
+      "kind": "concept",
+      "id": "language-modeling-objective",
+      "intro": "Predicting the next word in a stream of internet text is the ordinary objective used to pretrain most large language models. It is a useful way to learn language, but it is not the same thing as following what a user actually asked for, and this page is about that gap.\n\nIt opens by explaining the objective on its own terms before turning to the paper's core complaint about it, then connects out to instruction following as the alternative the paper proposes, within the lens contrasting the two objectives."
+    },
+    {
+      "kind": "concept",
+      "id": "instruction-following",
+      "intro": "Getting a language model to actually do what a written instruction asks, across almost any task you can phrase in words, is harder than it sounds, and it is the ability this page is centered on. InstructGPT trains and tests it directly, using real prompts people submitted, rather than a fixed set of formatted exercises.\n\nThe page moves from why the paper treats this as its founding claim to how that claim is tested through a ladder of model comparisons. It connects onward to the older next-token objective it is contrasted with and to two baseline models, under the lens on this alternative to next-token prediction."
+    },
+    {
+      "kind": "concept",
+      "id": "labeler-screening-process",
+      "intro": "Before any labels could be collected, the paper first had to decide who was allowed to produce them. This page covers the screening process used to narrow a pool of candidates down to the roughly forty contractors who actually ranked and wrote the training data.\n\nIt walks through the four criteria, then what clearing that bar does and doesn't guarantee about data quality, ending on the open question that the held-out generalization test picks up. From there it connects to labeler agreement, both part of the lens on building the human side of the RLHF pipeline."
+    },
+    {
+      "kind": "concept",
+      "id": "held-out-labeler-generalization",
+      "intro": "Training a model on one small group's preferences raises an obvious worry: will it work for anyone else? This page covers the check InstructGPT ran to see whether its results held up for a separate group of labelers who never touched the training data.\n\nThe page explains where this test sits in the paper's argument before turning to why it was needed and what it found. It links back to the screening process that assembled the original labeler pool, under the lens on building the human side of the RLHF pipeline."
+    },
+    {
+      "kind": "concept",
+      "id": "labeling-interface",
+      "intro": "Every ranking and score that ends up in InstructGPT's training data first passes through a piece of software: the web tool labelers used to actually do their work. This page is about that interface.\n\nIt first places the tool within the paper's data pipeline, then looks at how its design quietly shapes the data it produces. From there it connects to the comparison dataset it feeds, within the lens on building the human side of the RLHF pipeline."
+    },
+    {
+      "kind": "concept",
+      "id": "constitutional-ai",
+      "intro": "Constitutional AI is a way of training an assistant to avoid harmful behavior without asking people to label thousands of harmful examples by hand. In its place, the model is guided by a short written set of principles and largely trains itself, through rounds of critique, revision, and comparison.\n\nThe page lays out the two-stage method and where it sits in the corpus, then what each stage contributes, before opening into its five components: the constitution, critique and revision, and the two resulting models, plus the AI-feedback step, under the lens on this method of principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "constitution",
+      "intro": "A constitution, in this context, is not a legal document but a short list of written instructions telling a model roughly how to behave. It stands in for all the harm labels a more conventional approach would otherwise need from human crowdworkers.\n\nThe page explains what these principles replace and why keeping the list small matters, as part of Constitutional AI. It then opens onto its three components, the two appendix principle lists and the technique of ensembling them, within the lens on this method of principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "sl-cai-principles",
+      "intro": "This is the actual list behind the constitution's supervised half: sixteen paired instructions, each telling the model how to critique one of its own harmful responses and then how to revise it. They are the concrete text a more abstract description of principles turns out to mean.\n\nThe page sets out these instructions before comparing them with their counterpart used in the later reinforcement-learning stage. It connects to principle ensembling and to the RL-CAI principles it mirrors, under the lens on Constitutional AI's method of principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "rl-cai-principles",
+      "intro": "Where one set of constitutional instructions tells the model how to fix its own writing, this one tells a separate model how to judge which of two responses is more harmless. Both are drawn from the same short constitution, just aimed at different jobs.\n\nThe page lays out these sixteen comparison questions and how the feedback model puts them to use, then connects back to the supervised-stage principles they mirror, within the lens on principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "critique-and-revision",
+      "intro": "Rather than being told by a human what's wrong with a harmful response, the model is asked to work it out itself: first to critique its own output against one of the constitution's principles, then to rewrite it in light of that critique. This is how Constitutional AI produces training data without human harm labels.\n\nThe page walks through this pipeline and two checks on its design, then opens onto the few-shot prompts that steady it and the ablation testing whether critique is needed, before connecting to the resulting SL-CAI model, under the lens on principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "sl-cai",
+      "intro": "SL-CAI is what you get after finetuning a plain language model on all those self-critiqued, self-revised responses, mixed in with ordinary helpfulness examples so the model doesn't lose its usefulness along the way. It exists for one reason: to give the next stage somewhere to start.\n\nThe page covers how this finetuned model is produced and its single downstream job, before connecting back to the critique-and-revision process that supplies its training data and forward to RL-CAI, the model it seeds. Both sit within the lens on principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "rl-cai",
+      "intro": "RL-CAI is Constitutional AI's finished product: the policy that comes out after reinforcement learning is run against a preference model that was itself partly trained on AI-generated judgments of harmlessness. It starts from the earlier SL-CAI snapshot and refines it further.\n\nThe page presents this as the method's final policy, then makes the case that it shifts a known tradeoff rather than merely moving along it. It connects to the SL-CAI model it builds on, and to evasiveness and the Pareto-improvement finding, within the lens on the helpfulness-harmlessness tradeoff."
+    },
+    {
+      "kind": "concept",
+      "id": "rlaif",
+      "intro": "RL from AI Feedback takes the ordinary human-feedback training loop and swaps out one piece: instead of crowdworkers judging which response is more harmless, an AI model does the judging. Everything else about the training pipeline stays the same.\n\nThe page frames this as a single swap rather than a redesign, then as an instance of a broader idea: oversight that scales past what human labelers alone can do. It opens onto its three components, the feedback model, the comparison format, and label clamping, and connects to RLHF and to iterated training, under the lens moving from an open problem to reward models to AI feedback."
+    },
+    {
+      "kind": "concept",
+      "id": "feedback-model",
+      "intro": "Nothing about the feedback model is architecturally special; it's an ordinary pretrained language model, just put to a new use, shown a harmful prompt, two candidate responses, and one of the constitution's principles, and asked to say which response is less harmful.\n\nThe page shows how an off-the-shelf model gets turned into a labeler, then how its judgments come to supply half of a hybrid reward signal. It connects to the comparison format it uses, to principle ensembling, and to the hybrid preference model and RLAIF process it feeds, across two lenses on AI feedback and on engineering a usable labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "hybrid-human-ai-preference-model",
+      "intro": "This preference model learns from two different sources at once: human judgments of which response is more helpful, and AI judgments of which is more harmless. Structurally it's an ordinary reward model; what changes is only where its training comparisons come from.\n\nThe page describes what the model is before placing it within a longer line of work on scaling up oversight. It connects to the feedback model supplying its AI-generated half, under the lens tracing the path from an open problem to reward models to AI feedback."
+    },
+    {
+      "kind": "concept",
+      "id": "helpful-rlhf-model",
+      "intro": "This model is an earlier system, not something Constitutional AI trains itself: an RLHF policy shaped purely by human judgments of helpfulness, with no harmlessness training at all. Constitutional AI borrows it as a convenient source of responses that still need fixing.\n\nThe page explains where this policy came from and the specific jobs it plays here, then connects to the harmlessness-trained RLHF model it's compared against, within the lens on the helpfulness-harmlessness tradeoff."
+    },
+    {
+      "kind": "concept",
+      "id": "hh-rlhf-model",
+      "intro": "Like its helpfulness-only counterpart, this is an earlier RLHF policy rather than something new to this paper, but trained on comparisons covering both helpfulness and harmlessness together. It's the standard against which Constitutional AI has to prove itself.\n\nThe page traces where this baseline model came from and why its shortcomings motivate the paper's redesign, then connects to the helpfulness-only model it complements, under the lens on the helpfulness-harmlessness tradeoff."
+    },
+    {
+      "kind": "concept",
+      "id": "chain-of-thought-prompting",
+      "intro": "Chain-of-thought prompting simply asks a model to reason through a problem step by step before giving its final answer, rather than jumping straight to a conclusion. It's an older technique that Constitutional AI borrows rather than invents.\n\nThe page introduces the general idea, then its two specific jobs here, sharpening critiques and making harmlessness judgments more transparent, and the side effect those two jobs share. It opens onto its two components, a trigger phrase and a set of worked prompts, and connects to label clamping, within the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "lets-think-step-by-step-prompt",
+      "intro": "Sometimes getting a model to reason step by step takes nothing more than asking it to. This page is about that exact phrase, borrowed from earlier work, and tacked onto prompts to draw out reasoning before an answer.\n\nIt explains what the phrase is and the narrow role it plays inside the feedback model's prompt, as one instance of chain-of-thought prompting, then connects to the worked examples it's paired with, under the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "multiple-choice-evaluation-format",
+      "intro": "Getting a preference out of a model that only predicts the next word takes some engineering: this format lays out a conversation, a principle, and two labeled responses, then reads off which label the model finds more probable as its answer.\n\nThe page shows how this trick turns ordinary next-token prediction into a usable preference signal, and the assumption it quietly leans on. It connects to the feedback model that uses it and to the calibration property it depends on, within the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "label-clamping",
+      "intro": "Once a model starts reasoning step by step before answering, its confidence tends to swing to extremes, which can make its stated probabilities a poor training signal. This page is about the fix: squeezing those probabilities back into a narrower, more moderate range before using them.\n\nIt compares three ways of turning a judgment into a training label and the overconfidence problem chain-of-thought reasoning introduces, then settles on the right range to clamp to. It connects back to chain-of-thought prompting, the cause of the problem it solves, under the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "ensembling-principles",
+      "intro": "Instead of applying the same principle over and over, this technique draws a fresh one from the constitution for every comparison or revision. The idea is that variety makes the resulting behavior more robust than any single fixed rule would.\n\nThe page shows this one technique applied twice, in the supervised stage and the AI-feedback stage, with a different payoff each time, which is why it belongs to two lenses at once: the method of principles, critique, and revision, and engineering a usable preference labeler. It connects to the SL-CAI principle list and to the feedback model."
+    },
+    {
+      "kind": "concept",
+      "id": "evasiveness",
+      "intro": "Train a model too hard to avoid saying anything risky, and it can start refusing to engage at all, falling back on stock lines like 'I can't answer that' even for ordinary questions. This canned-refusal pattern is what the page calls evasiveness.\n\nIt first describes what the failure looks like, then traces it back to a Goodhart-style problem present from the earliest labels, before covering how Constitutional AI removes it and what that costs on other metrics. With six connections, including to Elo scores, hedging, Goodhart's law, and RL-CAI, it spans both the Goodhart's-law lens and the helpfulness-harmlessness tradeoff lens."
+    },
+    {
+      "kind": "concept",
+      "id": "helpfulness-harmlessness-tension",
+      "intro": "Push a model to be more willing to help, and it becomes more willing to do harmful things too; push it toward caution, and it starts refusing ordinary requests as well. This is the underlying tension that most of Constitutional AI's evaluation is trying to address.\n\nThe page describes the tradeoff in general terms before narrowing to its specific failure mode and the finding that grows out of it. It opens onto the Pareto-improvement concept and connects to evasiveness, within the lens on this tradeoff and Constitutional AI's claim to beat it."
+    },
+    {
+      "kind": "concept",
+      "id": "elo-score",
+      "intro": "Borrowed from chess ranking systems, an Elo score turns a series of head-to-head comparisons into a single number that tracks how a model is doing over time. Here, crowdworkers do the comparing, and the outcome tracks helpfulness and harmlessness rather than wins and losses.\n\nThe page explains the rating system in general, how Constitutional AI applies it, and a caveat about it not being a fully neutral instrument. It connects to the absolute harmfulness score, evasiveness, and win rate, spanning the lens comparing automatic scores to human judgment and the lens on the helpfulness-harmlessness tradeoff."
+    },
+    {
+      "kind": "concept",
+      "id": "hhh-eval-benchmark",
+      "intro": "To check whether a model actually understands what helpful, honest, and harmless behavior looks like, this benchmark gives it pairs of candidate replies and asks it to pick the better one. Most of the questions come from earlier work, with a further set of harder ones added here.\n\nThe page covers what the benchmark tests and where its questions originate, then what it's used to check. It connects to the HHH framework it operationalizes, the BIG-Bench suite that first hosted it, and the calibration property it relies on, within the lens on this shared definition of alignment."
+    },
+    {
+      "kind": "concept",
+      "id": "big-bench",
+      "intro": "BIG-Bench is a sprawling, many-author collection of tasks meant to probe language models more broadly than any single benchmark could on its own. It predates Constitutional AI and shows up here mainly because of one thing it happens to host.\n\nThe page introduces the suite itself and then narrows to the one part relevant here: the original HHH evaluation questions it hosts. It connects to that evaluation set, under the lens on this shared definition of alignment."
+    },
+    {
+      "kind": "concept",
+      "id": "model-calibration",
+      "intro": "A model is well calibrated if, whenever it says it's eighty percent confident, it turns out to be right about eighty percent of the time. This general property, established before Constitutional AI, is what lets the paper treat a model's raw output probabilities as meaningful preference signals.\n\nThe page explains what calibration means and why it's a load-bearing assumption behind the paper's soft preference labels. It connects to the HHH evaluation set and the multiple-choice format that both rely on it, spanning the lens on the shared HHH definition and the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "absolute-harmfulness-score",
+      "intro": "Rather than comparing two responses against each other, this metric rates a single conversation directly, on a scale from zero to four, using a model trained to predict crowdworkers' own harm ratings. It's a different kind of measurement than a head-to-head comparison altogether.\n\nThe page explains what the score measures and why the paper wanted a second instrument beyond a pairwise ranking. It connects to the Elo score it supplements, within the lens comparing automatic scores against human and preference judgments."
+    },
+    {
+      "kind": "concept",
+      "id": "red-teaming",
+      "intro": "Red teaming means deliberately trying to break a system before someone else does, a practice with roots well outside AI. Here, crowdworkers play the adversary, holding conversations designed to coax a language model into saying something harmful, and those conversations become training material for both stages of Constitutional AI.\n\nThe page defines the practice, describes how Constitutional AI runs it, and closes on its one child concept and an outside check. It opens onto automated red teaming and connects to the harm-classification evaluations and the PALMS dataset, within the lens on sourcing and classifying harmful prompts."
+    },
+    {
+      "kind": "concept",
+      "id": "automated-red-teaming",
+      "intro": "Instead of relying on people to think up adversarial prompts, this approach has another language model do the searching for failure modes. It's mentioned here as a promising future direction rather than something Constitutional AI actually uses.\n\nThe page explains what the technique is and why a non-evasive model has to exist first for it to work well. It connects back to the manual red teaming it would extend, within the lens on sourcing and classifying harmful prompts."
+    },
+    {
+      "kind": "concept",
+      "id": "palms",
+      "intro": "PALMS is an older, fixed set of deliberately sensitive questions, built by earlier researchers to test how a model handles topics like violence or discrimination. Constitutional AI reuses it here mainly as a way to compare two of its models side by side.\n\nThe page introduces where PALMS came from and its role as an outside check on the paper's own results. It connects to red teaming, the paper's own source of harmful prompts, within the lens on sourcing and classifying harmful prompts."
+    },
+    {
+      "kind": "concept",
+      "id": "lamda",
+      "intro": "LaMDA is Google's dialogue-focused language model, built and published before Constitutional AI, and tuned on conversational data to make its replies more sensible and specific. It shows up here as a point of comparison rather than as something Constitutional AI builds on.\n\nThe page describes what LaMDA is and the two ways it's used in the paper, as a related system and as a source of comparison material. It connects to Sparrow, another prior dialogue agent, within the lens on the systems Constitutional AI positions itself against."
+    },
+    {
+      "kind": "concept",
+      "id": "sparrow",
+      "intro": "Sparrow is DeepMind's earlier dialogue agent, trained with human preference feedback and able to back up factual claims with live search results. Its way of breaking harmlessness down into a set of targeted rules is a close cousin of Constitutional AI's own approach.\n\nThe page describes what Sparrow is and why the paper treats it as an ancestor in its design lineage rather than just another baseline to beat. It connects to LaMDA, within the lens on the prior dialogue-agent systems Constitutional AI positions itself against."
+    },
+    {
+      "kind": "concept",
+      "id": "context-distillation",
+      "intro": "Context distillation is an older way of baking a long, carefully written prompt's behavior directly into a model's weights, by fine-tuning the model on its own outputs under that prompt. Earlier RLHF work used it; the RLHF models trained directly in this paper do not.\n\nThe page explains the technique itself and then why the paper deliberately sets it aside. With no other concepts connected to it, it sits alone within the lens on the prior systems Constitutional AI positions itself against."
+    },
+    {
+      "kind": "concept",
+      "id": "sl-cai-few-shot-examples",
+      "intro": "Left to its own devices, a model asked to critique and then revise its own writing sometimes gets confused about whose voice it's supposed to be using. This page covers the small set of hand-written examples added to the prompt to head that confusion off.\n\nIt describes the specific bug being fixed and how narrow a role this fix plays within the larger pipeline. It connects back to critique and revision, the process it supports, under the lens on principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "rl-cai-cot-prompts",
+      "intro": "Beyond the simple instruction to think step by step, the feedback model is also given a handful of fully worked examples, each showing the reasoning pattern with a slot left open for whichever principle is being applied. This page is about those worked examples.\n\nIt explains what the examples contain and how they work alongside the simpler generic trigger phrase. It connects to that trigger, within the lens on engineering a usable preference labeler."
+    },
+    {
+      "kind": "concept",
+      "id": "direct-revision-ablation",
+      "intro": "Is the critique step actually necessary, or would a model do just as well revising its harmful response directly, with no critique in between? This page covers the ablation the paper ran to find out.\n\nIt walks through the test itself and the paper's reasoning for keeping the critique step regardless of what the numbers showed. It connects back to critique and revision, the process it's testing, within the lens on principles, critique, and revision."
+    },
+    {
+      "kind": "concept",
+      "id": "classifying-harmful-behavior-eval",
+      "intro": "Built directly out of red-teaming transcripts, these two multiple-choice tests ask a model to do what crowdworkers already did by hand: tell harmful assistant behavior apart from ethical behavior, and sort harmful conversations into one of nine categories.\n\nThe page covers what the evaluations check for and how their difficulty carries over from the original human task into the paper's argument. It connects to red teaming, the source of the transcripts they're built from, within the lens on sourcing and classifying harmful prompts."
+    },
+    {
+      "kind": "concept",
+      "id": "pareto-improvement",
+      "intro": "Normally, making a model safer costs you some helpfulness, and making it more helpful costs you some safety; you just slide along the same tradeoff line. This page covers the paper's claim to have actually pushed that line outward instead.\n\nIt starts from what a Pareto improvement means in general, then the specific finding Constitutional AI reports, framed as the direct answer to the tension it grows out of. It connects to RL-CAI, the model that achieves it, within the lens on this tradeoff and Constitutional AI's claim to beat it."
+    },
+    {
+      "kind": "concept",
+      "id": "iterated-online-training",
+      "intro": "A preference model trained once can drift out of step with a policy that keeps changing during training. Iterated training is the older fix, periodically refreshing the preference model on the current policy's outputs, and it predates Constitutional AI.\n\nThe page explains what the technique is and why it's mentioned rather than actually used here, as a future direction that AI feedback could make easier to automate. It connects to RL from AI Feedback, within the lens moving from an open problem to reward models to AI feedback."
+    }
+  ]
+}

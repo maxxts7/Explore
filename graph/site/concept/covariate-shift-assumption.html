@@ -32,6 +32,8 @@
 <h1>Covariate shift assumption</h1>
 <p class="origins"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a> — <span class="role role-inherited">inherited</span></p>
 <p class="lede">A prior assumption (Shimodaira 2000) that p(y|x) is unchanged between training and test distributions, allowing importance-weighted reuse of training data under a shifted p(x).</p>
+<div class="page-intro"><p>When the world a model faces drifts away from the world it trained on, one classical assumption offers a foothold: the inputs may change, but the relationship between input and label stays fixed. That is the covariate shift assumption, which Shimodaira formalized in 2000 and Concrete Problems in AI Safety (2016) inherits.</p>
+<p>One section explains reweighting training data under a fixed conditional; a second explains why the paper treats the assumption warily.</p></div>
 <section class="prose-section">
 <h2>Reweighting training data under a fixed conditional</h2>
 <p>The covariate shift assumption, due to Shimodaira (2000), addresses the case of prediction tasks where an input $x$ and output $y$ are drawn from a training distribution $p_0$ and a test distribution $p^*$ that differ. The assumption asserts that only the marginal input distribution changes while the conditional relationship between input and label is preserved: $p_0(y \mid x) = p^*(y \mid x)$. Under this assumption, each training example $(x,y)$ can be reweighted by the importance ratio $w(x) = p^*(x)/p_0(x)$, so that the expected loss under the test distribution can be estimated from training data alone,

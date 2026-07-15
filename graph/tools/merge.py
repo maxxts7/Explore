@@ -17,6 +17,7 @@ Usage:
   python merge.py paper-overlay <staged.json>
   python merge.py walks <staged.json>...
   python merge.py pages <staged.json>...
+  python merge.py intros <staged.json>...
   python merge.py validate
 """
 import json
@@ -267,6 +268,25 @@ def validate(store):
             if not s.get("heading") or len(s.get("body", "").strip()) < 100:
                 err(f"concept {c['id']}: section {s.get('heading')!r} empty or too thin")
 
+    def check_intro(owner, intro):
+        paras = [p for p in intro.split("\n\n") if p.strip()]
+        if len(paras) != 2:
+            err(f"{owner}: intro must be exactly two paragraphs, got {len(paras)}")
+        if "[[" in intro:
+            err(f"{owner}: intro must not contain wiki-links")
+        words = len(intro.split())
+        if not 35 <= words <= 160:
+            err(f"{owner}: intro is {words} words, outside 35-160")
+
+    for coll, kindname in (("concepts", "concept"), ("themes", "theme"),
+                           ("superthemes", "supertheme"), ("tissueThemes", "tissue theme")):
+        for item in store[coll]:
+            if item.get("intro"):
+                check_intro(f"{kindname} {item['id']}", item["intro"])
+    for s in store.get("stories") or []:
+        if s.get("intro"):
+            check_intro(f"story {s['id']}", s["intro"])
+
     return errors
 
 
@@ -310,6 +330,25 @@ def merge_simple(store, key, staged_files):
             else:
                 store[key].append(item)
                 by_id[item["id"]] = item
+
+
+INTRO_KIND_COLL = {"concept": "concepts", "theme": "themes",
+                   "supertheme": "superthemes", "tissue": "tissueThemes",
+                   "story": "stories"}
+
+
+def merge_intros(store, staged_files):
+    index = {}
+    for kind, coll in INTRO_KIND_COLL.items():
+        for item in store.get(coll) or []:
+            index[(kind, item["id"])] = item
+    for f in staged_files:
+        data = json.loads(Path(f).read_text(encoding="utf-8"))
+        for entry in data["intros"]:
+            key = (entry["kind"], entry["id"])
+            if key not in index:
+                raise SystemExit(f"intros: unknown {entry['kind']} {entry['id']!r} in {f}")
+            index[key]["intro"] = entry["intro"].strip()
 
 
 def merge_pages(store, staged_files):
@@ -380,6 +419,8 @@ def main():
                 by_id[w["theme"]]["walk"] = w["steps"]
     elif cmd == "pages":
         merge_pages(store, args)
+    elif cmd == "intros":
+        merge_intros(store, args)
     else:
         raise SystemExit(f"unknown command {cmd!r}")
 

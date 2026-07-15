@@ -1,0 +1,224 @@
+{
+  "intros": [
+    {
+      "kind": "concept",
+      "id": "semi-supervised-reinforcement-learning",
+      "intro": "Imagine an agent that is told how well it did only once in a while, yet is judged on everything it does. Semi-supervised reinforcement learning is the framework Concrete Problems in AI Safety (2016) builds around that setup, its main technical route to oversight that cannot be given constantly.\n\nThe prose below lays out the fraction-of-episodes setup, then works through the approaches the paper sketches for closing the gap between what the agent sees and what it is judged on."
+    },
+    {
+      "kind": "concept",
+      "id": "supervised-reward-learning",
+      "intro": "The simplest way to cope with scarce reward is to guess the missing values: train a model to predict reward from what the agent sees, and trust its guesses where no true label exists. Supervised reward learning is the most direct of the four approaches Concrete Problems in AI Safety (2016) offers for its semi-supervised framework.\n\nWhat follows walks through the reward-predicting model itself, then places it as the base case the other approaches build on or complicate."
+    },
+    {
+      "kind": "concept",
+      "id": "semi-supervised-active-reward-learning",
+      "intro": "Rather than passively accepting whichever episodes happen to be labeled, an agent could ask: it could notice salient events and request reward feedback on those in particular. Concrete Problems in AI Safety (2016) calls this semi-supervised or active reward learning, a refinement of its basic reward-prediction proposal.\n\nThe page explains how that choice gets layered on top of ordinary reward prediction, then places the idea among its sibling approaches within the same framework."
+    },
+    {
+      "kind": "concept",
+      "id": "unsupervised-value-iteration",
+      "intro": "Even an episode with no reward attached still shows how the world moves. Unsupervised value iteration, one of four proposals in Concrete Problems in AI Safety (2016), puts those unlabeled transitions to work, using them to sharpen the value estimates an agent keeps through Bellman updates.\n\nThe first section shows how those updates get made; the second sets the idea beside its companion and its complement among the sibling proposals."
+    },
+    {
+      "kind": "concept",
+      "id": "unsupervised-model-learning",
+      "intro": "A model-based agent needs more than reward; it needs to know how the world responds to what it does, and that part of the picture stays visible even when reward does not. Unsupervised model learning, the fourth of the semi-supervised proposals in Concrete Problems in AI Safety (2016), uses reward-free episodes to sharpen exactly that response model.\n\nWhat follows covers sharpening the dynamics model itself, then how this proposal mirrors, in model-based terms, its unsupervised-value-iteration sibling."
+    },
+    {
+      "kind": "concept",
+      "id": "distant-supervision",
+      "intro": "Long before AI safety borrowed the idea, natural language processing researchers were training systems without labeling each example, supplying aggregate statistics or rules that stamp out many noisy labels instead. Distant supervision names that family of techniques, which Concrete Problems in AI Safety (2016) picks up as one route to cheaper oversight.\n\nWhat follows traces that trade of per-example evaluation for weaker signal, then follows the branches the paper draws off scalable oversight, including the knowledge-base system it points to as evidence the approach works."
+    },
+    {
+      "kind": "concept",
+      "id": "deepdive",
+      "intro": "DeepDive is a working system from Stanford that builds knowledge bases from rules its users write, each rule generating many rough labels at once. Concrete Problems in AI Safety (2016) cites it as proof that this style of weak supervision holds up in practice.\n\nOne section describes the rule-based system itself; the other explains why the paper treats it as evidence that weak supervision holds up in practice, rather than as a technique to adopt directly."
+    },
+    {
+      "kind": "concept",
+      "id": "hierarchical-reinforcement-learning",
+      "intro": "Some agents work like organizations: a top level decides broad, long-horizon moves, and lower levels handle the details in exchange for rewards of their own. Hierarchical reinforcement learning is that longstanding paradigm, which Concrete Problems in AI Safety (2016) revisits because layered delegation might let sparse oversight stretch further.\n\nThe page traces that delegation across timescales first, then turns to why the structure promises to stretch scarce oversight further, and to the earlier architecture, feudal reinforcement learning, the idea descends from."
+    },
+    {
+      "kind": "concept",
+      "id": "feudal-reinforcement-learning",
+      "intro": "In 1993, Dayan and Hinton sketched a control scheme run like a fiefdom: manager agents set goals, and worker agents chase synthetic rewards for meeting them. Feudal reinforcement learning is that early architecture, remembered here as the starting point of hierarchical RL.\n\nThe prose covers the manager-worker arrangement and its synthetic rewards first, then what the design lends to scalable oversight and the warning that travels with it."
+    },
+    {
+      "kind": "concept",
+      "id": "atari-games-environment",
+      "intro": "Atari's old video games found a second life as a standard proving ground for reinforcement learning. On this wiki they appear not as a technique but as a testbed: Concrete Problems in AI Safety (2016) borrows them as a toy world for its oversight and reward-hacking experiments.\n\nFirst the page explains how a pre-existing benchmark was repurposed as a difficulty ladder, then what that enables: a graded test of how little reward feedback an agent can manage on."
+    },
+    {
+      "kind": "concept",
+      "id": "epsilon-greedy",
+      "intro": "Flip a weighted coin: usually take the best action you know, occasionally take one at random. That simple rule, epsilon-greedy exploration, has guided reinforcement learning agents for decades, and it is entirely indifferent to whether the random action happens to be dangerous.\n\nThe page's sections cover the policy itself, far older than the paper that cites it, and why Concrete Problems in AI Safety (2016) treats it as unsafe by omission."
+    },
+    {
+      "kind": "concept",
+      "id": "r-max",
+      "intro": "Optimism can be a strategy. R-max, an algorithm Brafman and Tennenholtz published in 2003, assumes every unexplored action might yield maximum reward, which provably drives an agent to try everything, dangerous corners included.\n\nThe page moves from the pre-existing algorithm and its near-optimality guarantee, through the mechanism of optimism in the face of uncertainty, to why that same mechanism is both the guarantee and the hazard."
+    },
+    {
+      "kind": "concept",
+      "id": "risk-sensitive-performance-criteria",
+      "intro": "Most reinforcement learning chases the average outcome. A separate body of work asks agents to mind the worst one instead, swapping expected reward for objectives that bound variance or the probability of disaster. Concrete Problems in AI Safety (2016) surveys this literature as risk-sensitive performance criteria.\n\nThe page moves from the body of work the paper imports rather than invents, through the mathematics of replacing an expectation with something else, to what these objectives catch that a near-optimality proof does not."
+    },
+    {
+      "kind": "concept",
+      "id": "use-demonstrations",
+      "intro": "Trial and error is not the only way to learn a job someone competent has already done. Using demonstrations means handing the agent expert trajectories to learn from directly, so risky exploration may not be needed at all; Concrete Problems in AI Safety (2016) proposes it as a remedy for safe exploration.\n\nWhat follows moves from learning from experts instead of exploring, to the two different jobs one technique performs, to a note that a later paper actually built this one."
+    },
+    {
+      "kind": "concept",
+      "id": "apprenticeship-learning",
+      "intro": "Abbeel and Ng showed in 2005 that an agent can reach near-optimal behavior straight from expert trajectories, no trial and error required. Apprenticeship learning is their name for that paradigm, and Concrete Problems in AI Safety (2016) leans on it when arguing that demonstrations can substitute for risky exploration.\n\nFrom there, the prose covers the technique's history before the paper, its mechanism of matching feature expectations, and why the paper cares about the distinction it draws."
+    },
+    {
+      "kind": "concept",
+      "id": "simulated-exploration",
+      "intro": "One way to make dangerous learning safe is to move it somewhere consequence-free. Simulated exploration, a remedy proposed in Concrete Problems in AI Safety (2016), has the agent meet danger inside a simulation first, so that a more cautious policy can be brought out into the real world.\n\nThe sections below take the idea in turn: moving exploratory risk into simulation, what the paper admits that move does not solve, and where it sits among the other exploration remedies."
+    },
+    {
+      "kind": "concept",
+      "id": "bounded-exploration",
+      "intro": "Suppose some region of the world is known to be forgiving, a place where even the worst action can be recovered from. Bounded exploration, proposed in Concrete Problems in AI Safety (2016), lets an agent roam freely inside such a region and uses models to check any step that would leave it.\n\nDown the page: shrinking the space rather than the objective, the worst-case framing borrowed from robust control, and the question of who does the checking and what it needs to get started."
+    },
+    {
+      "kind": "concept",
+      "id": "h-infinity-control",
+      "intro": "Control engineers of the early 1980s built a theory around a pessimistic question: how badly can a bounded disturbance shake a system, and how do you design for that worst case? H-infinity control is that framework, and it enters this wiki because AI safety keeps borrowing its way of thinking.\n\nThe sections contrast worst-case with average-case design, then trace the safety mechanisms the framework underlies, bounded exploration among them."
+    },
+    {
+      "kind": "concept",
+      "id": "trusted-policy-oversight",
+      "intro": "A learner can be chaperoned by a policy that is already trusted: before an exploratory action is taken, the trusted policy and a model of the environment judge whether the agent could recover from it. Concrete Problems in AI Safety (2016) proposes this arrangement as trusted policy oversight.\n\nThe idea unfolds in stages: delegating the recoverability check to a second policy, one concrete way to run that abstract check, and the case for a machine-speed alternative once a human bottleneck stops scaling."
+    },
+    {
+      "kind": "concept",
+      "id": "human-oversight-safe-exploration",
+      "intro": "The bluntest remedy for risky exploration is simply to ask a person first. Concrete Problems in AI Safety (2016) proposes exactly that, a human check on potentially unsafe actions, while conceding in the same breath that people are far too slow to review very many of them.\n\nThe prose walks through the proposal, the limit the paper states in the same breath it proposes it, and what replaces the human once the approach stops scaling."
+    },
+    {
+      "kind": "concept",
+      "id": "babi-tasks",
+      "intro": "Before large language models, Weston and colleagues built the bAbI tasks: roughly twenty tiny question-answering puzzles, each isolating one skill a reading system ought to have. Concrete Problems in AI Safety (2016) points to them as a model for the diagnostic benchmark suite that safe exploration research still lacks.\n\nA section on the benchmark suite itself comes first, then one explaining that the paper borrows its structure for safe exploration research, not its technique."
+    },
+    {
+      "kind": "concept",
+      "id": "covariate-shift-assumption",
+      "intro": "When the world a model faces drifts away from the world it trained on, one classical assumption offers a foothold: the inputs may change, but the relationship between input and label stays fixed. That is the covariate shift assumption, which Shimodaira formalized in 2000 and Concrete Problems in AI Safety (2016) inherits.\n\nOne section explains reweighting training data under a fixed conditional; a second explains why the paper treats the assumption warily."
+    },
+    {
+      "kind": "concept",
+      "id": "partially-specified-models",
+      "intro": "Econometricians learned long ago to commit to only part of a model, assuming a few things about a distribution and staying agnostic about the rest. Partially specified models name that family of approaches, which Concrete Problems in AI Safety (2016) borrows as a way to survive distribution shift on weaker assumptions.\n\nAfter a section on specifying only part of a distribution, the prose introduces the techniques this family gave rise to, and the retreat from a fully specified model that motivates them both."
+    },
+    {
+      "kind": "concept",
+      "id": "generalized-method-of-moments",
+      "intro": "Hansen's generalized method of moments, from 1982, lets an econometrician pin down a model's parameters using only a handful of equations the true parameters must satisfy, no full description of the data's distribution required. It reaches this wiki as one of the partially specified approaches Concrete Problems in AI Safety (2016) surveys.\n\nIdentification from moment conditions alone occupies the first section; the second shows how the method generalizes the paper's founding example."
+    },
+    {
+      "kind": "concept",
+      "id": "unsupervised-risk-estimation",
+      "intro": "A model can be failing badly on new data with no one able to catch it, since no labels exist to check its answers against. Unsupervised risk estimation, formalized in 2010 by Donmez, Lebanon, and Balasubramanian, estimates that failure rate anyway, provided the model's error distribution has some assumed structure to lean on.\n\nEstimating risk without labels comes first in the prose, followed by why this target is narrower than the ambitions of the rest of its family."
+    },
+    {
+      "kind": "concept",
+      "id": "training-multiple-distributions",
+      "intro": "Practitioners have long hedged against surprise by training on several different distributions at once, wagering that a model performing well across all of them will cope with a genuinely new one. Concrete Problems in AI Safety (2016) records the habit as one of the plainer responses to distributional shift.\n\nThe prose treats the practice first as an engineering wager rather than a statistical assumption, then contrasts it with the covariate shift approach."
+    },
+    {
+      "kind": "concept",
+      "id": "counterfactual-reasoning",
+      "intro": "What would have happened had the world been different? Statisticians and causal theorists from Neyman to Pearl built formal machinery for answering that question, and counterfactual reasoning is the umbrella this corpus gives it. Concrete Problems in AI Safety (2016) suggests it as a unifying way to think about distributional shift.\n\nOne section introduces the causal frameworks themselves; the next applies them as a lens on distributional shift."
+    },
+    {
+      "kind": "concept",
+      "id": "machine-learning-with-contracts",
+      "intro": "Software engineers write contracts: explicit promises about what a component will do, checkable at its interface. Carried into machine learning, the idea exposes an uncomfortable fact, that most ML systems rest on the brittle, unwritten promise that training and test data look alike.\n\nThe first section unpacks the borrowing from design-by-contract; the second shows how the reframing organizes several other ideas on this wiki, model repair among them."
+    },
+    {
+      "kind": "concept",
+      "id": "model-repair",
+      "intro": "Instead of retraining a faulty model, one line of work patches it. Model repair, due to Ghosh and colleagues in 2016, alters a trained model directly until a specified safety property holds, and it enters this corpus as a concrete instance of making machine learning honor a contract.\n\nThe sections cover patching versus retraining first, then the technique's role as the ex-post half of a pair."
+    },
+    {
+      "kind": "concept",
+      "id": "formal-verification",
+      "intro": "Testing samples a system's behavior; formal verification proves it, mathematically, for every possible input. The approach has secured real safety-critical systems, most famously the federal aircraft collision avoidance system, and the AI-safety corpus keeps it in view as a standard that other methods rarely meet.\n\nA section on proving rather than testing opens the prose, followed by one on the rigor Asimov's fictional law never received, and that modern machine learning still lacks."
+    },
+    {
+      "kind": "concept",
+      "id": "asimovs-first-law",
+      "intro": "A robot may not injure a human being. Asimov wrote his First Law as fiction in the 1940s, and half a century later Weld and Etzioni took it seriously enough to attempt a formalization within classical AI planning. This corpus remembers both moves.\n\nThe page tells that double story first, a fictional injunction and a serious attempt to formalize it, then explains why the corpus treats the law mainly as a foil."
+    },
+    {
+      "kind": "concept",
+      "id": "privacy-research-area",
+      "intro": "Machine learning applied to sensitive records, medical data above all, raises a question of its own: what does a trained model give away about the people in its training set? Privacy research studies that leak, and Concrete Problems in AI Safety (2016) names it a neighbor to accident risk rather than a part of it.\n\nFirst the prose covers what a model can reveal about its training data; then it explains why this hazard needs no adversary, unlike the field listed beside it."
+    },
+    {
+      "kind": "concept",
+      "id": "fairness-research-area",
+      "intro": "Whether machine learning systems discriminate, and how to keep them from doing so, is the business of fairness research. It appears in this corpus for a modest reason: Concrete Problems in AI Safety (2016) lists it among the related safety problems that fall outside its own study of accidents.\n\nWhat follows sets the field aside just as the paper does, then explains what the field actually studies and why the paper draws its boundary of accidents around it rather than through it."
+    },
+    {
+      "kind": "concept",
+      "id": "security-ml",
+      "intro": "What can a malicious adversary do to a legitimate machine learning system? That question defines security research, an established field Concrete Problems in AI Safety (2016) mentions precisely to set it outside its own scope, which concerns harms nobody intended.\n\nThe prose runs from a field defined by its adversary, through the sense in which it mirrors accident risk one step removed, to the contrast with a neighboring field, privacy, that needs no adversary at all."
+    },
+    {
+      "kind": "concept",
+      "id": "abuse-ml",
+      "intro": "An ML system can itself be the weapon, built or deployed to defraud, spam, or harm people at scale. That is what this corpus means by abuse, one of the adjacent research areas Concrete Problems in AI Safety (2016) gestures to while marking out its own territory of accidents.\n\nA section on what the term covers comes first, then one on its modest place in the corpus, beside the security research it borders."
+    },
+    {
+      "kind": "concept",
+      "id": "transparency-ml",
+      "intro": "Nobody fully understands what a complicated machine learning system is doing inside, and much of AI safety work quietly depends on that changing. Transparency research pursues the question directly; Concrete Problems in AI Safety (2016) names the field in a single line, declining to develop it even though several of its own proposals assume it.\n\nWhat follows takes up a field named mainly to be set aside, the tool the paper's own proposals quietly presuppose anyway, and where the area sits relative to the rest."
+    },
+    {
+      "kind": "concept",
+      "id": "policy-ml",
+      "intro": "The economic and social consequences of machine learning, for labor, industries, and governance, have a research area of their own. This corpus calls it policy, following Concrete Problems in AI Safety (2016), which mentions the field in one line while marking the edge of its own technical territory.\n\nWhat follows describes the adjacent field the paper declines to cover, then the boundary that one brief mention draws around the paper's own territory."
+    },
+    {
+      "kind": "concept",
+      "id": "instructgpt",
+      "intro": "InstructGPT is what GPT-3 became after OpenAI taught it to follow instructions, through human demonstrations, human preference judgments, and reinforcement learning arranged as a three-step pipeline. Its 2022 paper found people preferred the tuned model's outputs even over those of a much larger untuned one.\n\nThe page moves from what InstructGPT is to the headline comparison showing its gains came from data rather than scale, then to where it still falls short and how it went on to become the reference RLHF system downstream."
+    },
+    {
+      "kind": "concept",
+      "id": "gpt-3",
+      "intro": "Underneath everything in the InstructGPT work sits GPT-3, the large autoregressive language model that Brown and colleagues introduced in 2020, trained to predict the next token across a vast sweep of text. Every model the paper trains, supervised, reward, or PPO, starts from it.\n\nThe prose explains what GPT-3 is, then its role in this corpus as the shared starting point, and finally a controlled comparison that teaches a lesson about where the improvements really came from."
+    },
+    {
+      "kind": "concept",
+      "id": "sft-model",
+      "intro": "Take GPT-3, show it thousands of human-written demonstrations of good responses, and fine-tune on them directly: the result is the SFT model, the first trained artifact in the InstructGPT (2022) pipeline. It serves both as a baseline in its own right and as the seed for everything trained afterward.\n\nFrom there the page moves through how the model is trained, an overfitting curve explained by the dataset's construction, its selection by the reward model it later initializes, and the way it quietly forks in two."
+    },
+    {
+      "kind": "concept",
+      "id": "reward-model",
+      "intro": "Human judgment is expensive, so InstructGPT (2022) trained a stand-in: a model that reads a prompt and a response and returns a single score predicting which responses people would prefer. That reward model becomes the signal the rest of the pipeline optimizes against.\n\nThe prose asks first why the corpus needed a stand-in for human judgment at all, then what that stand-in enabled downstream, before finally getting to the mechanics of what the model actually is."
+    },
+    {
+      "kind": "concept",
+      "id": "reward-model-loss",
+      "intro": "When a labeler ranks two model outputs, that preference becomes training signal through a pairwise loss: the gap between the rewards assigned to the preferred and dispreferred outputs is read as the log odds a human would favor the first. InstructGPT (2022) inherited the loss from earlier summarization work.\n\nWhat follows explains how the loss fits into the pipeline, walks through its mathematics, and draws out what its structure implies."
+    },
+    {
+      "kind": "concept",
+      "id": "k-choose-2-batching",
+      "intro": "Ranking K outputs at once yields every pairwise comparison among them, and shuffling those correlated pairs into training as if they were independent makes a reward model overfit. The fix in InstructGPT (2022) is small: keep all the comparisons from one ranking inside a single batch element.\n\nHow the trick fits, what it enabled, and what it actually is, in that order, make up what follows: a small fix nested under the reward model it protects from overfitting."
+    },
+    {
+      "kind": "concept",
+      "id": "ppo-training",
+      "intro": "Proximal Policy Optimization is the reinforcement learning algorithm behind the final step of the InstructGPT (2022) pipeline: starting from the supervised model, it nudges the policy toward outputs the reward model scores highly while limiting how far any single update can move.\n\nSections on the algorithm in general and its role as the third training stage lead into the moving parts that make the stage actually work, each substantial enough to earn its own page further down this wiki."
+    }
+  ]
+}

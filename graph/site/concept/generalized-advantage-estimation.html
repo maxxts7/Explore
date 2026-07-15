@@ -32,6 +32,8 @@
 <h1>Generalized advantage estimation (GAE)</h1>
 <p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-inherited">inherited</span></p>
 <p class="lede">The advantage-estimation technique of Schulman et al. (2016) used within PPO training, applied here with no discounting.</p>
+<div class="page-intro"><p>Policy-gradient methods learn faster when they can judge each action against a baseline: how much better was this than what usually happens? Generalized advantage estimation, borrowed from earlier reinforcement learning work, is the machinery InstructGPT uses to make that judgment.</p>
+<p>The page explains what GAE computes and how PPO fine-tuning applies it with discounting switched off, building to a quiet irony: the one-step bandit setting leaves half the machinery idle. That deactivation is the detail worth carrying forward.</p></div>
 <section class="prose-section">
 <h2>What GAE computes, in general</h2>
 <p>Generalized advantage estimation, introduced by Schulman et al. (2016), is a technique for estimating the advantage function used in policy-gradient reinforcement learning, $A(s,a) = Q(s,a) - V(s)$, the amount by which taking action $a$ in state $s$ beats the average value of that state. Given a trajectory of rewards $r_t$ and a learned value function $V$, define the temporal-difference residual $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$. GAE forms the advantage estimate as an exponentially weighted sum of these residuals,

@@ -494,6 +494,14 @@ class SiteBuilder:
         tag = ' <span class="tag hindsight">hindsight</span>' if e["hindsight"] else ""
         return f"{left} — {verb_html} → {right}{tag}"
 
+    def intro_block(self, page_kind: str, item: dict) -> str:
+        """Gentle two-paragraph page introduction, when the item has one."""
+        intro = (item.get("intro") or "").strip()
+        if not intro:
+            return ""
+        return (f'<div class="page-intro">'
+                f'{self.process_body(intro, page_kind, item["id"])}</div>')
+
     def origin_line(self, origins: list[dict]) -> str:
         parts = []
         for o in origins:
@@ -514,6 +522,7 @@ class SiteBuilder:
         parts.append(f"<h1>{esc(c['name'])}</h1>")
         parts.append(f'<p class="origins">{self.origin_line(c["origins"])}</p>')
         parts.append(f'<p class="lede">{esc(c["summary"])}</p>')
+        parts.append(self.intro_block(pk, c))
 
         for s in c["sections"]:
             parts.append(f"<section class=\"prose-section\">")
@@ -603,6 +612,7 @@ class SiteBuilder:
         pk = "theme"
         parts = []
         parts.append(f"<h1>{esc(t['name'])}</h1>")
+        parts.append(self.intro_block(pk, t))
         parts.append('<section class="prose-section">' + self.process_body(t["narrative"], pk, t["id"]) + "</section>")
 
         parts.append('<hr class="divider">')
@@ -650,6 +660,7 @@ class SiteBuilder:
         pk = "supertheme"
         parts = []
         parts.append(f"<h1>{esc(t['name'])}</h1>")
+        parts.append(self.intro_block(pk, t))
         parts.append('<section class="prose-section">' + self.process_body(t["narrative"], pk, t["id"]) + "</section>")
 
         parts.append('<hr class="divider">')
@@ -711,6 +722,7 @@ class SiteBuilder:
         pk = "tissue"
         parts = []
         parts.append(f"<h1>{esc(t['name'])}</h1>")
+        parts.append(self.intro_block(pk, t))
         parts.append('<section class="prose-section">' + self.process_body(t["narrative"], pk, t["id"]) + "</section>")
 
         parts.append('<hr class="divider">')
@@ -817,9 +829,6 @@ class SiteBuilder:
         count_html = f' <span class="tree-count">({count})</span>' if count else ""
 
         body = []
-        claim = (node.get("claim") or "").strip()
-        if claim:
-            body.append(f'<p class="story-claim">{esc(claim)}</p>')
         narrative = (node.get("narrative") or "").strip()
         if narrative:
             body.append(f'<div class="node-narrative">{self.process_body(narrative, pk, "overlay")}</div>')
@@ -889,6 +898,7 @@ class SiteBuilder:
             parts.append(
                 f'<div class="story-panel" id="{esc(s["id"])}" role="tabpanel" '
                 f'aria-labelledby="subtabbtn-{esc(s["id"])}"{hidden}>\n'
+                f'{self.intro_block("index", s)}\n'
                 f'<p class="tree-controls"><span class="controls-label">Read at</span>{gran_buttons}</p>\n'
                 f'<div class="overlay-tree">{self._overlay_node(s, 0)}</div>\n</div>'
             )
@@ -1054,10 +1064,14 @@ class SiteBuilder:
       if (history.replaceState) history.replaceState(null, '', '#tab-' + slug);
     });
   });
-  if (location.hash.indexOf('#tab-') === 0) {
-    var slug = location.hash.slice(5);
-    if (document.getElementById('tabbtn-' + slug)) activate(slug);
+  function activateFromHash() {
+    if (location.hash.indexOf('#tab-') === 0) {
+      var slug = location.hash.slice(5);
+      if (document.getElementById('tabbtn-' + slug)) activate(slug);
+    }
   }
+  activateFromHash();
+  window.addEventListener('hashchange', activateFromHash);
   var subtabs = Array.prototype.slice.call(document.querySelectorAll('.subtabs [role="tab"]'));
   function activateStory(sid) {
     subtabs.forEach(function (btn) {
@@ -1107,33 +1121,13 @@ class SiteBuilder:
         parts = []
         parts.append('<h1 class="hero-title">Explore</h1>')
         parts.append('<p class="hero-tag">An AI safety wiki</p>')
-        story_lede = (
-            "the same graph told a few different ways. Each story gathers every theme "
-            "under its own central claim, and you can open any telling at your own pace, "
-            "one level at a time"
-            if len(stories) > 1 else
-            "the whole graph resting on a single root claim. Open it one level at a "
-            "time, and every page is simply a step along the walk"
-        )
         parts.append(
-            "<p class=\"lede\">Everything here comes from three AI-safety papers &mdash; "
-            "<em>Concrete Problems in AI Safety</em> (2016), "
-            "<em>InstructGPT</em> (2022), and <em>Constitutional AI</em> (2022) &mdash; "
-            "and there isn&rsquo;t a diagram anywhere. What you&rsquo;ll find instead is "
-            + story_lede + ". "
-            "And if you&rsquo;d rather stay close to the sources, you can re-sort the "
-            "same pool paper by paper, following each paper&rsquo;s own reading order.</p>"
+            "<p class=\"lede\">A quiet way to explore AI-safety research. "
+            "Each paper is taken down to its bare-bones concepts, so you can see "
+            "what it&rsquo;s really made of and follow how the ideas connect &mdash; "
+            "within the paper itself, and out across the wider field. "
+            "The papers are all in <a href=\"#tab-papers\">the papers section</a>.</p>"
         )
-        count_bits = [
-            (len(d["concepts"]), "concepts"), (len(d["edges"]), "edges"),
-            (len(d["themes"]), "themes"), (len(d["superthemes"]), "superthemes"),
-            (len(d["superedges"]), "super edges"), (len(d["tissueThemes"]), "tissue themes"),
-            (len(d["papers"]), "papers"),
-        ]
-        counts = "".join(f'<span class="count-chip"><b>{n}</b>{label}</span>'
-                         for n, label in count_bits)
-        parts.append(f'<div class="counts">{counts}</div>')
-
         tabs: list[tuple[str, str, str]] = []
         if stories:
             story_label = "Stories" if len(stories) > 1 else "The story"
@@ -1206,20 +1200,13 @@ CSS = """
 /* ==========================================================================
    Explore — an AI safety wiki · "aurora glass"
    Frosted panels floating over a slow ambient aurora field.
-   Display/UI: Space Grotesk · Prose: Frank Ruhl Libre · Math: KaTeX
+   Display/UI and prose: Source Serif 4 · Math: KaTeX
    ========================================================================== */
 
 @font-face {
-  font-family: "Space Grotesk";
-  src: url("typefaces/space-grotesk-latin-wght-normal.woff2") format("woff2-variations");
-  font-weight: 300 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Frank Ruhl Libre";
-  src: url("typefaces/frank-ruhl-libre-latin-wght-normal.woff2") format("woff2-variations");
-  font-weight: 300 900;
+  font-family: "Source Serif 4";
+  src: url("typefaces/source-serif-4-latin-wght-normal.woff2") format("woff2-variations");
+  font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
@@ -1228,8 +1215,8 @@ CSS = """
 
 :root {
   color-scheme: light dark;
-  --sans: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --serif: "Frank Ruhl Libre", Georgia, "Iowan Old Style", serif;
+  --sans: "Source Serif 4", Georgia, "Iowan Old Style", serif;
+  --serif: "Source Serif 4", Georgia, "Iowan Old Style", serif;
   --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
 
   --bg0: #eef1fa;
@@ -1309,7 +1296,7 @@ body {
   color: var(--fg);
   font-family: var(--serif);
   font-weight: 450;
-  font-size: 1.09rem;
+  font-size: 1.15rem;
   line-height: 1.72;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -1527,6 +1514,9 @@ p { margin: 0 0 2rem; }
   margin-bottom: 1.1rem;
 }
 
+/* gentle two-paragraph page introduction — plain prose, part of the page flow */
+.page-intro { margin: 0 0 1.6rem; }
+
 .origins, .edge-meta {
   font-family: var(--sans);
   font-size: 0.84rem;
@@ -1645,33 +1635,6 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 }
 
 .muted { color: var(--muted); font-size: 0.85em; }
-
-/* index stat chips */
-.counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 1.15rem 0 0.5rem;
-}
-.count-chip {
-  font-family: var(--sans);
-  font-size: 0.78rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-  padding: 0.32rem 0.72rem;
-  border-radius: 999px;
-  background: var(--chip);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--card-shadow);
-  white-space: nowrap;
-}
-.count-chip b {
-  color: var(--fg);
-  font-weight: 640;
-  margin-right: 0.3em;
-  font-variant-numeric: tabular-nums;
-}
 
 /* ---- content blocks ------------------------------------------------------ */
 
@@ -1927,17 +1890,6 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
   letter-spacing: 0.1em;
 }
 
-.story-claim {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 1.14rem;
-  line-height: 1.55;
-  margin: 0.5rem 0 0.85rem;
-  padding-left: 0.95rem;
-  border-left: 2px solid;
-  border-image: linear-gradient(180deg, var(--acc-a), var(--acc-c)) 1;
-}
-
 .node-narrative p { margin: 0.4rem 0 0.85rem; }
 
 .tree-count {
@@ -2065,7 +2017,7 @@ ol.walk .walk-prose { margin-left: 0; }
 /* ---- responsive -------------------------------------------------------- */
 
 @media (max-width: 640px) {
-  body { font-size: 1.03rem; }
+  body { font-size: 1.08rem; }
   .concept-az { columns: 1; }
   .page { border-radius: 16px; margin-top: 0.8rem; }
   .node-body { margin-left: 0.45rem; padding-left: 0.75rem; }
@@ -2198,25 +2150,23 @@ KATEX_LOCAL = True  # set to False in main() if download fails
 
 
 # --------------------------------------------------------------------------
-# Webfont fetch (Space Grotesk for UI, Frank Ruhl Libre for prose)
+# Webfont fetch (Source Serif 4 for everything)
 # --------------------------------------------------------------------------
 
 # dest file (under assets/typefaces/) -> candidate CDN URLs, first hit wins
 # (fontsource variable packages name their default file after the axis set,
 # which differs per font, hence the candidates)
 FONT_FILES: dict[str, list[str]] = {
-    "space-grotesk-latin-wght-normal.woff2": [
-        "https://cdn.jsdelivr.net/npm/@fontsource-variable/space-grotesk@5/files/space-grotesk-latin-wght-normal.woff2",
-    ],
-    "frank-ruhl-libre-latin-wght-normal.woff2": [
-        "https://cdn.jsdelivr.net/npm/@fontsource-variable/frank-ruhl-libre@5/files/frank-ruhl-libre-latin-wght-normal.woff2",
+    "source-serif-4-latin-wght-normal.woff2": [
+        "https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5/files/source-serif-4-latin-wght-normal.woff2",
+        "https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5/files/source-serif-4-latin-opsz-normal.woff2",
     ],
 }
 
 
 def download_fonts() -> bool:
-    """Fetch the UI/prose webfonts locally. Non-fatal: on failure the CSS
-    font stacks fall back to Segoe UI / Georgia."""
+    """Fetch the webfont locally. Non-fatal: on failure the CSS
+    font stacks fall back to Georgia."""
     dest_dir = ASSETS_DIR / "typefaces"
     dest_dir.mkdir(parents=True, exist_ok=True)
     ok = True

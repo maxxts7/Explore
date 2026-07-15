@@ -1,0 +1,219 @@
+{
+  "intros": [
+    {
+      "kind": "concept",
+      "id": "ppo-model",
+      "intro": "When InstructGPT's authors wanted to know what their pretraining-gradient trick actually bought them, they needed a version trained without it. This is that variant: plain reinforcement learning against the reward model, penalized only for drifting from its starting point.\n\nThe page first pins down the ablation exactly, then explains what it isolates. From there, the natural next stop is PPO-ptx, the sibling variant it exists to be measured against."
+    },
+    {
+      "kind": "concept",
+      "id": "ppo-ptx",
+      "intro": "Fine-tuning a language model with reinforcement learning tends to make it worse at things it already knew how to do. PPO-ptx is InstructGPT's answer: while the model chases reward, it keeps practicing plain language modeling on its original pretraining data, so the two pulls balance.\n\nAfter the modification itself comes the problem it was built to fix, the so-called alignment tax, and then the more interesting question: how it stacks up against its two rivals."
+    },
+    {
+      "kind": "concept",
+      "id": "kl-penalty",
+      "intro": "A model being optimized against a learned reward will happily wander into strange territory to please it. The per-token KL penalty is the leash: at every token, the policy pays a small cost for straying from the supervised model it started as.\n\nWhat follows moves from what a KL penalty is in general to why this one bites at every token rather than once per episode, then out to the corpus's wider story about proxies going wrong. Its tradeoff against pretraining-gradient mixing is the part worth lingering on."
+    },
+    {
+      "kind": "concept",
+      "id": "value-function",
+      "intro": "Reinforcement learning needs a running estimate of how well things are going, so the algorithm can tell which actions beat expectations. That estimator is the value function, or critic, and in InstructGPT it is not built from scratch but grown out of the reward model itself.\n\nFrom the general idea of a critic, the page narrows to how InstructGPT initializes it from the reward model's weights, then to the more surprising choice: keeping it fixed at six billion parameters even as the policy scales far larger."
+    },
+    {
+      "kind": "concept",
+      "id": "bandit-environment",
+      "intro": "Most reinforcement learning imagines a long game: act, see the world change, act again. InstructGPT's setup is far simpler. The model sees one prompt, writes one response, receives one score, and the episode is over.\n\nThat one-step framing gets worked through in general before landing on what it costs the surrounding machinery. It is worth following into generalized advantage estimation, where the same simplicity leaves half the usual apparatus doing nothing."
+    },
+    {
+      "kind": "concept",
+      "id": "generalized-advantage-estimation",
+      "intro": "Policy-gradient methods learn faster when they can judge each action against a baseline: how much better was this than what usually happens? Generalized advantage estimation, borrowed from earlier reinforcement learning work, is the machinery InstructGPT uses to make that judgment.\n\nThe page explains what GAE computes and how PPO fine-tuning applies it with discounting switched off, building to a quiet irony: the one-step bandit setting leaves half the machinery idle. That deactivation is the detail worth carrying forward."
+    },
+    {
+      "kind": "concept",
+      "id": "rlhf",
+      "intro": "Some things we want from a language model are easy to recognize but hard to write down as a rule. Reinforcement learning from human feedback works with that asymmetry: people compare pairs of outputs, a model learns to predict their preferences, and that learned judgment becomes the training signal.\n\nThe general technique gives way to the specific pipeline built here, then to its place in a longer lineage of scalable oversight. Because the idea nests, it is worth going down into the models it contains, Helpful RLHF and HH RLHF, to see the same recipe reused."
+    },
+    {
+      "kind": "concept",
+      "id": "supervised-fine-tuning",
+      "intro": "Before any reinforcement learning happens, InstructGPT begins the old-fashioned way: show the model examples of the behavior you want, written by people, and train it to imitate them.\n\nFrom the technique in general, the page narrows to its role as step one of the pipeline, then traces it back to a proposal in Concrete Problems in AI Safety (2016), worth a look for how directly a six-year-old suggestion became load-bearing practice."
+    },
+    {
+      "kind": "concept",
+      "id": "alignment-tax",
+      "intro": "Making a model more aligned can quietly make it less capable. InstructGPT found that its fine-tuned models slipped on standard NLP benchmarks even as human raters preferred their answers, a cost the paper names the alignment tax.\n\nThe page places the idea among the paper's own admitted shortfalls, explains why noticing it matters, and finally gets concrete about what it looks like in practice. It connects most directly to reward-model over-optimization, the pathology it sits beside."
+    },
+    {
+      "kind": "concept",
+      "id": "hallucination",
+      "intro": "Ask a model to summarize a document and it may confidently include things the document never said. That is hallucination in its closed-domain sense: fabricating content the input does not support, on tasks where the input is supposed to be the whole world.\n\nThe term's roots predate this paper; what InstructGPT adds is a way for labelers to actually mark it. More interesting is the tension just one connection away: the opposite failure of hedging too much."
+    },
+    {
+      "kind": "concept",
+      "id": "reward-overoptimization",
+      "intro": "Push hard enough on any learned measure of quality and it stops measuring quality. When InstructGPT's policy is optimized against its reward model too aggressively, it finds outputs the model scores highly but people do not actually like. The reward was only ever a proxy.\n\nThis is treated here as the corpus's clearest Goodhart story, then followed into what enables the failure and what counters it in practice. Worth following is its connection to Goodhart's law itself, the pattern stated in the abstract that this page makes concrete."
+    },
+    {
+      "kind": "concept",
+      "id": "excessive-hedging",
+      "intro": "Put a simple question to InstructGPT and it will sometimes refuse to commit, offering a polite spread of possible answers where one clear answer exists. The authors noticed this hedging habit just by talking to their own model.\n\nThe failure gets examined on its own terms, then argued into a Goodhart effect too fine-grained for any training curve to catch. Its mirror image on the harmlessness axis, and the data bug suspected of causing it, are worth the detour."
+    },
+    {
+      "kind": "concept",
+      "id": "false-premise-failure",
+      "intro": "Slip a false assumption into an instruction, such as asking why it is important to eat socks after meditating, and the model tends to play along rather than push back. Instead of correcting the premise, it answers as though it were true.\n\nThis is a short page: the failure itself, then why it counts as an error of omission that pairs naturally with hedging's error of commission. That pairing matters more than the failure on its own; it is what ties this page to hedging's opposite mistake."
+    },
+    {
+      "kind": "concept",
+      "id": "sft-dataset",
+      "intro": "Roughly thirteen thousand prompts, each paired with an answer a person actually wrote: that is the raw material for the first stage of InstructGPT's training. Its contents came partly from hired labelers and partly from real users of an earlier model.\n\nIt traces back first to a proposal sketched in Concrete Problems in AI Safety (2016), then forward to what it enabled downstream, including a data quirk worth knowing before trusting the numbers built on top of it."
+    },
+    {
+      "kind": "concept",
+      "id": "rm-dataset",
+      "intro": "To learn what people prefer, you first need a record of people preferring things. This dataset is that record: around 33,000 prompts, each with a handful of model outputs that labelers ranked from best to worst, gathered to train InstructGPT's reward model.\n\nIt sits among the pipeline's three human-data artifacts, but the more consequential half of the page is what shapes the data before the reward model ever sees it, since bias introduced here becomes bias everywhere downstream."
+    },
+    {
+      "kind": "concept",
+      "id": "ppo-dataset",
+      "intro": "The final stage of InstructGPT's training needs prompts but no answers: the model writes its own responses and the reward model scores them. Some 31,000 unlabeled prompts from the API serve that purpose, making this the cheapest of the pipeline's three datasets.\n\nAfter placing it among the three data artifacts, the page turns to what that cheapness bought: the economics that made the whole pipeline affordable to run at scale."
+    },
+    {
+      "kind": "concept",
+      "id": "api-prompt-distribution",
+      "intro": "Most of what InstructGPT trained on was written by strangers: real requests that customers typed into an early version of the model on OpenAI's Playground. Before use, the prompts were deduplicated, capped per user, and scrubbed of personal information.\n\nWhere the prompts came from matters less than what follows: the resulting distribution co-evolved with the model rather than sampling anything neutral. From there, it is worth seeing how one stream of prompts ended up funding three separate datasets."
+    },
+    {
+      "kind": "concept",
+      "id": "truthfulqa",
+      "intro": "Some questions invite wrong answers because people keep repeating them wrong: urban myths, garbled science, comfortable falsehoods. TruthfulQA tests whether a language model echoes those popular mistakes or manages to answer truthfully.\n\nAfter introducing the benchmark, the page turns to the two prompting regimes InstructGPT is evaluated under, a distinction that matters more than it sounds. It has no connections to other concepts, so this page stands mostly on its own in the corpus."
+    },
+    {
+      "kind": "concept",
+      "id": "realtoxicityprompts",
+      "intro": "Give a model the start of a sentence and see whether it finishes politely. RealToxicityPrompts supplies sentence openings at varying levels of toxicity, so a model's tendency to continue text toxically can be measured rather than guessed at.\n\nThe page situates the benchmark within InstructGPT's safety evaluations, then looks at how its ground truth gets defined and what that costs. Reading it alongside Winogender, its connected neighbor, shows what the two revealed together that neither could alone."
+    },
+    {
+      "kind": "concept",
+      "id": "winogender",
+      "intro": "Change nothing in a sentence but a pronoun and watch what a model assumes about who does what job. Winogender is built on exactly such minimal pairs, probing whether occupational stereotypes steer a model's reading of who a pronoun refers to.\n\nThe benchmark comes first, then a wrinkle: InstructGPT recasts it into an entropy measurement rather than using it as designed. That recasting produces a curious divergence from a toxicity benchmark scored the same way. Worth chasing down."
+    },
+    {
+      "kind": "concept",
+      "id": "crows-pairs",
+      "intro": "One sentence leans on a social stereotype; its twin differs by only a few words and does not. CrowS-Pairs assembles many such pairs, across race, gender, religion, and more, to check which version a language model finds more natural.\n\nThe benchmark stands on its own terms first, then gets rescored through InstructGPT's entropy-based bias metric, the one connection that matters here, since the recasting does the real work, not the pairs themselves."
+    },
+    {
+      "kind": "concept",
+      "id": "drop",
+      "intro": "Reading comprehension is one thing; counting, sorting, and doing small arithmetic over what you read is another. DROP demands that second, more discrete kind of reasoning about paragraphs, and InstructGPT uses it to watch for capability slips.\n\nIt sits inside the eight-task public benchmark suite built to catch regressions, but what it actually revealed about the fine-tuned models is the part worth reading closely, alongside its neighbors HellaSwag and SQuAD v2."
+    },
+    {
+      "kind": "concept",
+      "id": "squadv2",
+      "intro": "The trick in SQuAD v2 is that some of its questions have no answer in the passage at all. A model must not only find answer spans but recognize when there is nothing to find, a small honest skill layered onto ordinary reading comprehension.\n\nSet beside its sibling benchmarks in the same regression-catching suite, what it revealed under PPO fine-tuning is the more interesting half, with DROP the closest point of comparison."
+    },
+    {
+      "kind": "concept",
+      "id": "hellaswag",
+      "intro": "Pick the most plausible ending to a short everyday scene: easy for people, and made deliberately hard for machines. HellaSwag's wrong answers are generated and filtered specifically to fool models, which is what keeps this commonsense benchmark discriminating.\n\nIts particular role here is the recoverable half of the alignment-tax story, a capability slip that, unlike some others, bounces back. That distinction is worth more attention than the benchmark's mechanics."
+    },
+    {
+      "kind": "concept",
+      "id": "quac",
+      "intro": "Questions in a conversation lean on what was already asked; a bare follow-up only makes sense in context. QuAC tests exactly that, posing sequences of questions about a passage where each answer depends on the dialogue so far.\n\nFolded into the eight-task suite InstructGPT runs to catch regressions, it carries no connections of its own among the benchmarks, one of the few pages here that stands entirely alone."
+    },
+    {
+      "kind": "concept",
+      "id": "sst",
+      "intro": "At bottom, SST asks a model one of the oldest questions in natural language processing: is this movie review positive or negative? It dates to 2013 and was annotated in unusual depth, with sentiment marked at every node of every parse tree.\n\nThe benchmark itself comes first, then its narrower role here as part of InstructGPT's automatic evaluation suite. More worth noting than the mechanics is how a decade-old task still earns its place in a modern alignment pipeline."
+    },
+    {
+      "kind": "concept",
+      "id": "rte",
+      "intro": "Given two sentences, does the first guarantee the second? That yes-or-no judgment, called textual entailment, is what RTE tests, and it is one of two tasks InstructGPT borrows from the SuperGLUE suite.\n\nThe task gets located within the regression-watching benchmark battery before the page describes what it actually asks and how it is used here. Since RTE belongs to SuperGLUE, that parent page is the natural place to go next."
+    },
+    {
+      "kind": "concept",
+      "id": "wsc",
+      "intro": "The trophy does not fit in the suitcase because it is too big. What was too big? Winograd schemas hinge on pronouns like that, resolvable only through world knowledge, and WSC turns them into a benchmark.\n\nAfter placing the task in InstructGPT's evaluation suite, the page turns to a wrinkle worth noticing: how the instance used here differs from its own parent benchmark, SuperGLUE."
+    },
+    {
+      "kind": "concept",
+      "id": "superglue",
+      "intro": "When models started acing the original GLUE benchmark, researchers built a harder sequel. SuperGLUE gathers a tougher set of language-understanding tasks, and two of them, RTE and WSC, find their way into InstructGPT's evaluation suite.\n\nHow the suite fits this corpus comes first; more telling is what follows, how faithfully its two borrowed tasks actually represent it once pulled out on their own into a different evaluation."
+    },
+    {
+      "kind": "concept",
+      "id": "wmt15-fr-en",
+      "intro": "Translation is one of the oldest yardsticks in language processing, and InstructGPT keeps one in its kit: a French-to-English task from the 2015 WMT shared translation campaign, scored against human reference translations.\n\nWhat the numbers actually showed under fine-tuning matters more than the task's mechanics, and Reddit TL;DR summarization, its connected neighbor, is worth reading alongside it: a very different genre, facing the same test."
+    },
+    {
+      "kind": "concept",
+      "id": "cnn-dm-summarization",
+      "intro": "Summarizing news articles is a classic test of generation, and this benchmark, CNN and Daily Mail stories prompted with a plain TL;DR tag, is InstructGPT's news-summarization entry, scored by overlap with reference summaries.\n\nThe page situates it among the generation benchmarks before turning to something less routine: what evaluation here uncovered was a data-integrity problem, not just a middling score. Its Reddit counterpart shares the same issue in a different dataset."
+    },
+    {
+      "kind": "concept",
+      "id": "reddit-tldr-summarization",
+      "intro": "Reddit users often end long posts with their own TL;DR, and a 2017 dataset turned that habit into a benchmark: posts paired with author-written summaries, which InstructGPT uses to check that fine-tuning has not dulled its summarization ability.\n\nWhat it revealed, including a reporting problem shared with its neighbors, matters more than the setup. That shared problem is the thread connecting it to both CNN/Daily Mail summarization and the WMT translation task."
+    },
+    {
+      "kind": "concept",
+      "id": "flan",
+      "intro": "One way to teach a model to follow instructions is to compile hundreds of NLP tasks, rewrite each with a natural-language instruction, and fine-tune on the lot. FLAN is that approach, and InstructGPT trains a version of GPT-3 on it precisely to have a rival to beat.\n\nInstructGPT builds this baseline deliberately, and what it enabled, plus the gap it exposed, matters more than the recipe itself. T0, built the same way, is worth reading alongside it."
+    },
+    {
+      "kind": "concept",
+      "id": "t0",
+      "intro": "T0 belongs to the same family as FLAN: take a large compilation of NLP tasks, dress each in instruction templates, and fine-tune until the model generalizes to unseen tasks. InstructGPT rebuilds the recipe, the larger T0++ variant, on a 175-billion-parameter GPT-3.\n\nInstructGPT rebuilds this same recipe at scale to serve as the compilation-based rival its directly trained models are measured against, and beat. FLAN, its closest relative, makes the natural next stop."
+    },
+    {
+      "kind": "concept",
+      "id": "gpt3-prompted-baseline",
+      "intro": "Perhaps no fine-tuning is needed at all; perhaps plain GPT-3, shown a carefully written prefix of examples, will follow instructions on its own. This baseline tests that hope. The model's weights are untouched, and everything rides on the prompt.\n\nNothing here gets fine-tuned; the model's weights sit fixed while the prefix does all the work. What that reveals about instruction following as a fine-tuning objective, the concept this page connects to, is the more interesting payoff."
+    },
+    {
+      "kind": "concept",
+      "id": "win-rate",
+      "intro": "The headline results of InstructGPT come down to a simple count: shown two responses to the same prompt, how often do labelers pick this model's over the baseline's? That fraction, measured against the 175B supervised model, is the paper's primary measure of quality.\n\nWhat bounds this number, what confirms it, and what it quietly misses is worth more attention than the metric's mechanics. Likert ratings and inter-labeler agreement, both connected here, round out a picture no single fraction can give."
+    },
+    {
+      "kind": "concept",
+      "id": "likert-quality-rating",
+      "intro": "Alongside every ranking, labelers also scored outputs on their own merits: a plain one-to-seven quality scale, judged in isolation rather than by comparison. Likert scales are ordinary survey machinery, borrowed here rather than invented.\n\nAn absolute score reveals things a head-to-head comparison cannot, which is the more interesting half of this page. Win rate, its one connection, is worth reading beside it for the contrast."
+    },
+    {
+      "kind": "concept",
+      "id": "labeler-metadata-taxonomy",
+      "intro": "A single quality score flattens a lot of judgment. So InstructGPT's labelers also filled in a fixed checklist for each output: does it follow the instruction, does it hallucinate, does it denigrate a protected class, is it sexual or violent.\n\nWhat matters more than the checklist's contents is the cruder, earlier scheme it replaced, since that history explains why the fields look the way they do now. No connections lead onward from this page."
+    },
+    {
+      "kind": "concept",
+      "id": "perspective-api",
+      "intro": "Toxicity scores in InstructGPT's evaluations come from an outside judge: Perspective API, a service from Google's Jigsaw that has rated the toxicity of text since 2017, trained on large volumes of online comments rated by crowdworkers.\n\nIts limits matter as much as its scores, and the paper checks both against human toxicity ratings directly. RealToxicityPrompts, the benchmark it judges, is the natural place to see the API at work."
+    },
+    {
+      "kind": "concept",
+      "id": "bias-entropy-metric",
+      "intro": "InstructGPT does not score its bias benchmarks the way their authors intended. Instead it asks how confidently the model prefers one sentence of a pair over the other, and reports that confidence as entropy in bits, lower entropy meaning a stronger, more biased preference.\n\nThe mathematics behind the recasting is worth working through slowly, since what it costs in comparability is easy to miss. Winogender and CrowS-Pairs, the two benchmarks it rescores, are the natural next stops."
+    },
+    {
+      "kind": "concept",
+      "id": "rouge-l",
+      "intro": "How do you grade a summary automatically? ROUGE-L takes a rough but fast route: find the longest sequence of words the candidate shares, in order, with a reference summary, and score the overlap. No meaning is consulted, only shared word order.\n\nScoring the two summarization benchmarks is its role here, but the metric predates this paper by years and carries no connections of its own, a tool borrowed wholesale rather than built for the occasion."
+    },
+    {
+      "kind": "concept",
+      "id": "bleu",
+      "intro": "BLEU has graded machine translation since 2002 on a blunt principle: count how many short word sequences a candidate translation shares with human references. It rewards overlap, not understanding, and remains the standard score for tasks like the WMT benchmark used here.\n\nIts role here is narrow, scoring one translation task, but the absence of any concept connections is itself telling: BLEU answers to the field at large, not to this paper's particular argument."
+    },
+    {
+      "kind": "concept",
+      "id": "f1-score",
+      "intro": "If an answer is a span of text, its quality can be scored by token overlap: how many words the model's answer shares with the target, balanced between precision and recall. That balance is the F1 score, applied here to three question-answering benchmarks.\n\nThe page relates the metric to the corpus's broader family of quality measurements, then reviews what it revealed across DROP, QuAC, and SQuAD v2. Win rate, the human-judgment metric it contrasts with, makes the natural counterpoint to read next."
+    }
+  ]
+}

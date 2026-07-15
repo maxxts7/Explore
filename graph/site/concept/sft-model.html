@@ -32,6 +32,8 @@
 <h1>Supervised fine-tuned (SFT) model</h1>
 <p class="origins"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> — <span class="role role-refined">refined</span></p>
 <p class="lede">A GPT-3 model fine-tuned on labeler demonstrations via supervised learning, used both as a standalone baseline and as the initialization for reward-model and PPO training.</p>
+<div class="page-intro"><p>Take GPT-3, show it thousands of human-written demonstrations of good responses, and fine-tune on them directly: the result is the SFT model, the first trained artifact in the InstructGPT (2022) pipeline. It serves both as a baseline in its own right and as the seed for everything trained afterward.</p>
+<p>From there the page moves through how the model is trained, an overfitting curve explained by the dataset's construction, its selection by the reward model it later initializes, and the way it quietly forks in two.</p></div>
 <section class="prose-section">
 <h2>What it is and how it&#x27;s trained</h2>
 <p>The SFT model is a GPT-3 model fine-tuned directly on labeler demonstrations using ordinary supervised learning, for 16 epochs with cosine learning-rate decay and a residual dropout of 0.2 (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.5 Models", p. 8</a>). It plays a dual role in the corpus: a standalone baseline evaluated in its own right, and the initialization from which both the <a href="../concept/reward-model.html">Reward model (RM)</a> and the <a href="../concept/ppo-training.html">PPO fine-tuning stage (RLHF policy optimization)</a> policy are built.</p>
