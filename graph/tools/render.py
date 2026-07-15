@@ -1390,7 +1390,7 @@ body::after {
 }
 
 .header-inner {
-  width: min(860px, 100% - 1.4rem);
+  width: min(960px, 100% - 1.4rem);
   margin: 0 auto;
   padding: 0.62rem 0.15rem;
   display: flex;
@@ -1424,7 +1424,7 @@ body::after {
 @media (max-width: 560px) { .home-sub { display: none; } }
 
 .page {
-  width: min(860px, 100% - 1.4rem);
+  width: min(960px, 100% - 1.4rem);
   margin: 1.15rem auto 2.8rem;
   padding: clamp(1.5rem, 4vw, 2.6rem) clamp(1.15rem, 4.5vw, 2.6rem) clamp(1.5rem, 4vw, 2.3rem);
   background: var(--panel);
@@ -2052,7 +2052,7 @@ ol.walk .walk-prose { margin-left: 0; }
 .in-popup .site-footer { display: none; }
 .in-popup .page {
   margin: 0.9rem auto 1.4rem;
-  width: min(860px, 100% - 1.1rem);
+  width: min(960px, 100% - 1.1rem);
 }
 
 /* ---- math / misc ------------------------------------------------------- */
