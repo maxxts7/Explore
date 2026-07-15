@@ -1108,18 +1108,21 @@ class SiteBuilder:
         parts.append('<h1 class="hero-title">Explore</h1>')
         parts.append('<p class="hero-tag">An AI safety wiki</p>')
         story_lede = (
-            "the same graph told several ways &mdash; each story regroups every theme "
-            "under a different claim, and you open any telling level by level"
+            "the same graph told a few different ways. Each story gathers every theme "
+            "under its own central claim, and you can open any telling at your own pace, "
+            "one level at a time"
             if len(stories) > 1 else
-            "the whole graph hangs off one root claim you can open level by level, "
-            "and every page is a step in the walk"
+            "the whole graph resting on a single root claim. Open it one level at a "
+            "time, and every page is simply a step along the walk"
         )
         parts.append(
-            "<p class=\"lede\">Built from three AI-safety papers &mdash; "
+            "<p class=\"lede\">Everything here comes from three AI-safety papers &mdash; "
             "<em>Concrete Problems in AI Safety</em> (2016), "
             "<em>InstructGPT</em> (2022), and <em>Constitutional AI</em> (2022) &mdash; "
-            "with no diagram anywhere: " + story_lede + ". "
-            "Or re-sort the same pool paper by paper, in each paper&rsquo;s own reading order.</p>"
+            "and there isn&rsquo;t a diagram anywhere. What you&rsquo;ll find instead is "
+            + story_lede + ". "
+            "And if you&rsquo;d rather stay close to the sources, you can re-sort the "
+            "same pool paper by paper, following each paper&rsquo;s own reading order.</p>"
         )
         count_bits = [
             (len(d["concepts"]), "concepts"), (len(d["edges"]), "edges"),
@@ -1390,7 +1393,7 @@ body::after {
 }
 
 .header-inner {
-  width: min(960px, 100% - 1.4rem);
+  width: min(1060px, 100% - 1.4rem);
   margin: 0 auto;
   padding: 0.62rem 0.15rem;
   display: flex;
@@ -1424,7 +1427,7 @@ body::after {
 @media (max-width: 560px) { .home-sub { display: none; } }
 
 .page {
-  width: min(960px, 100% - 1.4rem);
+  width: min(1060px, 100% - 1.4rem);
   margin: 1.15rem auto 2.8rem;
   padding: clamp(1.5rem, 4vw, 2.6rem) clamp(1.15rem, 4.5vw, 2.6rem) clamp(1.5rem, 4vw, 2.3rem);
   background: var(--panel);
@@ -2052,7 +2055,7 @@ ol.walk .walk-prose { margin-left: 0; }
 .in-popup .site-footer { display: none; }
 .in-popup .page {
   margin: 0.9rem auto 1.4rem;
-  width: min(960px, 100% - 1.1rem);
+  width: min(1060px, 100% - 1.1rem);
 }
 
 /* ---- math / misc ------------------------------------------------------- */
