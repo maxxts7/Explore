@@ -57,11 +57,14 @@ something up, follow a connection, keep digging?
 - the recursion ends here: no edges between edges
 
 **Paper stories**
-- every paper gets a story page: its material retold as rooted trees the reader
-  opens level by level, with connective narrative at every branching node
+- every paper gets a page of its own: its material retold as rooted trees the
+  reader opens level by level, with connective narrative at every branching node
 - a fixed trio of tellings per paper: inside the paper (its own arc, chapter by
   chapter), across the corpus (how it connects to the other papers), the big
   picture (its place under the superthemes)
+- below the tellings, the same page lists every concept the paper uses —
+  introduced, refined, or inherited — in reading order, deep-linked into the
+  source PDF, so the paper's page is the one place that fully explains the paper
 - a story places what already exists — concepts, themes, superthemes, connective
   themes — it never invents new concepts or framing metaphors
 - story prose stays grounded: name papers by year, state documented relationships
@@ -85,7 +88,8 @@ something up, follow a connection, keep digging?
 **Store and site**
 - the extracted data is stored as JSON — the single source of truth
 - the wiki is rendered from it as static HTML: a page per concept, per edge, per
-  lens, and a story page per paper — the papers are the front page's entry point
+  lens, and a page per paper (its stories and its concepts in reading order) —
+  the front page is a plain list of paper cards, each a doorway to its paper's page
 - no graph visualization — the purpose is reading; the graph is walked page by page,
   never drawn as a diagram
 - the site is always regenerated from the JSON, never hand-edited

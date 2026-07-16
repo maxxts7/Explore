@@ -73,15 +73,6 @@ KIND_LABEL = {k: v[2] for k, v in KIND_INFO.items()}
 # page kinds whose html lives at the site root (everything else is one dir down)
 ROOT_KINDS = {"index", "help"}
 
-# short paper names for the compact selector UI; unknown ids fall back to
-# the first few words of the full title
-PAPER_SHORT = {
-    "concrete-problems": "Concrete Problems",
-    "instructgpt": "InstructGPT",
-    "constitutional-ai": "Constitutional AI",
-    "deep-rl-human-prefs": "Deep RL from Human Preferences",
-}
-
 # --------------------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------------------
@@ -122,6 +113,9 @@ class SiteBuilder:
         self.superedges = {e["id"]: e for e in data["superedges"]}
         self.tissues = {t["id"]: t for t in data["tissueThemes"]}
         self.paper_stories = {e["id"]: e for e in data.get("paperStories") or []}
+        self.paper_overlay_narrative = {
+            e["paper"]: e.get("narrative", "")
+            for e in (data.get("paperOverlay") or {}).get("papers", [])}
 
         self.unresolved: list[tuple[str, str, str]] = []  # (from_kind, from_id, target_id)
         self.markdown_artifacts: list[tuple[str, str]] = []  # (page, artifact)
@@ -202,43 +196,6 @@ class SiteBuilder:
                 by_role[role].sort(key=lambda cid: (
                     self.first_loc.get((pid, cid), {"page": 999})["page"],
                     self.concepts[cid]["name"].lower()))
-
-        # paper provenance for every node kind, keyed "dir/id" to match page
-        # URLs. Consumed by the paper-selection filter (assets/paperfilter.js):
-        # a node counts as excluded only when every paper here is excluded.
-        self.node_papers: dict[str, list[str]] = {}
-
-        def reg_papers(kind: str, nid: str, papers: set[str]):
-            self.node_papers[f"{KIND_DIR[kind]}/{nid}"] = sorted(papers)
-
-        concept_papers = {c["id"]: {o["paper"] for o in c["origins"]} for c in d["concepts"]}
-        for c in d["concepts"]:
-            reg_papers("concept", c["id"], concept_papers[c["id"]])
-        edge_papers: dict[str, set[str]] = {}
-        for e in d["edges"]:
-            ps = concept_papers.get(e["source"], set()) | concept_papers.get(e["target"], set())
-            if e.get("groundedIn"):
-                ps.add(e["groundedIn"])
-            edge_papers[e["id"]] = ps
-            reg_papers("edge", e["id"], ps)
-        theme_papers: dict[str, set[str]] = {}
-        for t in d["themes"]:
-            ps = set().union(*(concept_papers.get(m, set()) for m in t["members"])) if t["members"] else set()
-            theme_papers[t["id"]] = ps
-            reg_papers("theme", t["id"], ps)
-        for st in d["superthemes"]:
-            ps = set().union(*(theme_papers.get(m, set()) for m in st["members"])) if st["members"] else set()
-            reg_papers("supertheme", st["id"], ps)
-        for se in d["superedges"]:
-            ps = theme_papers.get(se["source"], set()) | theme_papers.get(se["target"], set())
-            if se.get("groundedIn"):
-                ps.add(se["groundedIn"])
-            reg_papers("superedge", se["id"], ps)
-        for tt in d["tissueThemes"]:
-            ps = set().union(*(edge_papers.get(m, set()) for m in tt["members"])) if tt["members"] else set()
-            reg_papers("tissue", tt["id"], ps)
-        for entry in d.get("paperStories") or []:
-            reg_papers("story", entry["id"], {entry["id"]})
 
     # ---- global id registry for wiki-link resolution -------------------
 
@@ -439,7 +396,6 @@ class SiteBuilder:
     def shell(self, page_kind: str, title: str, body: str) -> str:
         css_href = self.asset_href(page_kind, "style.css")
         popup_js = self.asset_href(page_kind, "popup.js")
-        paperfilter_js = self.asset_href(page_kind, "paperfilter.js")
         katex_css = self.asset_href(page_kind, "katex.min.css")
         katex_js = self.asset_href(page_kind, "katex.min.js")
         autorender_js = self.asset_href(page_kind, "auto-render.min.js")
@@ -472,7 +428,6 @@ class SiteBuilder:
     <title>{esc(title)}</title>
     <link rel="stylesheet" href="{css_href}">
     <script defer src="{popup_js}"></script>
-    <script defer src="{paperfilter_js}"></script>
     {katex_head}
     <script>
       var katexOptions = {{
@@ -830,6 +785,7 @@ class SiteBuilder:
             'set a granularity to read the whole story at that zoom.</p>'
         )
         parts.append(self._story_tabs(stories, pk, multi_note, single_note))
+        parts.append(self._paper_concepts_section(pid))
         parts.append(self.INDEX_TABS_JS)
         return self.shell(pk, f"{p['title']} — Stories", "\n".join(parts))
 
@@ -1048,16 +1004,37 @@ class SiteBuilder:
         return "\n".join(parts)
 
     def _index_tab_papers(self) -> str:
-        parts = ["<ul>"]
+        pk = "index"
+        parts = [
+            '<p class="section-note">The corpus, paper by paper. Each paper opens '
+            'into a page of its own: the paper told as stories, and every concept '
+            'it uses in reading order.</p>',
+            '<div class="paper-cards">',
+        ]
         for p in self.data["papers"]:
-            story = ""
-            if p["id"] in self.paper_stories:
-                story = f' &middot; <a href="{self.href("index", "story", p["id"])}">its stories</a>'
+            pid = p["id"]
+            page = self.href(pk, "story", pid)
+            n = sum(len(v) for v in self.concepts_of_paper.get(pid, {}).values())
+            stories = ""
+            if pid in self.paper_stories:
+                lenses = " ".join(
+                    f'<a class="ps-lens" href="{page}#{esc(s["id"])}">'
+                    f'{esc(s.get("tab") or s["name"])}</a>'
+                    for s in self.paper_stories[pid]["stories"])
+                stories = (
+                    f'<div class="paper-stories">'
+                    f'<a class="ps-lead" href="{page}">Stories</a>'
+                    f'<span class="ps-lenses">{lenses}</span></div>')
             parts.append(
-                f'<li><a href="{self.paper_href(p["id"])}" target="_blank" rel="noopener">'
-                f'{esc(p["title"])}</a> <span class="muted">(arXiv:{esc(p["arxiv"])}, {p["pages"]} pp.)</span>{story}</li>'
+                f'<div class="paper-card">'
+                f'<h3 class="pc-title"><a href="{page}">{esc(p["title"])}</a></h3>'
+                f'<p class="edge-meta">'
+                f'<a href="{self.paper_href(pid)}" target="_blank" rel="noopener">arXiv:{esc(p["arxiv"])}</a>'
+                f' &middot; <a href="{self.pdf_href(pk, pid)}" target="_blank" rel="noopener">PDF</a>'
+                f' &middot; {p["pages"]} pp. &middot; {n} concepts</p>'
+                f'{stories}</div>'
             )
-        parts.append("</ul>")
+        parts.append("</div>")
         return "\n".join(parts)
 
     # ---- index page: paper overlay tree ----------------------------------
@@ -1069,10 +1046,9 @@ class SiteBuilder:
         "inherited": "Inherited — used, not invented here",
     }
 
-    def _paper_concept_item(self, pid: str, cid: str) -> str:
+    def _paper_concept_item(self, pid: str, cid: str, pk: str) -> str:
         """One concept as it appears in one paper: link, deep-linked first
         locator, the paper's own take on it as prose, expandable connections."""
-        pk = "index"
         clink = self.concept_link(pk, cid)
         loc = self.first_loc.get((pid, cid))
         cite = f' <span class="tree-count">{self.cite_link(pk, loc)}</span>' if loc else ""
@@ -1094,75 +1070,41 @@ class SiteBuilder:
             )
         return f'<li class="walk-step tree-leaf">{clink}{cite}{prose_html}</li>'
 
-    def _paper_node(self, entry: dict) -> str:
-        pk = "index"
-        pid = entry["paper"]
-        p = self.papers[pid]
+    def _paper_concepts_section(self, pid: str) -> str:
+        """The paper's concepts by role (introduced/refined/inherited, reading
+        order, PDF deep links) with its overlay narrative — rendered on the
+        paper's own page, below the stories."""
+        pk = "story"
         by_role = self.concepts_of_paper.get(pid, {})
         total = sum(len(v) for v in by_role.values())
-
-        meta = (
-            f'<p class="edge-meta"><a href="{self.paper_href(pid)}" target="_blank" '
-            f'rel="noopener">arXiv:{esc(p["arxiv"])}</a> &middot; '
-            f'<a href="{self.pdf_href(pk, pid)}" target="_blank" rel="noopener">PDF</a> '
-            f'&middot; {p["pages"]} pp.</p>'
+        if not total:
+            return ""
+        parts = ['<section class="nav-block paper-concepts" id="paper-concepts">']
+        parts.append(f'<h2>The paper&rsquo;s concepts <span class="tree-count">({total})</span></h2>')
+        narrative = self.paper_overlay_narrative.get(pid, "")
+        if narrative:
+            parts.append(
+                f'<div class="node-narrative">{self.process_body(narrative, pk, "paper-overlay")}</div>')
+        gran_buttons = "".join(
+            f'<button type="button" class="gran-chip" data-gran="{g}" data-scope="paper-concepts">{label}</button>'
+            for g, label in ((1, "roles"), (2, "concepts"), (3, "everything"))
         )
-        body = [meta]
-        if pid in self.paper_stories:
-            story_page = self.href(pk, "story", pid)
-            lenses = " ".join(
-                f'<a class="ps-lens" href="{story_page}#{esc(s["id"])}">'
-                f'{esc(s.get("tab") or s["name"])}</a>'
-                for s in self.paper_stories[pid]["stories"])
-            body.append(
-                f'<div class="paper-stories">'
-                f'<a class="ps-lead" href="{story_page}">Stories</a>'
-                f'<span class="ps-lenses">{lenses}</span></div>')
-        body.append(
-            f'<div class="node-narrative">{self.process_body(entry["narrative"], pk, "paper-overlay")}</div>')
+        parts.append(f'<p class="tree-controls"><span class="controls-label">Read at</span>{gran_buttons}</p>')
+        parts.append('<div class="overlay-tree">')
         for role in self.ROLE_ORDER:
             cids = by_role.get(role, [])
             if not cids:
                 continue
             n = len(cids)
-            items = "".join(self._paper_concept_item(pid, cid) for cid in cids)
-            body.append(
+            items = "".join(self._paper_concept_item(pid, cid, pk) for cid in cids)
+            parts.append(
                 f'<details class="tree-node node-rolegroup" data-depth="1">'
                 f'<summary>{esc(self.ROLE_HEADS[role])} '
                 f'<span class="tree-kind role-{role}">{role}</span> '
                 f'<span class="tree-count">({n} concept{"s" if n != 1 else ""}, in reading order)</span></summary>'
                 f'<ul class="tree-concepts">{items}</ul></details>'
             )
-        return (
-            f'<details class="tree-node node-paper" id="paper-{esc(pid)}" data-depth="0">'
-            f'<summary>{esc(p["title"])} '
-            f'<span class="tree-count">({total} concepts)</span></summary>'
-            f'<div class="node-body">{"".join(body)}</div></details>'
-        )
-
-    def _index_tab_paper_overlay(self, paper_overlay: dict) -> str:
-        pk = "index"
-        parts = []
-        parts.append(
-            '<div class="pf-select">'
-            '<p class="section-note">Choose which papers are in view. Excluding a paper '
-            'removes its concepts, themes, and connective themes from the index listings '
-            '&mdash; they stay reachable through links on other pages, shown dimmed.</p>'
-            '<div id="pf-paper-cards" class="pf-cards"></div></div>'
-        )
-        parts.append(
-            f'<div class="node-narrative">{self.process_body(paper_overlay["narrative"], pk, "paper-overlay")}</div>'
-        )
-        gran_buttons = "".join(
-            f'<button type="button" class="gran-chip" data-gran="{g}" data-scope="tab-papers">{label}</button>'
-            for g, label in enumerate(("titles", "roles", "concepts", "everything"))
-        )
-        parts.append(f'<p class="tree-controls"><span class="controls-label">Read at</span>{gran_buttons}</p>')
-        parts.append('<div class="overlay-tree">')
-        order = {p["id"]: i for i, p in enumerate(self.data["papers"])}
-        for entry in sorted(paper_overlay["papers"], key=lambda e: order.get(e["paper"], 99)):
-            parts.append(self._paper_node(entry))
-        parts.append('</div>')
+        parts.append('</div></section>')
         return "\n".join(parts)
 
     INDEX_TABS_JS = """
@@ -1228,7 +1170,7 @@ class SiteBuilder:
 </script>
 <noscript><style>
   .tab-panel[hidden], .story-panel[hidden] { display: block; }
-  .tabs, .subtabs, .tree-controls, .pf-select { display: none; }
+  .tabs, .subtabs, .tree-controls { display: none; }
   .panel-title { display: block; }
   .story-panel + .story-panel { margin-top: 2.5rem; border-top: 1px solid var(--stroke-strong); padding-top: 1.5rem; }
 </style></noscript>"""
@@ -1236,7 +1178,6 @@ class SiteBuilder:
     def build_index_page(self) -> str:
         pk = "index"
         d = self.data
-        paper_overlay = d.get("paperOverlay")
 
         parts = []
         parts.append('<h1 class="hero-title">Explore</h1>')
@@ -1253,14 +1194,12 @@ class SiteBuilder:
             '<p class="section-note">First visit? <a href="help.html">How to use this '
             'wiki</a> &mdash; a short illustrated guide to the pieces and the controls.</p>'
         )
-        tabs: list[tuple[str, str, str]] = []
-        if paper_overlay:
-            tabs.append(("papers", "Papers", self._index_tab_paper_overlay(paper_overlay)))
-        tabs.append(("superthemes", "Superthemes", self._index_tab_superthemes()))
-        tabs.append(("tissue", "Connective themes", self._index_tab_tissues()))
-        tabs.append(("concepts", "Concepts A–Z", self._index_tab_concepts()))
-        if not paper_overlay:
-            tabs.append(("papers", "Papers", self._index_tab_papers()))
+        tabs: list[tuple[str, str, str]] = [
+            ("papers", "Papers", self._index_tab_papers()),
+            ("superthemes", "Superthemes", self._index_tab_superthemes()),
+            ("tissue", "Connective themes", self._index_tab_tissues()),
+            ("concepts", "Concepts A–Z", self._index_tab_concepts()),
+        ]
 
         buttons = []
         panels = []
@@ -1302,7 +1241,6 @@ class SiteBuilder:
         pk = "help"
         d = self.data
         paper_stories = d.get("paperStories") or []
-        paper_overlay = d.get("paperOverlay")
         n_papers = self._SMALL_NUMBERS.get(len(d["papers"]), str(len(d["papers"])))
         n_concepts = len(d["concepts"])
         n_edges = len(d["edges"])
@@ -1351,27 +1289,15 @@ class SiteBuilder:
             "The front page of the wiki, with its row of view tabs under the title",
             "The front page. Each tab is a different view of the same material.",
         ))
-        tab_bullets = []
-        if paper_overlay:
-            paper_story_extra = ""
-            if paper_stories:
-                paper_story_extra = (
-                    ' Each paper carries a <b>Stories</b> box linking to its own story '
-                    'page &mdash; several tellings of just that paper. The best place '
-                    'to start reading.'
-                )
-            tab_bullets.append(
-                '<li><b>Papers</b> &mdash; where the front page opens: each paper on '
-                'its own, with its concepts in reading order and links into the PDF. '
-                'Also where you choose which papers are in '
-                f'view.{paper_story_extra}</li>'
-            )
+        tab_bullets = [
+            '<li><b>Papers</b> &mdash; where the front page opens: a card per paper, '
+            'each linking to the paper&rsquo;s own page &mdash; its stories, and every '
+            'concept it uses in reading order. The best place to start reading.</li>'
+        ]
         tab_bullets.append('<li><b>Superthemes</b> &mdash; the big structures, each listing its themes.</li>')
         tab_bullets.append('<li><b>Connective themes</b> &mdash; the threads of connections.</li>')
         tab_bullets.append('<li><b>Concepts A&ndash;Z</b> &mdash; every concept, alphabetically. '
                            'Use it when you already know what you are looking for.</li>')
-        if not paper_overlay:
-            tab_bullets.append('<li><b>Papers</b> &mdash; the source papers.</li>')
         parts.append(f'<ul>{"".join(tab_bullets)}</ul>')
         parts.append(
             '<p>The address bar follows the tab you are on (<code>#tab-concepts</code>, '
@@ -1406,6 +1332,12 @@ class SiteBuilder:
                 "its connections. You can also open and close any single branch by hand "
                 "with the +/&minus; markers.</p>"
             )
+            parts.append(
+                "<p>Below the stories, the same page holds the paper&rsquo;s concepts "
+                "&mdash; what it introduced, refined, and inherited, in reading order, "
+                "each deep-linked into the PDF &mdash; with a <b>Read at</b> zoom of "
+                "its own.</p>"
+            )
             parts.append(self._help_figure(
                 "story-tree.png",
                 "A story tree with chapters partially expanded, showing the +/− toggles",
@@ -1413,25 +1345,6 @@ class SiteBuilder:
                 "the prose at each level explains what the level below contains.",
             ))
             parts.append("</section>")
-
-        # -- paper selection -----------------------------------------------------
-        parts.append('<section class="prose-section">')
-        parts.append("<h2>Choosing your papers</h2>")
-        parts.append(
-            "<p>The <b>Papers</b> tab lets you exclude papers from view. Excluding a "
-            "paper hides its concepts, themes, and connective themes from the index "
-            "listings, so the front page only offers what the remaining papers cover. "
-            "Nothing is deleted: an excluded page stays reachable through links on "
-            "other pages &mdash; those links are simply dimmed &mdash; and it opens "
-            "with a note saying where it came from and a one-click way to bring the "
-            "paper back. An idea shared by several papers stays visible as long as "
-            "any one of them is included.</p>"
-        )
-        parts.append(
-            "<p>The <b>Papers <i>n</i>/<i>n</i></b> control in the header does the "
-            "same from any page, and your selection is remembered between visits.</p>"
-        )
-        parts.append("</section>")
 
         # -- concept pages -----------------------------------------------------
         parts.append('<section class="prose-section">')
@@ -1501,25 +1414,6 @@ class SiteBuilder:
         parts.append("</section>")
 
         return self.shell(pk, "How to use this wiki — Explore", "\n".join(parts))
-
-    # ---- paper-selection filter script ------------------------------------
-
-    def paper_short(self, pid: str) -> str:
-        if pid in PAPER_SHORT:
-            return PAPER_SHORT[pid]
-        words = self.papers[pid]["title"].split()
-        return " ".join(words[:4]) + ("…" if len(words) > 4 else "")
-
-    def paperfilter_js(self) -> str:
-        data = {
-            "papers": [
-                {"id": p["id"], "title": p["title"], "short": self.paper_short(p["id"])}
-                for p in self.data["papers"]
-            ],
-            "nodes": self.node_papers,
-        }
-        return PAPERFILTER_JS_TEMPLATE.replace(
-            "__PF_DATA__", json.dumps(data, ensure_ascii=False))
 
     # ---- top-level build --------------------------------------------------
 
@@ -2284,8 +2178,36 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 .node-supertheme > summary { font-family: var(--sans); font-weight: 600; }
 .node-theme > summary { font-family: var(--sans); font-size: 0.95rem; }
 .node-superedges > summary { font-family: var(--sans); font-size: 0.88rem; color: var(--muted); }
-.node-paper > summary { font-family: var(--sans); font-size: 1.05rem; font-weight: 650; }
 .node-rolegroup > summary { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; }
+
+/* ---- papers tab cards --------------------------------------------------- */
+
+.paper-cards {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0.4rem 0 1.3rem;
+}
+.paper-card {
+  padding: 0.95rem 1.15rem 1rem;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+}
+.paper-card .pc-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.paper-card .pc-title a { color: var(--fg); text-decoration: none; }
+.paper-card .pc-title a:hover { color: var(--link); }
+.paper-card .edge-meta { margin: 0 0 0.55rem; }
+.paper-card .paper-stories { margin: 0; }
+
+/* the paper page's own concepts section, below the stories */
+.paper-concepts { margin-top: 2.4rem; }
 
 /* ---- per-paper stories block ------------------------------------------- */
 
@@ -2455,136 +2377,6 @@ ol.walk .walk-prose { margin-left: 0; }
   width: min(1060px, 100% - 1.1rem);
 }
 
-/* ---- paper-selection filter --------------------------------------------- */
-
-.pf-hide { display: none !important; }
-
-.pf-dim { opacity: 0.45; }
-.pf-dim .pf-dim { opacity: 1; } /* don't compound nested dimming */
-a.pf-dim { color: var(--muted); }
-
-.pf-widget { position: relative; display: inline-flex; }
-.pf-widget-btn {
-  font-family: var(--sans);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-  background: none;
-  padding: 0.2rem 0.66rem;
-  border: 1px solid var(--stroke-strong);
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.pf-widget-btn:hover { color: var(--acc-a); border-color: var(--acc-a); }
-.pf-widget-btn.pf-widget-active { color: var(--acc-c); border-color: var(--acc-c); }
-.pf-pop {
-  position: absolute;
-  top: calc(100% + 0.45rem);
-  right: 0;
-  z-index: 60;
-  min-width: 250px;
-  padding: 0.7rem 0.85rem;
-  background: var(--dialog-bg);
-  -webkit-backdrop-filter: blur(18px) saturate(1.3);
-  backdrop-filter: blur(18px) saturate(1.3);
-  border: 1px solid var(--stroke-strong);
-  border-radius: 14px;
-  box-shadow: var(--panel-shadow);
-}
-.pf-pop-head {
-  margin: 0 0 0.4rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--faint);
-}
-.pf-pop-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.22rem 0;
-  font-family: var(--sans);
-  font-size: 0.86rem;
-  color: var(--fg);
-  cursor: pointer;
-}
-.pf-pop-row input { accent-color: var(--acc-b); }
-
-.pf-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 0.6rem;
-  margin: 0.4rem 0 1.3rem;
-}
-.pf-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  padding: 0.6rem 0.75rem;
-  background: var(--card);
-  border: 1px solid var(--stroke);
-  border-radius: 12px;
-  box-shadow: var(--card-shadow);
-  font-family: var(--sans);
-  font-size: 0.88rem;
-  line-height: 1.35;
-  cursor: pointer;
-}
-.pf-card input { accent-color: var(--acc-b); margin-top: 0.2rem; }
-.pf-card-title { flex: 1; }
-.pf-card-state {
-  align-self: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--acc-a);
-}
-.pf-card-off { opacity: 0.62; }
-.pf-card-off .pf-card-state { color: var(--faint); }
-
-details.node-paper.pf-off > summary { opacity: 0.5; pointer-events: none; }
-details.node-paper.pf-off > summary::after {
-  content: "excluded";
-  margin-left: 0.55rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-details.node-paper.pf-off > .node-body { display: none; }
-
-.pf-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 1.3rem;
-  padding: 0.7rem 0.95rem;
-  font-family: var(--sans);
-  font-size: 0.88rem;
-  color: var(--muted);
-  background: var(--chip);
-  border: 1px dashed var(--stroke-strong);
-  border-radius: 12px;
-}
-.pf-banner-btn {
-  font-family: var(--sans);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--link);
-  background: none;
-  border: 1px solid var(--stroke-strong);
-  border-radius: 999px;
-  padding: 0.18rem 0.7rem;
-  cursor: pointer;
-}
-.pf-banner-btn:hover { color: var(--acc-a); border-color: var(--acc-a); }
-
 /* ---- math / misc ------------------------------------------------------- */
 
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 0.2rem 0; }
@@ -2691,323 +2483,6 @@ POPUP_JS = r"""
     frame.src = url.href;
     if (!d.open) d.showModal();
   });
-})();
-"""
-
-# --------------------------------------------------------------------------
-# Paper-selection filter: papers toggled off drop out of the index listings;
-# their nodes stay reachable through links on other pages, shown dimmed.
-# --------------------------------------------------------------------------
-
-PAPERFILTER_JS_TEMPLATE = r"""
-(function () {
-  'use strict';
-  var PF = __PF_DATA__;
-  var KEY = 'pf-excluded-papers';
-  var NODE_RE = /\/(concept|edge|theme|supertheme|superedge|tissue|story)\/([^\/]+)\.html$/;
-  var KIND_LABEL = {
-    concept: 'concept', edge: 'edge', theme: 'theme',
-    supertheme: 'supertheme', superedge: 'super edge', tissue: 'connective theme',
-    story: 'story page'
-  };
-  var validIds = PF.papers.map(function (p) { return p.id; });
-
-  function loadExcluded() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(KEY) || '[]');
-      if (!Array.isArray(raw)) return [];
-      return raw.filter(function (id) { return validIds.indexOf(id) !== -1; });
-    } catch (e) { return []; }
-  }
-  function saveExcluded(list) {
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
-  }
-
-  var excluded = loadExcluded();
-
-  function isPaperOff(pid) { return excluded.indexOf(pid) !== -1; }
-  function isNodeOff(key) {
-    var papers = PF.nodes[key];
-    if (!papers || !papers.length) return false;
-    for (var i = 0; i < papers.length; i++) {
-      if (!isPaperOff(papers[i])) return false;
-    }
-    return true;
-  }
-  function nodeKeyFromHref(a) {
-    var url;
-    try { url = new URL(a.getAttribute('href'), window.location.href); }
-    catch (e) { return null; }
-    if (url.origin !== window.location.origin) return null;
-    var m = NODE_RE.exec(url.pathname);
-    return m ? m[1] + '/' + decodeURIComponent(m[2]) : null;
-  }
-  function currentNodeKey() {
-    var m = NODE_RE.exec(window.location.pathname);
-    return m ? m[1] + '/' + decodeURIComponent(m[2]) : null;
-  }
-  function paperById(pid) {
-    for (var i = 0; i < PF.papers.length; i++) {
-      if (PF.papers[i].id === pid) return PF.papers[i];
-    }
-    return null;
-  }
-
-  // ---- dim links to excluded nodes (every page) -------------------------
-
-  function applyLinks() {
-    Array.prototype.forEach.call(document.querySelectorAll('a[href]'), function (a) {
-      var key = nodeKeyFromHref(a);
-      var off = !!key && isNodeOff(key);
-      a.classList.toggle('pf-dim', off);
-      if (off) {
-        a.setAttribute('title', 'From an excluded paper');
-        a.setAttribute('data-pf-titled', '1');
-      } else if (a.getAttribute('data-pf-titled')) {
-        a.removeAttribute('title');
-        a.removeAttribute('data-pf-titled');
-      }
-    });
-  }
-
-  function firstNodeLink(el) {
-    var as = el.querySelectorAll('a[href]');
-    for (var i = 0; i < as.length; i++) {
-      var key = nodeKeyFromHref(as[i]);
-      if (key) return key;
-    }
-    return null;
-  }
-
-  // ---- dim tree nodes / walk steps whose lead node is excluded ----------
-
-  function applyContainers() {
-    var sel = 'details.tree-node, li.walk-step, li.tree-leaf';
-    Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) {
-      var key;
-      if (el.tagName === 'DETAILS') {
-        var summary = el.querySelector('summary');
-        key = summary ? firstNodeLink(summary) : null;
-      } else {
-        key = firstNodeLink(el);
-      }
-      el.classList.toggle('pf-dim', !!key && isNodeOff(key));
-    });
-  }
-
-  // ---- hide excluded nodes from the index listing tabs -------------------
-
-  function applyIndexLists() {
-    ['tab-superthemes', 'tab-tissue', 'tab-concepts'].forEach(function (pid) {
-      var panel = document.getElementById(pid);
-      if (!panel) return;
-      var lis = panel.querySelectorAll('li');
-      Array.prototype.forEach.call(lis, function (li) {
-        var key = firstNodeLink(li);
-        li.classList.toggle('pf-hide', !!key && isNodeOff(key));
-      });
-      Array.prototype.forEach.call(panel.querySelectorAll('h3.letter-head'), function (h) {
-        var ul = h.nextElementSibling;
-        var any = ul && ul.querySelector('li:not(.pf-hide)');
-        h.classList.toggle('pf-hide', !any);
-        if (ul) ul.classList.toggle('pf-hide', !any);
-      });
-      var anyVisible = false;
-      for (var i = 0; i < lis.length; i++) {
-        if (!lis[i].classList.contains('pf-hide')) { anyVisible = true; break; }
-      }
-      var note = panel.querySelector('.pf-empty');
-      if (!anyVisible && lis.length) {
-        if (!note) {
-          note = document.createElement('p');
-          note.className = 'pf-empty section-note';
-          note.textContent = 'Nothing to show — every paper is excluded. ' +
-            'Re-include papers in the Papers tab.';
-          panel.appendChild(note);
-        }
-        note.classList.remove('pf-hide');
-      } else if (note) {
-        note.classList.add('pf-hide');
-      }
-    });
-  }
-
-  // ---- papers tab: toggle cards + collapse excluded paper trees ----------
-
-  function applyPaperTab() {
-    PF.papers.forEach(function (p) {
-      var node = document.getElementById('paper-' + p.id);
-      if (!node) return;
-      var off = isPaperOff(p.id);
-      node.classList.toggle('pf-off', off);
-      if (off) node.open = false;
-    });
-  }
-
-  function setPaper(pid, included) {
-    var idx = excluded.indexOf(pid);
-    if (included && idx !== -1) excluded.splice(idx, 1);
-    if (!included && idx === -1) excluded.push(pid);
-    saveExcluded(excluded);
-    apply();
-  }
-
-  function buildPaperCards() {
-    var host = document.getElementById('pf-paper-cards');
-    if (!host) return;
-    PF.papers.forEach(function (p) {
-      var card = document.createElement('label');
-      card.className = 'pf-card';
-      var cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.setAttribute('data-paper', p.id);
-      cb.addEventListener('change', function () { setPaper(p.id, cb.checked); });
-      var title = document.createElement('span');
-      title.className = 'pf-card-title';
-      title.textContent = p.title;
-      var state = document.createElement('span');
-      state.className = 'pf-card-state';
-      card.appendChild(cb);
-      card.appendChild(title);
-      card.appendChild(state);
-      host.appendChild(card);
-    });
-  }
-
-  function refreshPaperCards() {
-    var host = document.getElementById('pf-paper-cards');
-    if (!host) return;
-    Array.prototype.forEach.call(host.querySelectorAll('input[data-paper]'), function (cb) {
-      var off = isPaperOff(cb.getAttribute('data-paper'));
-      cb.checked = !off;
-      cb.parentNode.classList.toggle('pf-card-off', off);
-      cb.parentNode.querySelector('.pf-card-state').textContent = off ? 'excluded' : 'included';
-    });
-  }
-
-  // ---- header widget: change the selection from any page -----------------
-
-  var headerWidget = null;
-
-  function buildHeaderWidget() {
-    if (window.self !== window.top) return; // popup frame: chrome is hidden
-    var tools = document.querySelector('.header-tools');
-    if (!tools) return;
-    var wrap = document.createElement('span');
-    wrap.className = 'pf-widget';
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pf-widget-btn';
-    btn.setAttribute('aria-haspopup', 'true');
-    btn.setAttribute('aria-expanded', 'false');
-    var pop = document.createElement('div');
-    pop.className = 'pf-pop';
-    pop.hidden = true;
-    var head = document.createElement('p');
-    head.className = 'pf-pop-head';
-    head.textContent = 'Papers in view';
-    pop.appendChild(head);
-    PF.papers.forEach(function (p) {
-      var row = document.createElement('label');
-      row.className = 'pf-pop-row';
-      var cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.setAttribute('data-paper', p.id);
-      cb.addEventListener('change', function () { setPaper(p.id, cb.checked); });
-      var name = document.createElement('span');
-      name.textContent = p.short;
-      row.appendChild(cb);
-      row.appendChild(name);
-      pop.appendChild(row);
-    });
-    btn.addEventListener('click', function () {
-      var open = pop.hidden;
-      pop.hidden = !open;
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    document.addEventListener('click', function (ev) {
-      if (!pop.hidden && !wrap.contains(ev.target)) {
-        pop.hidden = true;
-        btn.setAttribute('aria-expanded', 'false');
-      }
-    });
-    wrap.appendChild(btn);
-    wrap.appendChild(pop);
-    tools.insertBefore(wrap, tools.firstChild);
-    headerWidget = { btn: btn, pop: pop };
-  }
-
-  function refreshHeaderWidget() {
-    if (!headerWidget) return;
-    var n = validIds.length - excluded.length;
-    headerWidget.btn.textContent = 'Papers ' + n + '/' + validIds.length;
-    headerWidget.btn.classList.toggle('pf-widget-active', excluded.length > 0);
-    Array.prototype.forEach.call(
-      headerWidget.pop.querySelectorAll('input[data-paper]'),
-      function (cb) { cb.checked = !isPaperOff(cb.getAttribute('data-paper')); }
-    );
-  }
-
-  // ---- banner on an excluded node's own page ------------------------------
-
-  function applyBanner() {
-    var key = currentNodeKey();
-    var main = document.querySelector('main');
-    var banner = document.getElementById('pf-banner');
-    if (banner) banner.parentNode.removeChild(banner);
-    if (!key || !main || !isNodeOff(key)) return;
-    banner = document.createElement('div');
-    banner.id = 'pf-banner';
-    banner.className = 'pf-banner';
-    var papers = PF.nodes[key] || [];
-    var label = KIND_LABEL[key.split('/')[0]] || 'page';
-    var msg = document.createElement('span');
-    msg.textContent = 'This ' + label + ' comes only from ' +
-      (papers.length > 1 ? 'papers you’ve excluded.' : 'a paper you’ve excluded.');
-    banner.appendChild(msg);
-    papers.forEach(function (pid) {
-      var p = paperById(pid);
-      if (!p) return;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'pf-banner-btn';
-      b.textContent = 'Re-include ' + p.short;
-      b.addEventListener('click', function () { setPaper(pid, true); });
-      banner.appendChild(b);
-    });
-    main.insertBefore(banner, main.firstChild);
-  }
-
-  // ---- glue ---------------------------------------------------------------
-
-  function apply() {
-    applyLinks();
-    applyContainers();
-    applyIndexLists();
-    applyPaperTab();
-    refreshPaperCards();
-    refreshHeaderWidget();
-    applyBanner();
-  }
-
-  function init() {
-    buildHeaderWidget();
-    buildPaperCards();
-    apply();
-  }
-
-  // selection changed in another tab, window, or popup frame
-  window.addEventListener('storage', function (ev) {
-    if (ev.key && ev.key !== KEY) return;
-    excluded = loadExcluded();
-    apply();
-  });
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
 })();
 """
 
@@ -3197,7 +2672,6 @@ def main():
     builder = SiteBuilder(data)
 
     print("[render] writing paper-selection filter script")
-    (ASSETS_DIR / "paperfilter.js").write_text(builder.paperfilter_js(), encoding="utf-8")
 
     print("[render] generating pages ...")
     counts = builder.build_all()
