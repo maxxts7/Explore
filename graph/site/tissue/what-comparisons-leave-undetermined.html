@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>What comparison training leaves undetermined — Connective theme</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-tissue">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-tissue">connective theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>What comparison training leaves undetermined</h1>
+<div class="page-intro"><p>Learn a reward purely from which of two things a person preferred, and the result is pinned down only up to reordering: nothing fixes its zero point, scale, or how confident a prediction may get. The Bradley-Terry model supplies the comparison loss, but its bare softmax would let confidence climb toward certainty, so a constant rater-error rate caps it, and normalization fixes a scale the comparisons never specified.</p>
+<p>The walk works through each patch, including reward being summed across a clip without discounting, closing on two smaller facts: a normalization constant chosen backward from an algorithm's existing hyperparameters, and the same scale problem reappearing, patched differently, in InstructGPT years later.</p></div>
+<section class="prose-section"><p>A reward model learned only from comparisons is pinned down only up to order-preserving transformations, so these edges are the patches that nail down what pairwise ranking alone leaves free: the loss function itself, the asymptotic confidence of that loss, the model's absolute scale, and the timing assumptions within a single clip. The Bradley-Terry model supplies the loss for the reward model, fitting predicted summed reward as a latent score inside a pairwise-comparison softmax rather than regressing to any absolute number, since comparisons are all the training data provides. The rater error noise model corrects an asymptotic property a bare Bradley-Terry softmax gets wrong, capping predicted confidence well below certainty with an assumed constant 10 percent error rate rather than letting confidence approach 1 as the reward gap between two segments grows. Reward normalization fixes the underdetermined scale of the reward model, rescaling its output to zero mean and a fixed standard deviation before the RL algorithm sees it, since the comparison loss alone leaves both the zero point and the magnitude unconstrained. The trajectory segment is summed without discount by the Bradley-Terry model, an explicit choice that treats an event at the start of a one-to-two-second clip as equally decisive as the same event at the end, one more free parameter the comparison framing has to fix by assumption rather than infer from the data. Reward normalization is reverse-engineered to avoid retuning A2C: the fixed standard deviation of 0.05 chosen for Atari was picked backward from A2C's existing hyperparameters rather than from any principled measure of scale. And reward normalization prefigures the scale fix that reappears in the reward model loss five years later, when InstructGPT anchors its own zero point to labeler demonstrations instead, patching the identical underdetermination for interpretability rather than for optimizer convenience.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Member edges</h2><ul><li><a href="../edge/bradley-terry-model-supplies-the-loss-for-reward-model.html">Bradley-Terry Model — supplies the loss for → Reward model (RM)</a></li><li><a href="../edge/rater-error-noise-model-corrects-the-asymptotics-of-bradley-terry-model.html">Constant Rater-Error Noise Model — corrects the asymptotics of → Bradley-Terry Model</a></li><li><a href="../edge/reward-normalization-fixes-the-underdetermined-scale-of-reward-model.html">Reward Prediction Normalization — fixes the underdetermined scale of → Reward model (RM)</a></li><li><a href="../edge/trajectory-segment-is-summed-without-discount-by-bradley-terry-model.html">Trajectory Segment — is summed without discount by → Bradley-Terry Model</a></li><li><a href="../edge/reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c.html">Reward Prediction Normalization — is reverse engineered to avoid retuning → Advantage Actor-Critic (A2C/A3C)</a></li><li><a href="../edge/reward-normalization-prefigures-the-scale-fix-in-reward-model-loss.html">Reward Prediction Normalization — prefigures the scale fix in → Reward model pairwise comparison loss</a> <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind the concepts its member edges connect.</p><details class="sources-details"><summary>10 source passages in 3 papers</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=41" target="_blank" rel="noopener">&sect;&ldquo;C.2 Details of RM training&rdquo;, p. 41</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;1.2 The Constitutional AI Approach&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;4.1 Method&rdquo;, p. 10</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Setting and Goal&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.2 Preference Elicitation&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;A.2 Atari&rdquo;, p. 15</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

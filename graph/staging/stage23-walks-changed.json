@@ -1,0 +1,170 @@
+{"walks": [
+  {
+    "theme": "scalable-oversight-lineage",
+    "steps": [
+      {
+        "concept": "scalable-oversight",
+        "prose": "Scalable oversight is named as an open problem in 2016: safe behavior requires evaluating a true objective too costly to check on every training example, forcing reliance on cheaper proxies. This walk now traces how a 2017 paper answers that problem directly, before the answer is scaled twice more, first into a language-model pipeline and then into an AI-fed variant of that same pipeline."
+      },
+      {
+        "concept": "async-reward-learning-architecture",
+        "prose": "The 2017 paper's asynchronous reward-learning architecture is scalable oversight's first concrete answer: a policy, a human-comparison process, and a reward predictor run as three concurrent loops, each feeding the next, so a learned reward can stand in for the missing objective while the policy trains. Trajectories flow into comparisons and comparisons into reward-predictor training, letting human judgment guide learning without ever evaluating the true objective on every step."
+      },
+      {
+        "concept": "human-feedback-sample-efficiency",
+        "prose": "Human-feedback sample efficiency is the architecture's headline payoff: it makes the answer credible by learning complex tasks and novel behaviors from feedback on less than 1% of the agent's environment interactions, roughly three orders of magnitude less than feedback on every timestep. That efficiency is what turns asynchronous reward learning from a plausible idea into something practically deployable at deep-RL scale."
+      },
+      {
+        "concept": "reward-model",
+        "prose": "InstructGPT's (2022) reward model is, functionally, that same architecture scaled to language five years later: a model trained to predict which of two outputs human labelers would prefer, in place of the 2017 paper's video-clip comparisons. InstructGPT never uses the term scalable oversight, so the continuity is visible only in hindsight, but the underlying move, a learned proxy standing in for an objective too costly to check directly, is the one the 2017 architecture already made."
+      },
+      {
+        "concept": "rlhf",
+        "prose": "RLHF is the fine-tuning technique the reward model exists to serve: its architecture and role are dictated by how policy optimization actually works, since it starts from the same weights as the policy it will later steer and anchors the reward signal RLHF optimizes against. Where the 2017 paper's three processes updated continuously and asynchronously, RLHF alternates reward-model training and policy optimization in discrete rounds, but the underlying loop is the one that architecture first ran end to end."
+      },
+      {
+        "concept": "rlaif",
+        "prose": "RLAIF swaps the labeler in RLHF, replacing the human who produces preference comparisons with an AI system, while Constitutional AI states plainly that the remainder of the pipeline, preference model training and RL, is exactly the same as RLHF. It is a minimal, surgical modification, not a new algorithm, pushing the same lineage one step further toward automation."
+      },
+      {
+        "concept": "feedback-model",
+        "prose": "The feedback model is what RLAIF delegates harmlessness comparisons to: an independent language model shown a harmful prompt and a pair of responses, formatted as an explicit multiple-choice question, that produces the preference label a human labeler, or the 2017 paper's human overseer, would have produced before. It is the concrete mechanism that makes RLAIF's labeler-swap actually work."
+      },
+      {
+        "concept": "hybrid-human-ai-preference-model",
+        "prose": "The hybrid human/AI preference model is trained on a mixture the feedback model makes possible: human-labeled helpfulness comparisons stitched together with AI-labeled harmlessness comparisons into a single reward signal. It shows the lineage does not have to be all-human or all-AI, human and machine judgment can be blended in the same trained model."
+      },
+      {
+        "concept": "iterated-online-training",
+        "prose": "Iterated online training, periodically refreshing the preference model with new comparisons on the current policy's own outputs, is not new at this last step: the 2017 paper's architecture already ran it as a core design choice, collecting comparisons continuously throughout training rather than only at the start. Constitutional AI (2022) flags the same technique as a further scaling step, now newly automatable once an AI rather than a human is doing the labeling, closing the lineage at the point where the labeler itself stops being the bottleneck."
+      }
+    ]
+  },
+  {
+    "theme": "semi-supervised-reward-learning-proposals",
+    "steps": [
+      {
+        "concept": "scalable-oversight",
+        "prose": "Scalable oversight names the core difficulty this theme addresses: ensuring safe agent behavior when the true objective is too costly to evaluate on every training example, forcing reliance on cheaper proxies. The rest of this walk traces the paper's flagship answer to that difficulty, semi-supervised reinforcement learning, the family of techniques built to make it work, and, for one of them, the concrete deep-RL implementation a 2017 paper built the following year."
+      },
+      {
+        "concept": "semi-supervised-reinforcement-learning",
+        "prose": "Semi-supervised RL operationalizes scalable oversight as a concrete, tunable setup: an agent observes its true reward on only a small fraction of timesteps or episodes, yet is evaluated as if judged throughout. The four proposals that follow are all instantiations of this single framework, each mining the unlabeled majority of experience in a different way."
+      },
+      {
+        "concept": "supervised-reward-learning",
+        "prose": "Supervised reward learning is the baseline instantiation: train a model to predict reward directly from state, then use that prediction, weighted by its own uncertainty, to estimate payoff on episodes that carry no true label at all. It is the most literal reading of semi-supervised RL's promise, learning to fill in the missing reward signal itself."
+      },
+      {
+        "concept": "semi-supervised-active-reward-learning",
+        "prose": "The semi-supervised or active variant extends supervised reward learning by adding the ability to flag salient events and request feedback on them specifically, rather than passively predicting reward everywhere. Concrete Problems leaves how to choose which events to flag unspecified, a gap the 2017 paper closes the following year with a concrete deep-RL implementation."
+      },
+      {
+        "concept": "uncertainty-based-query-selection",
+        "prose": "Uncertainty-based query selection is the 2017 paper's answer to that gap: sample a large batch of candidate segment pairs, have every member of a reward-predictor ensemble predict a preference for each, and present to the human whichever pairs the ensemble disagrees about most. It turns semi-supervised active reward learning's abstract request for feedback on salient events into a concrete, automatic rule for choosing which comparisons are worth a human's time."
+      },
+      {
+        "concept": "expected-value-of-information-query-selection",
+        "prose": "Expected-value-of-information query selection is the more principled alternative the 2017 paper considers but leaves to future work: rather than querying wherever the ensemble disagrees, it would choose queries by how much information they are expected to yield. The paper admits ensemble disagreement is only a crude approximation to this ideal, one its own ablations show can even impair performance on some tasks."
+      },
+      {
+        "concept": "unsupervised-value-iteration",
+        "prose": "Unsupervised value iteration steps back from the query-selection question entirely to a different proposal: instead of estimating the missing reward or choosing which comparisons to request, it mines the transitions of unlabeled episodes directly to make more accurate Bellman updates. Reward prediction and dynamics-only learning turn out to be two non-overlapping ways of using experience that lacks a label."
+      },
+      {
+        "concept": "unsupervised-model-learning",
+        "prose": "Unsupervised model learning mirrors unsupervised value iteration's trick in model-based form, using the same reward-free transitions to improve a dynamics model instead of a value function. Between them, the model-free and model-based branches of RL each get their own route to squeezing information out of unlabeled episodes."
+      },
+      {
+        "concept": "atari-games-environment",
+        "prose": "Atari games are proposed as the shared toy testbed for all of the above, letting the paper stage a sequence of increasingly demanding oversight-scarcity conditions inside one familiar environment. It closes the walk by grounding these proposals in a place that turned out to be more than hypothetical: Atari became, the following year, one of the two domains where the 2017 paper actually ran its query-selection implementation and measured how well a predicted reward could substitute for the real one."
+      }
+    ]
+  },
+  {
+    "theme": "human-feedback-data-infrastructure",
+    "steps": [
+      {
+        "concept": "preference-elicitation-protocol",
+        "prose": "The preference elicitation protocol is the primitive ancestor of this whole human-data infrastructure: in 2017, a human overseer watches two rendered video clips of an agent's behavior and records a preference, a tie, or an incomparable judgment into a growing preference database. That same three-way response structure, prefer one side, call it a tie, or admit it can't be judged, still shapes how InstructGPT's labeling apparatus works five years later."
+      },
+      {
+        "concept": "contractor-preference-labeling",
+        "prose": "The contractor preference-labeling protocol is how that primitive was actually staffed in 2017: paid contractors sign up for time slots, receive a one-to-two sentence description of the task, and repeatedly compare pairs of video clips through a keyboard-driven interface offering prefer-left, prefer-right, tie, and can't-tell responses. It is the first working answer to a question every later stage of this walk answers again at greater scale: who does the labeling, and how are they organized to do it consistently."
+      },
+      {
+        "concept": "api-prompt-distribution",
+        "prose": "InstructGPT (2022) scales the 2017 primitive into a purpose-built pipeline, and the API prompt distribution is where that pipeline's data starts: text submitted by external users to an earlier, demonstration-only InstructGPT model on the OpenAI Playground, deduplicated, capped per user, and filtered for personally identifiable information. Every dataset in the rest of this walk draws its raw prompts from here."
+      },
+      {
+        "concept": "sft-dataset",
+        "prose": "The SFT dataset pairs roughly 13,000 of those prompts with human demonstrations, but the relationship with its source is circular: the Playground traffic behind the API prompt distribution was itself submitted to an earlier model trained on a subset of this same demonstration data, so each partly bootstrapped the other's existence."
+      },
+      {
+        "concept": "rm-dataset",
+        "prose": "The RM dataset trains the reward model on roughly 33,000 prompts, each with several outputs ranked by labelers, and those completions come overwhelmingly from policies trained on the SFT dataset just introduced. It marks a step up in labeling effort, from writing one demonstration per prompt to ranking several model outputs against each other."
+      },
+      {
+        "concept": "ppo-dataset",
+        "prose": "The PPO dataset completes the trio at the opposite extreme of labeling effort: roughly 31,000 prompts drawn purely from the API prompt distribution, with no human labels at all, closing a declining gradient of human effort per prompt that runs from full demonstrations, to rankings, to nothing."
+      },
+      {
+        "concept": "labeler-screening-process",
+        "prose": "None of these three datasets exists without the roughly 40 contractors selected through this four-criterion screening process, covering agreement on sensitive-speech flagging, agreement on rankings, sensitive demonstration writing quality, and self-assessed ability to identify sensitive content across groups. The walk now turns from the data itself to the human infrastructure that produced it."
+      },
+      {
+        "concept": "inter-annotator-agreement",
+        "prose": "Inter-labeler agreement enters this pipeline on both sides of the screening process just described: two of its four criteria are agreement measures used to filter candidates in, and the same statistic is later recomputed as an audit of the labelers who made it through."
+      },
+      {
+        "concept": "labeling-interface",
+        "prose": "The web labeling interface is where screened labelers actually record their judgments, assigning Likert scores, metadata labels, and full rankings; because it collects rankings of four to nine completions per prompt rather than isolated pairs, it is what filters uncertain comparisons out of the RM dataset introduced earlier."
+      },
+      {
+        "concept": "labeler-metadata-taxonomy",
+        "prose": "The labeler metadata annotation taxonomy is the fixed set of fields that interface asks labelers to fill in for every rated output, binary and Likert-scale flags for failures like hallucination or denigration of a protected class, turning each labeling session into structured data rather than just a ranking."
+      },
+      {
+        "concept": "held-out-labeler-generalization",
+        "prose": "The held-out labeler generalization test is the question the screening process creates the need to answer: because every training label came from the same roughly 40 screened contractors, this test checks whether models trained on their preferences hold up for a separate group of labelers who contributed no training data at all. It closes the walk by auditing the trustworthiness of everything built on top of this human infrastructure, all the way back to the simple three-way judgment the 2017 protocol first asked a person to make."
+      }
+    ]
+  },
+  {
+    "theme": "demonstrations-not-specification",
+    "steps": [
+      {
+        "concept": "inverse-reinforcement-learning",
+        "prose": "Inverse reinforcement learning infers a reward function or policy from observed expert trajectories rather than from a hand-specified reward, and this walk follows how that basic idea gets weighed against alternatives, repurposed, and eventually built into a real training pipeline. IRL is the foundational technique this theme measures its other demonstration-based proposals against, starting with the most direct alternative to it."
+      },
+      {
+        "concept": "imitation-learning",
+        "prose": "Imitation learning skips reward inference entirely and clones the demonstrated behavior directly, the same basic contrast Concrete Problems draws between IRL and cloning in 2016. The 2017 paper revisits this exact pair the following year and gives the stated reason both get passed over there: IRL and imitation learning both require a human able to demonstrate the desired behavior, which breaks down for tasks like controlling a non-human robot morphology a person can recognize but cannot perform."
+      },
+      {
+        "concept": "apprenticeship-learning",
+        "prose": "Apprenticeship learning returns to IRL's own family of techniques rather than imitation learning's direct-cloning alternative: it borrows its technique from inverse reinforcement learning but targets a different object, letting an agent learn near-optimal behavior directly from expert trajectories, skipping trial-and-error exploration entirely."
+      },
+      {
+        "concept": "use-demonstrations",
+        "prose": "Use demonstrations is the proposed safety remedy that repurposes both prior techniques, IRL and apprenticeship learning, as ways to reduce risky exploration: learn a baseline policy from expert trajectories first, then optionally bound any further exploration around it. It is the umbrella under which the two preceding techniques become a safety intervention rather than just a learning method."
+      },
+      {
+        "concept": "cooperative-inverse-reinforcement-learning",
+        "prose": "Cooperative inverse reinforcement learning is grouped alongside use demonstrations as its interactive counterpart, sharing the goal of letting a human's intentions substitute for a hand-specified reward but working through ongoing collaboration rather than a fixed, pre-collected dataset of trajectories. It marks the edge of what the demonstration-based proposals in Concrete Problems covered, before the walk turns to how one of them was actually built."
+      },
+      {
+        "concept": "supervised-fine-tuning",
+        "prose": "Supervised fine-tuning is InstructGPT's real-world operationalization of use demonstrations: a pretrained GPT-3 model is fine-tuned directly on human-written demonstrations of desired behavior, turning a 2016 proposal into the concrete first stage of a 2022 training pipeline. It is structurally the simplest of InstructGPT's three steps precisely because it inherits use demonstrations' original simplicity."
+      },
+      {
+        "concept": "sft-dataset",
+        "prose": "The SFT dataset is the roughly 13,000 labeler-written and API-sourced demonstrations that supervised fine-tuning actually trains on, the concrete substance behind the abstract phrase human demonstrations. Its construction, including duplicated template instructions, shapes what the resulting model learns."
+      },
+      {
+        "concept": "sft-model",
+        "prose": "The SFT model is what supervised fine-tuning on the SFT dataset produces, and it inherits that dataset's quirks directly: because near-duplicate demonstrations were common early in the project, the model was prone to early overfitting despite being trained for many epochs anyway. It closes this walk as both a standalone baseline and, as later stages of the pipeline depend on, the seed for everything downstream."
+      }
+    ]
+  }
+]}

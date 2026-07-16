@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>OpenAI Gym — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>OpenAI Gym</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A toolkit (Brockman et al., 2016) providing a common interface to the MuJoCo and Arcade Learning Environment tasks used in the paper&#x27;s experiments.</p>
+<div class="page-intro"><p>Two very different testbeds, a physics simulator and an arcade emulator, needed one common interface before the paper could run experiments on either the same way.</p>
+<p>The page covers what the toolkit provides, then the specific places the paper edits its default reward and termination logic, and closes on its role as shared plumbing underneath the two very different task suites the paper actually varies.</p></div>
+<section class="prose-section">
+<h2>What it is</h2>
+<p>OpenAI Gym is the toolkit (Brockman et al., 2016) the paper uses as the common interface to both testbeds: "we interface with MuJoCo... and the Arcade Learning Environment... through the OpenAI Gym" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3 Experimental Results", p. 6</a>). It supplies the standard task implementations for the <a href="../concept/mujoco.html">MuJoCo</a> locomotion tasks such as <a href="../concept/hopper-task.html">Hopper (MuJoCo task)</a>, <a href="../concept/half-cheetah-task.html">Half-Cheetah (MuJoCo task)</a>, and <a href="../concept/ant-task.html">Ant (MuJoCo task)</a>, as well as access to the Atari games run through the Arcade Learning Environment.</p>
+</section>
+<section class="prose-section">
+<h2>Where the paper edits Gym&#x27;s defaults</h2>
+<p>Two of the paper's environment modifications change Gym's own built-in reward and termination logic specifically. Gym's continuous-control tasks "penalize large torques," but since "torques are not directly visible to a human supervisor, these reward functions are not good representatives of human preferences over trajectories," the paper removes them (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>). Separately, in the Gym versions of the robotics tasks "the episode ends when certain parameters go outside of a prescribed range (for example when the robot falls over)"; this termination condition was replaced with a learned penalty rather than a hard reset, per the <a href="../concept/environment-modifications-for-preference-learning.html">Environment Modifications for Preference Learning</a> concept (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Its place among the testbeds</h2>
+<p>Gym is shared plumbing rather than a testbed itself — the paper's experimental variety comes from the tasks it exposes, split into the <a href="../concept/mujoco.html">MuJoCo</a> robotics suite and seven Atari games. Both halves of the paper's quantitative evaluation (§3.1.1 and §3.1.2) depend on Gym supplying a stable, standard task interface, so that the paper's reward-learning results can be compared directly against ordinary RL trained on the environment's original reward function.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/deep-rl-testbeds.html">The 2017 deep-RL testbeds: MuJoCo and Atari</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3 Experimental Results&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,511 @@
+{
+ "concepts": [
+  {
+   "id": "novel-behavior-training",
+   "name": "Novel Behavior Training",
+   "summary": "A set of experiments demonstrating that the method can teach agents entirely new behaviors that were never associated with a programmatic reward function, specified only via roughly an hour of human feedback: a robot performing repeated backflips, a half-cheetah moving forward on one leg, and a car agent that drives level with surrounding traffic.",
+   "parent": null,
+   "children": [
+    "hopper-backflip-demonstration",
+    "half-cheetah-one-leg-demonstration",
+    "enduro-keeping-pace-demonstration"
+   ],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A set of experiments demonstrating that the method can teach agents entirely new behaviors that were never associated with a programmatic reward function, specified only via roughly an hour of human feedback: a robot performing repeated backflips, a half-cheetah moving forward on one leg, and a car agent that drives level with surrounding traffic.",
+     "notes": "Presented as the paper's demonstration of flexibility beyond matching existing RL benchmarks; feedback for these was provided by the paper's authors rather than contractors."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.2 Novel behaviors",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions"
+    }
+   ],
+   "edges": [
+    {
+     "id": "human-feedback-implicit-reward-shaping-becomes-the-only-signal-in-novel-behavior-training",
+     "type": "becomes-the-only-signal-in",
+     "direction": "in",
+     "other": "human-feedback-implicit-reward-shaping",
+     "otherName": "Human-Feedback Implicit Reward Shaping",
+     "hindsight": false,
+     "gist": "On Ant, implicit reward shaping is a bonus: human comparisons happen to outperform a true, withheld reward that still exists and is used to score the outcome (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). On the backflip, one-leg, and keeping-pace demonstrations there is no true reward to fall back on or compare against at all, so whatever shaping the raters supply is the entire trainin"
+    },
+    {
+     "id": "reward-model-is-overbuilt-in-anticipation-of-novel-behavior-training",
+     "type": "is-overbuilt-in-anticipation-of",
+     "direction": "in",
+     "other": "reward-model",
+     "otherName": "Reward model (RM)",
+     "hindsight": false,
+     "gist": "The reward predictor used for the MuJoCo tasks is a full two-layer neural network even though the true reward functions for those standard benchmarks are, as the paper notes, all just second-degree polynomials of the input features, simple enough that a much simpler regression method would have sufficed (deep-rl-human-prefs, §\"A.1 Simulated Robotics Tasks\", p. 14). The paper is explicit that this "
+    }
+   ]
+  },
+  {
+   "id": "hopper-backflip-demonstration",
+   "name": "Hopper Backflip Demonstration",
+   "summary": "A novel behavior in which the simulated Hopper robot is trained, using 900 human preference queries in under an hour, to perform a sequence of backflips and land upright each time, despite there being no natural hand-engineered reward function for 'doing a backflip.'",
+   "parent": "novel-behavior-training",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A novel behavior in which the simulated Hopper robot is trained, using 900 human preference queries in under an hour, to perform a sequence of backflips and land upright each time, despite there being no natural hand-engineered reward function for 'doing a backflip.'",
+     "notes": "One of the paper's most frequently cited illustrative results in later RLHF literature (Figure 4)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.2 Novel behaviors",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions"
+    }
+   ],
+   "edges": [
+    {
+     "id": "hopper-backflip-demonstration-extends-past-the-hand-engineerable-reward-of-hopper-task",
+     "type": "extends-past-the-hand-engineerable-reward-of",
+     "direction": "out",
+     "other": "hopper-task",
+     "otherName": "Hopper (MuJoCo task)",
+     "hindsight": false,
+     "gist": "The standard Hopper benchmark already has a reward that is easy to hand-engineer: the paper describes all of the MuJoCo tasks' reward functions, Hopper included, as simple quadratic functions of the robot's distances, positions, and velocities (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). The backflip demonstration reuses the identical simulated robot and action space but targets behav"
+    }
+   ]
+  },
+  {
+   "id": "half-cheetah-one-leg-demonstration",
+   "name": "Half-Cheetah One-Leg Demonstration",
+   "summary": "A novel behavior in which the simulated Half-Cheetah robot is trained, using 800 human preference queries in under an hour, to move forward while balancing and standing on a single leg.",
+   "parent": "novel-behavior-training",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A novel behavior in which the simulated Half-Cheetah robot is trained, using 800 human preference queries in under an hour, to move forward while balancing and standing on a single leg.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.2 Novel behaviors",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions"
+    }
+   ],
+   "edges": [
+    {
+     "id": "half-cheetah-one-leg-demonstration-costs-barely-more-in-queries-than-half-cheetah-task",
+     "type": "costs-barely-more-in-queries-than",
+     "direction": "out",
+     "other": "half-cheetah-task",
+     "otherName": "Half-Cheetah (MuJoCo task)",
+     "hindsight": false,
+     "gist": "The standard Half-Cheetah benchmark, run against its own existing hand-engineered reward, was matched using 700 human preference queries (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). Teaching the identical robot an entirely new behavior with no reward function to hand-engineer at all, standing and moving forward on a single leg, took only 800 queries in under an hour (deep-rl-human-pre"
+    }
+   ]
+  },
+  {
+   "id": "enduro-keeping-pace-demonstration",
+   "name": "Enduro Keeping-Pace Demonstration",
+   "summary": "A novel behavior in which an agent playing the Atari game Enduro is trained, using roughly 1,300 queries and 4 million frames, to drive alongside other cars and stay roughly level with traffic, rather than the game's usual objective of passing as many cars as possible.",
+   "parent": "novel-behavior-training",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A novel behavior in which an agent playing the Atari game Enduro is trained, using roughly 1,300 queries and 4 million frames, to drive alongside other cars and stay roughly level with traffic, rather than the game's usual objective of passing as many cars as possible.",
+     "notes": "Corresponds to the 'even mode' contractor instructions in Appendix B.2; the agent gets confused by changes in background."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.2 Novel behaviors",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions"
+    }
+   ],
+   "edges": [
+    {
+     "id": "enduro-keeping-pace-demonstration-inverts-the-scoring-objective-of-enduro-task",
+     "type": "inverts-the-scoring-objective-of",
+     "direction": "out",
+     "other": "enduro-task",
+     "otherName": "Enduro (Atari game)",
+     "hindsight": false,
+     "gist": "The standard Enduro task and its contractor instructions define good play as passing as many cars as possible while not getting passed (deep-rl-human-prefs, §\"B.2 Atari\", p. 17). The keeping-pace demonstration retrains the identical game and action space under a literally inverted instruction: for \"Enduro (even mode)\" contractors are told to \"Avoid passing cars OR getting passed by them,\" rewardin"
+    }
+   ]
+  },
+  {
+   "id": "human-feedback-implicit-reward-shaping",
+   "name": "Human-Feedback Implicit Reward Shaping",
+   "summary": "An observed phenomenon in which reward predictors learned from human preferences sometimes outperform the ground-truth RL reward function, because human raters implicitly reward-shape the task (e.g. rewarding 'standing upright' on Ant, or rewarding any progress passing cars on Enduro), yielding denser or better-shaped guidance than the original hand-written reward.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "An observed phenomenon in which reward predictors learned from human preferences sometimes outperform the ground-truth RL reward function, because human raters implicitly reward-shape the task (e.g. rewarding 'standing upright' on Ant, or rewarding any progress passing cars on Enduro), yielding denser or better-shaped guidance than the original hand-written reward.",
+     "notes": "Relates to 'ant-task' and 'enduro-task' results; also observed at the aggregate level where 1400 synthetic labels slightly outperform training on the true reward directly."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.1 Simulated Robotics",
+     "page": 7,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "3.1.2 Atari",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "hidden-reward-experimental-design",
+     "name": "Hiding the reward: experimental design for preference-only learning"
+    },
+    {
+     "id": "novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions"
+    }
+   ],
+   "edges": [
+    {
+     "id": "enduro-task-supplies-the-hard-exploration-case-for-human-feedback-implicit-reward-shaping",
+     "type": "supplies-the-hard-exploration-case-for",
+     "direction": "in",
+     "other": "enduro-task",
+     "otherName": "Enduro (Atari game)",
+     "hindsight": false,
+     "gist": "Enduro's standard objective, passing cars, is genuinely hard for A3C to learn because successfully passing another car through undirected random exploration is a rare event under the game's own sparse reward, which is why the paper reports Enduro is 'difficult for A3C to learn' and correspondingly difficult to learn from synthetic labels drawn from that same sparse reward (deep-rl-human-prefs, §\"3"
+    },
+    {
+     "id": "synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping",
+     "type": "reveals-a-non-human-instance-of",
+     "direction": "in",
+     "other": "synthetic-oracle-feedback",
+     "otherName": "Synthetic Oracle Feedback",
+     "hindsight": false,
+     "gist": "The shaping phenomenon is usually told as a story about human judgment specifically, that humans reward 'standing upright' or 'passing cars' better than a hand-written bonus does, but the paper reports the same shaping advantage appearing with no human in the loop at all: at 1400 labels, training against the synthetic oracle's comparisons 'performs slightly better than if it had simply been given "
+    },
+    {
+     "id": "human-feedback-implicit-reward-shaping-becomes-the-only-signal-in-novel-behavior-training",
+     "type": "becomes-the-only-signal-in",
+     "direction": "out",
+     "other": "novel-behavior-training",
+     "otherName": "Novel Behavior Training",
+     "hindsight": false,
+     "gist": "On Ant, implicit reward shaping is a bonus: human comparisons happen to outperform a true, withheld reward that still exists and is used to score the outcome (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). On the backflip, one-leg, and keeping-pace demonstrations there is no true reward to fall back on or compare against at all, so whatever shaping the raters supply is the entire trainin"
+    }
+   ]
+  },
+  {
+   "id": "a2c",
+   "name": "Advantage Actor-Critic (A2C/A3C)",
+   "summary": "A policy-gradient RL algorithm; the paper uses the synchronous variant (A2C) of Mnih et al. (2016)'s asynchronous A3C algorithm to train the policy on the seven Atari tasks against predicted reward from the learned reward model.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A policy-gradient RL algorithm; the paper uses the synchronous variant (A2C) of Mnih et al. (2016)'s asynchronous A3C algorithm to train the policy on the seven Atari tasks against predicted reward from the learned reward model.",
+     "notes": "Standard hyperparameters from Mnih et al. (2015, 2016) were reused essentially unchanged."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2.2.1 Optimizing the Policy",
+     "page": 4,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "A.2 Atari",
+     "page": 15,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "policy-optimization-under-learned-rewards",
+     "name": "Policy optimization under a learned, changing reward"
+    }
+   ],
+   "edges": [
+    {
+     "id": "non-stationary-reward-challenge-motivates-the-choice-of-a2c",
+     "type": "motivates-the-choice-of",
+     "direction": "in",
+     "other": "non-stationary-reward-challenge",
+     "otherName": "Non-Stationary Reward Function Challenge",
+     "hindsight": false,
+     "gist": "The paper picks its RL algorithms specifically to survive a reward function that keeps moving underneath the policy: because the reward predictor is repeatedly updated as new preference labels arrive, the optimizer is chasing a non-stationary target, which the authors say led them to focus on policy-gradient methods over alternatives tuned for a fixed reward (deep-rl-human-prefs, §\"2.2.1 Optimizin"
+    },
+    {
+     "id": "a2c-closes-its-enduro-exploration-gap-with-dqn",
+     "type": "closes-its-enduro-exploration-gap-with",
+     "direction": "out",
+     "other": "dqn",
+     "otherName": "Deep Q-Network (DQN)",
+     "hindsight": false,
+     "gist": "A2C, a policy-gradient method, and DQN, a value-based method, sit on opposite sides of an algorithmic divide that the paper's Enduro result puts to an inadvertent test. The paper states that Enduro is difficult for A2C's asynchronous relative A3C to learn because successfully passing another car essentially never happens under random policy-gradient exploration, and this same difficulty carries ov"
+    },
+    {
+     "id": "reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c",
+     "type": "is-reverse-engineered-to-avoid-retuning",
+     "direction": "in",
+     "other": "reward-normalization",
+     "otherName": "Reward Prediction Normalization",
+     "hindsight": false,
+     "gist": "For the Atari experiments the reward predictor's output is rescaled to a standard deviation of exactly 0.05, a figure the paper calls arbitrary in principle but chosen specifically so the same A2C hyperparameters used against the true reward, entropy bonus, learning rate, and the rest, could be reused completely unchanged (deep-rl-human-prefs, §\"A.2 Atari\", p. 15). The authors note they could equi"
+    }
+   ]
+  },
+  {
+   "id": "trpo",
+   "name": "Trust Region Policy Optimization (TRPO)",
+   "summary": "A policy-gradient RL algorithm (Schulman et al., 2015) used to train the policy on the simulated MuJoCo robotics tasks; the paper increases TRPO's entropy bonus above standard settings to compensate for reduced exploration under a changing, learned reward function.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A policy-gradient RL algorithm (Schulman et al., 2015) used to train the policy on the simulated MuJoCo robotics tasks; the paper increases TRPO's entropy bonus above standard settings to compensate for reduced exploration under a changing, learned reward function.",
+     "notes": "The entropy bonus was the only hyperparameter the authors adjusted away from standard settings."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2.2.1 Optimizing the Policy",
+     "page": 4,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "A.1 Simulated Robotics Tasks",
+     "page": 14,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "policy-optimization-under-learned-rewards",
+     "name": "Policy optimization under a learned, changing reward"
+    }
+   ],
+   "edges": [
+    {
+     "id": "non-stationary-reward-challenge-forces-an-entropy-bonus-increase-in-trpo",
+     "type": "forces-an-entropy-bonus-increase-in",
+     "direction": "in",
+     "other": "non-stationary-reward-challenge",
+     "otherName": "Non-Stationary Reward Function Challenge",
+     "hindsight": false,
+     "gist": "Where A2C needed no adjustment, TRPO did: the paper reports raising TRPO's entropy bonus above its standard setting, the only hyperparameter changed anywhere in the simulated-robotics experiments, specifically because TRPO's trust region is what normally guarantees adequate exploration, and that guarantee degrades when the reward driving it is being rewritten during training (deep-rl-human-prefs, "
+    }
+   ]
+  },
+  {
+   "id": "dqn",
+   "name": "Deep Q-Network (DQN)",
+   "summary": "A value-based deep RL algorithm (Mnih et al., 2015), mentioned as a baseline whose reported Enduro performance is comparable to what the paper's preference-based method achieves.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A value-based deep RL algorithm (Mnih et al., 2015), mentioned as a baseline whose reported Enduro performance is comparable to what the paper's preference-based method achieves.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.2 Atari",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "policy-optimization-under-learned-rewards",
+     "name": "Policy optimization under a learned, changing reward"
+    }
+   ],
+   "edges": [
+    {
+     "id": "a2c-closes-its-enduro-exploration-gap-with-dqn",
+     "type": "closes-its-enduro-exploration-gap-with",
+     "direction": "in",
+     "other": "a2c",
+     "otherName": "Advantage Actor-Critic (A2C/A3C)",
+     "hindsight": false,
+     "gist": "A2C, a policy-gradient method, and DQN, a value-based method, sit on opposite sides of an algorithmic divide that the paper's Enduro result puts to an inadvertent test. The paper states that Enduro is difficult for A2C's asynchronous relative A3C to learn because successfully passing another car essentially never happens under random policy-gradient exploration, and this same difficulty carries ov"
+    }
+   ]
+  },
+  {
+   "id": "imitation-learning",
+   "name": "Imitation Learning",
+   "summary": "An alternative approach, mentioned in the introduction, of directly cloning demonstrated behavior rather than learning from preferences; noted as inapplicable to behaviors difficult for humans to demonstrate, such as controlling non-human robot morphologies.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An alternative approach, mentioned in the introduction, of directly cloning demonstrated behavior rather than learning from preferences; noted as inapplicable to behaviors difficult for humans to demonstrate, such as controlling non-human robot morphologies.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 1,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "demonstrations-not-specification",
+     "name": "Learning from demonstrations instead of a specified reward"
+    },
+    {
+     "id": "prior-human-in-the-loop-rl",
+     "name": "Prior human-in-the-loop RL and why it didn't scale"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "id": "tamer-framework",
+   "name": "TAMER Framework",
+   "summary": "A prior framework (Knox and Stone, 2009; Knox, 2012) for learning a reward function from real-time human feedback, discussed in related work as tackling much simpler settings where the desired policy can be learned relatively quickly, unlike the thousands of hours of experience required in this paper's Atari domain.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A prior framework (Knox and Stone, 2009; Knox, 2012) for learning a reward function from real-time human feedback, discussed in related work as tackling much simpler settings where the desired policy can be learned relatively quickly, unlike the thousands of hours of experience required in this paper's Atari domain.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "1.1 Related Work",
+     "page": 3,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "prior-human-in-the-loop-rl",
+     "name": "Prior human-in-the-loop RL and why it didn't scale"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "id": "expected-value-of-information-query-selection",
+   "name": "Expected-Value-of-Information Query Selection",
+   "summary": "A more principled query-selection criterion, mentioned as future work, that would choose queries by their expected value of information rather than by ensemble disagreement, attributed to Akrour et al. (2012) and Krueger et al. (2016).",
+   "parent": "semi-supervised-active-reward-learning",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A more principled query-selection criterion, mentioned as future work, that would choose queries by their expected value of information rather than by ensemble disagreement, attributed to Akrour et al. (2012) and Krueger et al. (2016).",
+     "notes": "Left to future work; not implemented in this paper."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2.2.4 Selecting Queries",
+     "page": 6,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "semi-supervised-reward-learning-proposals",
+     "name": "Scaling oversight by predicting reward on unlabeled episodes"
+    },
+    {
+     "id": "economics-of-human-feedback",
+     "name": "The economics of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "uncertainty-based-query-selection-is-a-crude-approximation-of-expected-value-of-information-query-selection",
+     "type": "is-a-crude-approximation-of",
+     "direction": "in",
+     "other": "uncertainty-based-query-selection",
+     "otherName": "Uncertainty-Based Query Selection (Ensemble Variance)",
+     "hindsight": false,
+     "gist": "The paper's authors are explicit that ensemble-variance querying is 'a crude approximation' to the query-selection problem, not a considered solution to it: the criterion they call more principled is expected value of information, credited to Akrour et al. (2012) and Krueger et al. (2016), which they leave entirely to future work rather than implement (deep-rl-human-prefs, §\"2.2.4 Selecting Querie"
+    }
+   ]
+  }
+ ],
+ "examplePage": {
+  "id": "kl-penalty",
+  "name": "Per-token KL penalty from the SFT model",
+  "sections": [
+   {
+    "heading": "What a KL penalty is",
+    "body": "The Kullback-Leibler divergence between two distributions $P$ and $Q$ over the same space is $D_{KL}(P \\| Q) = \\sum_x P(x)\\log\\frac{P(x)}{Q(x)}$, a non-negative, asymmetric measure of how much $P$ diverges from $Q$. Constraining or penalizing this divergence between a new policy and a reference policy during optimization predates this paper by years, underlying trust-region methods such as TRPO and forming a standard regularization term in PPO-style RL fine-tuning of language models (as in Ziegler et al., 2019, and Stiennon et al., 2020, which InstructGPT explicitly follows). The concept is inherited: InstructGPT does not invent the KL-penalty idea but applies it in a specific, per-token form."
+   },
+   {
+    "heading": "Applied per token, not per episode",
+    "body": "InstructGPT subtracts, from the reward at every generated token, a term $-\\beta \\log\\big(\\pi^{RL}_\\phi(y|x)/\\pi^{SFT}(y|x)\\big)$ proportional to the log-ratio between the RL policy and the [[sft-model]] at that position (instructgpt, §\"3.5 Models\", p. 9; Equation 2), with the final models setting $\\beta = 0.02$ (instructgpt, §\"C.4 Details of RLHF training\", p. 42). As the [[kl-penalty-densifies-the-terminal-reward-of-bandit-environment]] edge observes, this design choice does more than its stated job: because the [[reward-model]] delivers exactly one scalar per episode in the [[bandit-environment]], only at the very end, the per-token KL term is the objective's sole source of dense, mid-generation feedback, kept deliberately small so it shapes token-level behavior without swamping the terminal reward that carries the actual preference signal."
+   },
+   {
+    "heading": "Its place in the corpus's Goodhart story",
+    "body": "The [[reward-overoptimization-is-preemptively-countered-by-kl-penalty]] edge frames the penalty's core purpose precisely: it does not touch the reward model or the human labels behind it, only how far the PPO policy may drift from the SFT model while chasing RM score, applying continuous pressure across the same tokens over which reward-hacking behavior could accumulate. But the penalty is not a universal fix for [[goodharts-law]] in this corpus. The [[kl-penalty-was-not-the-fix-applied-to-evasiveness]] edge contrasts it with Constitutional AI's [[evasiveness]] problem, whose cause was traced upstream to the labeling instructions themselves rather than downstream to the optimizer, so its fix changed what crowdworkers were asked to prefer rather than constraining the RL policy. Excessive hedging is the case where the KL penalty demonstrably fails within InstructGPT itself: because the reward model's training labels genuinely prefer hedged text, staying close to the SFT distribution offers no protection, and the RM is simply wrong at home."
+   },
+   {
+    "heading": "A tradeoff against pretraining-gradient mixing",
+    "body": "The [[ppo-ptx-outperforms-tightening-of-kl-penalty]] edge reports a direct experimental comparison: raising $\\beta$ to counter public-NLP-dataset regressions sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, whereas a well-chosen [[ppo-ptx]] pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The asymmetry reflects what each term actually does: the KL penalty constrains where the policy may go relative to the SFT model, so buying back capability with it costs alignment gain proportionally, whereas pretraining gradients inject the missing training signal directly. Pretraining-gradient mixing does not make the KL knob redundant, however; even with ptx active, human Likert scores peak near $\\beta \\approx 0.01$–$0.02$ and degrade at both $\\beta=0$ and $\\beta=2$ (instructgpt, §\"E.7 Optimal KL reward coefficient\", p. 56). The concept belongs to both the [[ppo-optimization-mechanics]] theme and the cross-corpus [[goodhart-across-corpus]] theme."
+   }
+  ]
+ }
+}

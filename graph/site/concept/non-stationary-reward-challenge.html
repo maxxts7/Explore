@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Non-Stationary Reward Function Challenge — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Non-Stationary Reward Function Challenge</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The observation that because the reward predictor is repeatedly updated during training, the policy is effectively solving an RL problem with a non-stationary reward function; this motivated favoring policy-gradient methods robust to a changing reward and increasing the entropy bonus (particularly for TRPO) to maintain adequate exploration.</p>
+<div class="page-intro"><p>A policy chasing a reward function under continuous revision is solving a fundamentally different problem than one chasing a fixed target, and the difference shows up in which algorithms even hold up.</p>
+<p>The page names the source of the moving target, then the two ways the paper responds to it, choice of algorithm and a raised entropy bonus, before closing on how the identical problem resurfaces later whenever a language-model reward model is itself refit partway through training.</p></div>
+<section class="prose-section">
+<h2>A moving target, by design</h2>
+<p>Because the reward predictor is repeatedly refit on new comparisons throughout training rather than fixed once, the policy is, at every point, solving a reinforcement-learning problem whose reward function keeps changing. The paper names this directly: the reward function "may be non-stationary, which leads us to prefer methods which are robust to changes in the reward function" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 4</a>). This is the direct consequence of <a href="../concept/iterated-online-training.html">iterated online training</a> — the choice to keep collecting and fitting on comparisons throughout policy training rather than freezing the predictor after an initial batch, as the "no online queries" ablation does instead.</p>
+</section>
+<section class="prose-section">
+<h2>Two responses: choice of algorithm, choice of entropy bonus</h2>
+<p>The paper responds in two distinct ways. First, non-stationarity is why the authors "focus on policy gradient methods," settling on <a href="../concept/a2c.html">A2C</a> for Atari and <a href="../concept/trpo.html">TRPO</a> for the MuJoCo tasks rather than value-based methods tuned for a fixed reward (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 4</a>). Second, within TRPO specifically, the paper raises the entropy bonus above its standard setting — the only hyperparameter changed anywhere in the simulated-robotics experiments — because TRPO's trust region normally guarantees adequate exploration, and that guarantee weakens when the reward driving it is itself being rewritten during training (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>). A2C required no equivalent adjustment.</p>
+</section>
+<section class="prose-section">
+<h2>The same problem, resurfacing under iteration</h2>
+<p>InstructGPT's <a href="../concept/ppo-training.html">PPO fine-tuning stage</a> looks stationary at first glance, since a single reward model is trained once on a fixed comparison dataset before policy optimization begins. But the paper notes that comparison collection and reward-model training can themselves be iterated continuously, with more comparisons gathered on the current best policy to train a new RM and then a new policy in turn (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.1 High-level methodology", p. 6</a>) — and whenever that iteration is used, the same non-stationary-target problem this concept names reappears: a policy optimizing against a reward model that is itself about to be replaced by a newer one fit on the policy's own more recent behavior.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/async-reward-learning-architecture.html">Asynchronous Reward-Learning Architecture</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Non-Stationary Reward Function Challenge</strong> — <a href="../edge/non-stationary-reward-challenge-motivates-the-choice-of-a2c.html">motivates the choice of</a> → Advantage Actor-Critic (A2C/A3C)</li><li>Iterated (Online) Training — <a href="../edge/iterated-online-training-is-the-cause-of-non-stationary-reward-challenge.html">is the cause of</a> → <strong>Non-Stationary Reward Function Challenge</strong></li><li><strong>Non-Stationary Reward Function Challenge</strong> — <a href="../edge/non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training.html">resurfaces under iteration in</a> → PPO fine-tuning stage (RLHF policy optimization) <span class="tag hindsight">hindsight</span></li><li><strong>Non-Stationary Reward Function Challenge</strong> — <a href="../edge/non-stationary-reward-challenge-forces-an-entropy-bonus-increase-in-trpo.html">forces an entropy bonus increase in</a> → Trust Region Policy Optimization (TRPO)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></li><li><a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

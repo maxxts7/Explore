@@ -1,0 +1,64 @@
+{
+  "superedges": [
+    {
+      "id": "learning-rewards-from-comparisons-scales-binary-comparison-into-rankings-in-rlhf-three-step-pipeline",
+      "type": "scales-binary-comparison-into-rankings-for",
+      "source": "learning-rewards-from-comparisons",
+      "target": "rlhf-three-step-pipeline",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The 2017 mechanism only ever resolves one pair at a time: a human is shown two trajectory segments, and the Bradley-Terry softmax converts that single binary judgment into a scalar reward via \"the difference in predicted reward of two trajectory segments\" (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). InstructGPT's reward-model step generalizes the same softmax to whole rankings: labelers rank K = 4 to 9 outputs per prompt rather than choosing between two (instructgpt, §\"3.2 Dataset\", p. 7), and the reward model pairwise comparison loss is applied to every pair implied by that ranking at once. Doing so creates a problem 2017 never faces, because each of its comparisons is drawn as an independently sampled pair; comparisons pulled from one ranking are correlated, sharing K-1 outputs with each other, so training on all of them as if they were independently shuffled data overfits. K-choose-2 batching is the specific fix: every pairwise comparison from one labeler's ranked set is placed into a single batch element together, rather than scattered through training as if unrelated (instructgpt, §\"3.5 Models\", p. 8). Nothing about the underlying comparison-to-scale logic changes in this generalization from pairs to rankings, only the bookkeeping needed to keep correlated comparisons from being double-counted as independent evidence."
+    },
+    {
+      "id": "learning-rewards-from-comparisons-assumes-error-rate-later-measured-in-human-feedback-data-infrastructure",
+      "type": "assumes-the-error-rate-later-measured-in",
+      "source": "learning-rewards-from-comparisons",
+      "target": "human-feedback-data-infrastructure",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The Bradley-Terry machinery this theme describes bakes in an assumption about its own labelers that it never checks: the constant rater-error noise model adds a flat 10% chance of a uniformly random response to the softmax, because \"human raters have a constant probability of making an error, which doesn't decay to 0 as the difference in reward difference becomes extreme\" (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). That figure is chosen once, at design time, and never measured against the paper's actual contractors. The human-feedback-data-infrastructure theme's inter-labeler agreement rate asks the same question the opposite way: instead of assuming a fixed error rate, InstructGPT's labeling operation measures directly, from real labeling data, how often independent labelers actually agree with each other (instructgpt, §\"3.4 Human data collection\", p. 8). The preference itself, one clip or completion judged against another, is the one thing that stays identical across five years; what changes is whether its unreliability is a constant guessed once or a statistic tracked as an ongoing property of the labeling workforce. Only the second version supports the held-out labeler generalization test, a check the 2017 paper's single hardcoded constant has no way to perform."
+    },
+    {
+      "id": "keeping-reward-models-on-distribution-trades-online-refresh-for-kl-penalty-in-ppo-optimization-mechanics",
+      "type": "trades-its-online-refresh-for-a-kl-penalty-in",
+      "source": "keeping-reward-models-on-distribution",
+      "target": "ppo-optimization-mechanics",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "This theme's central answer to a policy drifting off the reward model's training distribution is to keep the reward model itself alive: the asynchronous architecture refits the reward predictor continuously as the policy generates new trajectories (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4), and the paper's own \"no online queries\" ablation shows that training on early labels alone lets the policy exploit gaps in an incompletely-trained predictor (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). InstructGPT's PPO stage answers the identical drift problem by refusing to do this: the reward model is trained once, in the pipeline's second step, then held fixed through every later step of PPO fine-tuning, never refit against the policy's own drifting outputs the way the 2017 architecture continually does. In its place, the per-token KL penalty constrains the object that is actually moving: subtracted from reward at every generated token, it keeps the policy close to the SFT model it started from, rather than letting a moving reward model chase the policy outward (instructgpt, §\"3.5 Models\", p. 9). That substitution is not incidental: iterated online training itself never reaches InstructGPT at all, appearing only as a 2017 mechanism and, later, as a direction Constitutional AI names for the future rather than something either of its own trained models does (constitutional-ai, §\"6.1 Future Directions\", p. 15). Two answers to one shared problem: 2017 keeps its evaluator adapting to the policy, 2022 freezes the evaluator and puts the leash on the policy instead."
+    },
+    {
+      "id": "economics-of-human-feedback-supplies-cost-argument-behind-human-feedback-data-infrastructure",
+      "type": "supplies-the-cost-argument-behind",
+      "source": "economics-of-human-feedback",
+      "target": "human-feedback-data-infrastructure",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "This theme's closing arithmetic, roughly $25 of Atari compute already comparable to the roughly $36 of minimum-wage labor behind 5,000 labels (deep-rl-human-prefs, §\"4 Discussion and Conclusions\", p. 11), is the paper's own case that oversight of deep RL had, for the first time, become economically practical. That argument was made at the scale of a handful of contractors who signed up for open time slots off a shared spreadsheet, briefed with a one-to-two sentence task description (deep-rl-human-prefs, §\"3.1 Reinforcement Learning Tasks with Unobserved Rewards\", p. 6). InstructGPT's human-data infrastructure is what building on that argument at industrial scale actually requires: not a spreadsheet but a four-criterion labeler screening process selecting roughly 40 contractors (instructgpt, §\"B.1 Labeler selection\", p. 36), and not thousands of labels but the roughly 33,000-prompt RM dataset alone (instructgpt, §\"3.2 Dataset\", p. 7). Nothing in the 2017 accounting anticipates a purpose-built web labeling interface or a fixed metadata annotation taxonomy for failures like hallucination or denigration of a protected class; those exist because the budget stopped being a few contractors on a spreadsheet and became a standing operation with its own overhead to manage. The relation between the two themes is the argument becoming the org chart: the same minutes-of-attention logic that made $25 of compute look cheap next to $36 of labor is what, scaled up, justifies building screening pipelines and interfaces rather than simply paying more contractors to do more of the same simple task."
+    },
+    {
+      "id": "economics-of-human-feedback-prices-implicit-budget-of-semi-supervised-reward-learning-proposals",
+      "type": "prices-the-implicit-budget-of",
+      "source": "economics-of-human-feedback",
+      "target": "semi-supervised-reward-learning-proposals",
+      "hindsight": true,
+      "groundedIn": "deep-rl-human-prefs",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "None of this theme's four proposals, supervised reward learning, active reward learning, unsupervised value iteration, unsupervised model learning, mentions cost, dollars, or contractor wages, but each is at bottom a proposal about rationing a scarce resource: an agent that observes its true reward on only a small fraction of timesteps yet is evaluated throughout (concrete-problems, §\"5 Scalable Oversight\", p. 11). The 2017 paper takes exactly that scarcity framing and prices it: its stated budget is minutes of a non-expert human's attention, and its headline result is learning from feedback on \"less than 1% of our agent's interactions with the environment\" (deep-rl-human-prefs, §Abstract, p. 1). The paper's own closing cost accounting, roughly $25 of compute against roughly $36 of minimum-wage labor for 5,000 labels (deep-rl-human-prefs, §\"4 Discussion and Conclusions\", p. 11), is the number the 2016 theme needed but never had: evidence that the small fraction its semi-supervised framework assumed could be afforded actually was affordable, at least at this scale. Read this way, the theme's four mechanisms are not simply different technical routes to the same statistical goal; they are variations on a single budget request, and the 2017 paper is the first to itemize what that request would actually cost and pay."
+    },
+    {
+      "id": "keeping-reward-models-on-distribution-leaves-safeguards-outside-scalable-oversight-lineage",
+      "type": "leaves-most-of-its-safeguards-outside",
+      "source": "keeping-reward-models-on-distribution",
+      "target": "scalable-oversight-lineage",
+      "hindsight": true,
+      "groundedIn": "constitutional-ai",
+      "supertheme": "scalable-oversight-to-rlhf-pipeline",
+      "prose": "The lineage theme already tracks one of this theme's five concepts forward: iterated online training survives, in name, as a mechanism the 2017 architecture actually runs, and one Constitutional AI later names as a further scaling step made easier once an AI rather than a human is doing the labeling (constitutional-ai, §\"6.1 Future Directions\", p. 15). But the theme documents four other countermeasures against reward-model drift, the reward predictor ensemble, adaptive L2 regularization, reward prediction normalization, and label annealing, and none of them has any afterlife in either successor architecture: InstructGPT's reward model is a single scalar-head network trained once on ranked comparisons, not an ensemble (instructgpt, §\"3.5 Models\", p. 8), and Constitutional AI's feedback model is a single language model producing a preference label from one sampled principle at a time (constitutional-ai, §\"4.1 Method\", p. 10). Even the one concept that does carry forward changes character in the carrying: 2017 implements it as a running loop inside one system in continuous operation, while Constitutional AI names it only as future work, not something either of its own trained models does yet. Read through this theme, the lineage from open problem to reward model to AI feedback is less a relay of a maturing toolkit than a single idea, keep the evaluator adapting, proposed once, built once, and re-proposed as unfinished business, while the four safeguards that made that idea workable at 2017's scale were left behind entirely."
+    }
+  ]
+}

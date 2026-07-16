@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Trajectory Segment — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Trajectory Segment</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A short fixed-length sequence of observation-action pairs sampled from an agent&#x27;s trajectory (1-2 seconds of behavior in this paper&#x27;s experiments), used as the basic unit shown to and compared by a human, rather than whole trajectories or single states.</p>
+<div class="page-intro"><p>Asking a human to judge a whole episode, or a single frame, both have problems: one is too much to hold in mind, the other too little to say anything about. A short clip somewhere in between is the unit this method actually settles on.</p>
+<p>The page covers what a segment is and how it's shown to a rater, then how it feeds directly into the comparison math, before closing on why the specific one-to-two-second length was chosen and how the same underlying idea, comparing short units rather than whole trajectories, carries over once the domain shifts to text.</p></div>
+<section class="prose-section">
+<h2>The unit a human actually judges</h2>
+<p>A trajectory segment is defined formally as $\sigma = ((o_0,a_0),(o_1,a_1),\ldots,(o_{k-1},a_{k-1})) \in (O\times A)^k$, a short slice of an agent's observation-action history (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">§"2.1 Setting and Goal", p. 3</a>). In the paper's experiments a segment is rendered as a short video clip between 1 and 2 seconds long (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.2 Preference Elicitation", p. 5</a>). This is a deliberate departure from earlier preference-based RL: Akrour et al. (2012, 2014) elicited preferences over whole trajectories rather than short clips (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">§"1.1 Related Work", p. 3</a>), and Wilson et al. (2012) could reset their environment to an arbitrary state before generating a trajectory to compare. The paper's high-dimensional environments cannot be reset that way, so the two segments in a pair generally begin from different states — a complication the algorithm has to tolerate, since the human sees no indication of where in an episode either clip was drawn from.</p>
+</section>
+<section class="prose-section">
+<h2>Feeding the comparison protocol and the loss</h2>
+<p>The segment is the object every other piece of the method operates on. The <a href="../concept/preference-elicitation-protocol.html">Preference Elicitation Protocol</a> never shows the human anything larger or smaller than a pair of segments — not a whole episode, not a single frame (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.2 Preference Elicitation", p. 5</a>). And when the <a href="../concept/bradley-terry-model.html">Bradley-Terry Model</a> converts a segment into a scalar for its softmax, it sums predicted reward $\hat r(o_t,a_t)$ over every step of the segment with no discount factor applied to later timesteps (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.3 Fitting the Reward Function", p. 5</a>). The paper flags this as a modeling choice rather than a neutral default: undiscounted summation can be read as assuming the human is indifferent to when within the clip good or bad things happen, and discounting or inferring the human's own discount function would also have been reasonable.</p>
+</section>
+<section class="prose-section">
+<h2>Why one to two seconds</h2>
+<p>The segment length is not an arbitrary round number. Shorter clips took raters disproportionately longer to understand relative to the information they conveyed, so the authors chose the shortest length at which evaluation time still scaled roughly linearly with duration; single frames required substantially more comparisons to reach the performance clips achieved (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 10</a>). This finding, tracked in the <a href="../concept/clip-length-effects.html">Clip-Length Effects on Human Evaluation</a> concept, is what calibrates the 1-2 second figure above; it is an output of the ablations, not an input to them.</p>
+</section>
+<section class="prose-section">
+<h2>The unit that generalizes</h2>
+<p>Comparing short clips of behavior is specific to sequential control tasks with a rendered environment. When the same two-stage recipe — learn a reward from comparisons, then optimize it — was carried into language models, the atomic unit of comparison changed along with the domain: InstructGPT's <a href="../concept/rm-dataset.html">RM (comparison) dataset</a> has labelers rank complete text completions to the same prompt rather than segments of an ongoing trajectory. The underlying commitment to comparisons over absolute scores survives the transition; what counts as the thing being compared does not.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/clip-length-effects.html">Clip-Length Effects on Human Evaluation</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Trajectory Segment</strong> — <a href="../edge/trajectory-segment-is-summed-without-discount-by-bradley-terry-model.html">is summed without discount by</a> → Bradley-Terry Model</li><li>Clip-Length Effects on Human Evaluation — <a href="../edge/clip-length-effects-calibrates-the-length-of-trajectory-segment.html">calibrates the length of</a> → <strong>Trajectory Segment</strong></li><li><strong>Trajectory Segment</strong> — <a href="../edge/trajectory-segment-supplies-the-comparison-unit-for-preference-elicitation-protocol.html">supplies the comparison unit for</a> → Preference Elicitation Protocol</li><li><strong>Trajectory Segment</strong> — <a href="../edge/trajectory-segment-generalizes-into-rm-dataset.html">generalizes into</a> → RM (comparison) dataset <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/learning-rewards-from-comparisons.html">Comparisons as the atomic unit of human feedback</a></li><li><a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Setting and Goal&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.2 Preference Elicitation&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

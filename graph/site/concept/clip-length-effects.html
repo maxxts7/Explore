@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Clip-Length Effects on Human Evaluation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Clip-Length Effects on Human Evaluation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An empirical finding that comparing longer video clips is more informative per clip (though less informative per frame) than comparing single frames, because short clips take raters longer to understand relative to the information they convey; the paper chooses the shortest clip length for which rater evaluation time scales roughly linearly with length.</p>
+<div class="page-intro"><p>Showing a rater a single video frame sounds like it should be quicker to judge than a longer clip, but it isn't necessarily faster: a short clip can take just as long to make sense of as a long one, for none of the right reasons.</p>
+<p>The page walks through what the ablation found about clip length and rater time, then what it calibrated elsewhere in the paper, and closes on the one Atari game where a labeling failure looks like this same effect but was never directly tested against it.</p></div>
+<section class="prose-section">
+<h2>What the ablation found</h2>
+<p>This finding surfaces from the ablation studies, not from the main method description: the authors "discovered that asking humans to compare longer clips was significantly more helpful per clip, and significantly less helpful per frame. We found that for short clips it took human raters a while just to understand the situation, while for longer clips the evaluation time was a roughly linear function of the clip length" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 10</a>). The design rule that follows is practical rather than theoretical: "we tried to choose the shortest clip length for which the evaluation time was linear" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 10</a>) — pick the shortest clip where a rater's time cost stops being dominated by figuring out what's happening.</p>
+</section>
+<section class="prose-section">
+<h2>What it calibrates</h2>
+<p>The <a href="../concept/trajectory-segment.html">Trajectory Segment</a> concept's headline length spec is a direct output of this finding rather than an arbitrary round number. Clips shown to raters in the main experiments are "between 1 and 2 seconds long" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.2 Preference Elicitation", p. 5</a>); the appendix fixes this per domain, comparing "trajectory segments that last 1.5 seconds" in <a href="../concept/mujoco.html">MuJoCo</a> tasks (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>) and segments of "25 timesteps (1.7 seconds at 15 fps with frame skipping)" in Atari (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>). The finding was tested via a "no segments" (length-1) ablation, but only on the robotics tasks, "because our Atari reward model depends on a sequence of consecutive frames rather than a single frame" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 10</a>, footnote 5) — so the underlying claim about clip length is empirically verified on only half the paper's domains.</p>
+</section>
+<section class="prose-section">
+<h2>A prediction left untested on Qbert</h2>
+<p><a href="../concept/qbert-task.html">Qbert (Atari game)</a> is the one place in the paper where a labeling failure is explicitly attributed to clip difficulty — "our method fails to learn to beat the first level with real human feedback; this may be because short clips in Qbert can be confusing and difficult to evaluate" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">§"3.1.2 Atari", p. 8</a>) — which is exactly the mechanism this finding describes. But because the length-1 ablation never ran on Atari at all, the paper never actually tests whether longer Qbert clips would have helped; the connection is suggestive, not demonstrated.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/trajectory-segment.html">Trajectory Segment</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Clip-Length Effects on Human Evaluation</strong> — <a href="../edge/clip-length-effects-predicts-but-was-never-tested-on-qbert-task.html">predicts but was never tested on</a> → Qbert (Atari game)</li><li><strong>Clip-Length Effects on Human Evaluation</strong> — <a href="../edge/clip-length-effects-calibrates-the-length-of-trajectory-segment.html">calibrates the length of</a> → Trajectory Segment</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;3.3 Ablation Studies&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

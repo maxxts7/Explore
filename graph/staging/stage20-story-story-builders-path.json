@@ -1,0 +1,442 @@
+{
+ "id": "story-builders-path",
+ "tab": "Build order",
+ "name": "Pipeline order, not publication order",
+ "claim": "This story sorts the corpus's themes into the order in which InstructGPT's (2022) and Constitutional AI's (2022) training pipelines are actually assembled: problem framing, target definition, data collection, reward modeling and policy optimization, evaluation, and it closes with the Concrete Problems (2016) proposals that pipeline never adopted.",
+ "narrative": "This story presents the four papers' themes not in publication order but in the functional order the pipeline is actually assembled: define the target, collect human data, train a reward model, optimize a policy against it, then evaluate the result. Deep RL from Human Preferences (2017) supplies the primitive version of every one of those stages first, comparisons over trajectory clips as the training signal, a reward model kept on-distribution through iterated online training, a policy optimized against it with A2C or TRPO, before InstructGPT (2022) assembles the same stages at chatbot scale. Constitutional AI (2022) follows the same pipeline shape but replaces the harmlessness half of the human data with AI-generated feedback, so its themes sit beside InstructGPT's at the matching pipeline stage rather than in a separate chapter. Concrete Problems (2016) proposals that the later pipeline actually uses, learning from demonstrations, scalable oversight, reward hacking, are placed at the stage documented by a connecting edge. The final chapter collects the Concrete Problems (2016) proposals with no such connection: side-effect penalties, safe-exploration constraints, distributional-shift techniques, and formal verification, none of which any of the three later papers implements.",
+ "ref": null,
+ "children": [
+  {
+   "id": "bp-ch1-scope",
+   "name": "Defining the problem",
+   "narrative": "Concrete Problems (2016) opens by defining its subject as accidents, unintended harm from poor system design, rather than adopting the speculative superintelligence framing associated with Bostrom, MIRI, and FHI, and it draws a boundary between accident risk and adjacent fields such as privacy, fairness, security, and policy research that ask different questions. Constitutional AI (2022) opens by placing itself among prior dialogue-agent systems: LaMDA supplies comparison prompts, and Sparrow's rule-based decomposition of harmlessness is the closest prior-art parallel to Constitutional AI's own constitution of principles. Read in this order, the first move in both papers is definitional: state what the problem is before proposing anything to fix it.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-framing-accidents-vs-speculative-risk",
+     "name": "Framing safety as accidents, not superintelligence",
+     "ref": {
+      "kind": "theme",
+      "id": "framing-accidents-vs-speculative-risk"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-adjacent-research-areas",
+     "name": "Drawing the boundary: what accident risk is not",
+     "ref": {
+      "kind": "theme",
+      "id": "adjacent-research-areas"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-related-dialogue-agents",
+     "name": "Prior dialogue-agent systems Constitutional AI positions itself against",
+     "ref": {
+      "kind": "theme",
+      "id": "related-dialogue-agents"
+     },
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": "bp-ch2-target",
+   "name": "Defining the training objective",
+   "narrative": "A decade of human-in-the-loop RL preceded any of this: imitation learning and inverse reinforcement learning cloned or inferred a reward from demonstrations, TAMER learned from real-time evaluative feedback, and cooperative inverse reinforcement learning cast the human and agent as playing a cooperative game, but each approach needed expert demonstrations, hand-coded features, or constant human attention that kept it from scaling to deep RL. InstructGPT (2022) argues that the pretraining objective, predicting the next token, is not what users want, and defines instruction-following as the actual target, tested against fixed instruction-tuning baselines (FLAN, T0) and a prompted GPT-3 baseline. Concrete Problems (2016) had already proposed an alternative to writing a formal specification for such a target: learn from demonstrations rather than a hand-specified reward, a proposal Deep RL from Human Preferences (2017) positions its own comparison-based method against directly, arguing that preferences over behavior are easier for a human to supply than either a demonstration or a specification. InstructGPT's supervised fine-tuning step realizes the demonstration proposal directly, fine-tuning GPT-3 on about 13,000 human-written demonstrations. Both 2022 papers adopt Askell et al.'s helpful-honest-harmless framework as their shared definition of the target, later measured by the HHH evaluation set that Constitutional AI extends with 217 harder comparisons.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-prior-human-in-the-loop-rl",
+     "name": "Prior human-in-the-loop RL and why it didn't scale",
+     "ref": {
+      "kind": "theme",
+      "id": "prior-human-in-the-loop-rl"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-instruction-following-objective",
+     "name": "Instruction following as an alternative to next-token prediction",
+     "ref": {
+      "kind": "theme",
+      "id": "instruction-following-objective"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-demonstrations-not-specification",
+     "name": "Learning from demonstrations instead of a specified reward",
+     "ref": {
+      "kind": "theme",
+      "id": "demonstrations-not-specification"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-hhh-framework-and-benchmark",
+     "name": "Helpful, honest, harmless: a shared definition of alignment",
+     "ref": {
+      "kind": "theme",
+      "id": "hhh-framework-and-benchmark"
+     },
+     "children": []
+    }
+   ],
+   "era": "2016→2022"
+  },
+  {
+   "id": "bp-ch3-signal",
+   "name": "Collecting the training data",
+   "narrative": "Deep RL from Human Preferences (2017) fixes the unit its overseers judge before any later paper collects a label: pairs of one-to-two-second trajectory-segment clips, compared rather than scored, since humans proved consistent at choosing between two clips but not at giving either an absolute score, and that comparison, converted to a reward scale through a Bradley-Terry model, is the primitive InstructGPT and Constitutional AI later apply to chatbot responses. Paid contractors supplied those comparisons through a purpose-built clip server, the primitive version of the labeling operation InstructGPT (2022) later builds out: about 40 contractors selected through a four-criterion screening process, measured for inter-labeler agreement, working on SFT, reward-model, and PPO datasets built from prompts submitted to the OpenAI API, deduplicated and filtered. The 2017 paper's own cost accounting, contractor time compared directly against the compute cost of training, argued that human feedback on under 1% of an agent's interactions was already enough to train complex behavior, a budget constraint that shaped every design choice in its pipeline, down to which comparisons its reward-predictor ensemble queried and how long a clip had to be before a rater could judge it quickly. Constitutional AI (2022) collects a different half of the same kind of data: crowdworkers red-team the assistant with adversarial conversations designed to elicit harmful responses, producing the harmful-prompt data used to train both its supervised and reinforcement-learning stages. In all three papers this data collection precedes any reward-model or policy training, and in both 2022 papers, harmlessness data specifically depends on deliberately sourcing failure cases rather than a fixed example set.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-learning-rewards-from-comparisons",
+     "name": "Comparisons as the atomic unit of human feedback",
+     "ref": {
+      "kind": "theme",
+      "id": "learning-rewards-from-comparisons"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-human-feedback-data-infrastructure",
+     "name": "Building the human side of the RLHF pipeline",
+     "ref": {
+      "kind": "theme",
+      "id": "human-feedback-data-infrastructure"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-economics-of-human-feedback",
+     "name": "The economics of human feedback",
+     "ref": {
+      "kind": "theme",
+      "id": "economics-of-human-feedback"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-red-teaming-and-harm-data",
+     "name": "Sourcing and classifying harmful prompts",
+     "ref": {
+      "kind": "theme",
+      "id": "red-teaming-and-harm-data"
+     },
+     "children": []
+    }
+   ],
+   "era": "2022"
+  },
+  {
+   "id": "bp-ch4-pipeline",
+   "name": "Training the reward model and policy",
+   "narrative": "Concrete Problems (2016) names scalable oversight, evaluating a true objective too costly to check on every example, as an open problem, and proposes semi-supervised reward learning, predicting reward on unlabeled episodes, as one answer; Deep RL from Human Preferences (2017) gives that proposal one of its first concrete implementations, querying the comparisons where an ensemble of reward predictors disagrees most. Constitutional AI (2022) later frames InstructGPT's reward model as a further step toward this same scaled supervision, a connection InstructGPT itself never states, so the lineage runs from the 2016 open problem through the 2017 reward predictor to InstructGPT's reward model and on to Constitutional AI's AI feedback. A learned reward model survives being optimized against only if it keeps learning: the 2017 paper kept its ensembled predictor on-distribution with continuous online label collection, adaptive L2 regularization, and output normalization, while the policy that optimized against it, A2C on Atari or TRPO on MuJoCo, needed a raised entropy bonus to keep exploring under a reward that itself kept changing during training. InstructGPT (2022) assembles three steps in sequence: supervised fine-tuning on demonstrations, a reward model trained on human comparisons, then PPO against that reward model, held near the SFT model by a per-token KL penalty, the same reward-model-then-policy-optimization shape the 2017 paper ran first at a smaller scale. Constitutional AI reuses this pipeline unchanged except for one substitution: a feedback model, engineered through multiple-choice prompting and principle ensembling into a calibrated preference labeler, supplies the harmlessness comparisons in place of a human, RLAIF is RLHF with the labeler swapped.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-semi-supervised-reward-learning-proposals",
+     "name": "Scaling oversight by predicting reward on unlabeled episodes",
+     "ref": {
+      "kind": "theme",
+      "id": "semi-supervised-reward-learning-proposals"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback",
+     "ref": {
+      "kind": "theme",
+      "id": "scalable-oversight-lineage"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-keeping-reward-models-on-distribution",
+     "name": "Keeping the reward model on-distribution",
+     "ref": {
+      "kind": "theme",
+      "id": "keeping-reward-models-on-distribution"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-policy-optimization-under-learned-rewards",
+     "name": "Policy optimization under a learned, changing reward",
+     "ref": {
+      "kind": "theme",
+      "id": "policy-optimization-under-learned-rewards"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-rlhf-three-step-pipeline",
+     "name": "InstructGPT's three-step training pipeline",
+     "ref": {
+      "kind": "theme",
+      "id": "rlhf-three-step-pipeline"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-ppo-optimization-mechanics",
+     "name": "The mechanics that make PPO fine-tuning work",
+     "ref": {
+      "kind": "theme",
+      "id": "ppo-optimization-mechanics"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-feedback-model-engineering",
+     "name": "Engineering a language model into a usable preference labeler",
+     "ref": {
+      "kind": "theme",
+      "id": "feedback-model-engineering"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-cai-core-method",
+     "name": "Constitutional AI's method: principles, critique, and revision",
+     "ref": {
+      "kind": "theme",
+      "id": "cai-core-method"
+     },
+     "children": []
+    }
+   ],
+   "era": "2016→2022"
+  },
+  {
+   "id": "bp-ch5-harden",
+   "name": "Reward hacking and Goodhart's law",
+   "narrative": "Concrete Problems (2016) catalogs why learned reward proxies get gamed: partial observability, complex systems, abstract rewards, feedback loops, and an agent's reach into its own reward channel, and names Goodhart's law as the general principle behind the failures, a measure optimized as a target stops tracking the goal it was chosen for. It proposes two remedy families: adversarial training that searches for exploits, and engineering fixes such as reward capping and trip wires. InstructGPT (2022) documents the same principle inside its own pipeline: PPO exploiting the reward model, reward-model over-optimization, and a narrower version, excessive hedging, where labelers' preference for calibrated uncertainty generalizes into rewarding hedge language regardless of whether it is warranted. Constitutional AI (2022) reports an analogous symptom under harmlessness training, evasiveness, and names it Goodharting outright.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-reward-hacking-causes",
+     "name": "Why reward proxies get gamed: the anatomy of reward hacking",
+     "ref": {
+      "kind": "theme",
+      "id": "reward-hacking-causes"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-goodhart-across-corpus",
+     "name": "Goodhart's law across three papers: when the proxy becomes the target",
+     "ref": {
+      "kind": "theme",
+      "id": "goodhart-across-corpus"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-adversarial-ml-for-reward-hacking",
+     "name": "Borrowing adversarial ML to defend against reward hacking",
+     "ref": {
+      "kind": "theme",
+      "id": "adversarial-ml-for-reward-hacking"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-reward-hacking-engineering-remedies",
+     "name": "Non-adversarial engineering fixes for reward hacking",
+     "ref": {
+      "kind": "theme",
+      "id": "reward-hacking-engineering-remedies"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-rlhf-failure-modes",
+     "name": "Where RLHF alignment still falls short",
+     "ref": {
+      "kind": "theme",
+      "id": "rlhf-failure-modes"
+     },
+     "children": []
+    }
+   ],
+   "era": "2016→2022"
+  },
+  {
+   "id": "bp-ch6-evaluate",
+   "name": "Evaluating the trained models",
+   "narrative": "Deep RL from Human Preferences (2017) evaluated its method on two testbeds, MuJoCo continuous-control tasks (Hopper, Half-Cheetah, Ant, and others) and seven Atari games (including Enduro, Pong, and Qbert) accessed through OpenAI Gym, chosen because both domains already had a withheld true reward function a preference-trained policy could be checked against. That withholding was itself an experimental design problem: the paper had to blank on-screen score displays, remove variable-length episode signals, and build a synthetic oracle that answered comparison queries from the true reward, so a policy's performance could be judged quantitatively against the reward it never saw, or qualitatively by a human watching video for tasks with no reward function to withhold at all. The clearest qualitative results were behaviors no reward function specified: a simulated Hopper trained to backflip and land upright, a Half-Cheetah trained to run on one leg, and an Enduro agent trained to keep pace with traffic rather than pass it, each shaped by under an hour of human feedback. InstructGPT (2022) and Constitutional AI (2022) both measure quality with two families of metric: automatic overlap scores against a reference (ROUGE-L, BLEU, F1) and judgment-based scores from human or model comparisons (win rate, Likert ratings, Elo score, absolute harmfulness score). InstructGPT additionally runs a public NLP benchmark suite (DROP, SQuAD v2, QuAC, HellaSwag, SST, RTE, WSC) plus translation and summarization benchmarks to measure the alignment tax, the capability regressions RLHF introduces, and purpose-built truthfulness (TruthfulQA) and bias (Winogender, CrowS-Pairs) benchmarks the capability suite would not catch. Constitutional AI instead reports helpfulness against harmlessness as a frontier, measured by Elo score, and finds Constitutional RL shifts that frontier outward rather than trading one for the other.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari",
+     "ref": {
+      "kind": "theme",
+      "id": "deep-rl-testbeds"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-hidden-reward-experimental-design",
+     "name": "Hiding the reward: experimental design for preference-only learning",
+     "ref": {
+      "kind": "theme",
+      "id": "hidden-reward-experimental-design"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-novel-behaviors-without-reward-functions",
+     "name": "Novel behaviors without reward functions",
+     "ref": {
+      "kind": "theme",
+      "id": "novel-behaviors-without-reward-functions"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-quality-measurement-methods",
+     "name": "Automatic overlap scores versus human and preference judgments",
+     "ref": {
+      "kind": "theme",
+      "id": "quality-measurement-methods"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-language-understanding-benchmarks",
+     "name": "The public NLP benchmark suite used to catch regressions",
+     "ref": {
+      "kind": "theme",
+      "id": "language-understanding-benchmarks"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-generation-benchmarks-translation-summarization",
+     "name": "Testing generative capability: translation and summarization benchmarks",
+     "ref": {
+      "kind": "theme",
+      "id": "generation-benchmarks-translation-summarization"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-safety-bias-truthfulness-benchmarks",
+     "name": "Operationalizing truthfulness and social bias into measurable benchmarks",
+     "ref": {
+      "kind": "theme",
+      "id": "safety-bias-truthfulness-benchmarks"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-helpfulness-harmlessness-tradeoff",
+     "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it",
+     "ref": {
+      "kind": "theme",
+      "id": "helpfulness-harmlessness-tradeoff"
+     },
+     "children": []
+    }
+   ],
+   "era": "2022"
+  },
+  {
+   "id": "bp-ch7-shelf",
+   "name": "Proposals the 2022 pipeline does not use",
+   "narrative": "Concrete Problems (2016) proposes remedies for three further problem areas that neither InstructGPT (2022) nor Constitutional AI (2022) implements. For negative side effects: impact regularizers penalizing distance from a baseline state, penalizing potential influence rather than realized change, and a relational framing in which avoiding harm means modeling other agents' interests. For safe exploration: risk-sensitive objectives in place of expected-reward maximization, and mechanisms bounding exploration to a known-recoverable region. For distributional shift: statistical relaxations such as the covariate-shift assumption, and reframings via counterfactual reasoning or explicit behavioral contracts. Formal verification and control theory recur as the underlying substrate, and distant supervision and hierarchical reinforcement learning are offered as further routes to scalable oversight that train no reward predictor. None of these appear in either 2022 paper's pipeline.",
+   "ref": null,
+   "children": [
+    {
+     "id": "bp-impact-regularization-and-baselines",
+     "name": "Penalizing side effects by distance from a baseline",
+     "ref": {
+      "kind": "theme",
+      "id": "impact-regularization-and-baselines"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-influence-and-uncertainty-side-effect-mitigation",
+     "name": "Limiting potential influence instead of measuring realized change",
+     "ref": {
+      "kind": "theme",
+      "id": "influence-and-uncertainty-side-effect-mitigation"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-side-effects-as-relationship",
+     "name": "Side effects and control as a relationship with other agents",
+     "ref": {
+      "kind": "theme",
+      "id": "side-effects-as-relationship"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-exploration-risk-criteria-and-algorithms",
+     "name": "Exploration policies and the objectives that make them safe or reckless",
+     "ref": {
+      "kind": "theme",
+      "id": "exploration-risk-criteria-and-algorithms"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-constraining-exploration-to-safe-regions",
+     "name": "Keeping exploration inside a known-recoverable region",
+     "ref": {
+      "kind": "theme",
+      "id": "constraining-exploration-to-safe-regions"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-statistical-relaxations-for-distributional-shift",
+     "name": "Weakening statistical assumptions to survive distribution shift",
+     "ref": {
+      "kind": "theme",
+      "id": "statistical-relaxations-for-distributional-shift"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-shift-as-contracts-and-causation",
+     "name": "Reframing distributional shift as broken contracts and causal structure",
+     "ref": {
+      "kind": "theme",
+      "id": "shift-as-contracts-and-causation"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-formal-methods-imported",
+     "name": "Formal verification and control theory recur as safety building blocks",
+     "ref": {
+      "kind": "theme",
+      "id": "formal-methods-imported"
+     },
+     "children": []
+    },
+    {
+     "id": "bp-distant-supervision-and-hierarchical-decomposition",
+     "name": "Scaling oversight without a learned reward predictor",
+     "ref": {
+      "kind": "theme",
+      "id": "distant-supervision-and-hierarchical-decomposition"
+     },
+     "children": []
+    }
+   ],
+   "era": "2016"
+  }
+ ],
+ "intro": "Set publication order aside, and the corpus reorganizes around how InstructGPT's pipeline actually gets assembled: define the target, gather data, train, then evaluate. Concrete Problems' proposals slot into whichever stage a documented connection places them, and what never made it into the pipeline waits until the very end.\n\nThe chapters move through problem framing, target definition, data collection, reward-model and policy training, reward hacking's place inside that training, and evaluation, closing on the proposals the pipeline never adopted: side-effect penalties, safe-exploration constraints, distributional shift. Open one chapter at a time; the zoom controls above the tree move between the headline claim and individual concepts whenever you want more detail."
+}

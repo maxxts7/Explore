@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Expected-Value-of-Information Query Selection — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Expected-Value-of-Information Query Selection</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A more principled query-selection criterion, mentioned as future work, that would choose queries by their expected value of information rather than by ensemble disagreement, attributed to Akrour et al. (2012) and Krueger et al. (2016).</p>
+<div class="page-intro"><p>Some questions are more worth asking than others, and picking the right one is its own unsolved problem. This is the more principled way of choosing, one the paper names but never actually builds.</p>
+<p>The page explains what scoring a query by its expected value of information would mean, then how the paper's own simpler heuristic falls short of it by its authors' own admission, and closes on why this matters for the economics of a limited budget of human comparisons.</p></div>
+<section class="prose-section">
+<h2>What expected value of information means here</h2>
+<p>Expected-value-of-information (EVOI) query selection chooses the next comparison to ask a human by estimating how much each candidate query would be expected to reduce uncertainty, or downstream regret, in the learned reward function or resulting policy, rather than by a proxy for uncertainty alone. Concretely, this means scoring a candidate query by something like the expected reduction in loss the human's answer would produce, averaged over the possible answers weighted by their currently predicted probability, and then asking whichever candidate maximizes that quantity. This is a more direct optimization of "which question is worth asking" than measuring how much the model's current predictors merely disagree with each other, since disagreement does not necessarily track how much a query would change the resulting behavior.</p>
+</section>
+<section class="prose-section">
+<h2>Its status: cited, not built</h2>
+<p>The paper is explicit that its own query-selection method, <a href="../concept/uncertainty-based-query-selection.html">Uncertainty-Based Query Selection (Ensemble Variance)</a> by ensemble variance, is "a crude approximation" to this harder problem (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"2.2.4 Selecting Queries", p. 6</a>). It names EVOI querying, attributed to Akrour et al. (2012) and Krueger et al. (2016), as what a more principled criterion would look like, in the same breath as noting that ensemble disagreement "actually impairs performance" on some tasks in its own ablations (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"2.2.4 Selecting Queries", p. 6</a>). The paper leaves EVOI entirely to future work rather than implementing or testing it (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"2.2.4 Selecting Queries", p. 6</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Why it belongs to the economics of feedback</h2>
+<p>The point of any query-selection rule is to make each of the roughly 700 to 5,500 human comparisons the paper spends on a task count for as much learning as possible, since comparisons, unlike agent-environment interactions, cost human time. EVOI query selection targets that economics problem directly, asking the query expected to matter most rather than the query the ensemble merely disagrees about, which is why it sits under <a href="../concept/semi-supervised-active-reward-learning.html">Semi-supervised or active reward learning</a> as the more principled endpoint the paper's own heuristic only approximates.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/semi-supervised-active-reward-learning.html">Semi-supervised or active reward learning</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Uncertainty-Based Query Selection (Ensemble Variance) — <a href="../edge/uncertainty-based-query-selection-is-a-crude-approximation-of-expected-value-of-information-query-selection.html">is a crude approximation of</a> → <strong>Expected-Value-of-Information Query Selection</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/semi-supervised-reward-learning-proposals.html">Scaling oversight by predicting reward on unlabeled episodes</a></li><li><a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;2.2.4 Selecting Queries&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

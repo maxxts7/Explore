@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Comparisons vs. Absolute Scores (Target Ablation) — swaps in regression in place of → Bradley-Terry Model — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Comparisons vs. Absolute Scores (Target Ablation) — swaps in regression in place of → Bradley-Terry Model</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/learning-rewards-from-comparisons.html">Comparisons as the atomic unit of human feedback</a></p>
+<section class="prose-section"><p>The comparisons-vs-absolute-scores ablation directly targets the Bradley-Terry model's own loss: rather than fitting the reward predictor to cross-entropy over pairwise comparisons, it lets an oracle supply the true total reward over a segment and fits the predictor to that value with mean squared error instead (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 9</a>). The result complicates any simple story that comparisons are strictly better: on the continuous control tasks, predicting comparisons clearly outperformed regressing to a score, apparently because the varying scale of raw rewards makes direct regression harder, a difficulty the comparison loss smooths away since it never needs to match an absolute magnitude (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 10</a>). On Atari, where rewards were clipped so the target regression effectively only had to predict a sign, comparisons and score-regression instead performed differently across games with neither consistently ahead. So the paper's own ablation shows the Bradley-Terry framing is not obviously necessary for a clipped, sign-only reward signal, only for continuous magnitudes.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/comparisons-vs-absolute-scores.html">Comparisons vs. Absolute Scores (Target Ablation)</a> and <a href="../concept/bradley-terry-model.html">Bradley-Terry Model</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/ablations-carry-the-design-argument.html">The ablation is the argument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.3 Ablation Studies&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

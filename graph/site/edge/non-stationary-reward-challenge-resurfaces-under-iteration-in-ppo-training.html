@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Non-Stationary Reward Function Challenge — resurfaces under iteration in → PPO fine-tuning stage (RLHF policy optimization) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Non-Stationary Reward Function Challenge — resurfaces under iteration in → PPO fine-tuning stage (RLHF policy optimization)</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &middot; explored within the theme <a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a></p>
+<section class="prose-section"><p>In the 2017 paper the non-stationary-reward problem is built into the training loop by design: the reward predictor is repeatedly refit on new comparisons while the policy trains against it, so the policy is always chasing a moving target (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 4</a>). InstructGPT's PPO fine-tuning stage looks stationary by contrast, since a single reward model is trained once and then held fixed while PPO optimizes against it, but the paper itself notes that "steps 2 and 3 can be iterated continuously; more comparison data is collected on the current best policy, which is used to train a new RM and then a new policy" (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">§"3.1 High-level methodology", p. 6</a>). Read this way, PPO training can inherit exactly the constraint the 2017 paper identified: whenever the RM-then-PPO loop is iterated rather than run once, each new policy is again optimized against a reward that has just shifted underneath it, reproducing the moving target the earlier paper built its whole architecture, and its choice of policy-gradient algorithms, around.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/non-stationary-reward-challenge.html">Non-Stationary Reward Function Challenge</a> and <a href="../concept/ppo-training.html">PPO fine-tuning stage (RLHF policy optimization)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a></li><li><a href="../tissue/downstream-of-a-moving-reward.html">Everything downstream of a moving reward</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">&sect;&ldquo;C.4 Details of RLHF training&rdquo;, p. 42</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

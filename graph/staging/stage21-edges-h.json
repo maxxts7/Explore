@@ -1,0 +1,154 @@
+{
+  "edges": [
+    {
+      "id": "trajectory-segment-supplies-the-comparison-unit-for-preference-elicitation-protocol",
+      "type": "supplies-the-comparison-unit-for",
+      "source": "trajectory-segment",
+      "target": "preference-elicitation-protocol",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "The preference elicitation protocol never shows a human a full episode or a single state; it always presents two trajectory segments, rendered as short video clips between 1 and 2 seconds long (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5). Because the paper cannot reset its high-dimensional environments to an arbitrary initial state the way Wilson et al. (2012) could, the two segments in a pair generally begin from different states, which complicates how a human is meant to interpret a preference between them (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). The protocol's three-way response format, a preference, a tie, or 'incomparable,' exists to let a rater register that ambiguity rather than force a guess: ties become a uniform distribution over the two segments and incomparable judgments are simply dropped from the database. So the trajectory segment's job is not just to be short enough to query cheaply, but to be self-contained enough that a rater can still form a preference despite the two clips having no common starting point."
+    },
+    {
+      "id": "bradley-terry-model-supplies-the-loss-for-reward-model",
+      "type": "supplies-the-loss-for",
+      "source": "bradley-terry-model",
+      "target": "reward-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "The reward model has no target values to regress against; it is fit entirely by treating predicted summed reward as a latent score in the Bradley-Terry pairwise-comparison model and minimizing the resulting cross-entropy loss over recorded human preferences (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). Under this loss, a segment's predicted probability of being preferred is a softmax over the two segments' summed rewards, so what the network learns is not an absolute reward scale but a ranking consistent with observed preferences. The paper notes this is the same construction as the Luce-Shephard choice rule, a much older result about how proximity in an internal similarity or utility space predicts choice probabilities, applied here to segment rewards instead of psychological stimuli. Borrowing this specific loss, rather than direct regression, is what lets the reward model be trained purely from comparisons, without ever seeing a numeric reward target."
+    },
+    {
+      "id": "rater-error-noise-model-corrects-the-asymptotics-of-bradley-terry-model",
+      "type": "corrects-the-asymptotics-of",
+      "source": "rater-error-noise-model",
+      "target": "bradley-terry-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "Applied directly, the Bradley-Terry softmax in Equation 1 predicts that a human's probability of preferring the higher-reward segment approaches 1 as the gap between the two summed rewards grows arbitrarily large. The rater-error noise model rejects that asymptotic behavior: it assumes a constant 10% chance the human answers uniformly at random regardless of how large the reward gap is, capping the model's confidence in any comparison well below certainty (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). The paper's stated reason is empirical rather than mathematical convenience: human raters have a genuine, non-vanishing error rate that does not shrink to zero on easy comparisons, so a model that lets predicted confidence go to 1 would be systematically overconfident. This turns Equation 1 from a pure softmax into a mixture between that softmax and a uniform distribution, a strictly weaker and better-calibrated preference predictor for the same underlying reward difference."
+    },
+    {
+      "id": "reward-predictor-ensemble-supplies-the-disagreement-signal-for-uncertainty-based-query-selection",
+      "type": "supplies-the-disagreement-signal-for",
+      "source": "reward-predictor-ensemble",
+      "target": "uncertainty-based-query-selection",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "Uncertainty-based query selection needs some proxy for how uncertain the reward predictor is about a candidate pair, and the reward predictor ensemble is where that proxy comes from: with three independently bootstrap-trained predictors, the query-selection procedure samples a large batch of candidate segment pairs, asks every ensemble member for its preference prediction, and keeps whichever pairs show the highest variance across members (deep-rl-human-prefs, §\"2.2.4 Selecting Queries\", p. 6). The coupling between the two is tight enough that removing the ensemble removes the query-selection method entirely: the paper's 'no ensemble' ablation trains a single predictor and, having no members left to disagree, falls back to picking queries uniformly at random (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). The authors are explicit that ensemble variance is only 'a crude approximation' to true uncertainty, distinguishing it from a more principled expected-value-of-information criterion they leave to future work. So the ensemble's disagreement is not a side benefit of using multiple predictors for accuracy; in this paper it is the only uncertainty signal the query-selection method has access to."
+    },
+    {
+      "id": "iterated-online-training-is-the-cause-of-non-stationary-reward-challenge",
+      "type": "is-the-cause-of",
+      "source": "iterated-online-training",
+      "target": "non-stationary-reward-challenge",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "The non-stationary reward function challenge is not an incidental property of the reward model; it is the direct consequence of iterated online training. Because comparisons keep arriving and the reward predictor keeps being refit throughout policy training rather than fit once and fixed, the policy is, at every point, optimizing against a target that itself is still moving (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4). The paper treats this as a genuine cost worth paying: the alternative, fitting the predictor only once from an early batch of labels, is exactly the 'no online queries' ablation, and it performs worse because a static predictor only ever captures part of the true reward. Framed this way, the entropy-bonus increase and the preference for policy-gradient methods are not general-purpose robustness choices; they are specific compensations for a non-stationarity that the paper's own choice to keep training the reward model continuously has introduced."
+    },
+    {
+      "id": "adaptive-l2-regularization-bounds-the-generalization-gap-of-reward-model",
+      "type": "bounds-the-generalization-gap-of",
+      "source": "adaptive-l2-regularization",
+      "target": "reward-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "Rather than fix an l2 penalty coefficient in advance, the paper tunes it continuously against a held-out slice of the reward model's own training data: 1/e of the preference database is set aside as validation, and the regularization coefficient is adjusted so validation loss stays between 1.1 and 1.5 times training loss (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). This keeps the reward model's fit tethered to a fixed, small band of acceptable overfitting rather than letting the penalty go stale as the preference database keeps growing through iterated online training. The paper's 'no regularization' ablation removes the l2 term and relies on dropout alone (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9), isolating this adaptive scheme as a distinct safeguard rather than a redundant one. Because the reward model's only training signal is a comparison loss with no absolute scale, a coefficient that under- or over-penalizes would either let the model memorize idiosyncratic comparisons or wash out the reward differences it needs to preserve."
+    },
+    {
+      "id": "reward-predictor-pretraining-solves-the-cold-start-problem-of-async-reward-learning-architecture",
+      "type": "solves-the-cold-start-problem-of",
+      "source": "reward-predictor-pretraining",
+      "target": "async-reward-learning-architecture",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "The asynchronous architecture's three loops only work once the reward predictor has something to say about the policy's behavior, and at the very start of training it has nothing: no policy trajectories have been compared yet. Reward predictor pretraining solves this specific bootstrapping gap in the Atari experiments by fitting the predictor for 200 epochs on an initial batch of comparisons drawn from an untrained, randomly-initialized policy before RL training even begins (deep-rl-human-prefs, §\"A Experimental Details\", p. 14). Without this step, the paper notes, the policy risks irreversibly converging on a bad behavior while being guided by a predictor that has barely been trained at all. So the extension is not a generic 'more pretraining is better' trick; it exists because the architecture's three concurrent processes have a specific ordering dependency at initialization that a synchronous, single-pass training setup would not face."
+    },
+    {
+      "id": "label-annealing-paces-the-query-rate-within-iterated-online-training",
+      "type": "paces-the-query-rate-within",
+      "source": "label-annealing",
+      "target": "iterated-online-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "Iterated online training says only that labels keep arriving throughout policy training rather than all at once up front; it does not by itself specify how fast they should arrive. Label annealing supplies that schedule: the rate at which new queries are answered decays roughly inversely with elapsed timesteps, so that after twice as many timesteps have passed the system asks for about half as many labels per unit time (deep-rl-human-prefs, §\"A Experimental Details\", p. 14). This is a deliberate compromise rather than a default: front-loading feedback gives the reward predictor a usable signal early, while the continuing trickle of later labels is what keeps it from going stale as the policy visits states the earlier labels never covered. Even when the labels come from real contractors rather than a synthetic oracle, the paper still tries to approximate this same decaying schedule, though only approximately, since contractors do not give feedback at a constant rate."
+    },
+    {
+      "id": "reward-normalization-fixes-the-underdetermined-scale-of-reward-model",
+      "type": "fixes-the-underdetermined-scale-of",
+      "source": "reward-normalization",
+      "target": "reward-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "A reward model trained only on comparisons never sees an absolute number, so its output's zero point and scale are free parameters left unconstrained by the training objective (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 5). Reward normalization pins both down by rescaling the predictor's output to zero mean and a fixed standard deviation before it reaches the RL algorithm. That fixed standard deviation is chosen per domain specifically so existing RL hyperparameters could be reused unchanged: 1 for the MuJoCo tasks and 0.05 for Atari, a choice the paper says let it keep the same entropy bonus and learning rate as its true-reward baselines rather than retune them for an arbitrarily-scaled learned reward (deep-rl-human-prefs, §\"A.2 Atari\", p. 15). Without this step, the same reward model, valid up to any positive affine transformation of its output, could silently break RL hyperparameters that were tuned assuming a particular reward magnitude."
+    },
+    {
+      "id": "comparisons-vs-absolute-scores-swaps-in-regression-in-place-of-bradley-terry-model",
+      "type": "swaps-in-regression-in-place-of",
+      "source": "comparisons-vs-absolute-scores",
+      "target": "bradley-terry-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "The comparisons-vs-absolute-scores ablation directly targets the Bradley-Terry model's own loss: rather than fitting the reward predictor to cross-entropy over pairwise comparisons, it lets an oracle supply the true total reward over a segment and fits the predictor to that value with mean squared error instead (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). The result complicates any simple story that comparisons are strictly better: on the continuous control tasks, predicting comparisons clearly outperformed regressing to a score, apparently because the varying scale of raw rewards makes direct regression harder, a difficulty the comparison loss smooths away since it never needs to match an absolute magnitude (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 10). On Atari, where rewards were clipped so the target regression effectively only had to predict a sign, comparisons and score-regression instead performed differently across games with neither consistently ahead. So the paper's own ablation shows the Bradley-Terry framing is not obviously necessary for a clipped, sign-only reward signal, only for continuous magnitudes."
+    },
+    {
+      "id": "iterated-online-training-guards-against-reward-hacking",
+      "type": "guards-against",
+      "source": "iterated-online-training",
+      "target": "reward-hacking",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "The clearest demonstration that iterated online training matters comes from removing it: the paper's 'no online queries' ablation trains the reward predictor only on labels gathered at the very start of training, then freezes it, and this static predictor is what produces the paper's own worked example of reward hacking (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). On Pong specifically, optimizing against that frozen, incompletely-trained predictor sometimes teaches the agent to avoid losing points without learning to score any, producing volleys that repeat the same exchange indefinitely rather than the intended game-winning behavior. The paper attributes this directly to the non-stationarity of the state distribution the policy visits: a predictor fit once early on only captures part of the true reward, and the policy is free to exploit whatever part it missed once training moves on to states the label set never covered. Continuing to collect and refit on new comparisons throughout training is therefore not just about keeping the predictor accurate on average; in this paper it is specifically what keeps the reward-hacking failure mode from appearing at all."
+    },
+    {
+      "id": "async-reward-learning-architecture-gives-concrete-shape-to-rlhf",
+      "type": "gives-concrete-shape-to",
+      "source": "async-reward-learning-architecture",
+      "target": "rlhf",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "The paper's own section on its method is where both the specific architecture and the general recipe later called RLHF are laid out side by side, and the architecture is what makes the recipe executable rather than merely stated (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). Learning a reward function from human feedback and then optimizing that reward function names the paradigm, but doing so requires deciding how the reward-fitting process and the policy-optimization process actually relate to each other over time; the paper's answer is three concurrent, asynchronously-coupled loops, with trajectories flowing to the human, comparisons flowing to the reward fitter, and updated reward parameters flowing back to the policy. That concurrency is a specific design choice, not an implementation detail: it is what allows a single reward model to be reused and continually refit across an entire policy training run rather than fit once from a fixed batch of feedback and then discarded. So where the RLHF paradigm only commits to learning a reward model from preferences and optimizing it with RL, the asynchronous architecture is this paper's answer to the further question of how the learning and the optimizing should be scheduled against each other."
+    },
+    {
+      "id": "recurrent-reward-model-extension-would-generalize-the-fixed-window-of-reward-model",
+      "type": "would-generalize-the-fixed-window-of",
+      "source": "recurrent-reward-model-extension",
+      "target": "reward-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "keeping-reward-models-on-distribution",
+      "prose": "The reward model actually built in this paper never sees an agent's full history: the general formulation treats reward as a function of a single observation-action pair, and the Atari implementation widens that only to a fixed stack of the preceding 4 observations, not the whole episode (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). The recurrent reward model extension is the paper's own flagged gap in this design: in a general partially-observable environment, reward could instead be modeled as a function of the entire history of observations via a recurrent neural network, rather than the fixed window the actual experiments use. The paper is explicit that this is unimplemented, a footnote rather than a method, which means every result in the paper is obtained with a reward model structurally blind to anything outside its fixed window. That leaves open, by the paper's own admission, whether behaviors whose reward genuinely depends on long-past events could be learned at all with the architecture actually tested."
+    },
+    {
+      "id": "elo-score-supplies-the-explanatory-analogy-for-bradley-terry-model",
+      "type": "supplies-the-explanatory-analogy-for",
+      "source": "elo-score",
+      "target": "bradley-terry-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "The paper never computes anything like an Elo rating; it invokes Elo purely as an analogy to explain what the Bradley-Terry softmax in Equation 1 is doing (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). Just as a difference in Elo rating between two chess players is used to estimate the probability that one player beats the other, the paper treats a difference in predicted reward between two trajectory segments as estimating the probability that a human prefers one segment over the other, with the reward model's output playing the same explanatory role as a chess rating. The analogy is doing real interpretive work: it is what licenses treating a network trained purely on binary comparisons as if it had learned a meaningful interval reward scale, when the training signal only ever committed the network to getting relative comparisons right. That interpretive move, treating comparison outcomes as evidence for an underlying rating-like scale, is exactly what lets a single scalar reward per segment, rather than a full ranking over many segments, be enough information to drive policy optimization."
+    },
+    {
+      "id": "trajectory-segment-is-summed-without-discount-by-bradley-terry-model",
+      "type": "is-summed-without-discount-by",
+      "source": "trajectory-segment",
+      "target": "bradley-terry-model",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "learning-rewards-from-comparisons",
+      "prose": "Equation 1 turns a trajectory segment into a single number by summing predicted reward across every observation-action pair in the segment, with no discount factor applied to later timesteps (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). The paper flags this as a modeling choice rather than a neutral default: undiscounted summation can be read as assuming the human is indifferent to when within a one-to-two-second clip something good or bad happens, treating an event at the start of the segment as equally decisive as the same event at the end. The paper explicitly notes that using explicit discounting, or trying to infer a human's discount function from their comparisons, would also have been a reasonable alternative, which it simply did not pursue. So the trajectory segment is not just a fixed-length window the Bradley-Terry model happens to operate on; the choice of segment length interacts with this no-discounting assumption, since the assumption becomes less plausible the longer a segment is allowed to run."
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward Predictor Ensemble — supplies the disagreement signal for → Uncertainty-Based Query Selection (Ensemble Variance) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward Predictor Ensemble — supplies the disagreement signal for → Uncertainty-Based Query Selection (Ensemble Variance)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></p>
+<section class="prose-section"><p>Uncertainty-based query selection needs some proxy for how uncertain the reward predictor is about a candidate pair, and the reward predictor ensemble is where that proxy comes from: with three independently bootstrap-trained predictors, the query-selection procedure samples a large batch of candidate segment pairs, asks every ensemble member for its preference prediction, and keeps whichever pairs show the highest variance across members (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"2.2.4 Selecting Queries", p. 6</a>). The coupling between the two is tight enough that removing the ensemble removes the query-selection method entirely: the paper's 'no ensemble' ablation trains a single predictor and, having no members left to disagree, falls back to picking queries uniformly at random (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">§"3.3 Ablation Studies", p. 9</a>). The authors are explicit that ensemble variance is only 'a crude approximation' to true uncertainty, distinguishing it from a more principled expected-value-of-information criterion they leave to future work. So the ensemble's disagreement is not a side benefit of using multiple predictors for accuracy; in this paper it is the only uncertainty signal the query-selection method has access to.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/reward-predictor-ensemble.html">Reward Predictor Ensemble</a> and <a href="../concept/uncertainty-based-query-selection.html">Uncertainty-Based Query Selection (Ensemble Variance)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/ablations-carry-the-design-argument.html">The ablation is the argument</a></li><li><a href="../tissue/one-mechanism-many-jobs.html">The same technique, cited or deployed twice, doing different work each time</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;2.2.4 Selecting Queries&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

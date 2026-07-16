@@ -18,7 +18,16 @@ Usage:
   python merge.py walks <staged.json>...
   python merge.py pages <staged.json>...
   python merge.py intros <staged.json>...
+  python merge.py apply <manifest.json>
   python merge.py validate
+
+`apply` runs several subcommands as one transaction — one in-memory store, one
+validation, one atomic write — for additions that can only be valid together
+(e.g. a new paper's concepts plus the theme/story/overlay updates that cover
+them). The manifest lists ordinary steps:
+  {"steps": [{"cmd": "concepts", "files": ["staging/x.json"], "aliases": "staging/a.json"},
+             {"cmd": "themes",   "files": ["staging/y.json"]}, ...]}
+File paths are relative to the graph/ directory (this file's parent's parent).
 """
 import json
 import re
@@ -361,6 +370,44 @@ def merge_pages(store, staged_files):
             if cid not in by_id:
                 raise SystemExit(f"pages: unknown concept {cid!r} in {f}")
             by_id[cid]["sections"] = page["sections"]
+            if page.get("summary"):  # optional refresh when the old one was paper-specific
+                by_id[cid]["summary"] = page["summary"]
+
+
+def run_step(store, cmd, files, aliases):
+    if cmd == "concepts":
+        merge_concepts(store, files, aliases)
+    elif cmd == "themes":
+        merge_simple(store, "themes", files)
+    elif cmd == "edges":
+        merge_simple(store, "edges", files)
+    elif cmd == "superthemes":
+        merge_simple(store, "superthemes", files)
+    elif cmd == "superedges":
+        merge_simple(store, "superedges", files)
+    elif cmd == "tissue-themes":
+        merge_simple(store, "tissueThemes", files)
+    elif cmd == "stories":
+        data = json.loads(Path(files[0]).read_text(encoding="utf-8"))
+        store["stories"] = data["stories"]
+        store.pop("overlay", None)  # legacy single-story key, superseded
+    elif cmd == "paper-overlay":
+        data = json.loads(Path(files[0]).read_text(encoding="utf-8"))
+        store["paperOverlay"] = data["paperOverlay"]
+    elif cmd == "walks":
+        by_id = {t["id"]: t for t in store["themes"]}
+        for f in files:
+            data = json.loads(Path(f).read_text(encoding="utf-8"))
+            for w in data["walks"]:
+                if w["theme"] not in by_id:
+                    raise SystemExit(f"walks: unknown theme {w['theme']!r} in {f}")
+                by_id[w["theme"]]["walk"] = w["steps"]
+    elif cmd == "pages":
+        merge_pages(store, files)
+    elif cmd == "intros":
+        merge_intros(store, files)
+    else:
+        raise SystemExit(f"unknown command {cmd!r}")
 
 
 def main():
@@ -390,39 +437,15 @@ def main():
         aliases = json.loads(Path(args[i + 1]).read_text(encoding="utf-8"))
         args = args[:i] + args[i + 2:]
 
-    if cmd == "concepts":
-        merge_concepts(store, args, aliases)
-    elif cmd == "themes":
-        merge_simple(store, "themes", args)
-    elif cmd == "edges":
-        merge_simple(store, "edges", args)
-    elif cmd == "superthemes":
-        merge_simple(store, "superthemes", args)
-    elif cmd == "superedges":
-        merge_simple(store, "superedges", args)
-    elif cmd == "tissue-themes":
-        merge_simple(store, "tissueThemes", args)
-    elif cmd == "stories":
-        data = json.loads(Path(args[0]).read_text(encoding="utf-8"))
-        store["stories"] = data["stories"]
-        store.pop("overlay", None)  # legacy single-story key, superseded
-    elif cmd == "paper-overlay":
-        data = json.loads(Path(args[0]).read_text(encoding="utf-8"))
-        store["paperOverlay"] = data["paperOverlay"]
-    elif cmd == "walks":
-        by_id = {t["id"]: t for t in store["themes"]}
-        for f in args:
-            data = json.loads(Path(f).read_text(encoding="utf-8"))
-            for w in data["walks"]:
-                if w["theme"] not in by_id:
-                    raise SystemExit(f"walks: unknown theme {w['theme']!r} in {f}")
-                by_id[w["theme"]]["walk"] = w["steps"]
-    elif cmd == "pages":
-        merge_pages(store, args)
-    elif cmd == "intros":
-        merge_intros(store, args)
+    if cmd == "apply":
+        manifest = json.loads(Path(args[0]).read_text(encoding="utf-8"))
+        for step in manifest["steps"]:
+            step_aliases = {}
+            if step.get("aliases"):
+                step_aliases = json.loads(Path(step["aliases"]).read_text(encoding="utf-8"))
+            run_step(store, step["cmd"], step.get("files", []), step_aliases)
     else:
-        raise SystemExit(f"unknown command {cmd!r}")
+        run_step(store, cmd, args, aliases)
 
     errors = validate(store)
     if errors:

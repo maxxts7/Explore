@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>MuJoCo — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>MuJoCo</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A physics simulator (Todorov et al., 2012) used to implement the paper&#x27;s simulated-robotics locomotion and control tasks (Hopper, Walker, Swimmer, Half-Cheetah, Ant, Reacher, Pendulum, Double-pendulum), accessed via OpenAI Gym.</p>
+<div class="page-intro"><p>Eight simulated robots, from a simple pendulum up to a four-legged Ant, all share the same physics engine and the same style of hand-written reward underneath them.</p>
+<p>The page introduces the simulator and how the paper reaches it through a common interface, then the changes made to its default termination and reward rules so a hidden true reward wouldn't leak through some other channel, and closes on how well the method actually did against that hidden reward.</p></div>
+<section class="prose-section">
+<h2>What it is and how it&#x27;s used here</h2>
+<p>MuJoCo is the physics simulator (Todorov et al., 2012) underlying all eight of the paper's simulated-robotics tasks, accessed through <a href="../concept/openai-gym.html">OpenAI Gym</a> rather than called directly (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3 Experimental Results", p. 6</a>). The tasks span a simple "pendulum," included "since this is representative of the complexity of tasks studied in prior work," up through <a href="../concept/hopper-task.html">Hopper (MuJoCo task)</a>, <a href="../concept/half-cheetah-task.html">Half-Cheetah (MuJoCo task)</a>, and <a href="../concept/ant-task.html">Ant (MuJoCo task)</a> (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 6</a>). All eight share a reward structure: "linear functions of distances, positions and velocities... all are a quadratic function of the features" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 6</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Modifications made for preference learning</h2>
+<p>Standard Gym/MuJoCo episodes end early when the robot's state leaves a prescribed range, e.g. falling over — a termination signal the paper found leaks task information even without an observable reward. It was replaced by "a penalty which encourages the parameters to remain in the range (and which the agent must learn)" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>), per the <a href="../concept/environment-modifications-for-preference-learning.html">Environment Modifications for Preference Learning</a> concept. Gym's built-in torque penalties were also stripped out, since "torques are not directly visible to a human supervisor" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Its results in the paper</h2>
+<p>With 700 preference queries, the method is "able to nearly match reinforcement learning on all of these tasks" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>), and by 1400 synthetic labels it sometimes exceeds RL on the true reward, attributed to a better-shaped learned reward. Feedback came from contractors on most tasks, but from an author on Reacher and Half-Cheetah "due to time constraints" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/ant-task.html">Ant (MuJoCo task)</a></li><li><a href="../concept/half-cheetah-task.html">Half-Cheetah (MuJoCo task)</a></li><li><a href="../concept/hopper-task.html">Hopper (MuJoCo task)</a></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/deep-rl-testbeds.html">The 2017 deep-RL testbeds: MuJoCo and Atari</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3.1.1 Simulated Robotics&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

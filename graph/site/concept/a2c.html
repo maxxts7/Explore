@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Advantage Actor-Critic (A2C/A3C) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Advantage Actor-Critic (A2C/A3C)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A policy-gradient RL algorithm; the paper uses the synchronous variant (A2C) of Mnih et al. (2016)&#x27;s asynchronous A3C algorithm to train the policy on the seven Atari tasks against predicted reward from the learned reward model.</p>
+<div class="page-intro"><p>Scoring an action by the raw return it eventually leads to is noisy: much of that outcome is luck that has nothing to do with the choice itself. A2C cuts through the noise by judging each action against what a critic already expected the state to be worth.</p>
+<p>The page opens with how the actor and critic fit together, then turns to why this algorithm, rather than a value-based one, suited a reward that kept changing mid-training, before covering the rescaling that let its original settings survive unchanged and the one game where its own exploration falls short.</p></div>
+<section class="prose-section">
+<h2>The algorithm</h2>
+<p>A2C is a policy-gradient method that trains two coupled networks: an actor (\pi_\theta(a \mid s)) producing an action distribution, and a critic (V_\phi(s)) estimating expected future return from a state. Rather than scaling the policy gradient by the raw, noisy return, A2C scales it by the advantage (A(s,a) = r + \gamma V_\phi(s') - V_\phi(s)), how much better an action did than the critic expected. The actor update follows $$\nabla_\theta J(\theta) = \mathbb{E}\left[\nabla_\theta \log \pi_\theta(a \mid s)\, A(s,a)\right]$$ raising the probability of actions that beat the baseline and lowering it for those that fell short, while the critic is fit by regression toward observed returns. A2C is the synchronous counterpart of Mnih et al. (2016)'s A3C: parallel environment workers step in lockstep and contribute to one batched update, trading some throughput for determinism.</p>
+</section>
+<section class="prose-section">
+<h2>Its role in the paper</h2>
+<p>The paper uses A2C, with Mnih et al. (2016)'s hyperparameters left unchanged, to train the policy on all seven Atari tasks against the predicted reward from the learned <a href="../concept/reward-model.html">Reward model (RM)</a> rather than the game's own score (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 4</a>; <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>). The <a href="../concept/non-stationary-reward-challenge.html">Non-Stationary Reward Function Challenge</a> is why a policy-gradient method was chosen at all: because the reward predictor keeps changing as new preference labels arrive, the authors say this "led us to focus on policy gradient methods" over value-based alternatives tuned for a fixed reward (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 4</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Reused hyperparameters, engineered reward scale</h2>
+<p>Unlike TRPO, A2C needed no hyperparameter changes at all to cope with the moving target. That stability was purchased, not found: <a href="../concept/reward-normalization.html">Reward Prediction Normalization</a> rescales the reward predictor's output to a standard deviation of exactly 0.05, specifically so A2C's existing entropy bonus, learning rate, and other settings, tuned against the true Atari reward, could be reused completely unchanged (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Where policy-gradient exploration falls short</h2>
+<p>A2C's reliance on its own exploration is also its weak point on Enduro: successfully passing another car is a rare event under undirected policy-gradient exploration, which the paper says makes Enduro "difficult for A3C to learn" and correspondingly hard to learn from synthetic labels drawn from that same sparse reward (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">§"3.1.2 Atari", p. 8</a>). The paper reports its human-feedback result on Enduro ends up "comparable to those achieved with DQN" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">§"3.1.2 Atari", p. 8</a>), a value-based method whose <a href="../concept/dqn.html">Q-learning</a> target does not depend on stumbling into a positive event through that same on-policy exploration.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Advantage Actor-Critic (A2C/A3C)</strong> — <a href="../edge/a2c-closes-its-enduro-exploration-gap-with-dqn.html">closes its enduro exploration gap with</a> → Deep Q-Network (DQN)</li><li>Non-Stationary Reward Function Challenge — <a href="../edge/non-stationary-reward-challenge-motivates-the-choice-of-a2c.html">motivates the choice of</a> → <strong>Advantage Actor-Critic (A2C/A3C)</strong></li><li>Reward Prediction Normalization — <a href="../edge/reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c.html">is reverse engineered to avoid retuning</a> → <strong>Advantage Actor-Critic (A2C/A3C)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;A.2 Atari&rdquo;, p. 15</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

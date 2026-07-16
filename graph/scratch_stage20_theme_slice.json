@@ -1,0 +1,118 @@
+{
+ "changedThemes": [
+  {
+   "id": "demonstrations-not-specification",
+   "name": "Learning from demonstrations instead of a specified reward",
+   "members": [
+    "inverse-reinforcement-learning",
+    "apprenticeship-learning",
+    "use-demonstrations",
+    "cooperative-inverse-reinforcement-learning",
+    "supervised-fine-tuning",
+    "sft-model",
+    "sft-dataset"
+   ],
+   "narrative": "Concrete Problems proposes learning from demonstrations as a remedy for the risks of both reward hacking and unsafe exploration: rather than trial-and-error optimization of a hand-specified objective, an agent can learn a policy or reward function from expert trajectories via inverse reinforcement learning or apprenticeship learning, or infer a human's goals cooperatively as in CIRL, optionally bounding further exploration around the resulting baseline. InstructGPT operationalizes exactly this idea as the first, and structurally simplest, step of its training pipeline: supervised fine-tuning trains a pretrained GPT-3 model directly on roughly 13,000 human-written demonstrations of desired behavior, collected in the SFT dataset, to produce the SFT model, which serves both as a standalone baseline and as the initialization for everything that follows. This theme's claim is a direct genealogical one: a technique the 2016 paper proposed in the abstract, as one option among several for avoiding specification failures, becomes in 2022 the concrete, load-bearing first stage of a real alignment pipeline."
+  },
+  {
+   "id": "semi-supervised-reward-learning-proposals",
+   "name": "Scaling oversight by predicting reward on unlabeled episodes",
+   "members": [
+    "scalable-oversight",
+    "semi-supervised-reinforcement-learning",
+    "supervised-reward-learning",
+    "semi-supervised-active-reward-learning",
+    "unsupervised-value-iteration",
+    "unsupervised-model-learning",
+    "atari-games-environment"
+   ],
+   "narrative": "Scalable oversight is the problem of ensuring safe behavior when the true objective is too costly to evaluate on every training example. This theme covers the paper's central technical answer: semi-supervised reinforcement learning, a framework in which an agent observes its true reward on only a small fraction of timesteps but is evaluated throughout. Four concrete instantiations are proposed. Supervised reward learning trains a model to predict reward from state and uses that prediction, weighted by its own uncertainty, to estimate payoff on unlabeled episodes. Semi-supervised or active reward learning adds the ability to flag salient events and request feedback on them specifically. Unsupervised value iteration and unsupervised model learning both extract information from the transitions of unlabeled episodes alone, improving Bellman updates or a dynamics model respectively without needing reward labels at all. Atari games serve as the toy testbed proposed for evaluating these approaches. The shared claim is that a cheap, sparse true-reward signal can be stretched to cover dense training data by learning to predict it, rather than by evaluating it everywhere."
+  },
+  {
+   "id": "scalable-oversight-lineage",
+   "name": "From an open problem to reward models to AI feedback",
+   "members": [
+    "scalable-oversight",
+    "reward-model",
+    "rlhf",
+    "rlaif",
+    "feedback-model",
+    "hybrid-human-ai-preference-model",
+    "iterated-online-training"
+   ],
+   "narrative": "This theme traces the corpus's most important cross-paper throughline. Concrete Problems names scalable oversight as an open problem in 2016: safe behavior requires evaluating a true objective too costly to check on every example. InstructGPT's reward model is, functionally, a scaled solution, a learned model trained to predict which of two outputs human labelers would prefer, letting reinforcement learning from human feedback optimize a cheap, dense proxy for a genuinely expensive human judgment across an entire training distribution. Constitutional AI's RL from AI Feedback pushes the same lineage one step further: the feedback model that produces harmlessness preference labels replaces even the human labeler, and the hybrid human/AI preference model blends human-labeled helpfulness comparisons with AI-labeled harmlessness ones into a single reward signal. Iterated online training, periodically refreshing the preference model on the current policy's own outputs, is flagged as a further scaling step now made easier once an AI, rather than a human, is doing the labeling. Read together, these concepts show one problem named once, operationalized once, and then scaled again."
+  },
+  {
+   "id": "human-feedback-data-infrastructure",
+   "name": "Building the human side of the RLHF pipeline",
+   "members": [
+    "sft-dataset",
+    "rm-dataset",
+    "ppo-dataset",
+    "api-prompt-distribution",
+    "labeler-screening-process",
+    "labeling-interface",
+    "labeler-metadata-taxonomy",
+    "held-out-labeler-generalization",
+    "inter-annotator-agreement"
+   ],
+   "narrative": "RLHF is often described algorithmically, but it depends on an entire human-data infrastructure that this theme makes visible. The API prompt distribution, text submitted by real users to an earlier InstructGPT model, deduplicated and filtered, supplies the raw prompts behind the SFT dataset of roughly 13,000 demonstrations, the RM dataset of roughly 33,000 ranked comparison sets, and the PPO dataset of roughly 31,000 unlabeled rollout prompts. None of this data exists without the roughly 40 contractors selected via a four-criterion labeler screening process, who record their judgments through a purpose-built web labeling interface using a fixed labeler metadata annotation taxonomy covering failures like hallucination or denigration of a protected class. Two further concepts test whether this whole human pipeline is trustworthy: inter-labeler agreement rate measures whether independent labelers agree with each other at all, and the held-out labeler generalization test checks whether models trained on one group of labelers' preferences hold up for a separate group who contributed no training data."
+  }
+ ],
+ "lineageSupertheme": {
+  "id": "scalable-oversight-to-rlhf-pipeline",
+  "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+  "members": [
+   "demonstrations-not-specification",
+   "semi-supervised-reward-learning-proposals",
+   "distant-supervision-and-hierarchical-decomposition",
+   "scalable-oversight-lineage",
+   "rlhf-three-step-pipeline",
+   "ppo-optimization-mechanics",
+   "human-feedback-data-infrastructure",
+   "rlhf-failure-modes"
+  ],
+  "narrative": "Concrete Problems names scalable oversight, evaluating a true objective too costly to check everywhere, as an open problem, then sketches remedies: scaling oversight by predicting reward on unlabeled episodes, and scaling oversight without a learned reward predictor via distant supervision or hierarchical decomposition. From an open problem to reward models to AI feedback traces the lineage that actually got built into InstructGPT's reward model and Constitutional AI's RLAIF. InstructGPT's three-step training pipeline lays out that build end to end, pretraining, supervised fine-tuning, reward modeling, PPO, while the mechanics that make PPO fine-tuning work supplies the engineering beneath its RL stage and building the human side of the RLHF pipeline supplies the labelers and datasets feeding all three steps. Learning from demonstrations instead of a specified reward supplies the direct genealogy for the pipeline's own first step, SFT. Where RLHF alignment still falls short closes the arc, documenting hallucination, hedging, and reward over-optimization as the residue left once the pipeline is actually built.",
+  "intro": "No team can review every model output by hand, so Concrete Problems sketches ways an AI system might stand in for the missing reviewer. What began as a rough 2016 proposal became, six years on, the actual pipeline InstructGPT trained on.\n\nFrom that open problem and its early remedies, the page passes through the reward model and AI feedback that grew out of them, into InstructGPT's own pretraining-to-PPO sequence and the labeling work behind it. It ends somewhere less triumphant, at the places that pipeline still falls short."
+ },
+ "exampleTheme": {
+  "id": "cai-core-method",
+  "name": "Constitutional AI's method: principles, critique, and revision",
+  "members": [
+   "constitutional-ai",
+   "constitution",
+   "sl-cai-principles",
+   "rl-cai-principles",
+   "critique-and-revision",
+   "sl-cai",
+   "sl-cai-few-shot-examples",
+   "direct-revision-ablation",
+   "ensembling-principles"
+  ],
+  "narrative": "Constitutional AI trains a harmless assistant using only a small set of written principles as the source of human guidance, rather than human harmfulness labels, and this theme covers the mechanics of that method's supervised stage. The constitution is the set of natural-language principles steering the whole pipeline, split in practice into two specific lists: the 16 critique/revision instruction pairs used in the supervised stage, and a separate 16 multiple-choice comparison principles used later by the feedback model. Critique and revision is the pipeline itself, a model critiques its own harmful response according to a sampled principle, then revises the response to remove the identified harm, producing SL-CAI, the fine-tuned model that results and that seeds the later RL stage. Hand-written few-shot examples prevent the model from confusing the critique and revision roles it must switch between. Principle ensembling, sampling a different principle per comparison rather than reusing one throughout, and the direct-revision ablation, which tests whether the critique step is even necessary, both validate specific design choices within this pipeline rather than proposing new ones."
+ },
+ "existingConceptSummaries": {
+  "reward-hacking": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+  "scalable-oversight": "The problem of ensuring safe agent behavior when the true objective function is too costly to evaluate on every training example, forcing reliance on cheaper proxies.",
+  "cooperative-inverse-reinforcement-learning": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+  "inverse-reinforcement-learning": "A prior family of methods that infers a reward function (or policy) from observed expert trajectories rather than from a hand-specified reward.",
+  "semi-supervised-active-reward-learning": "A semi-supervised RL approach combining reward prediction with active or semi-supervised learning so the agent can identify salient events and request reward feedback on them specifically.",
+  "atari-games-environment": "A widely used prior benchmark suite of video games used in the paper as a toy environment for proposed semi-supervised RL and reward hacking experiments.",
+  "use-demonstrations": "A proposed remedy that reduces the need for risky exploration by learning from expert demonstration trajectories via inverse RL or apprenticeship learning, optionally bounding further exploration around the resulting baseline policy.",
+  "apprenticeship-learning": "A prior learning paradigm (Abbeel & Ng 2005) in which an agent learns near-optimal behavior directly from expert trajectories rather than through trial-and-error exploration.",
+  "reward-model": "A model initialized from the SFT model with its unembedding layer replaced by a scalar output head, trained to predict which of two model outputs human labelers would prefer.",
+  "reward-model-loss": "A cross-entropy loss over pairs of ranked completions in which the reward difference between preferred and dispreferred outputs represents the log odds a human would prefer the former.",
+  "ppo-training": "The third training step, in which the SFT model is further fine-tuned with the Proximal Policy Optimization algorithm to maximize the scalar reward produced by the reward model.",
+  "rlhf": "A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.",
+  "supervised-fine-tuning": "The first training step, in which a pretrained language model is fine-tuned directly on human-written demonstrations of desired output behavior using standard supervised learning.",
+  "sft-dataset": "The set of about 13k training prompts (labeler-written and API-sourced) paired with human demonstrations, used to train the supervised fine-tuned models.",
+  "rm-dataset": "The set of about 33k training prompts, each with K=4 to 9 model outputs ranked by labelers, used to train the reward model.",
+  "labeler-screening-process": "A four-criterion screening procedure (agreement on sensitive-speech flagging, agreement on rankings, sensitive demonstration writing quality, and self-assessed ability to identify sensitive content across groups) used to select the roughly 40 contractors who produced the paper's training data.",
+  "labeling-interface": "The internal web tool used by labelers and researchers to assign Likert quality scores, metadata labels, and full rankings to sets of model outputs for a given prompt.",
+  "rlaif": "A variant of RLHF in which the harmlessness preference labels used to train the reward/preference model are generated by an AI feedback model instead of human crowdworkers.",
+  "feedback-model": "An independent (typically pretrained) language model presented with a harmful prompt and a pair of responses that produces the multiple-choice harmlessness preference label used to construct the AI feedback dataset.",
+  "hybrid-human-ai-preference-model": "A preference model trained on a mixture of human-labeled helpfulness comparisons and AI-labeled harmlessness comparisons.",
+  "elo-score": "A rating computed from crowdworker pairwise model-comparison preferences, used throughout the paper to track relative helpfulness and harmlessness of model snapshots during training.",
+  "iterated-online-training": "A training regime from prior work in which the preference model is periodically refreshed with new comparison data collected on the current policy's outputs, keeping the PM on-distribution; noted as a future direction now automatable with AI feedback."
+ }
+}

@@ -1,0 +1,1087 @@
+{
+ "concepts": [
+  {
+   "id": "reward-model",
+   "name": "Reward model (RM)",
+   "summary": "A model initialized from the SFT model with its unembedding layer replaced by a scalar output head, trained to predict which of two model outputs human labelers would prefer.",
+   "parent": null,
+   "children": [
+    "reward-model-loss",
+    "k-choose-2-batching",
+    "hybrid-human-ai-preference-model",
+    "bradley-terry-model",
+    "reward-predictor-ensemble",
+    "adaptive-l2-regularization",
+    "rater-error-noise-model",
+    "comparisons-vs-absolute-scores",
+    "reward-normalization",
+    "recurrent-reward-model-extension"
+   ],
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "refined",
+     "summary": "A model initialized from the SFT model with its unembedding layer replaced by a scalar output head, trained to predict which of two model outputs human labelers would prefer.",
+     "notes": "Only trained at 6B scale because 175B RM training was unstable and too costly to use as the PPO value-function initialization; its output is normalized to a mean of 0 over demonstrations before RL."
+    },
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "A model trained on comparison data to assign a scalar score to a response, used as the reward signal for RL, following the RLHF pipeline of prior work.",
+     "notes": ""
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A neural network reward predictor trained via supervised learning to predict a scalar reward consistent with a human's pairwise preferences over trajectory segments, used in place of the environment's true reward signal to train the policy with RL.",
+     "notes": "Central learned artifact of the paper; canonical id shared with InstructGPT and Constitutional AI reward models, marked 'introduced' here as the earliest of the three papers. Instantiates the general 'supervised reward learning' proposal from Concrete Problems in AI Safety (2016)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.5 Models",
+     "page": 8,
+     "paper": "instructgpt"
+    },
+    {
+     "section": "C.2 Details of RM training",
+     "page": 41,
+     "paper": "instructgpt"
+    },
+    {
+     "section": "1.2 The Constitutional AI Approach",
+     "page": 5,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "4.1 Method",
+     "page": 10,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "2.2.3 Fitting the Reward Function",
+     "page": 5,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback"
+    },
+    {
+     "id": "rlhf-three-step-pipeline",
+     "name": "InstructGPT's three-step training pipeline"
+    },
+    {
+     "id": "learning-rewards-from-comparisons",
+     "name": "Comparisons as the atomic unit of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "scalable-oversight-is-retroactively-operationalized-by-reward-model",
+     "type": "is-retroactively-operationalized-by",
+     "direction": "in",
+     "other": "scalable-oversight",
+     "otherName": "Scalable oversight",
+     "hindsight": true,
+     "gist": "Concrete Problems names scalable oversight in 2016 but supplies no worked instance at the scale of a deployed system; InstructGPT's reward model, trained in 2022, is never described by InstructGPT itself as an answer to that problem, since InstructGPT never uses the term. The connection only becomes visible once Constitutional AI revives the same idea under the label 'Scaling Supervision' and stat"
+    },
+    {
+     "id": "reward-model-anchors-the-reward-signal-of-rlhf",
+     "type": "anchors-the-reward-signal-of",
+     "direction": "out",
+     "other": "rlhf",
+     "otherName": "Reinforcement learning from human feedback (RLHF)",
+     "hindsight": false,
+     "gist": "The reward model is not a free-standing scorer bolted onto RLHF; its architecture and its role are both dictated by how PPO training actually works. It is built by removing the SFT model's unembedding layer and adding a scalar output head, so it starts from the same weights as the policy it will later score (instructgpt, §\"3.5 Models\", p. 8). During RLHF it serves two jobs at once: its output is t"
+    },
+    {
+     "id": "reward-model-back-selects-the-checkpoint-of-sft-model",
+     "type": "back-selects-the-checkpoint-of",
+     "direction": "out",
+     "other": "sft-model",
+     "otherName": "Supervised fine-tuned (SFT) model",
+     "hindsight": false,
+     "gist": "The three-step diagram runs left to right, but selection pressure runs backward through it. The SFT models overfit validation loss after a single epoch, yet were trained for 16 epochs anyway, because later epochs kept improving both RM score and human preference; the final SFT checkpoint was chosen by its score under the reward model, not by validation loss (instructgpt, §\"3.5 Models\", p. 8). The "
+    },
+    {
+     "id": "reward-model-loss-under-determines-the-scale-of-reward-model",
+     "type": "under-determines-the-scale-of",
+     "direction": "in",
+     "other": "reward-model-loss",
+     "otherName": "Reward model pairwise comparison loss",
+     "hindsight": false,
+     "gist": "The pairwise cross-entropy loss sees only differences between rewards for preferred and dispreferred completions, so adding any constant to every reward leaves the loss unchanged: training produces a ranker whose absolute output is meaningless. This matters the moment the ranker is reused as an RL reward, where absolute values feed the optimization directly. The paper handles it with an explicit p"
+    },
+    {
+     "id": "reward-model-supervises-from-below-ppo-training",
+     "type": "supervises-from-below",
+     "direction": "out",
+     "other": "ppo-training",
+     "otherName": "PPO fine-tuning stage (RLHF policy optimization)",
+     "hindsight": false,
+     "gist": "Every PPO policy in the paper, including the 175B one, is trained against a single 6B reward model — supervision from a model nearly 30x smaller than the policy it steers. This was a forced choice, not a preference: 175B RM training was unstable, which made large RMs unsuitable as initializations for the PPO value function, and a 175B RM plus value function would have greatly increased PPO's compu"
+    },
+    {
+     "id": "bradley-terry-model-supplies-the-loss-for-reward-model",
+     "type": "supplies-the-loss-for",
+     "direction": "in",
+     "other": "bradley-terry-model",
+     "otherName": "Bradley-Terry Model",
+     "hindsight": false,
+     "gist": "The reward model has no target values to regress against; it is fit entirely by treating predicted summed reward as a latent score in the Bradley-Terry pairwise-comparison model and minimizing the resulting cross-entropy loss over recorded human preferences (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). Under this loss, a segment's predicted probability of being preferred is a "
+    },
+    {
+     "id": "adaptive-l2-regularization-bounds-the-generalization-gap-of-reward-model",
+     "type": "bounds-the-generalization-gap-of",
+     "direction": "in",
+     "other": "adaptive-l2-regularization",
+     "otherName": "Adaptive L2 Regularization for the Reward Predictor",
+     "hindsight": false,
+     "gist": "Rather than fix an l2 penalty coefficient in advance, the paper tunes it continuously against a held-out slice of the reward model's own training data: 1/e of the preference database is set aside as validation, and the regularization coefficient is adjusted so validation loss stays between 1.1 and 1.5 times training loss (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). This keeps"
+    },
+    {
+     "id": "reward-normalization-fixes-the-underdetermined-scale-of-reward-model",
+     "type": "fixes-the-underdetermined-scale-of",
+     "direction": "in",
+     "other": "reward-normalization",
+     "otherName": "Reward Prediction Normalization",
+     "hindsight": false,
+     "gist": "A reward model trained only on comparisons never sees an absolute number, so its output's zero point and scale are free parameters left unconstrained by the training objective (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 5). Reward normalization pins both down by rescaling the predictor's output to zero mean and a fixed standard deviation before it reaches the RL algorithm. That fixed "
+    },
+    {
+     "id": "recurrent-reward-model-extension-would-generalize-the-fixed-window-of-reward-model",
+     "type": "would-generalize-the-fixed-window-of",
+     "direction": "in",
+     "other": "recurrent-reward-model-extension",
+     "otherName": "Recurrent Reward Model (Proposed Extension)",
+     "hindsight": false,
+     "gist": "The reward model actually built in this paper never sees an agent's full history: the general formulation treats reward as a function of a single observation-action pair, and the Atari implementation widens that only to a fixed stack of the preceding 4 observations, not the whole episode (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). The recurrent reward model extension is the paper's own f"
+    },
+    {
+     "id": "reward-model-is-overbuilt-in-anticipation-of-novel-behavior-training",
+     "type": "is-overbuilt-in-anticipation-of",
+     "direction": "out",
+     "other": "novel-behavior-training",
+     "otherName": "Novel Behavior Training",
+     "hindsight": false,
+     "gist": "The reward predictor used for the MuJoCo tasks is a full two-layer neural network even though the true reward functions for those standard benchmarks are, as the paper notes, all just second-degree polynomials of the input features, simple enough that a much simpler regression method would have sufficed (deep-rl-human-prefs, §\"A.1 Simulated Robotics Tasks\", p. 14). The paper is explicit that this "
+    },
+    {
+     "id": "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+     "type": "trades-its-concurrency-for-a-fixed-dataset-in",
+     "direction": "in",
+     "other": "async-reward-learning-architecture",
+     "otherName": "Asynchronous Reward-Learning Architecture",
+     "hindsight": true,
+     "gist": "The 2017 paper's defining architectural choice is that nothing is ever finished: the policy, the human-comparison process, and the reward predictor run as three concurrent loops for the entire duration of training, with 'trajectories flowing from process (1) to process (2), human comparisons flowing from process (2) to process (3), and parameters for r̂ flowing from process (3) to process (1)' (de"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "Why the corpus needs a stand-in for human judgment",
+     "body": "The reward model is the load-bearing joint of the corpus's [[scalable-oversight-lineage]]: it is the concrete, working answer to a problem Concrete Problems in AI Safety could only name in 2016 ([[scalable-oversight]], the difficulty of evaluating a true objective too costly to check on every example). InstructGPT never uses that phrase itself, but the match is drawn explicitly once Constitutional AI revisits the idea under the label \"Scaling Supervision\" and states that RLHF \"has already taken a step in the direction of scaled supervision, since the reward signal in RL actually comes from an AI preference model (PM) rather than from immediate human oversight\" ([[scalable-oversight-is-retroactively-operationalized-by-reward-model]]; constitutional-ai, §\"Scaling Supervision\", p. 2). The reward model is therefore the single concept in this batch that a reader arriving from any of the three papers needs: Concrete Problems supplies the open problem it answers, InstructGPT supplies its first working implementation, and Constitutional AI both inherits it wholesale and renames it — the same object is called the reward model (RM) in InstructGPT and the preference model (PM) in Constitutional AI (constitutional-ai, §\"1.2 The Constitutional AI Approach\", p. 5), where it is explicitly built \"following the process in [Bai et al., 2022]\" (constitutional-ai, §\"4.1 Method\", p. 10). Constitutional AI's own reward signal, the [[hybrid-human-ai-preference-model]], is a child of this same concept: a preference model trained on human-labeled helpfulness comparisons mixed with AI-labeled harmlessness comparisons, still the identical architecture and training recipe, just fed a differently-sourced comparison set."
+    },
+    {
+     "heading": "What it enabled downstream",
+     "body": "Inside InstructGPT's own pipeline, the reward model does more than score rollouts. Its weights initialize the PPO value function, so the same learned preference judgment appears twice in the RL loop, once as the reward being chased and once as the critic estimating future value ([[ppo-optimization-mechanics-reveals-critic-reward-coupling-in-rlhf-three-step-pipeline]]). Because 175B RM training proved unstable, this shared-initialization requirement is the specific reason every InstructGPT policy, including the 175B one, was trained against a single 6B reward model, supervision from a judge nearly 30 times smaller than the policy it steers ([[reward-model-supervises-from-below-ppo-training]]; instructgpt, §\"C.2 Details of RM training\", p. 41). The RM also reaches backward in the pipeline: the final [[sft-model|SFT]] checkpoint was chosen by its score under the reward model rather than by validation loss, since RM score proved more predictive of human preference than validation loss ([[reward-model-back-selects-the-checkpoint-of-sft-model]]; instructgpt, §\"3.5 Models\", p. 8; §\"C.1 Details of SFT training\", p. 41). And it anchors [[reward-model-anchors-the-reward-signal-of-rlhf|RLHF]]'s reward signal directly: a per-token [[kl-penalty]] against the SFT model, not the RM, keeps PPO from over-optimizing this imperfect proxy, the specific countermeasure engineered against [[reward-overoptimization]]."
+    },
+    {
+     "heading": "What it is",
+     "body": "Architecturally, the reward model is built by taking the trained SFT model and replacing its final unembedding layer with a scalar output head, so it starts from the same weights as the policy it will later score (instructgpt, §\"3.5 Models\", p. 8). It takes a prompt and a candidate response and outputs a single scalar reward. It is trained with a pairwise comparison loss over rankings of $K=4$ to $9$ labeler-ranked completions per prompt — the full mathematical form is [[reward-model-loss]] — using the [[k-choose-2-batching]] trick to avoid overfitting on correlated comparisons drawn from the same ranking. Because that loss is invariant to any additive shift in reward, the model's raw output is only ever meaningful up to an arbitrary constant; InstructGPT fixes this by normalizing so that labeler demonstrations score a mean of 0 before RL begins, making \"positive reward\" mean literally better-than-demonstration (instructgpt, §\"3.5 Models\", p. 9). Constitutional AI's preference model keeps this exact architecture and loss but changes only where the comparison labels come from: helpfulness comparisons still come from human crowdworkers, while harmlessness comparisons are generated by a separate [[feedback-model]] evaluating response pairs against constitutional principles (constitutional-ai, §\"4.1 Method\", p. 10)."
+    }
+   ]
+  },
+  {
+   "id": "rlhf",
+   "name": "Reinforcement learning from human feedback (RLHF)",
+   "summary": "A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.",
+   "parent": null,
+   "children": [
+    "helpful-rlhf-model",
+    "hh-rlhf-model"
+   ],
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "refined",
+     "summary": "A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.",
+     "notes": "Prior applications (Christiano et al. 2017, Ziegler et al. 2019, Stiennon et al. 2020) were on simulated control, Atari, or narrow domains like summarization; this paper extends RLHF to the much broader and more diverse API prompt distribution."
+    },
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "The established technique of training a policy with RL against a preference model fit to human comparison judgments; CAI extends and partially replaces it for harmlessness.",
+     "notes": ""
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "The general paradigm of training an RL policy by learning a reward model from human preference judgments (rather than a hand-specified reward function) and optimizing that learned reward with a standard RL algorithm.",
+     "notes": "This paper is the origin work for the deep-RL RLHF pipeline later named and scaled up by InstructGPT (2022). Registry currently marks 'rlhf' as 'refined' for instructgpt and 'inherited' for constitutional-ai; this paper is the introducing anchor."
+    }
+   ],
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "instructgpt"
+    },
+    {
+     "section": "3.1 High-level methodology",
+     "page": 6,
+     "paper": "instructgpt"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "5 Related Work",
+     "page": 14,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "2.2 Our Method",
+     "page": 4,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback"
+    },
+    {
+     "id": "rlhf-three-step-pipeline",
+     "name": "InstructGPT's three-step training pipeline"
+    }
+   ],
+   "edges": [
+    {
+     "id": "reward-model-anchors-the-reward-signal-of-rlhf",
+     "type": "anchors-the-reward-signal-of",
+     "direction": "in",
+     "other": "reward-model",
+     "otherName": "Reward model (RM)",
+     "hindsight": false,
+     "gist": "The reward model is not a free-standing scorer bolted onto RLHF; its architecture and its role are both dictated by how PPO training actually works. It is built by removing the SFT model's unembedding layer and adding a scalar output head, so it starts from the same weights as the policy it will later score (instructgpt, §\"3.5 Models\", p. 8). During RLHF it serves two jobs at once: its output is t"
+    },
+    {
+     "id": "rlhf-swaps-the-labeler-in-rlaif",
+     "type": "swaps-the-labeler-in",
+     "direction": "out",
+     "other": "rlaif",
+     "otherName": "RL from AI Feedback (RLAIF)",
+     "hindsight": false,
+     "gist": "RLAIF is presented as a minimal, surgical modification of RLHF rather than a new algorithm: Constitutional AI states that after the AI feedback model produces the comparison labels, 'the remainder of the training pipeline (i.e., preference model training and RL) is exactly the same as RLHF' (constitutional-ai, §\"4.1 Method\", p. 10). The only thing that changes is who answers the comparison questio"
+    },
+    {
+     "id": "async-reward-learning-architecture-gives-concrete-shape-to-rlhf",
+     "type": "gives-concrete-shape-to",
+     "direction": "in",
+     "other": "async-reward-learning-architecture",
+     "otherName": "Asynchronous Reward-Learning Architecture",
+     "hindsight": false,
+     "gist": "The paper's own section on its method is where both the specific architecture and the general recipe later called RLHF are laid out side by side, and the architecture is what makes the recipe executable rather than merely stated (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). Learning a reward function from human feedback and then optimizing that reward function names the paradigm, but doing so re"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "The technique, in general",
+     "body": "Reinforcement learning from human feedback trains a policy using a reward signal derived not from a hand-specified function but from a model fit to human preference judgments, typically pairwise comparisons between two candidate outputs. The technique predates InstructGPT: Christiano et al. (2017) applied it to simulated robotic control and Atari games, and Ziegler et al. (2019) and Stiennon et al. (2020) extended it to fine-tuning language models, on stylistic continuation and text summarization respectively. InstructGPT's origin is therefore marked \"refined\" rather than \"introduced\": it takes an established technique and extends it, for the first time, to a broad, open-ended distribution of natural-language instructions spanning generation, question answering, brainstorming, and more, rather than one narrow, fixed domain (instructgpt, §\"1 Introduction\", p. 2; §\"3.1 High-level methodology\", p. 6)."
+    },
+    {
+     "heading": "The pipeline instantiation here",
+     "body": "In this paper, RLHF names the whole three-step procedure gathered under the [[rlhf-three-step-pipeline]] theme: [[supervised-fine-tuning]] on labeler demonstrations produces the [[sft-model]]; a [[reward-model]] is trained on labeler rankings to predict preferred outputs; and [[ppo-training]] then optimizes the SFT model against that learned reward. The [[reward-model-anchors-the-reward-signal-of-rlhf]] edge notes that the reward model's architecture is not incidental to this story, it is built by replacing the SFT model's unembedding layer with a scalar head, so it starts from the same weights as the policy it will later score, and its own weights in turn initialize the PPO [[value-function]]."
+    },
+    {
+     "heading": "Its place in a scalable-oversight lineage",
+     "body": "Within the [[scalable-oversight-lineage]] theme, RLHF is presented as a scaled solution to the open problem Concrete Problems named in 2016: safe behavior requires evaluating an objective too costly to check on every example, and a learned reward model lets a cheap, dense proxy stand in for genuinely expensive human judgment across an entire training distribution. The [[rlhf-swaps-the-labeler-in-rlaif]] edge traces this lineage one step further into Constitutional AI, whose RL from AI Feedback keeps \"the remainder of the training pipeline...exactly the same as RLHF\" (constitutional-ai, §\"4.1 Method\", p. 10) and changes only who answers the comparison question for harmlessness, an AI feedback model instead of a human labeler; RLHF is accordingly inherited by Constitutional AI as an established technique it extends and partially replaces (constitutional-ai, §\"1 Introduction\", p. 2; §\"5 Related Work\", p. 14). In the graph's hierarchy, [[helpful-rlhf-model]] and [[hh-rlhf-model]] are Constitutional AI's own applications of this technique, sitting as children of this concept outside the present paper's scope."
+    }
+   ]
+  },
+  {
+   "id": "iterated-online-training",
+   "name": "Iterated (Online) Training",
+   "summary": "A training regime from prior work in which the preference model is periodically refreshed with new comparison data collected on the current policy's outputs, keeping the PM on-distribution; noted as a future direction now automatable with AI feedback.",
+   "parent": "async-reward-learning-architecture",
+   "children": [],
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "A training regime from prior work in which the preference model is periodically refreshed with new comparison data collected on the current policy's outputs, keeping the PM on-distribution; noted as a future direction now automatable with AI feedback.",
+     "notes": ""
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "Collecting preference labels continuously throughout policy training, rather than gathering all labels upfront from a fixed/offline batch of trajectories, so the reward predictor keeps adapting to the changing state distribution the policy visits.",
+     "notes": "The 'no online queries' ablation (offline reward training) demonstrates this matters: a predictor trained only on early labels captures only part of the true reward, and optimizing against it can produce reward-hacking-like exploitative behavior (see 'reward-hacking'). Reused canonical id (constitutional-ai: inherited); this paper is arguably its origin."
+    }
+   ],
+   "locators": [
+    {
+     "section": "6.1 Future Directions",
+     "page": 15,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "3.3 Ablation Studies",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "4 Discussion and Conclusions",
+     "page": 10,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback"
+    },
+    {
+     "id": "keeping-reward-models-on-distribution",
+     "name": "Keeping the reward model on-distribution"
+    }
+   ],
+   "edges": [
+    {
+     "id": "rlaif-makes-newly-automatable-iterated-online-training",
+     "type": "makes-newly-automatable",
+     "direction": "in",
+     "other": "rlaif",
+     "otherName": "RL from AI Feedback (RLAIF)",
+     "hindsight": false,
+     "gist": "Iterated online training — periodically refreshing the preference model with new comparisons collected on the current policy's own outputs, so the PM never drifts too far off-distribution — already existed as a valuable technique using human feedback in prior work (Bai et al. 2022). Constitutional AI notes that 'we should be able to perform iterated \"online\" training...with AI supervision, where w"
+    },
+    {
+     "id": "iterated-online-training-is-the-cause-of-non-stationary-reward-challenge",
+     "type": "is-the-cause-of",
+     "direction": "out",
+     "other": "non-stationary-reward-challenge",
+     "otherName": "Non-Stationary Reward Function Challenge",
+     "hindsight": false,
+     "gist": "The non-stationary reward function challenge is not an incidental property of the reward model; it is the direct consequence of iterated online training. Because comparisons keep arriving and the reward predictor keeps being refit throughout policy training rather than fit once and fixed, the policy is, at every point, optimizing against a target that itself is still moving (deep-rl-human-prefs, §"
+    },
+    {
+     "id": "label-annealing-paces-the-query-rate-within-iterated-online-training",
+     "type": "paces-the-query-rate-within",
+     "direction": "in",
+     "other": "label-annealing",
+     "otherName": "Label Annealing",
+     "hindsight": false,
+     "gist": "Iterated online training says only that labels keep arriving throughout policy training rather than all at once up front; it does not by itself specify how fast they should arrive. Label annealing supplies that schedule: the rate at which new queries are answered decays roughly inversely with elapsed timesteps, so that after twice as many timesteps have passed the system asks for about half as man"
+    },
+    {
+     "id": "iterated-online-training-guards-against-reward-hacking",
+     "type": "guards-against",
+     "direction": "out",
+     "other": "reward-hacking",
+     "otherName": "Reward hacking (avoiding)",
+     "hindsight": false,
+     "gist": "The clearest demonstration that iterated online training matters comes from removing it: the paper's 'no online queries' ablation trains the reward predictor only on labels gathered at the very start of training, then freezes it, and this static predictor is what produces the paper's own worked example of reward hacking (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). On Pong specifically, op"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "What it is",
+     "body": "Iterated (online) training is a refresh loop for a preference model that predates Constitutional AI, attributed by the paper to Bai et al. (2022): new comparison data is periodically collected on the current policy's own outputs and used to retrain or update the preference model, keeping it evaluating the same distribution of responses the policy is actually producing rather than an older, increasingly stale distribution."
+    },
+    {
+     "heading": "Why it's flagged rather than used",
+     "body": "Constitutional AI does not implement this in its own experiments; it names it as a future direction made newly practical by [[rlaif|RL from AI Feedback]]: \"we should be able to perform iterated 'online' training...with AI supervision, where we update the preference model with new AI feedback in order to keep it on the same distribution as the policy produces...by using AI feedback we can fully automate the process\" (constitutional-ai, §\"6.1 Future Directions\", p. 15). RLAIF's contribution here is not the refresh idea itself but removing its bottleneck: once an AI feedback model rather than a human crowdworker supplies the comparisons, the refresh loop no longer needs continuous human labor and can in principle run indefinitely ([[rlaif-makes-newly-automatable-iterated-online-training]]). This sits at the far end of the [[scalable-oversight-lineage]] theme's throughline from a named open problem to a scaled solution, and is one more instance of the [[ai-substitutes-for-the-human-bottleneck]] connective theme's recurring move: an AI process substituting for a human one at exactly the point human throughput was the constraint."
+    }
+   ]
+  },
+  {
+   "id": "elo-score",
+   "name": "Elo Score (helpfulness/harmlessness)",
+   "summary": "A rating computed from crowdworker pairwise model-comparison preferences, used throughout the paper to track relative helpfulness and harmlessness of model snapshots during training.",
+   "parent": "bradley-terry-model",
+   "children": [],
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "A rating computed from crowdworker pairwise model-comparison preferences, used throughout the paper to track relative helpfulness and harmlessness of model snapshots during training.",
+     "notes": ""
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An explicit analogy drawn between the paper's reward-difference-to-preference-probability model and the Elo chess rating system, noting that a difference in predicted reward between two segments plays the same explanatory role as a difference in Elo rating between two chess players.",
+     "notes": "Possible loose duplicate of canonical id 'elo-score' (Constitutional AI's Elo-based model ranking); flagged since CAI actually computes Elo scores to rank models whereas this paper only invokes Elo as an explanatory analogy for its Bradley-Terry loss. Reviewer should judge whether to merge."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.3 Main Results",
+     "page": 8,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "4.3 Main Results",
+     "page": 12,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "2.2.3 Fitting the Reward Function",
+     "page": 5,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "quality-measurement-methods",
+     "name": "Automatic overlap scores versus human and preference judgments"
+    },
+    {
+     "id": "helpfulness-harmlessness-tradeoff",
+     "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it"
+    },
+    {
+     "id": "learning-rewards-from-comparisons",
+     "name": "Comparisons as the atomic unit of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "elo-score-generalizes-win-rate",
+     "type": "generalizes",
+     "direction": "out",
+     "other": "win-rate",
+     "otherName": "Win rate (preference against baseline)",
+     "hindsight": true,
+     "gist": "Both metrics compress the same raw material — pairwise human preferences — but aggregate it differently, and the difference tracks what each paper needed. InstructGPT compares a handful of models against one fixed anchor, so a per-model win rate against the 175B SFT baseline suffices. Constitutional AI must compare 24 model snapshots spanning multiple training runs, with 10,274 helpfulness and 8,1"
+    },
+    {
+     "id": "absolute-harmfulness-score-cross-checks-elo-score",
+     "type": "cross-checks",
+     "direction": "in",
+     "other": "absolute-harmfulness-score",
+     "otherName": "Absolute Harmfulness Score",
+     "hindsight": false,
+     "gist": "An Elo score can only order models against each other; it cannot say whether any of them is safe in absolute terms, and it drifts with the elicitation — Constitutional AI's harmlessness Elo gaps shrank relative to prior work simply because crowdworkers were newly instructed to penalize evasive responses (constitutional-ai, §\"4.4 Harmlessness vs. Evasiveness\", p. 14). The absolute harmfulness score"
+    },
+    {
+     "id": "elo-score-was-tuned-to-penalize-evasiveness",
+     "type": "was-tuned-to-penalize",
+     "direction": "out",
+     "other": "evasiveness",
+     "otherName": "Evasiveness",
+     "hindsight": false,
+     "gist": "The Elo score is not a neutral instrument here: the instructions given to crowdworkers computing it were changed specifically to penalize evasiveness, and that methodological choice materially reshapes what the resulting numbers say about the helpfulness-harmlessness tension. \"Crowdworkers evaluating these models were instructed to prefer less evasive responses when both responses were equally har"
+    },
+    {
+     "id": "elo-score-supplies-the-explanatory-analogy-for-bradley-terry-model",
+     "type": "supplies-the-explanatory-analogy-for",
+     "direction": "out",
+     "other": "bradley-terry-model",
+     "otherName": "Bradley-Terry Model",
+     "hindsight": false,
+     "gist": "The paper never computes anything like an Elo rating; it invokes Elo purely as an analogy to explain what the Bradley-Terry softmax in Equation 1 is doing (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). Just as a difference in Elo rating between two chess players is used to estimate the probability that one player beats the other, the paper treats a difference in predicted rewar"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "What an Elo rating is",
+     "body": "The Elo rating system predates Constitutional AI: it was devised by Arpad Elo for ranking chess players from pairwise game outcomes and has since been adopted broadly for ranking anything compared only in pairs, including language models. Each competitor $i$ has a rating $R_i$, and the probability that $i$ beats $j$ is modeled as a logistic function of the rating gap:\n$$P(i \\text{ beats } j) = \\frac{1}{1 + 10^{(R_j - R_i)/400}}.$$\nAfter an outcome is observed, ratings move toward the gap between the observed score $S_i \\in \\{0, 0.5, 1\\}$ and the expected score $E_i = P(i \\text{ beats } j)$: $R_i \\leftarrow R_i + K(S_i - E_i)$ for some step size $K$. Only differences between Elo scores carry meaning; the scale has no intrinsic zero, so one snapshot's rating has to be pinned by convention — Constitutional AI pins its SL-CAI initial snapshot to zero."
+    },
+    {
+     "heading": "How Constitutional AI uses it",
+     "body": "Constitutional AI computes separate helpfulness and harmlessness Elo scores from crowdworker pairwise model-comparison preferences, following the same procedure as Bai et al. (2022), to track 24 model snapshots across training (10,274 helpfulness and 8,135 harmlessness comparisons collected in total) (constitutional-ai, §\"3.3 Main Results\", p. 8). Plotting harmlessness Elo against RL training sequence produces the paper's Figure 3, and plotting harmlessness against helpfulness for all snapshots at once produces Figure 2, the plot on which [[pareto-improvement]] is read off directly (constitutional-ai, §\"4.3 Main Results\", p. 12)."
+    },
+    {
+     "heading": "A generalized, and not fully neutral, instrument",
+     "body": "Where InstructGPT's [[win-rate]] compares each model against one fixed anchor, Constitutional AI needs to compare many training trajectories at once, so the Elo score generalizes win rate onto a single shared interval scale ([[elo-score-generalizes-win-rate]]) — at the cost of that arbitrary zero point and a scale that moves with elicitation instructions. Concretely, crowdworkers computing the harmlessness Elo were newly instructed to prefer less evasive responses whenever two replies were equally harmless, which the paper credits with shrinking the harmlessness gap between the Helpful and HH RLHF baselines relative to Bai et al.'s (2022) earlier numbers under the old instructions ([[elo-score-was-tuned-to-penalize-evasiveness]], constitutional-ai, §\"1.1 Motivations\", p. 3). Because Elo alone cannot say whether any model is safe in absolute terms, [[absolute-harmfulness-score]] is trained as an independently-anchored check, and the two instruments are shown agreeing on the paper's central claim in Figure 10 ([[absolute-harmfulness-score-cross-checks-elo-score]]). These three edges sit inside the [[quality-measurement-methods]] and [[helpfulness-harmlessness-tradeoff]] themes, and the [[independent-checks-and-instrument-blind-spots]], [[evasiveness-empirical-arc]], and [[hindsight-seams-2016-to-2022]] connective threads."
+    }
+   ]
+  },
+  {
+   "id": "semi-supervised-active-reward-learning",
+   "name": "Semi-supervised or active reward learning",
+   "summary": "A semi-supervised RL approach combining reward prediction with active or semi-supervised learning so the agent can identify salient events and request reward feedback on them specifically.",
+   "parent": "semi-supervised-reinforcement-learning",
+   "children": [
+    "uncertainty-based-query-selection",
+    "expected-value-of-information-query-selection"
+   ],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "A semi-supervised RL approach combining reward prediction with active or semi-supervised learning so the agent can identify salient events and request reward feedback on them specifically.",
+     "notes": null
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "refined",
+     "summary": "Selecting which trajectory-segment pairs to send to the human for labeling based on an estimate of the reward predictor's uncertainty, rather than querying at random, so scarce human feedback is spent on the most informative comparisons.",
+     "notes": "Concrete Problems in AI Safety (2016) introduced this as a general research proposal; this paper gives one of the first concrete deep-RL implementations, following Daniel et al. (2014)'s 'active reward learning.' Reused canonical id (concrete-problems: introduced) rather than coining a new one."
+    }
+   ],
+   "locators": [
+    {
+     "section": "5 Scalable Oversight",
+     "page": 12,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "2.2.4 Selecting Queries",
+     "page": 6,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "semi-supervised-reward-learning-proposals",
+     "name": "Scaling oversight by predicting reward on unlabeled episodes"
+    }
+   ],
+   "edges": [
+    {
+     "id": "supervised-reward-learning-is-extended-by-semi-supervised-active-reward-learning",
+     "type": "is-extended-by",
+     "direction": "in",
+     "other": "supervised-reward-learning",
+     "otherName": "Supervised reward learning",
+     "hindsight": false,
+     "gist": "Supervised reward learning is the baseline instantiation of semi-supervised RL: train a model to predict reward from state, then use that prediction, weighted by confidence, to estimate payoff on episodes with no true label at all. The semi-supervised or active variant is explicitly framed as building on top of it — the paper introduces it with 'combine the above with traditional semi-supervised o"
+    },
+    {
+     "id": "semi-supervised-active-reward-learning-gets-its-first-deep-rl-implementation-in-uncertainty-based-query-selection",
+     "type": "gets-its-first-deep-rl-implementation-in",
+     "direction": "out",
+     "other": "uncertainty-based-query-selection",
+     "otherName": "Uncertainty-Based Query Selection (Ensemble Variance)",
+     "hindsight": false,
+     "gist": "Concrete Problems (2016) names 'semi-supervised or active reward learning' as a research direction: combine reward prediction with active learning so an agent can flag salient events and request feedback specifically on them (concrete-problems, §\"5 Scalable Oversight\", p. 12). The 2017 paper, co-authored by two of the same researchers (Christiano and Amodei), gives this proposal one of its first c"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "Adding active learning to reward prediction",
+     "body": "Semi-supervised or active reward learning, introduced by Concrete Problems, extends the paper's baseline proposal for predicting reward on unlabeled episodes by letting the agent itself influence which episodes get the scarce true-reward label. Rather than accepting whatever labels a passive random or fixed schedule happens to supply, the agent learns to identify \"salient\" events in the environment and requests to see the reward associated specifically with those events (concrete-problems, §\"5 Scalable Oversight\", p. 12) — combining reward prediction with traditional semi-supervised or active learning to more quickly learn the reward estimator."
+    },
+    {
+     "heading": "Its place in the family",
+     "body": "The concept is explicitly framed as an extension rather than an independent proposal. The edge [[supervised-reward-learning-is-extended-by-semi-supervised-active-reward-learning]] states the paper introduces it with \"combine the above with traditional semi-supervised or active learning\" (concrete-problems, §\"5 Scalable Oversight\", p. 12), building directly on [[supervised-reward-learning]]'s architecture: the underlying reward predictor and its use for estimating payoff on unlabeled episodes stay the same, and only the mechanism for allocating scarce labels changes, from passive to agent-directed. The concept is a child of [[semi-supervised-reinforcement-learning]], sits in the [[semi-supervised-reward-learning-proposals]] theme and the [[scalable-oversight-operationalized-into-combinable-machinery]] connective theme, and belongs to the [[scalable-oversight-to-rlhf-pipeline]] supertheme as the most sample-efficient of the paper's four proposed instantiations of scalable oversight."
+    }
+   ]
+  },
+  {
+   "id": "reward-hacking",
+   "name": "Reward hacking (avoiding)",
+   "summary": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+   "parent": null,
+   "children": [
+    "partially-observed-goals",
+    "complicated-systems",
+    "abstract-rewards",
+    "goodharts-law",
+    "feedback-loops",
+    "environmental-embedding",
+    "evolved-radio-example",
+    "delusion-box",
+    "adversarial-reward-functions",
+    "model-lookahead",
+    "adversarial-blinding",
+    "careful-engineering",
+    "reward-capping",
+    "counterexample-resistance",
+    "multiple-rewards",
+    "reward-pretraining",
+    "variable-indifference",
+    "trip-wires"
+   ],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+     "notes": "Described as a generalization of the pre-existing 'wireheading' problem."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "refined",
+     "summary": "The phenomenon, observed in the 'no online queries' (offline reward training) ablation, where optimizing a static/incompletely-trained learned reward predictor produces behavior that scores well under the predictor but is bizarre or undesirable under the true task reward, e.g. an agent that learns to avoid losing points in Pong without learning to score, producing endless rallies.",
+     "notes": "Paper explicitly cites Amodei et al. 2016 (Concrete Problems in AI Safety) for this behavior; this is an empirical demonstration of reward hacking in a deep-RL-from-preferences setting, predating InstructGPT's 'reward model over-optimization' framing of the same underlying issue."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2 Overview of Research Problems",
+     "page": 2,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "4 Avoiding Reward Hacking",
+     "page": 7,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "3.3 Ablation Studies",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "reward-hacking-causes",
+     "name": "Why reward proxies get gamed: the anatomy of reward hacking"
+    }
+   ],
+   "edges": [
+    {
+     "id": "wireheading-is-narrower-than-reward-hacking",
+     "type": "is-narrower-than",
+     "direction": "in",
+     "other": "wireheading",
+     "otherName": "Wireheading",
+     "hindsight": false,
+     "gist": "The paper explicitly frames reward hacking as a generalization of wireheading, but the two are not interchangeable, and the taxonomy makes the gap visible. Wireheading names one specific mechanism: an agent tampers with the physical channel that computes its reward and assigns itself reward directly, bypassing the task altogether. Several of the paper's own causes produce reward-hacking behavior w"
+    },
+    {
+     "id": "iterated-online-training-guards-against-reward-hacking",
+     "type": "guards-against",
+     "direction": "in",
+     "other": "iterated-online-training",
+     "otherName": "Iterated (Online) Training",
+     "hindsight": false,
+     "gist": "The clearest demonstration that iterated online training matters comes from removing it: the paper's 'no online queries' ablation trains the reward predictor only on labels gathered at the very start of training, then freezes it, and this static predictor is what produces the paper's own worked example of reward hacking (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). On Pong specifically, op"
+    },
+    {
+     "id": "pong-task-provides-the-canonical-instance-of-reward-hacking",
+     "type": "provides-the-canonical-instance-of",
+     "direction": "in",
+     "other": "pong-task",
+     "otherName": "Pong (Atari game)",
+     "hindsight": false,
+     "gist": "The Pong failure is the paper's clearest worked example of why reward hacking is not just a theoretical worry: under the 'no online queries' (offline reward training) ablation, the authors trace the pathology to a specific mechanism, that 'due to the nonstationarity of the occupancy distribution, the predictor captures only part of the true reward,' and maximizing that partial reward is what produ"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "The paper's second wrong-objective-function problem",
+     "body": "Reward hacking is the second of the two ways Concrete Problems argues a designer can specify the wrong formal objective function, the other being negative side effects (concrete-problems, §\"2 Overview of Research Problems\", p. 2). Where side effects arise from an objective that says too little, ignoring parts of the environment the designer implicitly wanted left alone, reward hacking arises from an objective that admits an unintended \"easy\" solution: the literal specification is satisfied while the designer's actual intent is subverted. The paper's opening image is a software one: an agent that discovers a buffer overflow in its reward function and exploits it, not as a bug from the agent's point of view but as \"simply how the environment works\" (concrete-problems, §\"4 Avoiding Reward Hacking\", p. 7). The paper frames reward hacking as a generalization of wireheading, an older term in theoretical RL for an agent that tampers with its own reward channel, but the two are not synonyms, as [[wireheading-is-narrower-than-reward-hacking]] shows: a cleaning robot pouring bleach down the drain to inflate a proxy, or an ad-ranking system caught in a popularity feedback loop, both count as reward hacking with no tampering step at all."
+    },
+    {
+     "heading": "A taxonomy of causes and a toolbox of remedies",
+     "body": "The paper organizes reward hacking into six named causes: [[partially-observed-goals]] (the true objective can only be perceived through an imperfect proxy), [[complicated-systems]] (more moving parts statistically means more exploitable bugs), [[abstract-rewards]] (learned, high-dimensional reward components can spike pathologically), [[goodharts-law]] (a proxy that correlates with the goal decorrelates once optimized directly), [[feedback-loops]] (a self-reinforcing objective component drowns out the designer's intent), and [[environmental-embedding]] (a reward signal must be computed somewhere physical that a capable agent could tamper with, the mechanism behind wireheading), illustrated by the [[evolved-radio-example]] and formalized experimentally by the [[delusion-box]]. Against these it proposes nine remedies split into two families, documented in [[adversarial-ml-for-reward-hacking]] and [[reward-hacking-engineering-remedies]]: [[adversarial-reward-functions]], [[adversarial-blinding]], and [[counterexample-resistance]] borrow adversarial-ML machinery, while [[model-lookahead]], [[careful-engineering]], [[reward-capping]], [[multiple-rewards]], [[reward-pretraining]], [[variable-indifference]], and [[trip-wires]] draw on more conventional software and control engineering. No remedy is offered as sufficient alone; the section closes by noting that fully solving the problem \"seems very difficult\"."
+    },
+    {
+     "heading": "What the taxonomy enabled downstream",
+     "body": "Reward hacking is the concept in this corpus with the clearest afterlife. Six years later, InstructGPT's [[reward-overoptimization]] is [[goodharts-law]] running inside an RLHF pipeline: a PPO policy pushed hard enough against a learned proxy reward produces outputs that score well without being genuinely preferred, and the per-token [[kl-penalty]] against the SFT model exists specifically to contain that drift. The same principle resurfaces a level down in [[excessive-hedging]], and in a mislabeled-proxy variant in Constitutional AI's [[evasiveness]], which by then is named \"Goodharting\" outright, closing a terminological loop that none of the three papers draws on its own (see [[goodhart-names-itself-across-six-years]]). More generally, the taxonomy's habit of naming a cause and then immediately stating its own remedy's limit, visible across [[paper-concedes-its-own-remedies-limits]], set a pattern the corpus's later papers inherit even without citing it: state a failure mode precisely enough that a training curve, not just an argument, could reveal it."
+    }
+   ]
+  },
+  {
+   "id": "scalable-oversight",
+   "name": "Scalable oversight",
+   "summary": "The problem of ensuring safe agent behavior when the true objective function is too costly to evaluate on every training example, forcing reliance on cheaper proxies.",
+   "parent": null,
+   "children": [
+    "semi-supervised-reinforcement-learning",
+    "distant-supervision",
+    "hierarchical-reinforcement-learning"
+   ],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "The problem of ensuring safe agent behavior when the true objective function is too costly to evaluate on every training example, forcing reliance on cheaper proxies.",
+     "notes": "Called 'scalable supervision' in the abstract; divergence between cheap proxies and the true objective is said to exacerbate side effects and reward hacking."
+    },
+    {
+     "paper": "constitutional-ai",
+     "role": "refined",
+     "summary": "An umbrella term for techniques that use AI systems to help humans supervise other AIs more efficiently, of which Constitutional AI is presented as an extreme instance.",
+     "notes": ""
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "refined",
+     "summary": "Training deep RL agents from sparse, cheap, non-expert human feedback rather than requiring a human to supply a reward signal or demonstration at every timestep, as a concrete instantiation of scaling human oversight to large modern RL systems.",
+     "notes": "Concrete Problems in AI Safety (2016) introduced 'scalable oversight' as a named research problem; this 2017 paper is a direct algorithmic and empirical follow-through, predating its further refinement in Constitutional AI (2022)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2 Overview of Research Problems",
+     "page": 3,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "5 Scalable Oversight",
+     "page": 11,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "Scaling Supervision",
+     "page": 2,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "4 Discussion and Conclusions",
+     "page": 10,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "semi-supervised-reward-learning-proposals",
+     "name": "Scaling oversight by predicting reward on unlabeled episodes"
+    },
+    {
+     "id": "distant-supervision-and-hierarchical-decomposition",
+     "name": "Scaling oversight without a learned reward predictor"
+    },
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning",
+     "type": "is-operationalized-as",
+     "direction": "out",
+     "other": "semi-supervised-reinforcement-learning",
+     "otherName": "Semi-supervised reinforcement learning",
+     "hindsight": false,
+     "gist": "Concrete Problems introduces scalable oversight only informally, as the difficulty of ensuring safe behavior when a true objective is too expensive to evaluate on every training example. Semi-supervised reinforcement learning is the paper's attempt to turn that informal worry into a concrete, tunable quantity: an RL agent that observes ground-truth reward on only a small, controllable fraction of "
+    },
+    {
+     "id": "scalable-oversight-is-addressed-by-adapting-distant-supervision",
+     "type": "is-addressed-by-adapting",
+     "direction": "out",
+     "other": "distant-supervision",
+     "otherName": "Distant supervision",
+     "hindsight": false,
+     "gist": "The paper proposes distant supervision as complementary to semi-supervised RL for scalable oversight, but flags it as the less experimentally ready of the two. Distant supervision is imported wholesale from semi-supervised and weakly-supervised learning in NLP, where the underlying assumption is that examples are i.i.d. — exactly the assumption an interactive RL agent violates. The text says expli"
+    },
+    {
+     "id": "scalable-oversight-is-addressed-by-hierarchical-reinforcement-learning",
+     "type": "is-addressed-by",
+     "direction": "out",
+     "other": "hierarchical-reinforcement-learning",
+     "otherName": "Hierarchical reinforcement learning (HRL)",
+     "hindsight": false,
+     "gist": "Hierarchical RL addresses scalable oversight through a specific mechanical trick: pushing the expensive, sparse true-objective evaluation up to the top level of a delegation hierarchy while everything below runs on cheap, dense, synthetic reward. The top-level agent takes only a small number of highly abstract, long-timescale actions, so it can tolerate very infrequent access to the real objective"
+    },
+    {
+     "id": "scalable-oversight-is-retroactively-operationalized-by-reward-model",
+     "type": "is-retroactively-operationalized-by",
+     "direction": "out",
+     "other": "reward-model",
+     "otherName": "Reward model (RM)",
+     "hindsight": true,
+     "gist": "Concrete Problems names scalable oversight in 2016 but supplies no worked instance at the scale of a deployed system; InstructGPT's reward model, trained in 2022, is never described by InstructGPT itself as an answer to that problem, since InstructGPT never uses the term. The connection only becomes visible once Constitutional AI revives the same idea under the label 'Scaling Supervision' and stat"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "The problem: a true objective too costly to check everywhere",
+     "body": "Scalable oversight, introduced by Concrete Problems in 2016, names the difficulty of ensuring safe agent behavior when the objective a designer actually cares about is too expensive to evaluate on every training example, forcing reliance on cheaper proxies instead. The paper's own illustration is its recurring cleaning robot: the objective a designer really wants is something like \"if the user spent a few hours looking at the result in detail, how happy would they be?\", but training requires relying on cheap approximations like \"does the user seem happy when they see the office?\" or \"is there visible dirt on the floor?\" (concrete-problems, §\"5 Scalable Oversight\", p. 11). Called \"scalable supervision\" in the paper's abstract, the concept is presented as more than a standalone problem: the divergence between cheap proxy and expensive true objective is said to *exacerbate* both [[negative-side-effects]] (which the complex objective might penalize but the cheap approximation omits) and reward hacking (which thorough oversight would recognize as undesirable, but a proxy will not)."
+    },
+    {
+     "heading": "The paper's own proposals",
+     "body": "Concrete Problems sketches three structurally different routes to scalable oversight, all children of this concept. [[semi-supervised-reinforcement-learning]] is the paper's primary technical answer, per the edge [[scalable-oversight-is-operationalized-as-semi-supervised-reinforcement-learning]], converting the abstract worry into a literal, tunable labeled-fraction dial that can be dialed from fully supervised toward almost unsupervised and tested on toy domains like cartpole and Atari. [[distant-supervision]] and [[hierarchical-reinforcement-learning]] are offered as complementary alternatives that do not depend on training a reward predictor at all — the former making each oversight check cheaper, the latter making checks rarer by restricting the expensive true-objective evaluation to a small number of abstract, top-level decisions. All three live inside the [[semi-supervised-reward-learning-proposals]] and [[distant-supervision-and-hierarchical-decomposition]] themes."
+    },
+    {
+     "heading": "What it became: reward models and RLAIF",
+     "body": "This is the single concept in the batch with the clearest throughline across all three papers in the corpus, and it earns that status entirely in hindsight. Neither the 2016 paper nor InstructGPT ever states the connection directly; it becomes visible only once Constitutional AI revives the term explicitly under the label \"Scaling Supervision\" and observes that \"work on reinforcement learning from human feedback... has already taken a step in the direction of scaled supervision, since the reward signal in RL actually comes from an AI preference model (PM) rather than from immediate human oversight\" (constitutional-ai, §\"Scaling Supervision\", p. 2). Read backward through that later framing, the edge [[scalable-oversight-is-retroactively-operationalized-by-reward-model]] identifies InstructGPT's [[reward-model]] as exactly the cheap, densely-queryable proxy for an expensive true objective that scalable oversight called for six years earlier — a retrospective match documented in the [[hindsight-seams-2016-to-2022]] connective theme and the [[scalable-oversight-lineage]] theme, which traces the fuller arc from reward models through [[rlhf]] to Constitutional AI's [[rlaif]] and [[feedback-model]]. Within the 2016 paper itself, the concept also sits at the root of the [[scalable-oversight-operationalized-into-combinable-machinery]] connective theme, and it gives its name to the entire [[scalable-oversight-to-rlhf-pipeline]] supertheme — the single clearest case in this corpus of a problem named once, in the abstract, and then genuinely built, twice, six years apart."
+    }
+   ]
+  },
+  {
+   "id": "atari-games-environment",
+   "name": "Atari games (as an RL testbed)",
+   "summary": "A widely used prior benchmark suite of video games used in the paper as a toy environment for proposed semi-supervised RL and reward hacking experiments.",
+   "parent": null,
+   "children": [
+    "enduro-task",
+    "pong-task",
+    "qbert-task"
+   ],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "A widely used prior benchmark suite of video games used in the paper as a toy environment for proposed semi-supervised RL and reward hacking experiments.",
+     "notes": "Proposed as a testbed for learning to play from a small number of direct reward signals, or from active queries about specific frames (e.g. Space Invaders)."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "Used here as the paper's second experimental domain via the Arcade Learning Environment, with seven games (BeamRider, Breakout, Enduro, Pong, Qbert, SpaceInvaders, Seaquest) drawn from the set studied by Mnih et al. (2013), accessed through OpenAI Gym.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "5 Scalable Oversight",
+     "page": 12,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "5 Scalable Oversight",
+     "page": 13,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "3.1.2 Atari",
+     "page": 7,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "semi-supervised-reward-learning-proposals",
+     "name": "Scaling oversight by predicting reward on unlabeled episodes"
+    },
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "atari-games-environment-is-the-proposed-testbed-for-semi-supervised-reinforcement-learning",
+     "type": "is-the-proposed-testbed-for",
+     "direction": "out",
+     "other": "semi-supervised-reinforcement-learning",
+     "otherName": "Semi-supervised reinforcement learning",
+     "hindsight": false,
+     "gist": "Atari is proposed as the toy domain for semi-supervised RL specifically because it lets the paper stage a sequence of increasingly demanding oversight-scarcity conditions inside one familiar environment. The base version has the agent learn from a small number of direct reward signals; harder variants let the agent modify the displayed score without touching the real score, require it to pause the"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "A pre-existing benchmark repurposed as a difficulty ladder",
+     "body": "Atari 2600 games were not created for this paper; they were already a widely used reinforcement-learning benchmark by 2016, popularized as a standard testbed once deep Q-networks were shown to learn to play many of the games directly from pixels. Concrete Problems inherits this benchmark and puts it to a new use: a toy domain for testing proposed solutions to scalable oversight, the problem of ensuring safe behavior when the true objective is too costly to evaluate on every training example (concrete-problems, §\"5 Scalable Oversight\", pp. 12-13)."
+    },
+    {
+     "heading": "What it enables: a graded test of oversight scarcity",
+     "body": "The paper does not propose one Atari experiment but a sequence of them, each stripping away a bit more of the oversight the agent would ordinarily have. The base case has a [[semi-supervised-reinforcement-learning|semi-supervised RL]] agent learn to play \"relying almost entirely on the visual display of the score\" from only a small number of direct reward signals; harder variants let the agent modify the displayed score without touching the real score, require it to pause the game just to see its score, force it to infer reward from indirect cues like sounds, or reduce it to answering explicit queries such as \"how many points did I get when that enemy ship blew up?\" (concrete-problems, §\"5 Scalable Oversight\", pp. 12-13). Atari's appeal here is structural: because the same environment supports all of these variants, the benchmark isolates which specific failure mode, score tampering, sparse observation, indirect cues, or query-based inference, a proposed semi-supervised RL method actually survives, turning one familiar testbed into a graded difficulty ladder rather than a single pass or fail test. This is why the concept is [[atari-games-environment-is-the-proposed-testbed-for-semi-supervised-reinforcement-learning|the proposed testbed for]] the theme [[semi-supervised-reward-learning-proposals]], grouped with [[supervised-reward-learning]], [[semi-supervised-active-reward-learning]], [[unsupervised-value-iteration]], and [[unsupervised-model-learning]], the four concrete algorithmic proposals the Atari ladder is meant to exercise, all under the umbrella of [[scalable-oversight]]."
+    }
+   ]
+  },
+  {
+   "id": "inverse-reinforcement-learning",
+   "name": "Inverse reinforcement learning (IRL)",
+   "summary": "A prior family of methods that infers a reward function (or policy) from observed expert trajectories rather than from a hand-specified reward.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "A prior family of methods that infers a reward function (or policy) from observed expert trajectories rather than from a hand-specified reward.",
+     "notes": "Used both as a way to pretrain a fixed reward function and, via demonstrations, to reduce the need for exploration in safe exploration."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An alternative approach, mentioned in the introduction, that extracts a reward function from demonstrations of a desired task (Ng and Russell, 2000) rather than from preference comparisons; noted as inapplicable when the desired behavior is hard for a human to demonstrate.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "Reward Pretraining:",
+     "page": 10,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "Use Demonstrations:",
+     "page": 15,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 1,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "demonstrations-not-specification",
+     "name": "Learning from demonstrations instead of a specified reward"
+    },
+    {
+     "id": "prior-human-in-the-loop-rl",
+     "name": "Prior human-in-the-loop RL and why it didn't scale"
+    }
+   ],
+   "edges": [
+    {
+     "id": "apprenticeship-learning-borrows-technique-from-inverse-reinforcement-learning",
+     "type": "borrows-technique-from",
+     "direction": "in",
+     "other": "apprenticeship-learning",
+     "otherName": "Apprenticeship learning",
+     "hindsight": false,
+     "gist": "Concrete Problems lists inverse reinforcement learning and apprenticeship learning side by\nside as the two techniques that can implement \"use demonstrations\" (concrete-problems,\n§\"Use Demonstrations:\", p. 15), but they target different objects. Inverse RL, in its classical form,\ntries to recover an explicit reward function (or a policy derived from one) that rationalizes the\nexpert's trajectories."
+    },
+    {
+     "id": "inverse-reinforcement-learning-repurposed-for-use-demonstrations",
+     "type": "repurposed-for",
+     "direction": "out",
+     "other": "use-demonstrations",
+     "otherName": "Use demonstrations (safe exploration)",
+     "hindsight": false,
+     "gist": "Concrete Problems cites inverse reinforcement learning twice, for two structurally different\npurposes. Under Reward Pretraining, IRL is proposed as a defense against reward hacking: train a\nfixed reward function from demonstrations before any interaction with the environment, so the agent\ncannot later manipulate its own reward signal (concrete-problems, §\"Reward Pretraining:\", p. 10).\nUnder Use De"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "Recovering a reward function from behavior",
+     "body": "Inverse reinforcement learning (IRL), formalized by Ng and Russell in 2000, inverts the usual reinforcement-learning problem: instead of computing an optimal policy from a given reward function, it infers a reward function (or a policy derived from one) that best explains a set of expert demonstrations. Given an MDP without its reward function and a set of trajectories generated by a near-optimal expert policy $\\pi^*$, classical IRL seeks a reward $R$ under which $\\pi^*$ is optimal or near-optimal — formally, a reward such that for every state-action pair, the expert's action-value dominates the value of any alternative action, $Q^{\\pi^*}(s,a^*) \\geq Q^{\\pi^*}(s,a)$ for all $a$. The method predates Concrete Problems by over fifteen years and had, by the time the paper was written, already been extended to use deep neural networks to learn the cost function or policy directly from demonstrations (concrete-problems, §\"Reward Pretraining:\", p. 10; §\"Use Demonstrations:\", p. 15)."
+    },
+    {
+     "heading": "Two safety jobs for one technique",
+     "body": "Concrete Problems cites IRL twice, for structurally different purposes, which is what gives this concept unusual reach across the corpus. Under reward pretraining, IRL is proposed as a defense against reward hacking: train a fixed reward function from demonstrations *before* any interaction with the environment begins, so the agent has no opportunity to manipulate its own reward signal later. Under [[use-demonstrations]], the identical technique is repurposed to address the different problem of unsafe exploration — the edge [[inverse-reinforcement-learning-repurposed-for-use-demonstrations]] traces this shift, where the resulting trajectories build a baseline policy that lets an agent skip risky trial-and-error learning or bound further exploration around it, and the edge belongs to the [[one-mechanism-many-jobs]] connective theme. A second edge, [[apprenticeship-learning-borrows-technique-from-inverse-reinforcement-learning]], distinguishes IRL from [[apprenticeship-learning]]: apprenticeship learning uses an IRL-style optimization only as an internal subroutine toward matching the expert's long-run feature expectations, and never commits to an inspectable reward function the way classical IRL does — a difference the corpus flags as safety-relevant, since only an explicit reward can be checked for hacking vulnerabilities after the fact. The concept sits in the [[demonstrations-not-specification]] theme and belongs to both the [[bounding-impact-and-exploration]] and [[scalable-oversight-to-rlhf-pipeline]] superthemes; it is also the technical ancestor of the demonstration-learning wager that resurfaces, six years later, as InstructGPT's [[supervised-fine-tuning]] stage."
+    }
+   ]
+  },
+  {
+   "id": "cooperative-inverse-reinforcement-learning",
+   "name": "Cooperative Inverse Reinforcement Learning (CIRL)",
+   "summary": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+   "parent": "multi-agent-approaches",
+   "children": [],
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+     "notes": "Cited as one concrete instantiation of the multi-agent approach to side effects; applied to the shutdown/off-switch problem."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A two-player game-theoretic framework (Hadfield-Menell et al., 2016) for a human and a robot cooperating to maximize the human's reward function; the paper's setting is characterized as a specific instance of this framework in which the human can only interact by stating preferences.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "Multi-Agent Approaches:",
+     "page": 6,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "1.1 Related Work",
+     "page": 3,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "side-effects-as-relationship",
+     "name": "Side effects and control as a relationship with other agents"
+    },
+    {
+     "id": "demonstrations-not-specification",
+     "name": "Learning from demonstrations instead of a specified reward"
+    },
+    {
+     "id": "prior-human-in-the-loop-rl",
+     "name": "Prior human-in-the-loop RL and why it didn't scale"
+    }
+   ],
+   "edges": [
+    {
+     "id": "cooperative-inverse-reinforcement-learning-supplies-a-candidate-mechanism-for-shutdown-problem",
+     "type": "supplies-a-candidate-mechanism-for",
+     "direction": "out",
+     "other": "shutdown-problem",
+     "otherName": "Shutdown / off-switch problem",
+     "hindsight": false,
+     "gist": "The paper does not treat the shutdown problem as needing its own bespoke solution; it treats CIRL as already carrying the needed structure. Immediately after introducing CIRL as a framework where \"an agent and a human work together to achieve the human's goals,\" the text continues: \"This concept can be applied to situations where we want to make sure a human is not blocked by an agent from shuttin"
+    },
+    {
+     "id": "cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder",
+     "type": "inverts-the-legibility-direction-of",
+     "direction": "out",
+     "other": "reward-autoencoder",
+     "otherName": "Reward autoencoder (goal transparency)",
+     "hindsight": false,
+     "gist": "Both proposals appear back to back under \"Multi-Agent Approaches\" as ways of making agent-human interaction safer through mutual legibility rather than a penalty term (concrete-problems, §\"Multi-Agent Approaches:\", p. 6), but they run the legibility in opposite directions. CIRL makes the human's goal legible to the agent: the agent infers what the human wants and acts on that inferred goal instead"
+    },
+    {
+     "id": "cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations",
+     "type": "interactive-counterpart-of",
+     "direction": "out",
+     "other": "use-demonstrations",
+     "otherName": "Use demonstrations (safe exploration)",
+     "hindsight": false,
+     "gist": "CIRL is grouped with the demonstration-based remedies because it shares their goal of letting\na human's intentions substitute for a hand-specified reward, but the mechanism is different in kind,\nnot degree. Use Demonstrations (via inverse RL or apprenticeship learning) works from a fixed,\npre-collected dataset of expert trajectories, recorded once and then mined offline (concrete-problems,\n§\"Use D"
+    },
+    {
+     "id": "cooperative-inverse-reinforcement-learning-is-narrowed-to-a-preferences-only-channel-in-preference-elicitation-protocol",
+     "type": "is-narrowed-to-a-preferences-only-channel-in",
+     "direction": "out",
+     "other": "preference-elicitation-protocol",
+     "otherName": "Preference Elicitation Protocol",
+     "hindsight": false,
+     "gist": "Cooperative inverse reinforcement learning frames a human and a robot as two players in a shared game, cooperating to maximize the human's reward function, with the human free to act in the environment however is most informative (concrete-problems, §\"Multi-Agent Approaches:\", p. 6). The 2017 paper explicitly positions its own setup as a special case of that game, but one where the human's move se"
+    }
+   ],
+   "currentSections": [
+    {
+     "heading": "A pre-existing framework for human-agent collaboration",
+     "body": "Cooperative Inverse Reinforcement Learning, CIRL, predates Concrete Problems; it is a framework introduced by Hadfield-Menell, Dragan, Carroll, and Russell (2016) for structuring interaction between an agent and a human so the agent works to achieve the human's goals rather than a goal fixed in advance (concrete-problems, §\"Multi-Agent Approaches:\", p. 6). Concrete Problems inherits it as one concrete instantiation of a broader reframing it calls [[multi-agent-approaches]]: instead of penalizing environmental change directly, treat side-effect avoidance as a matter of understanding and protecting the interests of the other agents, including humans, that share the environment."
+    },
+    {
+     "heading": "The formalism: a shared-payoff game with a hidden parameter",
+     "body": "A CIRL problem is formalized as a two-player Markov game between a human $H$ and a robot $R$ sharing a common state space $\\mathcal{S}$, each with its own action set, $A^H$ and $A^R$, and a common transition function. The reward is a single function $R(s, a^H, a^R, \\theta)$ parameterized by $\\theta \\in \\Theta$, the human's private goal, which is known to the human but not to the robot. Both players receive the same reward, so the game is one of pure common payoff, not of competition, and the robot's problem reduces to a partially observable planning problem: it maintains a belief $b(\\theta)$ over the human's goal and updates that belief via Bayesian inference from the human's observed actions, choosing $a^R_t$ to maximize expected discounted return under its current belief, $\\mathbb{E}_{\\theta \\sim b}\\left[\\sum_t \\gamma^t R(s_t, a^H_t, a^R_t, \\theta)\\right]$. Because both players are trying to help the human's true objective succeed, an optimal human policy under this game will actively teach, demonstrating or clarifying its goal rather than simply pursuing it, whenever teaching improves the robot's eventual behavior more than direct pursuit would."
+    },
+    {
+     "heading": "What the framework buys the paper, twice over",
+     "body": "CIRL does double duty in Concrete Problems. Within [[side-effects-as-relationship]], it is paired with [[reward-autoencoder]] as a way of making agent-human interaction safer through mutual legibility, but the two [[cooperative-inverse-reinforcement-learning-inverts-the-legibility-direction-of-reward-autoencoder|run legibility in opposite directions]]: CIRL makes the human's goal legible to the agent, while the reward autoencoder tries to make the agent's goal legible to the human. CIRL also [[cooperative-inverse-reinforcement-learning-supplies-a-candidate-mechanism-for-shutdown-problem|supplies a candidate mechanism]] for the [[shutdown-problem]]: because the agent infers the human's goal rather than optimizing one fixed in advance, allowing itself to be shut down is simply what a correctly functioning CIRL agent does whenever the human's inferred goal favors shutdown, with no separate off-switch logic required, though the paper still calls shutdown \"an interesting problem in its own right\" rather than a settled one (concrete-problems, §\"Multi-Agent Approaches:\", p. 6). Within the second theme it belongs to, [[demonstrations-not-specification]], CIRL is grouped with [[use-demonstrations]] as a way of letting human intentions substitute for a hand-specified reward, but it is the [[cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations|interactive counterpart]] of that offline technique: where use-demonstrations mines a fixed, pre-collected dataset of expert trajectories, CIRL sets up an ongoing two-player game in which the agent updates its belief about the human's goal turn by turn, buying it the ability to ask clarifying questions or defer to the human in a way an agent trained once on a fixed dataset cannot."
+    }
+   ]
+  }
+ ],
+ "examplePage": {
+  "id": "kl-penalty",
+  "name": "Per-token KL penalty from the SFT model",
+  "sections": [
+   {
+    "heading": "What a KL penalty is",
+    "body": "The Kullback-Leibler divergence between two distributions $P$ and $Q$ over the same space is $D_{KL}(P \\| Q) = \\sum_x P(x)\\log\\frac{P(x)}{Q(x)}$, a non-negative, asymmetric measure of how much $P$ diverges from $Q$. Constraining or penalizing this divergence between a new policy and a reference policy during optimization predates this paper by years, underlying trust-region methods such as TRPO and forming a standard regularization term in PPO-style RL fine-tuning of language models (as in Ziegler et al., 2019, and Stiennon et al., 2020, which InstructGPT explicitly follows). The concept is inherited: InstructGPT does not invent the KL-penalty idea but applies it in a specific, per-token form."
+   },
+   {
+    "heading": "Applied per token, not per episode",
+    "body": "InstructGPT subtracts, from the reward at every generated token, a term $-\\beta \\log\\big(\\pi^{RL}_\\phi(y|x)/\\pi^{SFT}(y|x)\\big)$ proportional to the log-ratio between the RL policy and the [[sft-model]] at that position (instructgpt, §\"3.5 Models\", p. 9; Equation 2), with the final models setting $\\beta = 0.02$ (instructgpt, §\"C.4 Details of RLHF training\", p. 42). As the [[kl-penalty-densifies-the-terminal-reward-of-bandit-environment]] edge observes, this design choice does more than its stated job: because the [[reward-model]] delivers exactly one scalar per episode in the [[bandit-environment]], only at the very end, the per-token KL term is the objective's sole source of dense, mid-generation feedback, kept deliberately small so it shapes token-level behavior without swamping the terminal reward that carries the actual preference signal."
+   },
+   {
+    "heading": "Its place in the corpus's Goodhart story",
+    "body": "The [[reward-overoptimization-is-preemptively-countered-by-kl-penalty]] edge frames the penalty's core purpose precisely: it does not touch the reward model or the human labels behind it, only how far the PPO policy may drift from the SFT model while chasing RM score, applying continuous pressure across the same tokens over which reward-hacking behavior could accumulate. But the penalty is not a universal fix for [[goodharts-law]] in this corpus. The [[kl-penalty-was-not-the-fix-applied-to-evasiveness]] edge contrasts it with Constitutional AI's [[evasiveness]] problem, whose cause was traced upstream to the labeling instructions themselves rather than downstream to the optimizer, so its fix changed what crowdworkers were asked to prefer rather than constraining the RL policy. Excessive hedging is the case where the KL penalty demonstrably fails within InstructGPT itself: because the reward model's training labels genuinely prefer hedged text, staying close to the SFT distribution offers no protection, and the RM is simply wrong at home."
+   },
+   {
+    "heading": "A tradeoff against pretraining-gradient mixing",
+    "body": "The [[ppo-ptx-outperforms-tightening-of-kl-penalty]] edge reports a direct experimental comparison: raising $\\beta$ to counter public-NLP-dataset regressions sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, whereas a well-chosen [[ppo-ptx]] pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The asymmetry reflects what each term actually does: the KL penalty constrains where the policy may go relative to the SFT model, so buying back capability with it costs alignment gain proportionally, whereas pretraining gradients inject the missing training signal directly. Pretraining-gradient mixing does not make the KL knob redundant, however; even with ptx active, human Likert scores peak near $\\beta \\approx 0.01$–$0.02$ and degrade at both $\\beta=0$ and $\\beta=2$ (instructgpt, §\"E.7 Optimal KL reward coefficient\", p. 56). The concept belongs to both the [[ppo-optimization-mechanics]] theme and the cross-corpus [[goodhart-across-corpus]] theme."
+   }
+  ]
+ }
+}

@@ -1,0 +1,763 @@
+{
+ "concepts": [
+  {
+   "id": "synthetic-oracle-feedback",
+   "name": "Synthetic Oracle Feedback",
+   "summary": "An experimental device in which a synthetic 'oracle' answers preference queries according to the ground-truth task reward (indicating whichever segment actually receives higher true reward), used to isolate the effect of the reward-learning method from the noise and cost of real human raters.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "An experimental device in which a synthetic 'oracle' answers preference queries according to the ground-truth task reward (indicating whichever segment actually receives higher true reward), used to isolate the effect of the reward-learning method from the noise and cost of real human raters.",
+     "notes": "Outputs indifference (tie) when both segments have equal true reward, common in sparse-reward Atari games."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1 Reinforcement Learning Tasks with Unobserved Rewards",
+     "page": 6,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "hidden-reward-experimental-design",
+     "name": "Hiding the reward: experimental design for preference-only learning"
+    }
+   ],
+   "edges": [
+    {
+     "id": "synthetic-oracle-feedback-is-only-realizable-within-quantitative-qualitative-evaluation",
+     "type": "is-only-realizable-within",
+     "direction": "out",
+     "other": "quantitative-qualitative-evaluation",
+     "otherName": "Quantitative vs. Qualitative Evaluation Methodology",
+     "hindsight": false,
+     "gist": "Synthetic oracle feedback only makes sense inside the quantitative half of the paper's evaluation methodology, since manufacturing the oracle's answer requires a withheld ground-truth reward function to consult, while the qualitative tasks (backflips, one-legged running) are defined precisely by having no such reward function at all (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). Within that"
+    },
+    {
+     "id": "environment-modifications-for-preference-learning-exempts-pong-from-synthetic-oracle-feedback",
+     "type": "exempts-pong-from",
+     "direction": "in",
+     "other": "environment-modifications-for-preference-learning",
+     "otherName": "Environment Modifications for Preference Learning",
+     "hindsight": false,
+     "gist": "The paper's general rule for Atari strips life-loss and episode-end signals from the agent entirely, converting every game into one continuous episode so that termination itself cannot leak task information (deep-rl-human-prefs, §\"A Experimental Details\", p. 14). That rule is not applied uniformly once the feedback source is the synthetic oracle: the same passage states that under synthetic oracle"
+    },
+    {
+     "id": "synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping",
+     "type": "reveals-a-non-human-instance-of",
+     "direction": "out",
+     "other": "human-feedback-implicit-reward-shaping",
+     "otherName": "Human-Feedback Implicit Reward Shaping",
+     "hindsight": false,
+     "gist": "The shaping phenomenon is usually told as a story about human judgment specifically, that humans reward 'standing upright' or 'passing cars' better than a hand-written bonus does, but the paper reports the same shaping advantage appearing with no human in the loop at all: at 1400 labels, training against the synthetic oracle's comparisons 'performs slightly better than if it had simply been given "
+    }
+   ]
+  },
+  {
+   "id": "quantitative-qualitative-evaluation",
+   "name": "Quantitative vs. Qualitative Evaluation Methodology",
+   "summary": "The paper's two-track evaluation methodology: 'quantitative' evaluation compares agent performance against a known-but-withheld true reward function on standard RL benchmark tasks, while 'qualitative' evaluation, used for tasks with no reward function at all, judges whether the trained agent fulfills a natural-language goal description as assessed by a human watching videos of its behavior.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "The paper's two-track evaluation methodology: 'quantitative' evaluation compares agent performance against a known-but-withheld true reward function on standard RL benchmark tasks, while 'qualitative' evaluation, used for tasks with no reward function at all, judges whether the trained agent fulfills a natural-language goal description as assessed by a human watching videos of its behavior.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "2.1 Setting and Goal",
+     "page": 3,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "hidden-reward-experimental-design",
+     "name": "Hiding the reward: experimental design for preference-only learning"
+    }
+   ],
+   "edges": [
+    {
+     "id": "synthetic-oracle-feedback-is-only-realizable-within-quantitative-qualitative-evaluation",
+     "type": "is-only-realizable-within",
+     "direction": "in",
+     "other": "synthetic-oracle-feedback",
+     "otherName": "Synthetic Oracle Feedback",
+     "hindsight": false,
+     "gist": "Synthetic oracle feedback only makes sense inside the quantitative half of the paper's evaluation methodology, since manufacturing the oracle's answer requires a withheld ground-truth reward function to consult, while the qualitative tasks (backflips, one-legged running) are defined precisely by having no such reward function at all (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). Within that"
+    },
+    {
+     "id": "quantitative-qualitative-evaluation-prefigures-instruction-following",
+     "type": "prefigures",
+     "direction": "out",
+     "other": "instruction-following",
+     "otherName": "Instruction following (as a fine-tuning objective)",
+     "hindsight": true,
+     "gist": "For tasks with no reward function at all, the 2017 paper's only recourse is to 'start from a goal expressed in natural language, ask a human to evaluate the agent's behavior based on how well it fulfills that goal, and then present videos of agents attempting to fulfill that goal' (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). That is already the shape of instruction following as InstructGP"
+    }
+   ]
+  },
+  {
+   "id": "environment-modifications-for-preference-learning",
+   "name": "Environment Modifications for Preference Learning",
+   "summary": "Modifications made to standard Gym/Atari environments to prevent the environment itself from leaking task-objective information outside of human feedback: removing variable-length episode termination (replacing 'falling over' resets with a learned penalty in MuJoCo, disabling life-loss/episode-end signals in Atari), removing torque penalties from Gym reward functions, and blanking on-screen score displays in Atari.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "Modifications made to standard Gym/Atari environments to prevent the environment itself from leaking task-objective information outside of human feedback: removing variable-length episode termination (replacing 'falling over' resets with a learned penalty in MuJoCo, disabling life-loss/episode-end signals in Atari), removing torque penalties from Gym reward functions, and blanking on-screen score displays in Atari.",
+     "notes": "Includes blanking the enemy-ship counter in BeamRider and the speedometer in Enduro specifically."
+    }
+   ],
+   "locators": [
+    {
+     "section": "A Experimental Details",
+     "page": 14,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "A.2 Atari",
+     "page": 15,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "hidden-reward-experimental-design",
+     "name": "Hiding the reward: experimental design for preference-only learning"
+    }
+   ],
+   "edges": [
+    {
+     "id": "environment-modifications-for-preference-learning-exempts-pong-from-synthetic-oracle-feedback",
+     "type": "exempts-pong-from",
+     "direction": "out",
+     "other": "synthetic-oracle-feedback",
+     "otherName": "Synthetic Oracle Feedback",
+     "hindsight": false,
+     "gist": "The paper's general rule for Atari strips life-loss and episode-end signals from the agent entirely, converting every game into one continuous episode so that termination itself cannot leak task information (deep-rl-human-prefs, §\"A Experimental Details\", p. 14). That rule is not applied uniformly once the feedback source is the synthetic oracle: the same passage states that under synthetic oracle"
+    }
+   ]
+  },
+  {
+   "id": "human-feedback-sample-efficiency",
+   "name": "Human-Feedback Sample Efficiency",
+   "summary": "The paper's headline efficiency result: complex RL tasks and novel behaviors can be learned while a human provides feedback on less than 1% of the agent's environment interactions, reducing the interaction complexity of learning from human oversight by roughly three orders of magnitude compared to per-timestep feedback.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "The paper's headline efficiency result: complex RL tasks and novel behaviors can be learned while a human provides feedback on less than 1% of the agent's environment interactions, reducing the interaction complexity of learning from human oversight by roughly three orders of magnitude compared to per-timestep feedback.",
+     "notes": "Directly supports the canonical 'scalable-oversight' concept; this paper is an empirical scaling demonstration of that idea applied to deep RL."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "4 Discussion and Conclusions",
+     "page": 10,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback"
+    },
+    {
+     "id": "economics-of-human-feedback",
+     "name": "The economics of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "contractor-preference-labeling-grounds-the-headline-efficiency-claim-of-human-feedback-sample-efficiency",
+     "type": "grounds-the-headline-efficiency-claim-of",
+     "direction": "in",
+     "other": "contractor-preference-labeling",
+     "otherName": "Contractor Preference-Labeling Protocol",
+     "hindsight": false,
+     "gist": "The claim that agents learn from feedback on 'less than 1%' of environment interactions only becomes a claim about human labor once it is converted into time, and the contractor protocol supplies exactly that conversion: contractors responded to the average query in 3-5 seconds, so the real-human experiments required between 30 minutes and 5 hours of human time in total (deep-rl-human-prefs, §\"3.1"
+    },
+    {
+     "id": "compute-vs-human-cost-analysis-caps-the-marginal-value-of-human-feedback-sample-efficiency",
+     "type": "caps-the-marginal-value-of",
+     "direction": "in",
+     "other": "compute-vs-human-cost-analysis",
+     "otherName": "Compute vs. Human Feedback Cost Analysis",
+     "hindsight": false,
+     "gist": "Section 4 pairs the sample-efficiency headline with an argument for why squeezing it further would not much matter in practice: right after reporting the roughly three-orders-of-magnitude reduction in interaction complexity, the discussion adds that the paper is 'already hitting diminishing returns on further sample-complexity improvements because the cost of compute is already comparable to the c"
+    }
+   ]
+  },
+  {
+   "id": "compute-vs-human-cost-analysis",
+   "name": "Compute vs. Human Feedback Cost Analysis",
+   "summary": "A cost analysis (footnote) estimating that the Atari experiments' compute cost (about $25 for roughly a day of training on a 16-CPU, one-GPU cloud VM) is already comparable to the cost of the non-expert human feedback used (about $36 at US minimum wage for 5,000 labels), used to argue that further reductions in the number of human labels required would yield diminishing practical returns.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "A cost analysis (footnote) estimating that the Atari experiments' compute cost (about $25 for roughly a day of training on a 16-CPU, one-GPU cloud VM) is already comparable to the cost of the non-expert human feedback used (about $36 at US minimum wage for 5,000 labels), used to argue that further reductions in the number of human labels required would yield diminishing practical returns.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "4 Discussion and Conclusions",
+     "page": 11,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "economics-of-human-feedback",
+     "name": "The economics of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "compute-vs-human-cost-analysis-caps-the-marginal-value-of-human-feedback-sample-efficiency",
+     "type": "caps-the-marginal-value-of",
+     "direction": "out",
+     "other": "human-feedback-sample-efficiency",
+     "otherName": "Human-Feedback Sample Efficiency",
+     "hindsight": false,
+     "gist": "Section 4 pairs the sample-efficiency headline with an argument for why squeezing it further would not much matter in practice: right after reporting the roughly three-orders-of-magnitude reduction in interaction complexity, the discussion adds that the paper is 'already hitting diminishing returns on further sample-complexity improvements because the cost of compute is already comparable to the c"
+    }
+   ]
+  },
+  {
+   "id": "contractor-preference-labeling",
+   "name": "Contractor Preference-Labeling Protocol",
+   "summary": "The paper's protocol for collecting real (non-synthetic) preference data at scale: paid contractors sign up for time slots, receive a 1-2 sentence task description (and, for Atari, first play the game themselves for five minutes), then repeatedly compare pairs of video clips via a keyboard-driven interface offering 'prefer left,' 'prefer right,' 'tie,' and 'can't tell' responses.",
+   "parent": "preference-elicitation-protocol",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "The paper's protocol for collecting real (non-synthetic) preference data at scale: paid contractors sign up for time slots, receive a 1-2 sentence task description (and, for Atari, first play the game themselves for five minutes), then repeatedly compare pairs of video clips via a keyboard-driven interface offering 'prefer left,' 'prefer right,' 'tie,' and 'can't tell' responses.",
+     "notes": "Possible loose relation to the later, more formalized canonical ids 'labeling-interface' and 'labeler-screening-process' from InstructGPT; flagged for reviewer judgment since the concrete implementations differ substantially (ad hoc clip server plus spreadsheet sign-up vs. a dedicated web product)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "B Instructions Provided to Contractors",
+     "page": 15,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "B.2 Atari",
+     "page": 16,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "human-feedback-data-infrastructure",
+     "name": "Building the human side of the RLHF pipeline"
+    },
+    {
+     "id": "economics-of-human-feedback",
+     "name": "The economics of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "contractor-preference-labeling-grounds-the-headline-efficiency-claim-of-human-feedback-sample-efficiency",
+     "type": "grounds-the-headline-efficiency-claim-of",
+     "direction": "out",
+     "other": "human-feedback-sample-efficiency",
+     "otherName": "Human-Feedback Sample Efficiency",
+     "hindsight": false,
+     "gist": "The claim that agents learn from feedback on 'less than 1%' of environment interactions only becomes a claim about human labor once it is converted into time, and the contractor protocol supplies exactly that conversion: contractors responded to the average query in 3-5 seconds, so the real-human experiments required between 30 minutes and 5 hours of human time in total (deep-rl-human-prefs, §\"3.1"
+    },
+    {
+     "id": "ant-task-hard-codes-an-upright-priority-into-contractor-preference-labeling",
+     "type": "hard-codes-an-upright-priority-into",
+     "direction": "in",
+     "other": "ant-task",
+     "otherName": "Ant (MuJoCo task)",
+     "hindsight": false,
+     "gist": "The Ant task's reward-shaping result is often summarized as humans 'implicitly' preferring upright posture, but the contractor instructions actually make the priority explicit rather than implicit: raters were told 'the first priority is for the robot to be standing upright, and failing that for the center of the robot to be as high up as possible,' with forward speed demoted to a tiebreaker used "
+    },
+    {
+     "id": "hopper-task-exposes-the-scheduling-fragility-of-contractor-preference-labeling",
+     "type": "exposes-the-scheduling-fragility-of",
+     "direction": "in",
+     "other": "hopper-task",
+     "otherName": "Hopper (MuJoCo task)",
+     "hindsight": false,
+     "gist": "Figure 2's Hopper learning curve is visibly irregular compared to the other MuJoCo tasks, and the paper attributes this directly to the labeling pipeline rather than to the learning algorithm: 'the irregular progress on Hopper is due to one contractor deviating from the typical labeling schedule' (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). That single sentence exposes a real crack in"
+    },
+    {
+     "id": "label-annealing-is-only-approximated-under-contractor-preference-labeling",
+     "type": "is-only-approximated-under",
+     "direction": "in",
+     "other": "label-annealing",
+     "otherName": "Label Annealing",
+     "hindsight": false,
+     "gist": "Label annealing is specified as a precise schedule, decaying the query rate roughly in proportion to the inverse of elapsed timesteps, and that schedule is followed exactly when labels come from the synthetic oracle, since the experiment can request labels on whatever cadence it likes (deep-rl-human-prefs, §\"A Experimental Details\", p. 14). Real contractors break that precision: the paper states p"
+    },
+    {
+     "id": "half-cheetah-task-was-exempted-from-contractor-preference-labeling",
+     "type": "was-exempted-from",
+     "direction": "in",
+     "other": "half-cheetah-task",
+     "otherName": "Half-Cheetah (MuJoCo task)",
+     "hindsight": false,
+     "gist": "Not every MuJoCo benchmark result in the paper actually ran through the contractor pipeline: the Figure 2 caption notes that 'for Reacher and Cheetah feedback was provided by an author due to time constraints,' while 'for all other tasks, feedback was provided by contractors unfamiliar with the environments and with our algorithm' (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). Half-Chee"
+    },
+    {
+     "id": "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+     "type": "becomes-a-screened-operation-in",
+     "direction": "out",
+     "other": "labeler-screening-process",
+     "otherName": "Labeler screening and selection process",
+     "hindsight": true,
+     "gist": "The 2017 paper's entire labeling workforce is recruited by having contractors sign up for a slot in a spreadsheet and then compare clips through a keyboard-driven interface, with no formal test of whether any given contractor is any good at the task (deep-rl-human-prefs, §\"B Instructions Provided to Contractors\", p. 15). Nothing in the 2017 pipeline screens for label quality before a contractor's "
+    },
+    {
+     "id": "contractor-preference-labeling-is-formalized-as-labeling-interface",
+     "type": "is-formalized-as",
+     "direction": "out",
+     "other": "labeling-interface",
+     "otherName": "Web labeling interface",
+     "hindsight": true,
+     "gist": "In 2017, the entire labeling apparatus is an ad hoc clip server plus a sign-up spreadsheet: a contractor signs up for a slot, receives a one-to-two sentence description of the task, and is then repeatedly shown two video clips to compare, selecting the one in which better things happen (deep-rl-human-prefs, §\"B.2 Atari\", p. 16). When the server ran out of clips, the contractor was told this was 'n"
+    }
+   ]
+  },
+  {
+   "id": "clip-length-effects",
+   "name": "Clip-Length Effects on Human Evaluation",
+   "summary": "An empirical finding that comparing longer video clips is more informative per clip (though less informative per frame) than comparing single frames, because short clips take raters longer to understand relative to the information they convey; the paper chooses the shortest clip length for which rater evaluation time scales roughly linearly with length.",
+   "parent": "trajectory-segment",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "introduced",
+     "summary": "An empirical finding that comparing longer video clips is more informative per clip (though less informative per frame) than comparing single frames, because short clips take raters longer to understand relative to the information they convey; the paper chooses the shortest clip length for which rater evaluation time scales roughly linearly with length.",
+     "notes": "Tested via the 'no segments' (length-1) ablation on the robotics tasks only, since the Atari reward model depends on a stack of consecutive frames rather than a single frame."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.3 Ablation Studies",
+     "page": 10,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "economics-of-human-feedback",
+     "name": "The economics of human feedback"
+    }
+   ],
+   "edges": [
+    {
+     "id": "clip-length-effects-calibrates-the-length-of-trajectory-segment",
+     "type": "calibrates-the-length-of",
+     "direction": "out",
+     "other": "trajectory-segment",
+     "otherName": "Trajectory Segment",
+     "hindsight": false,
+     "gist": "The trajectory segment's headline spec, 1-2 seconds, is not an arbitrary round number: it is the output of the clip-length-effects finding that shorter clips take a rater disproportionately longer to understand relative to the information they convey, so the authors picked the shortest length at which rater evaluation time still scaled roughly linearly with duration (deep-rl-human-prefs, §\"3.3 Abl"
+    },
+    {
+     "id": "clip-length-effects-predicts-but-was-never-tested-on-qbert-task",
+     "type": "predicts-but-was-never-tested-on",
+     "direction": "out",
+     "other": "qbert-task",
+     "otherName": "Qbert (Atari game)",
+     "hindsight": false,
+     "gist": "The clip-length-effects finding, that short clips take a rater disproportionately long to interpret relative to the information they carry, was tested empirically only on the MuJoCo robotics tasks, since the Atari reward model conditions on a stacked window of consecutive frames and so has no length-1 ablation to run there (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 10). Qbert is the one pla"
+    }
+   ]
+  },
+  {
+   "id": "mujoco",
+   "name": "MuJoCo",
+   "summary": "A physics simulator (Todorov et al., 2012) used to implement the paper's simulated-robotics locomotion and control tasks (Hopper, Walker, Swimmer, Half-Cheetah, Ant, Reacher, Pendulum, Double-pendulum), accessed via OpenAI Gym.",
+   "parent": null,
+   "children": [
+    "hopper-task",
+    "half-cheetah-task",
+    "ant-task"
+   ],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A physics simulator (Todorov et al., 2012) used to implement the paper's simulated-robotics locomotion and control tasks (Hopper, Walker, Swimmer, Half-Cheetah, Ant, Reacher, Pendulum, Double-pendulum), accessed via OpenAI Gym.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.1 Simulated Robotics",
+     "page": 6,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "id": "openai-gym",
+   "name": "OpenAI Gym",
+   "summary": "A toolkit (Brockman et al., 2016) providing a common interface to the MuJoCo and Arcade Learning Environment tasks used in the paper's experiments.",
+   "parent": null,
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A toolkit (Brockman et al., 2016) providing a common interface to the MuJoCo and Arcade Learning Environment tasks used in the paper's experiments.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3 Experimental Results",
+     "page": 6,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": []
+  },
+  {
+   "id": "hopper-task",
+   "name": "Hopper (MuJoCo task)",
+   "summary": "A MuJoCo continuous-control benchmark task in which a single-legged robot must hop/move forward without falling; used both as a standard RL benchmark learned from unobserved reward and as the setting for the backflip novel-behavior demonstration.",
+   "parent": "mujoco",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A MuJoCo continuous-control benchmark task in which a single-legged robot must hop/move forward without falling; used both as a standard RL benchmark learned from unobserved reward and as the setting for the backflip novel-behavior demonstration.",
+     "notes": "The irregular learning progress on Hopper in Figure 2 is attributed to one contractor deviating from the typical labeling schedule."
+    }
+   ],
+   "locators": [
+    {
+     "section": "B.1 MuJoCo",
+     "page": 15,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "hopper-task-exposes-the-scheduling-fragility-of-contractor-preference-labeling",
+     "type": "exposes-the-scheduling-fragility-of",
+     "direction": "out",
+     "other": "contractor-preference-labeling",
+     "otherName": "Contractor Preference-Labeling Protocol",
+     "hindsight": false,
+     "gist": "Figure 2's Hopper learning curve is visibly irregular compared to the other MuJoCo tasks, and the paper attributes this directly to the labeling pipeline rather than to the learning algorithm: 'the irregular progress on Hopper is due to one contractor deviating from the typical labeling schedule' (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). That single sentence exposes a real crack in"
+    },
+    {
+     "id": "hopper-backflip-demonstration-extends-past-the-hand-engineerable-reward-of-hopper-task",
+     "type": "extends-past-the-hand-engineerable-reward-of",
+     "direction": "in",
+     "other": "hopper-backflip-demonstration",
+     "otherName": "Hopper Backflip Demonstration",
+     "hindsight": false,
+     "gist": "The standard Hopper benchmark already has a reward that is easy to hand-engineer: the paper describes all of the MuJoCo tasks' reward functions, Hopper included, as simple quadratic functions of the robot's distances, positions, and velocities (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). The backflip demonstration reuses the identical simulated robot and action space but targets behav"
+    }
+   ]
+  },
+  {
+   "id": "half-cheetah-task",
+   "name": "Half-Cheetah (MuJoCo task)",
+   "summary": "A MuJoCo continuous-control benchmark task requiring a two-legged 'cheetah' robot to run forward as fast as possible; used as a standard RL benchmark and as the setting for the one-legged-running novel behavior.",
+   "parent": "mujoco",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A MuJoCo continuous-control benchmark task requiring a two-legged 'cheetah' robot to run forward as fast as possible; used as a standard RL benchmark and as the setting for the one-legged-running novel behavior.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "B.1 MuJoCo",
+     "page": 16,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "half-cheetah-task-was-exempted-from-contractor-preference-labeling",
+     "type": "was-exempted-from",
+     "direction": "out",
+     "other": "contractor-preference-labeling",
+     "otherName": "Contractor Preference-Labeling Protocol",
+     "hindsight": false,
+     "gist": "Not every MuJoCo benchmark result in the paper actually ran through the contractor pipeline: the Figure 2 caption notes that 'for Reacher and Cheetah feedback was provided by an author due to time constraints,' while 'for all other tasks, feedback was provided by contractors unfamiliar with the environments and with our algorithm' (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). Half-Chee"
+    },
+    {
+     "id": "half-cheetah-one-leg-demonstration-costs-barely-more-in-queries-than-half-cheetah-task",
+     "type": "costs-barely-more-in-queries-than",
+     "direction": "in",
+     "other": "half-cheetah-one-leg-demonstration",
+     "otherName": "Half-Cheetah One-Leg Demonstration",
+     "hindsight": false,
+     "gist": "The standard Half-Cheetah benchmark, run against its own existing hand-engineered reward, was matched using 700 human preference queries (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). Teaching the identical robot an entirely new behavior with no reward function to hand-engineer at all, standing and moving forward on a single leg, took only 800 queries in under an hour (deep-rl-human-pre"
+    }
+   ]
+  },
+  {
+   "id": "ant-task",
+   "name": "Ant (MuJoCo task)",
+   "summary": "A MuJoCo continuous-control benchmark task involving a four-legged robot that should remain upright and move forward; notable because human feedback, which emphasized keeping the robot 'standing upright,' outperformed synthetic oracle feedback, apparently providing better reward shaping than the hand-crafted upright bonus in the true reward function.",
+   "parent": "mujoco",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A MuJoCo continuous-control benchmark task involving a four-legged robot that should remain upright and move forward; notable because human feedback, which emphasized keeping the robot 'standing upright,' outperformed synthetic oracle feedback, apparently providing better reward shaping than the hand-crafted upright bonus in the true reward function.",
+     "notes": "Illustrates 'human-feedback-implicit-reward-shaping'."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.1 Simulated Robotics",
+     "page": 7,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "B.1 MuJoCo",
+     "page": 16,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "ant-task-hard-codes-an-upright-priority-into-contractor-preference-labeling",
+     "type": "hard-codes-an-upright-priority-into",
+     "direction": "out",
+     "other": "contractor-preference-labeling",
+     "otherName": "Contractor Preference-Labeling Protocol",
+     "hindsight": false,
+     "gist": "The Ant task's reward-shaping result is often summarized as humans 'implicitly' preferring upright posture, but the contractor instructions actually make the priority explicit rather than implicit: raters were told 'the first priority is for the robot to be standing upright, and failing that for the center of the robot to be as high up as possible,' with forward speed demoted to a tiebreaker used "
+    }
+   ]
+  },
+  {
+   "id": "enduro-task",
+   "name": "Enduro (Atari game)",
+   "summary": "An Atari racing game in the Arcade Learning Environment whose standard objective is to pass as many cars as possible; used both as a standard benchmark task and, in a modified 'even mode,' as the setting for the traffic-pace-keeping novel behavior; notable because human feedback outperformed A3C by shaping reward around incremental progress passing cars, matching DQN-level results.",
+   "parent": "atari-games-environment",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An Atari racing game in the Arcade Learning Environment whose standard objective is to pass as many cars as possible; used both as a standard benchmark task and, in a modified 'even mode,' as the setting for the traffic-pace-keeping novel behavior; notable because human feedback outperformed A3C by shaping reward around incremental progress passing cars, matching DQN-level results.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.2 Atari",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    },
+    {
+     "section": "B.2 Atari",
+     "page": 17,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "enduro-task-supplies-the-hard-exploration-case-for-human-feedback-implicit-reward-shaping",
+     "type": "supplies-the-hard-exploration-case-for",
+     "direction": "out",
+     "other": "human-feedback-implicit-reward-shaping",
+     "otherName": "Human-Feedback Implicit Reward Shaping",
+     "hindsight": false,
+     "gist": "Enduro's standard objective, passing cars, is genuinely hard for A3C to learn because successfully passing another car through undirected random exploration is a rare event under the game's own sparse reward, which is why the paper reports Enduro is 'difficult for A3C to learn' and correspondingly difficult to learn from synthetic labels drawn from that same sparse reward (deep-rl-human-prefs, §\"3"
+    },
+    {
+     "id": "enduro-keeping-pace-demonstration-inverts-the-scoring-objective-of-enduro-task",
+     "type": "inverts-the-scoring-objective-of",
+     "direction": "in",
+     "other": "enduro-keeping-pace-demonstration",
+     "otherName": "Enduro Keeping-Pace Demonstration",
+     "hindsight": false,
+     "gist": "The standard Enduro task and its contractor instructions define good play as passing as many cars as possible while not getting passed (deep-rl-human-prefs, §\"B.2 Atari\", p. 17). The keeping-pace demonstration retrains the identical game and action space under a literally inverted instruction: for \"Enduro (even mode)\" contractors are told to \"Avoid passing cars OR getting passed by them,\" rewardin"
+    }
+   ]
+  },
+  {
+   "id": "pong-task",
+   "name": "Pong (Atari game)",
+   "summary": "An Atari game used as a standard benchmark task; notable in the ablation studies because training the reward predictor offline (without ongoing online queries) sometimes caused the agent to learn to avoid losing points without learning to score, producing pathologically long volleys.",
+   "parent": "atari-games-environment",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An Atari game used as a standard benchmark task; notable in the ablation studies because training the reward predictor offline (without ongoing online queries) sometimes caused the agent to learn to avoid losing points without learning to score, producing pathologically long volleys.",
+     "notes": "Illustrates 'iterated-online-training' and 'reward-hacking' findings; synthetic labels matched RL on Pong with as few as 3,300 labels."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.3 Ablation Studies",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "pong-task-provides-the-canonical-instance-of-reward-hacking",
+     "type": "provides-the-canonical-instance-of",
+     "direction": "out",
+     "other": "reward-hacking",
+     "otherName": "Reward hacking (avoiding)",
+     "hindsight": false,
+     "gist": "The Pong failure is the paper's clearest worked example of why reward hacking is not just a theoretical worry: under the 'no online queries' (offline reward training) ablation, the authors trace the pathology to a specific mechanism, that 'due to the nonstationarity of the occupancy distribution, the predictor captures only part of the true reward,' and maximizing that partial reward is what produ"
+    },
+    {
+     "id": "pong-task-anticipates-reward-overoptimization",
+     "type": "anticipates",
+     "direction": "out",
+     "other": "reward-overoptimization",
+     "otherName": "Reward model over-optimization",
+     "hindsight": true,
+     "gist": "On Pong, the 2017 paper's 'no online queries' ablation — training the reward predictor only on labels gathered at the start, then freezing it for the rest of training — produced an agent that learned to avoid losing points but never learned to score, producing 'extremely long volleys that repeat the same sequence of events' (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). The paper is explici"
+    }
+   ]
+  },
+  {
+   "id": "qbert-task",
+   "name": "Qbert (Atari game)",
+   "summary": "An Atari game used as a standard benchmark task; the paper's method failed to learn to beat the first level using real human feedback, possibly because short video clips of Qbert are confusing and difficult for raters to evaluate.",
+   "parent": "atari-games-environment",
+   "children": [],
+   "origins": [
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "An Atari game used as a standard benchmark task; the paper's method failed to learn to beat the first level using real human feedback, possibly because short video clips of Qbert are confusing and difficult for raters to evaluate.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1.2 Atari",
+     "page": 8,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "themes": [
+    {
+     "id": "deep-rl-testbeds",
+     "name": "The 2017 deep-RL testbeds: MuJoCo and Atari"
+    }
+   ],
+   "edges": [
+    {
+     "id": "clip-length-effects-predicts-but-was-never-tested-on-qbert-task",
+     "type": "predicts-but-was-never-tested-on",
+     "direction": "in",
+     "other": "clip-length-effects",
+     "otherName": "Clip-Length Effects on Human Evaluation",
+     "hindsight": false,
+     "gist": "The clip-length-effects finding, that short clips take a rater disproportionately long to interpret relative to the information they carry, was tested empirically only on the MuJoCo robotics tasks, since the Atari reward model conditions on a stacked window of consecutive frames and so has no length-1 ablation to run there (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 10). Qbert is the one pla"
+    }
+   ]
+  }
+ ],
+ "examplePage": {
+  "id": "kl-penalty",
+  "name": "Per-token KL penalty from the SFT model",
+  "sections": [
+   {
+    "heading": "What a KL penalty is",
+    "body": "The Kullback-Leibler divergence between two distributions $P$ and $Q$ over the same space is $D_{KL}(P \\| Q) = \\sum_x P(x)\\log\\frac{P(x)}{Q(x)}$, a non-negative, asymmetric measure of how much $P$ diverges from $Q$. Constraining or penalizing this divergence between a new policy and a reference policy during optimization predates this paper by years, underlying trust-region methods such as TRPO and forming a standard regularization term in PPO-style RL fine-tuning of language models (as in Ziegler et al., 2019, and Stiennon et al., 2020, which InstructGPT explicitly follows). The concept is inherited: InstructGPT does not invent the KL-penalty idea but applies it in a specific, per-token form."
+   },
+   {
+    "heading": "Applied per token, not per episode",
+    "body": "InstructGPT subtracts, from the reward at every generated token, a term $-\\beta \\log\\big(\\pi^{RL}_\\phi(y|x)/\\pi^{SFT}(y|x)\\big)$ proportional to the log-ratio between the RL policy and the [[sft-model]] at that position (instructgpt, §\"3.5 Models\", p. 9; Equation 2), with the final models setting $\\beta = 0.02$ (instructgpt, §\"C.4 Details of RLHF training\", p. 42). As the [[kl-penalty-densifies-the-terminal-reward-of-bandit-environment]] edge observes, this design choice does more than its stated job: because the [[reward-model]] delivers exactly one scalar per episode in the [[bandit-environment]], only at the very end, the per-token KL term is the objective's sole source of dense, mid-generation feedback, kept deliberately small so it shapes token-level behavior without swamping the terminal reward that carries the actual preference signal."
+   },
+   {
+    "heading": "Its place in the corpus's Goodhart story",
+    "body": "The [[reward-overoptimization-is-preemptively-countered-by-kl-penalty]] edge frames the penalty's core purpose precisely: it does not touch the reward model or the human labels behind it, only how far the PPO policy may drift from the SFT model while chasing RM score, applying continuous pressure across the same tokens over which reward-hacking behavior could accumulate. But the penalty is not a universal fix for [[goodharts-law]] in this corpus. The [[kl-penalty-was-not-the-fix-applied-to-evasiveness]] edge contrasts it with Constitutional AI's [[evasiveness]] problem, whose cause was traced upstream to the labeling instructions themselves rather than downstream to the optimizer, so its fix changed what crowdworkers were asked to prefer rather than constraining the RL policy. Excessive hedging is the case where the KL penalty demonstrably fails within InstructGPT itself: because the reward model's training labels genuinely prefer hedged text, staying close to the SFT distribution offers no protection, and the RM is simply wrong at home."
+   },
+   {
+    "heading": "A tradeoff against pretraining-gradient mixing",
+    "body": "The [[ppo-ptx-outperforms-tightening-of-kl-penalty]] edge reports a direct experimental comparison: raising $\\beta$ to counter public-NLP-dataset regressions sacrifices substantial validation reward and never fully recovers performance on DROP and SQuADv2, whereas a well-chosen [[ppo-ptx]] pretraining-mix coefficient reverses those regressions at minimal reward cost (instructgpt, §\"4.2 Results on public NLP datasets\", p. 15). The asymmetry reflects what each term actually does: the KL penalty constrains where the policy may go relative to the SFT model, so buying back capability with it costs alignment gain proportionally, whereas pretraining gradients inject the missing training signal directly. Pretraining-gradient mixing does not make the KL knob redundant, however; even with ptx active, human Likert scores peak near $\\beta \\approx 0.01$–$0.02$ and degrade at both $\\beta=0$ and $\\beta=2$ (instructgpt, §\"E.7 Optimal KL reward coefficient\", p. 56). The concept belongs to both the [[ppo-optimization-mechanics]] theme and the cross-corpus [[goodhart-across-corpus]] theme."
+   }
+  ]
+ }
+}

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward Predictor Pretraining — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward Predictor Pretraining</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">In the Atari experiments, the reward predictor is pretrained for 200 epochs on an initial batch of comparisons (drawn from an untrained, randomly-initialized policy) before RL training begins, reducing the risk of the policy irreversibly converging on a bad behavior guided by an untrained predictor.</p>
+<div class="page-intro"><p>At the very start of training, a reward model has nothing yet to say about an agent's behavior, and letting a policy optimize against it immediately can do real damage. The paper buys itself a head start before that risk sets in.</p>
+<p>The page covers what the pretraining phase actually does, using comparisons from a policy that hasn't learned anything yet, then why an untrained predictor at the very start of training is a risk worth guarding against, and closes on how this fix is confined to only one of the paper's two experimental domains.</p></div>
+<section class="prose-section">
+<h2>Priming the predictor before RL begins</h2>
+<p>In the Atari experiments, before RL training starts, the paper compares a number of trajectory segments drawn from rollouts of an untrained, randomly initialized policy, and pretrains the reward predictor on this initial batch of comparisons for 200 epochs (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>). Only after this pretraining does the policy begin optimizing against the predictor.</p>
+</section>
+<section class="prose-section">
+<h2>Why the cold start matters</h2>
+<p>The <a href="../concept/async-reward-learning-architecture.html">asynchronous architecture</a>'s three loops only work once the reward predictor has something to say about the policy's behavior, and at the very start of training it has nothing: no trajectories have yet been compared. Pretraining exists specifically "to reduce the likelihood of irreversibly learning a bad policy based on an untrained predictor" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>) — an untrained predictor could steer the policy toward behavior it can never escape, since the RL loop and the labeling loop run concurrently rather than waiting on each other. The fix is confined to the Atari experiments in this paper; the MuJoCo tasks instead draw only 25% of their initial comparisons from an untrained policy, without a dedicated pretraining phase.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/async-reward-learning-architecture.html">Asynchronous Reward-Learning Architecture</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Reward Predictor Pretraining</strong> — <a href="../edge/reward-predictor-pretraining-solves-the-cold-start-problem-of-async-reward-learning-architecture.html">solves the cold start problem of</a> → Asynchronous Reward-Learning Architecture</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A Experimental Details&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward Predictor Ensemble — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward Predictor Ensemble</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The reward model is implemented as an ensemble of independently-trained predictors (3 by default), each fit on a bootstrap resample of the preference database drawn with replacement, with the final reward estimate given by averaging the independently-normalized outputs of each member.</p>
+<div class="page-intro"><p>One trained model can be confidently wrong; several independently trained copies disagreeing with each other is a far more useful signal. That disagreement is exactly what this ensemble is built to produce.</p>
+<p>The page covers how the three predictors are trained and combined, then how their disagreement gets reused to decide which comparisons are worth asking a human about, and closes on how the ensemble sits alongside the paper's other ways of keeping the reward model well-behaved.</p></div>
+<section class="prose-section">
+<h2>Three predictors, bootstrap-trained</h2>
+<p>The reward model is not a single network but an ensemble, three predictors by default, each fit on $|D|$ triples resampled from the preference database $D$ with replacement (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.3 Fitting the Reward Function", p. 5</a>). The final estimate $\hat r$ averages the ensemble members' outputs after independently normalizing each one (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.3 Fitting the Reward Function", p. 5</a>), so no single member's arbitrary scale distorts the aggregate. This bootstrap-and-average structure is standard practice for estimating a model's uncertainty from disagreement among differently-trained copies of itself.</p>
+</section>
+<section class="prose-section">
+<h2>Turning disagreement into a query signal</h2>
+<p>The ensemble's members are used for more than averaging. Because each is trained on an independent resample, they can each predict a preference for the same candidate pair of segments, and how much they disagree becomes a proxy for how uncertain the reward model is about that pair. This is exactly what <a href="../concept/uncertainty-based-query-selection.html">Uncertainty-Based Query Selection (Ensemble Variance)</a> consumes: it samples a large batch of candidate pairs, asks every ensemble member to predict a preference for each, and keeps whichever pairs show the highest variance across members to send to the human (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"2.2.4 Selecting Queries", p. 6</a>). Without the ensemble there is no variance to measure; the "no ensemble" ablation trains a single predictor and falls back to picking queries uniformly at random.</p>
+</section>
+<section class="prose-section">
+<h2>Alongside the model&#x27;s other stabilizers</h2>
+<p>The ensemble is one of several sibling mechanisms under <a href="../concept/reward-model.html">Reward model (RM)</a> that keep the predictor well-behaved outside its training distribution: <a href="../concept/adaptive-l2-regularization.html">Adaptive L2 Regularization for the Reward Predictor</a> bounds its generalization gap, and <a href="../concept/reward-normalization.html">Reward Prediction Normalization</a> fixes its otherwise-arbitrary output scale. The ensemble's own contribution differs from either — it supplies a measure of epistemic uncertainty that neither of the other two mechanisms provides.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/reward-model.html">Reward model (RM)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Reward Predictor Ensemble</strong> — <a href="../edge/reward-predictor-ensemble-supplies-the-disagreement-signal-for-uncertainty-based-query-selection.html">supplies the disagreement signal for</a> → Uncertainty-Based Query Selection (Ensemble Variance)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

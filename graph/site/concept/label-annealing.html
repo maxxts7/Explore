@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Label Annealing — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Label Annealing</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A schedule that decreases the rate at which new preference labels are requested over the course of training, roughly inversely proportional to elapsed timesteps, balancing the value of a good reward predictor early in training against the need to keep adapting it as the policy visits new states.</p>
+<div class="page-intro"><p>Asking for a comparison too rarely risks a reward model that never catches up with what the policy is doing; asking too often burns through a scarce and expensive resource. This is the schedule built to balance the two.</p>
+<p>The page describes the decaying rate at which labels are requested over training, then the two competing needs it balances, and closes on why the schedule is only ever approximate once real contractors, rather than a scripted process, are the ones answering.</p></div>
+<section class="prose-section">
+<h2>A decaying request rate</h2>
+<p>Label annealing decreases the rate at which new preference queries are answered over training, roughly in inverse proportion to elapsed timesteps: after twice as many timesteps have passed, the system asks for about half as many labels per unit time (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>). In the MuJoCo experiments, 25% of comparisons come from a randomly initialized policy at the start of training, and the labeling rate after $T$ frames follows $2\times10^6/(T+2\times10^6)$ (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>); the Atari rate follows the analogous $5\times10^6/(T+5\times10^6)$, decremented every $5\times10^6$ frames (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Balancing an early need against a moving target</h2>
+<p>The schedule balances two needs the paper names directly: having "a good predictor from the start" against "the need to adapt the predictor as the RL agent learns and encounters new states" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>). It supplies the pacing that <a href="../concept/iterated-online-training.html">iterated online training</a> itself leaves unspecified — that concept only establishes that labels keep arriving throughout training rather than being front-loaded, not how quickly they should arrive. That pacing decision is why the concept sits in the <a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a> theme alongside its role in <a href="../theme/keeping-reward-models-on-distribution.html">keeping the reward model on-distribution</a>.</p>
+</section>
+<section class="prose-section">
+<h2>Only approximate with real contractors</h2>
+<p>The schedule is followed exactly when a synthetic oracle supplies labels, since the experiment can request a comparison on whatever cadence it likes. Real <a href="../concept/contractor-preference-labeling.html">contractors</a> break that precision: the paper states that with human feedback "we attempt to similarly anneal the label rate, although in practice this is approximate because contractors give feedback at uneven rates" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>). The Hopper results show visibly irregular progress traced to one contractor deviating from the intended labeling schedule (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/async-reward-learning-architecture.html">Asynchronous Reward-Learning Architecture</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Label Annealing</strong> — <a href="../edge/label-annealing-is-only-approximated-under-contractor-preference-labeling.html">is only approximated under</a> → Contractor Preference-Labeling Protocol</li><li><strong>Label Annealing</strong> — <a href="../edge/label-annealing-paces-the-query-rate-within-iterated-online-training.html">paces the query rate within</a> → Iterated (Online) Training</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></li><li><a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A Experimental Details&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

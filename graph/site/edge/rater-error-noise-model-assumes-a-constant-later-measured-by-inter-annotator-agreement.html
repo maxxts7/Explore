@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Constant Rater-Error Noise Model — assumes a constant later measured by → Inter-labeler agreement rate — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Constant Rater-Error Noise Model — assumes a constant later measured by → Inter-labeler agreement rate</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &middot; explored within the theme <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></p>
+<section class="prose-section"><p>The 2017 paper handles the fact that human raters make mistakes by assumption rather than by measurement: it builds a constant 10% chance of a uniformly random response directly into the preference-prediction softmax, because 'human raters have a constant probability of making an error, which doesn't decay to 0' as the reward difference grows (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.3 Fitting the Reward Function", p. 5</a>). That figure is not derived from any data the 2017 paper collected about its own contractors; it is a modeling convenience chosen to keep the loss well-behaved. InstructGPT instead measures rater reliability directly, computing an inter-labeler agreement rate from labelers actually judging the same outputs, turning 'how often do humans agree' from an assumed constant into a reported statistic that can vary by task and be used to validate the labeling pipeline itself (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.4 Human data collection", p. 8</a>). The two papers answer the same underlying worry — that comparisons are noisy — with opposite epistemic postures: one builds in a fixed error rate so the math stays tractable, the other goes and finds out what the real rate is.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/rater-error-noise-model.html">Constant Rater-Error Noise Model</a> and <a href="../concept/inter-annotator-agreement.html">Inter-labeler agreement rate</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/primitive-parts-acquire-industrial-replacements.html">2017&#x27;s ad hoc parts become 2022&#x27;s industrial ones</a></li><li><a href="../tissue/independent-checks-and-instrument-blind-spots.html">A primary metric, and a second instrument built to catch what it can&#x27;t</a></li><li><a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.4 Human data collection&rdquo;, p. 8</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

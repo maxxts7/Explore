@@ -1,0 +1,132 @@
+{"edges": [
+  {
+    "id": "semi-supervised-active-reward-learning-gets-its-first-deep-rl-implementation-in-uncertainty-based-query-selection",
+    "type": "gets-its-first-deep-rl-implementation-in",
+    "source": "semi-supervised-active-reward-learning",
+    "target": "uncertainty-based-query-selection",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "semi-supervised-reward-learning-proposals",
+    "prose": "Concrete Problems (2016) names 'semi-supervised or active reward learning' as a research direction: combine reward prediction with active learning so an agent can flag salient events and request feedback specifically on them (concrete-problems, §\"5 Scalable Oversight\", p. 12). The 2017 paper, co-authored by two of the same researchers (Christiano and Amodei), gives this proposal one of its first concrete deep-RL forms: sample a large batch of candidate segment pairs, have every member of a reward-predictor ensemble predict a preference for each, and query the human only about the pairs where the ensemble disagrees most (deep-rl-human-prefs, §\"2.2.4 Selecting Queries\", p. 6). The 2017 paper is candid that this ensemble-variance heuristic is 'a crude approximation' of the ideal, and its own ablation shows the heuristic sometimes performs worse than picking queries at random. So the gap between the 2016 proposal and its 2017 realization is real: what was pitched as 'identify salient events' became, in practice, 'measure ensemble disagreement,' a much cruder proxy that the authors themselves flag as needing improvement."
+  },
+  {
+    "id": "use-demonstrations-is-explicitly-passed-over-in-favor-of-preference-elicitation-protocol",
+    "type": "is-explicitly-passed-over-in-favor-of",
+    "source": "use-demonstrations",
+    "target": "preference-elicitation-protocol",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "demonstrations-not-specification",
+    "prose": "Concrete Problems (2016) proposes using demonstrations, mined via inverse RL or apprenticeship learning, as a way to substitute a human's expertise for a hand-specified objective (concrete-problems, §\"Use Demonstrations:\", p. 15). The 2017 paper considers exactly this family of techniques in its own introduction and rejects it for a specific structural reason: inverse reinforcement learning and imitation learning both require a human able to demonstrate the desired behavior, which breaks down for behaviors 'difficult for humans to demonstrate (such as controlling a robot with many degrees of freedom but very non-human morphology)' (deep-rl-human-prefs, §\"1 Introduction\", p. 1). The preference elicitation protocol is built to survive exactly that failure: it only ever asks a human to compare two rendered clips and say which is better, a tie, or incomparable, never to produce or execute the behavior itself (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5). A demonstration is a weak superset of a preference in one sense — anyone who can demonstrate a behavior can also judge it — but the reverse fails, which is precisely the asymmetry the 2017 paper exploits: recognition is cheaper and more available than execution."
+  },
+  {
+    "id": "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+    "type": "becomes-a-screened-operation-in",
+    "source": "contractor-preference-labeling",
+    "target": "labeler-screening-process",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "human-feedback-data-infrastructure",
+    "prose": "The 2017 paper's entire labeling workforce is recruited by having contractors sign up for a slot in a spreadsheet and then compare clips through a keyboard-driven interface, with no formal test of whether any given contractor is any good at the task (deep-rl-human-prefs, §\"B Instructions Provided to Contractors\", p. 15). Nothing in the 2017 pipeline screens for label quality before a contractor's judgments enter the preference database; the paper's own results note that irregular learning progress on the Hopper task is attributable to 'one contractor deviating from the typical labeling schedule,' a quality problem the pipeline had no mechanism to catch before it affected training (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). InstructGPT's labeler screening and selection process is what a labeling operation looks like once that gap is closed: prospective labelers are scored on four separate criteria — agreement on sensitive-speech flagging, agreement on rankings, demonstration-writing quality, and self-assessed ability to judge sensitive content across groups — before the roughly 40 who pass are allowed to contribute any training data at all (instructgpt, §\"B.1 Labeler selection\", p. 36). Read backward from 2022, the 2017 sign-up sheet is a labeling operation with the entire screening stage missing, and the contractor-deviation anecdote shows that gap was already visibly a problem five years before anyone built a fix for it."
+  },
+  {
+    "id": "contractor-preference-labeling-is-formalized-as-labeling-interface",
+    "type": "is-formalized-as",
+    "source": "contractor-preference-labeling",
+    "target": "labeling-interface",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "human-feedback-data-infrastructure",
+    "prose": "In 2017, the entire labeling apparatus is an ad hoc clip server plus a sign-up spreadsheet: a contractor signs up for a slot, receives a one-to-two sentence description of the task, and is then repeatedly shown two video clips to compare, selecting the one in which better things happen (deep-rl-human-prefs, §\"B.2 Atari\", p. 16). When the server ran out of clips, the contractor was told this was 'normal, just wait a minute and refresh the page,' and if the problem persisted, to 'ping @tom on slack' — infrastructure held together by one named person watching a chat channel (deep-rl-human-prefs, §\"B.2 Atari\", p. 17). InstructGPT's web labeling interface is the same basic function — show an item, collect a structured judgment — rebuilt as an actual internal product: labelers assign Likert quality scores, apply a fixed taxonomy of metadata labels, and produce full rankings over sets of outputs for a given prompt, all within one tool (instructgpt, §\"B.5 Web interface\", p. 38). The tie-or-can't-tell judgments the 2017 interface offered survive conceptually in 2022's low-confidence and quality-score fields, but they are now one signal among several captured per item, rather than the entirety of what the interface records."
+  },
+  {
+    "id": "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss",
+    "type": "is-carried-over-unchanged-into",
+    "source": "bradley-terry-model",
+    "target": "reward-model-loss",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "learning-rewards-from-comparisons",
+    "prose": "The 2017 paper's loss function is not a bespoke invention; it is explicitly named as 'the Bradley-Terry model...for estimating score functions from pairwise preferences,' with predicted reward summed over a segment and passed through a softmax to yield a preference probability (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). InstructGPT's reward model loss is the same mathematical object five years later: a cross-entropy loss over pairs of ranked completions in which the reward difference between preferred and dispreferred outputs represents the log odds a human would prefer the former (instructgpt, §\"3.5 Models\", p. 8). Nothing about the functional form changed between the two papers — no new term was added, and the softmax-over-summed-reward structure is identical; the only difference is what fills the two slots being compared, a robot's trajectory segment in 2017 or a language model's completion in 2022. Neither paper cites the other on this point, and InstructGPT never names Bradley-Terry at all, so the identity of the two loss functions is a fact about the mathematics rather than a claimed lineage — a 1952 statistical model for ranking, adopted for deep RL in 2017, still doing the exact same job unmodified in a 2022 language-model reward model."
+  },
+  {
+    "id": "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+    "type": "trades-its-concurrency-for-a-fixed-dataset-in",
+    "source": "async-reward-learning-architecture",
+    "target": "reward-model",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "scalable-oversight-lineage",
+    "prose": "The 2017 paper's defining architectural choice is that nothing is ever finished: the policy, the human-comparison process, and the reward predictor run as three concurrent loops for the entire duration of training, with 'trajectories flowing from process (1) to process (2), human comparisons flowing from process (2) to process (3), and parameters for r̂ flowing from process (3) to process (1)' (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). InstructGPT's reward model is built by the opposite discipline: it is trained once, to convergence, on a fixed dataset of roughly 33,000 human-ranked comparison sets collected before PPO ever starts, and its weights are then frozen for the whole of RL fine-tuning (instructgpt, §\"3.5 Models\", p. 8). That difference reshapes what 'the reward model' even means operationally: in 2017 it is a moving target the RL optimizer must tolerate mid-training, while in InstructGPT it is a static artifact fully specified before optimization begins. InstructGPT accepts the risks of a static reward model deliberately — managing policy drift with a per-token KL penalty against the SFT model — rather than reintroducing anything like the 2017 paper's concurrent retraining loop."
+  },
+  {
+    "id": "cooperative-inverse-reinforcement-learning-is-narrowed-to-a-preferences-only-channel-in-preference-elicitation-protocol",
+    "type": "is-narrowed-to-a-preferences-only-channel-in",
+    "source": "cooperative-inverse-reinforcement-learning",
+    "target": "preference-elicitation-protocol",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "prior-human-in-the-loop-rl",
+    "prose": "Cooperative inverse reinforcement learning frames a human and a robot as two players in a shared game, cooperating to maximize the human's reward function, with the human free to act in the environment however is most informative (concrete-problems, §\"Multi-Agent Approaches:\", p. 6). The 2017 paper explicitly positions its own setup as a special case of that game, but one where the human's move set has been cut down to a single action type: 'in our setting the human is only allowed to interact with this game by stating their preferences' (deep-rl-human-prefs, §\"1.1 Related Work\", p. 3). The preference elicitation protocol is the concrete shape that restriction takes: shown two clips, the human can only prefer one, call a tie, or decline to answer, never demonstrate, correct, or otherwise intervene in the agent's behavior directly (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5). That narrowing is a deliberate trade: CIRL's general framework buys richer human input (physical demonstration, correction, communication) at the cost of needing the human embedded in the environment, while the 2017 paper gives up all of that in exchange for a channel so simple it can scale to a human located anywhere, watching a rendered video clip."
+  },
+  {
+    "id": "pong-task-anticipates-reward-overoptimization",
+    "type": "anticipates",
+    "source": "pong-task",
+    "target": "reward-overoptimization",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "keeping-reward-models-on-distribution",
+    "prose": "On Pong, the 2017 paper's 'no online queries' ablation — training the reward predictor only on labels gathered at the start, then freezing it for the rest of training — produced an agent that learned to avoid losing points but never learned to score, producing 'extremely long volleys that repeat the same sequence of events' (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). The paper is explicit this is not a one-off bug but a structural consequence of optimizing against an incompletely-trained, static proxy: 'the predictor captures only part of the true reward, and maximizing this partial reward can lead to bizarre behavior,' citing Amodei et al. (2016) directly for the phenomenon (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). InstructGPT's reward model over-optimization is qualitatively the same failure appearing five years later at a different scale and in a different domain: a policy exploits imperfections in a learned reward model to produce outputs that score highly on the model but are not actually what humans prefer (instructgpt, §\"3.5 Models\", p. 9). The structural precondition is also the same: InstructGPT's reward model, like the 2017 ablation's, is trained once and then held fixed throughout policy optimization rather than continuously refreshed — the exact frozen-predictor setup the 2017 paper had already shown, in miniature, produces exploitative rather than genuinely good behavior."
+  },
+  {
+    "id": "quantitative-qualitative-evaluation-prefigures-instruction-following",
+    "type": "prefigures",
+    "source": "quantitative-qualitative-evaluation",
+    "target": "instruction-following",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "hidden-reward-experimental-design",
+    "prose": "For tasks with no reward function at all, the 2017 paper's only recourse is to 'start from a goal expressed in natural language, ask a human to evaluate the agent's behavior based on how well it fulfills that goal, and then present videos of agents attempting to fulfill that goal' (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 4). That is already the shape of instruction following as InstructGPT later defines and trains it: a natural-language statement of intent, with no formal specification of correctness, evaluated by whether a human judges the output to have satisfied it (instructgpt, §\"1 Introduction\", p. 1). The domains could hardly be more different — a video of a simulated robot against a block of generated text — but the underlying wager is identical in both papers: that human judgment of goal-fulfillment can stand in for a reward function or loss nobody knows how to write down for the task in question. What changed by 2022 is that this 'qualitative' evaluation stopped being a fallback used only when nothing else was available and became the primary training signal for an entire class of systems, rather than a one-off way of grading backflips and traffic-following."
+  },
+  {
+    "id": "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "type": "assumes-a-constant-later-measured-by",
+    "source": "rater-error-noise-model",
+    "target": "inter-annotator-agreement",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "human-feedback-data-infrastructure",
+    "prose": "The 2017 paper handles the fact that human raters make mistakes by assumption rather than by measurement: it builds a constant 10% chance of a uniformly random response directly into the preference-prediction softmax, because 'human raters have a constant probability of making an error, which doesn't decay to 0' as the reward difference grows (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). That figure is not derived from any data the 2017 paper collected about its own contractors; it is a modeling convenience chosen to keep the loss well-behaved. InstructGPT instead measures rater reliability directly, computing an inter-labeler agreement rate from labelers actually judging the same outputs, turning 'how often do humans agree' from an assumed constant into a reported statistic that can vary by task and be used to validate the labeling pipeline itself (instructgpt, §\"3.4 Human data collection\", p. 8). The two papers answer the same underlying worry — that comparisons are noisy — with opposite epistemic postures: one builds in a fixed error rate so the math stays tractable, the other goes and finds out what the real rate is."
+  },
+  {
+    "id": "preference-elicitation-protocol-avoids-the-overfitting-problem-solved-by-k-choose-2-batching",
+    "type": "avoids-the-overfitting-problem-solved-by",
+    "source": "preference-elicitation-protocol",
+    "target": "k-choose-2-batching",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "human-feedback-data-infrastructure",
+    "prose": "The 2017 protocol only ever asks about one pair at a time: a human sees two clips and returns a single preference, tie, or incomparable judgment, stored as one triple in the preference database with no reference to any other comparison (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5). Because every training example is an independent pairwise draw, the 2017 paper never faces a problem InstructGPT has to solve directly: what to do when several comparisons all come from the same underlying judgment. InstructGPT collects a full ranking over K = 4 to 9 outputs per prompt in one sitting, which decomposes into C(K,2) pairwise comparisons that are correlated with each other rather than independent; naively shuffling them into ordinary training batches caused the reward model to overfit, so the paper instead places all comparisons from one ranking into a single batch element (instructgpt, §\"3.5 Models\", p. 8). The k-choose-2 batching trick, in other words, is a fix for a problem the 2017 protocol's strictly one-pair-at-a-time design structurally could not have — a cost of collecting richer, K-wise preference data that pairwise-only elicitation never had to pay."
+  },
+  {
+    "id": "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss",
+    "type": "prefigures-the-scale-fix-in",
+    "source": "reward-normalization",
+    "target": "reward-model-loss",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "keeping-reward-models-on-distribution",
+    "prose": "A comparison-only training objective leaves a reward predictor's absolute scale undetermined — nothing in the 2017 paper's loss changes if a constant is added to every predicted reward — so the paper rescales its predictor's output to zero mean and a fixed standard deviation (1 for MuJoCo, 0.05 for Atari) before handing it to the RL algorithm, a choice made so existing RL hyperparameters could be reused unchanged (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4; §\"A.1 Simulated Robotics Tasks\", p. 14). InstructGPT's reward model loss inherits exactly the same underdetermination for the same mathematical reason: a pairwise cross-entropy loss depends only on the difference between the two rewards being compared, so training on comparisons alone can never pin down where zero sits (instructgpt, §\"3.5 Models\", p. 8). The fix on the 2022 side is a renormalization too, but anchored differently: rather than picking a standard deviation for optimizer convenience, InstructGPT adds a bias so that labeler demonstrations score a mean of zero, making the anchor point interpretable — positive reward means better than a human demonstrator — rather than merely numerically convenient (instructgpt, §\"3.5 Models\", p. 9). The same defect, that comparison training cannot fix an absolute scale, gets patched twice six years apart: once for optimizer compatibility, once for interpretability."
+  },
+  {
+    "id": "trajectory-segment-generalizes-into-rm-dataset",
+    "type": "generalizes-into",
+    "source": "trajectory-segment",
+    "target": "rm-dataset",
+    "hindsight": true,
+    "groundedIn": "instructgpt",
+    "motivatedByTheme": "learning-rewards-from-comparisons",
+    "prose": "The atomic unit a human judges in the 2017 paper is a trajectory segment: a clip of one to two seconds of observations and actions, chosen specifically because it is faster to render and evaluate than a whole episode while still carrying enough information to be informative (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 3). InstructGPT's RM dataset judges a different kind of atom entirely — a complete model output, a full block of generated text answering one prompt, with no notion of a partial clip of behavior at all (instructgpt, §\"3.2 Dataset\", p. 7). What survives the jump from robotics to language is not the unit itself but the design principle behind choosing it: pick the smallest thing a human can evaluate quickly without losing the information the comparison is meant to carry, whatever 'smallest' means in that domain. For a video of continuous motor behavior that meant clipping to a couple of seconds; for language it means comparing whole completions rather than, say, individual tokens, since a token in isolation carries almost none of the information a full response does."
+  }
+]}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Half-Cheetah One-Leg Demonstration — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Half-Cheetah One-Leg Demonstration</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A novel behavior in which the simulated Half-Cheetah robot is trained, using 800 human preference queries in under an hour, to move forward while balancing and standing on a single leg.</p>
+<div class="page-intro"><p>Teaching a robot to run is one thing; teaching it to run while balancing on a single leg, a behavior nobody has written a reward function for, is another. Here the second one cost barely more than the first.</p>
+<p>The page covers what the trained agent actually does, then how close its query budget came to the ordinary benchmark's, and closes on why a behavior like this resists being scored by any hand-written function in the first place.</p></div>
+<section class="prose-section">
+<h2>What the agent learned</h2>
+<p>The paper trains the simulated Half-Cheetah robot, via 800 preference queries gathered in under an hour, to move forward while balancing and standing on a single leg (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">§"3.2 Novel behaviors", p. 9</a>). It reuses the identical robot model, action space, and reward-model architecture as the standard Half-Cheetah benchmark, with feedback again supplied by the paper's own authors rather than contractors (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">§"3.2 Novel behaviors", p. 9</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Barely any more expensive than the ordinary task</h2>
+<p>Run against its own existing hand-engineered reward, the standard Half-Cheetah benchmark was matched using 700 human preference queries (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 6</a>). Teaching the same robot an entirely new gait, one for which no reward function exists to hand-engineer at all, cost only 100 queries more: 800 total, still in under an hour (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">§"3.2 Novel behaviors", p. 9</a>). The near-equal price supports the paper's efficiency claim directly: specifying a genuinely novel goal through comparisons is not markedly harder than matching a goal someone already wrote down as a reward function.</p>
+</section>
+<section class="prose-section">
+<h2>Why one-legged running has no natural reward</h2>
+<p>A hand-written reward for <a href="../concept/half-cheetah-task.html">Half-Cheetah (MuJoCo task)</a> can score forward velocity directly from the simulator's state. Scoring "balance on one leg specifically" instead requires deciding in code which leg, how much ground contact from the others still counts as touching, and how to penalize the robot for reverting to two legs, decisions a human rater makes instantly by watching a clip but that resist being written as a closed-form function of joint torques and positions. This is the same recognize-but-cannot-specify gap that <a href="../concept/novel-behavior-training.html">Novel Behavior Training</a> as a whole is built to demonstrate.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/novel-behavior-training.html">Novel Behavior Training</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Half-Cheetah One-Leg Demonstration</strong> — <a href="../edge/half-cheetah-one-leg-demonstration-costs-barely-more-in-queries-than-half-cheetah-task.html">costs barely more in queries than</a> → Half-Cheetah (MuJoCo task)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/novel-behaviors-without-reward-functions.html">Novel behaviors without reward functions</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.2 Novel behaviors&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Prior human-in-the-loop RL and why it didn&#x27;t scale — Theme</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-theme">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-theme">theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Prior human-in-the-loop RL and why it didn&#x27;t scale</h1>
+<div class="page-intro"><p>Learning from something other than a hand-specified reward was not new in 2017; the paper needed a version able to survive deep RL's scale, and none of the existing ones did. Inverse reinforcement learning and imitation learning both need a human able to demonstrate the target behavior, which fails for a robot body no person can inhabit; TAMER's real-time feedback works only for policies learnable in a few hours, not the thousands the paper's Atari tasks demand.</p>
+<p>The walk runs through each approach's limits before landing on cooperative inverse reinforcement learning, the framework the paper's method turns out to be one instance of.</p></div>
+<section class="prose-section"><p>Learning a task from something other than a hand-specified reward did not start in 2017, and this theme is the lineage the paper places itself against in its own related-work discussion. Inverse reinforcement learning extracts a reward function from demonstrations of the desired task, an approach the paper notes is inapplicable when the desired behavior is hard for a human to demonstrate in the first place, such as controlling a non-human robot morphology. Imitation learning sidesteps reward learning entirely by cloning demonstrated behavior directly, and fails for the same reason: some behaviors cannot be demonstrated even if they can be recognized. The TAMER framework learns a reward function from real-time human feedback, but the paper distinguishes its own setting by scale: TAMER's prior experiments involve policies learnable relatively quickly, not the thousands of hours of experience the paper's Atari tasks require. Cooperative inverse reinforcement learning frames a human and an agent as two players cooperating to maximize the human's reward function, and the paper positions its own method as a specific instance of this framework, one in which the human's only available move is to state a preference between two segments. None of the four approaches, on their own, could absorb the deep-RL scale the 2017 paper needed: they required either expert demonstrations, hand-coded features, or an amount of continuous human attention that does not fit a budget of minutes.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Members &mdash; a guided walk</h2><ol class="walk"><li><a href="../concept/inverse-reinforcement-learning.html">Inverse reinforcement learning (IRL)</a><div class="walk-prose"><p>Inverse reinforcement learning opens this theme as the oldest and most direct alternative to the 2017 paper's approach: extract a reward function from demonstrations of the desired task, then train an agent against that extracted reward using ordinary reinforcement learning. The paper notes this is inapplicable when the desired behavior is hard for a human to demonstrate in the first place, such as controlling a robot with a non-human morphology.</p></div></li><li><a href="../concept/imitation-learning.html">Imitation Learning</a><div class="walk-prose"><p>Imitation learning sidesteps the reward-extraction step inverse reinforcement learning relies on, cloning demonstrated behavior directly instead of first inferring a reward function. It fails for exactly the same reason: some behaviors cannot be demonstrated by a human even if that human could recognize the behavior once performed.</p></div></li><li><a href="../concept/tamer-framework.html">TAMER Framework</a><div class="walk-prose"><p>The TAMER framework (Knox and Stone, 2009; Knox, 2012) does learn a reward function from real-time human feedback, avoiding the demonstration requirement entirely, but the 2017 paper distinguishes its own setting by scale: TAMER's prior experiments involve policies learnable relatively quickly, not the thousands of hours of experience the paper's Atari tasks require.</p></div></li><li><a href="../concept/cooperative-inverse-reinforcement-learning.html">Cooperative Inverse Reinforcement Learning (CIRL)</a><div class="walk-prose"><p>Cooperative inverse reinforcement learning (Hadfield-Menell et al., 2016) closes this theme by generalizing beyond any single feedback mechanism: it frames a human and an agent as two players cooperating to maximize the human's reward function. The 2017 paper positions its own method as a specific instance of this framework, one in which the human's only available move is to state a preference between two segments.</p></div></li></ol></section>
+<section class="nav-block"><h2>Superthemes</h2><ul><li><a href="../supertheme/deep-rl-from-preferences-proof-of-concept.html">Deep RL from Human Preferences: the 2017 proof of concept</a></li></ul></section>
+<section class="nav-block"><h2>Edges explored within this theme</h2><ul><li><a href="../edge/cooperative-inverse-reinforcement-learning-is-narrowed-to-a-preferences-only-channel-in-preference-elicitation-protocol.html">Cooperative Inverse Reinforcement Learning (CIRL) — is narrowed to a preferences only channel in → Preference Elicitation Protocol</a></li></ul></section>
+<section class="nav-block"><h2>Super edges touching this theme</h2><ul><li><a href="../superedge/prior-hitl-rl-finds-missing-piece-in-comparisons.html">Prior human-in-the-loop RL and why it didn&#x27;t scale — finds its missing piece in → Comparisons as the atomic unit of human feedback</a></li><li><a href="../superedge/prior-hitl-rl-fails-budget-test-set-by-feedback-economics.html">Prior human-in-the-loop RL and why it didn&#x27;t scale — fails the budget test set by → The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind this theme&rsquo;s member concepts.</p><details class="sources-details"><summary>5 source passages in 2 papers</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1606.06565" target="_blank" rel="noopener">Concrete Problems in AI Safety</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;Multi-Agent Approaches:&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;Reward Pretraining:&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/concrete-problems.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;Use Demonstrations:&rdquo;, p. 15</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;1.1 Related Work&rdquo;, p. 3</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

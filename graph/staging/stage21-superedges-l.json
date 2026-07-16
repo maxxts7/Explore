@@ -1,0 +1,64 @@
+{
+  "superedges": [
+    {
+      "id": "feedback-economics-underwrites-choosing-comparisons",
+      "type": "underwrites-choosing",
+      "source": "economics-of-human-feedback",
+      "target": "learning-rewards-from-comparisons",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "Every property that makes comparisons the paper's chosen feedback format is also a property the labeling budget specifically needs, a connection neither theme states on its own. A comparison costs about the same few seconds as any other judgment, contractors responded to the average query in 3-5 seconds (deep-rl-human-prefs, §\"3.1 Reinforcement Learning Tasks with Unobserved Rewards\", p. 6), so switching from absolute scores to comparisons does not slow the labeling pipeline down. What it buys instead is freedom from calibration: because the workforce is interchangeable contractors who sign up for scattered time slots rather than one trained rater working continuously (deep-rl-human-prefs, §\"B Instructions Provided to Contractors\", p. 15), an absolute-score protocol would require every contractor to hold the same internal scale, an overhead a minutes-of-attention budget has no room for. A comparison needs no shared scale at all, whichever contractor is on shift only has to say which of two clips is better, not where either sits on an absolute axis. That is the specific way the economics of human feedback, distinct from the accuracy argument the comparisons-vs-absolute-scores ablation already makes, explains the choice of comparisons: the paper's own accounting of the workforce, 5,000 labels for about $36 of minimum-wage labor (deep-rl-human-prefs, §\"4 Discussion and Conclusions\", p. 11), only pencils out because no part of that budget has to be spent aligning raters' scales."
+    },
+    {
+      "id": "reward-model-on-distribution-shares-non-stationarity-with-policy-optimization",
+      "type": "shares-non-stationarity-with",
+      "source": "keeping-reward-models-on-distribution",
+      "target": "policy-optimization-under-learned-rewards",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "These two themes are the same non-stationarity viewed from either side of the training loop, and each narrative describes its own half without naming the other as the reason it exists. On the reward-model side, online training, ensembling, regularization, and label annealing exist because the predictor is chasing a policy that keeps visiting new states, an unlabeled region the fixed early fit never saw (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). On the policy side, the paper picks A2C and TRPO specifically because policy-gradient methods tolerate a reward that keeps moving, and it raises TRPO's entropy bonus above standard settings for exactly this reason: \"TRPO relies on the trust region to ensure adequate exploration, which can lead to inadequate exploration if the reward function is changing\" (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 5). Neither fix alone would hold: an optimizer built to tolerate a stale reward gains nothing if the reward model never refreshes, and a constantly-refreshed reward model gains nothing if the optimizer's own exploration collapses before the refreshed signal reaches the states that need it. The two themes are better read as a single design decision split across two pieces of the architecture, one absorbing the non-stationarity by adapting the reward, the other by choosing an optimizer built to survive it."
+    },
+    {
+      "id": "hidden-reward-design-licenses-results-of-testbeds",
+      "type": "licenses-the-results-of",
+      "source": "hidden-reward-experimental-design",
+      "target": "deep-rl-testbeds",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "The near-parity numbers the testbeds theme reports, 700 labels nearly matching TRPO on MuJoCo, 5,500 nearly matching A2C on Atari, would prove nothing about learning from preferences alone if the environments still leaked the task objective through some other channel, a dependency the testbeds theme itself does not spell out. That is exactly what the environment modifications close off: on-screen score displays are blanked, variable-length episode termination is replaced with a learned penalty, and torque penalties are stripped from the Gym reward functions, changes made specifically \"to avoid encoding information about the task in the environment itself\" (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6; §\"A Experimental Details\", p. 14). The synthetic oracle supplies the other half of the same warrant: because it answers queries strictly from the withheld true reward, comparing real-human runs against it isolates how much of a testbed's performance came from the comparison-learning method itself rather than from residual leakage or an easy task (deep-rl-human-prefs, §\"3.1 Reinforcement Learning Tasks with Unobserved Rewards\", p. 6). Without this design, a benchmark score on Hopper or Pong would be uninterpretable, since nothing would rule out the agent having quietly rediscovered the true objective some other way; with it, the testbeds' numbers become a real test of preference learning rather than a demonstration that RL still works when a reward happens to be hidden somewhere nearby."
+    },
+    {
+      "id": "testbeds-repurposes-environments-for-novel-behaviors",
+      "type": "repurposes-environments-for",
+      "source": "deep-rl-testbeds",
+      "target": "novel-behaviors-without-reward-functions",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "The novel-behavior demonstrations are not new environments; they are the same three testbeds run again toward a different, in one case wholly absent, target, a continuity neither theme's own narrative makes explicit. Hopper, matched against a withheld true reward in the benchmark runs, is retrained toward a sequence of backflips that has no true reward function at all; Half-Cheetah, benchmarked on forward speed, is retrained to run balanced on one leg; and Enduro, benchmarked on the game's own passing-cars score, is retrained toward staying level with traffic instead (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8-9). The paper is explicit that this is the same machinery, unmodified: \"Using the same parameters as in the previous experiments, we show that our algorithm can learn novel complex behaviors\" (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8). That continuity is the point of reusing these particular environments rather than fresh ones: the testbeds theme establishes that the method can match a known answer, so when the identical code is pointed at a task with no known answer to match, the results can be read as evidence about the method rather than about some unrelated change in setup, one theme proves competence on a checkable case, the other spends that same competence on tasks where competence can no longer be checked against a number."
+    },
+    {
+      "id": "prior-hitl-rl-finds-missing-piece-in-comparisons",
+      "type": "finds-its-missing-piece-in",
+      "source": "prior-human-in-the-loop-rl",
+      "target": "learning-rewards-from-comparisons",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "Two of the four prior approaches this theme surveys already tried something close to comparisons, and the gap between their versions and this paper's is exactly what the comparisons theme supplies, a gap neither narrative closes on its own. Akrour et al. (2012, 2014) already elicited preferences rather than absolute reward, but only over whole trajectories and only where reward could be assumed linear in a small set of hand-coded features, \"continuous domains with four degrees of freedom and small discrete domains\" (deep-rl-human-prefs, §\"1.1 Related Work\", p. 2); the trajectory-segment format and a deep, nonlinear reward model are what let comparisons scale to Atari's raw pixels and MuJoCo's dozens of degrees of freedom instead. MacGlashan et al. and Pilarski et al. gathered real human feedback too, but \"learning only occurs during episodes where the human trainer provides feedback,\" which the paper calls infeasible for domains needing thousands of hours of experience (deep-rl-human-prefs, §\"1.1 Related Work\", p. 3). The comparisons theme's asynchronous reward-fitting loop is what decouples labeling from continuous real-time presence, letting a human's few seconds of judgment stand in for supervision the agent keeps using long after the human has looked away. The prior work, in other words, had already located the right question, preferences over demonstrated or observed behavior, without a format cheap and expressive enough to survive contact with deep RL; that format is precisely what this theme adds."
+    },
+    {
+      "id": "prior-hitl-rl-fails-budget-test-set-by-feedback-economics",
+      "type": "fails-the-budget-test-set-by",
+      "source": "prior-human-in-the-loop-rl",
+      "target": "economics-of-human-feedback",
+      "hindsight": false,
+      "groundedIn": null,
+      "supertheme": "deep-rl-from-preferences-proof-of-concept",
+      "prose": "The economics theme's accounting gives a precise, quantitative reason why the prior approaches surveyed here stalled before reaching deep-RL scale, one the related-work discussion only gestures at qualitatively. Akrour et al.'s whole-trajectory preferences are the clearest case: the paper reports that its own segment-based method gathers \"about two orders of magnitude more comparisons\" than Akrour's approach, yet requires \"less than one order of magnitude more human time\" (deep-rl-human-prefs, §\"1.1 Related Work\", p. 3). Read against the economics theme's own metric, minutes of attention rather than number of queries, that gap says whole-trajectory preferences were never cheap per query; watching and judging a full trajectory costs far more than watching a one-to-two-second clip, so scaling up comparisons under that format would have scaled human time linearly rather than the sublinear way segments allowed. TAMER and the MacGlashan/Pilarski line fail the same budget on a different axis: because \"learning only occurs during episodes where the human trainer provides feedback\" (deep-rl-human-prefs, §\"1.1 Related Work\", p. 3), the human's attention is coupled to the agent's entire experience stream rather than to a bounded set of queries, economically indistinguishable from the per-timestep feedback the economics theme treats as too expensive to afford. None of the prior work is diagnosed this way in the paper's own text, but the economics theme's budget lens explains, in cost terms rather than capability terms, why each predecessor stayed confined to policies learnable \"relatively quickly\" or to a handful of hand-coded degrees of freedom (deep-rl-human-prefs, §\"1.1 Related Work\", p. 3)."
+    }
+  ]
+}

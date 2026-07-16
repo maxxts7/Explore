@@ -1,0 +1,104 @@
+{
+  "edges": [
+    {
+      "id": "non-stationary-reward-challenge-motivates-the-choice-of-a2c",
+      "type": "motivates-the-choice-of",
+      "source": "non-stationary-reward-challenge",
+      "target": "a2c",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "policy-optimization-under-learned-rewards",
+      "prose": "The paper picks its RL algorithms specifically to survive a reward function that keeps moving underneath the policy: because the reward predictor is repeatedly updated as new preference labels arrive, the optimizer is chasing a non-stationary target, which the authors say led them to focus on policy-gradient methods over alternatives tuned for a fixed reward (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4). A2C is the concrete choice that follows from that reasoning for the Atari domain, used essentially off the shelf with standard hyperparameters from prior work reused unchanged, because being a policy-gradient method already supplied the needed robustness without further modification (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4). Unlike the MuJoCo case with TRPO, no compensating hyperparameter change was judged necessary for A2C, suggesting the paper treats the non-stationarity problem as already handled by the choice of algorithm family, not something every policy-gradient method needs extra tuning to survive."
+    },
+    {
+      "id": "non-stationary-reward-challenge-forces-an-entropy-bonus-increase-in-trpo",
+      "type": "forces-an-entropy-bonus-increase-in",
+      "source": "non-stationary-reward-challenge",
+      "target": "trpo",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "policy-optimization-under-learned-rewards",
+      "prose": "Where A2C needed no adjustment, TRPO did: the paper reports raising TRPO's entropy bonus above its standard setting, the only hyperparameter changed anywhere in the simulated-robotics experiments, specifically because TRPO's trust region is what normally guarantees adequate exploration, and that guarantee degrades when the reward driving it is being rewritten during training (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 5). The appendix confirms the fix was applied uniformly, an entropy bonus of 0.01 on every MuJoCo task but Swimmer (0.001), and ties the change explicitly back to compensating for a changing reward function rather than to any property of the individual tasks (deep-rl-human-prefs, §\"A.1 Simulated Robotics Tasks\", p. 14). This makes TRPO the one place in the paper where the non-stationary-reward problem required an active correction rather than being absorbed by the algorithm's existing design."
+    },
+    {
+      "id": "non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training",
+      "type": "resurfaces-under-iteration-in",
+      "source": "non-stationary-reward-challenge",
+      "target": "ppo-training",
+      "hindsight": true,
+      "groundedIn": "instructgpt",
+      "motivatedByTheme": "policy-optimization-under-learned-rewards",
+      "prose": "In the 2017 paper the non-stationary-reward problem is built into the training loop by design: the reward predictor is repeatedly refit on new comparisons while the policy trains against it, so the policy is always chasing a moving target (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4). InstructGPT's PPO fine-tuning stage looks stationary by contrast, since a single reward model is trained once and then held fixed while PPO optimizes against it, but the paper itself notes that \"steps 2 and 3 can be iterated continuously; more comparison data is collected on the current best policy, which is used to train a new RM and then a new policy\" (instructgpt, §\"3.1 High-level methodology\", p. 6). Read this way, PPO training can inherit exactly the constraint the 2017 paper identified: whenever the RM-then-PPO loop is iterated rather than run once, each new policy is again optimized against a reward that has just shifted underneath it, reproducing the moving target the earlier paper built its whole architecture, and its choice of policy-gradient algorithms, around."
+    },
+    {
+      "id": "a2c-closes-its-enduro-exploration-gap-with-dqn",
+      "type": "closes-its-enduro-exploration-gap-with",
+      "source": "a2c",
+      "target": "dqn",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "policy-optimization-under-learned-rewards",
+      "prose": "A2C, a policy-gradient method, and DQN, a value-based method, sit on opposite sides of an algorithmic divide that the paper's Enduro result puts to an inadvertent test. The paper states that Enduro is difficult for A2C's asynchronous relative A3C to learn because successfully passing another car essentially never happens under random policy-gradient exploration, and this same difficulty carries over when the reward comes from synthetic preference labels rather than the game's score (deep-rl-human-prefs, §\"3.1.2 Atari\", p. 8). Human labelers close the gap by a route no algorithm change could: instructed only to reward any visible progress toward passing a car, they hand the policy a denser shaping signal than random exploration would ever discover on its own, and the paper reports the result is \"comparable to those achieved with DQN\" (deep-rl-human-prefs, §\"3.1.2 Atari\", p. 8). The comparison is notable precisely because DQN was never trained in this paper at all, it is a citation to prior published performance, so the underlying claim is that reward-shaped preference learning let a policy-gradient method match a structurally different algorithm's results on the one game where the policy-gradient approach's own exploration was the bottleneck."
+    },
+    {
+      "id": "hopper-backflip-demonstration-extends-past-the-hand-engineerable-reward-of-hopper-task",
+      "type": "extends-past-the-hand-engineerable-reward-of",
+      "source": "hopper-backflip-demonstration",
+      "target": "hopper-task",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "novel-behaviors-without-reward-functions",
+      "prose": "The standard Hopper benchmark already has a reward that is easy to hand-engineer: the paper describes all of the MuJoCo tasks' reward functions, Hopper included, as simple quadratic functions of the robot's distances, positions, and velocities (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). The backflip demonstration reuses the identical simulated robot and action space but targets behaviors the paper itself frames, in its introduction, as ones for which \"it is unclear how to hand-engineer a reward function that would incentivize them\" (deep-rl-human-prefs, §\"1 Introduction\", p. 2). Because the robot's dynamics and observation space are unchanged between the two settings, the 900 queries needed to train the backflip in under an hour (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8) isolate what actually made the demonstration hard: not the physics, which the standard benchmark already solves cheaply, but the absence of any specifiable objective to hand-engineer in the first place."
+    },
+    {
+      "id": "enduro-keeping-pace-demonstration-inverts-the-scoring-objective-of-enduro-task",
+      "type": "inverts-the-scoring-objective-of",
+      "source": "enduro-keeping-pace-demonstration",
+      "target": "enduro-task",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "novel-behaviors-without-reward-functions",
+      "prose": "The standard Enduro task and its contractor instructions define good play as passing as many cars as possible while not getting passed (deep-rl-human-prefs, §\"B.2 Atari\", p. 17). The keeping-pace demonstration retrains the identical game and action space under a literally inverted instruction: for \"Enduro (even mode)\" contractors are told to \"Avoid passing cars OR getting passed by them,\" rewarding the agent for staying level with traffic instead of overtaking it (deep-rl-human-prefs, §\"B.2 Atari\", p. 17). Only the comparison instructions given to the human change; the environment, action space, and learning algorithm are the same as the benchmark task. Using roughly 1,300 queries and 4 million frames, the demonstration shows the preference-learning method can retarget a game's entire objective, including reversing it outright, without touching the game's code (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 9)."
+    },
+    {
+      "id": "human-feedback-implicit-reward-shaping-becomes-the-only-signal-in-novel-behavior-training",
+      "type": "becomes-the-only-signal-in",
+      "source": "human-feedback-implicit-reward-shaping",
+      "target": "novel-behavior-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "novel-behaviors-without-reward-functions",
+      "prose": "On Ant, implicit reward shaping is a bonus: human comparisons happen to outperform a true, withheld reward that still exists and is used to score the outcome (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7). On the backflip, one-leg, and keeping-pace demonstrations there is no true reward to fall back on or compare against at all, so whatever shaping the raters supply is the entire training signal the policy optimizes, not an improvement over an existing one (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8). That distinction supplies a reason for a detail the paper never explains outright: it is precisely these three demonstrations, the only experiments in the paper rated by its own authors rather than contractors, where implicit shaping cannot be a bonus layered on top of a real objective, so getting the shaping right is the only thing standing between the policy and an uncorrected, potentially exploitable proxy (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 9)."
+    },
+    {
+      "id": "half-cheetah-one-leg-demonstration-costs-barely-more-in-queries-than-half-cheetah-task",
+      "type": "costs-barely-more-in-queries-than",
+      "source": "half-cheetah-one-leg-demonstration",
+      "target": "half-cheetah-task",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "novel-behaviors-without-reward-functions",
+      "prose": "The standard Half-Cheetah benchmark, run against its own existing hand-engineered reward, was matched using 700 human preference queries (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 6). Teaching the identical robot an entirely new behavior with no reward function to hand-engineer at all, standing and moving forward on a single leg, took only 800 queries in under an hour (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 9). That the novel, unspecifiable behavior cost barely more query budget than replicating an existing, well-defined objective on the same robot suggests the method's expense tracks how hard a behavior is to elicit and compare, not whether a programmatic reward for it happens to already exist."
+    },
+    {
+      "id": "reward-model-is-overbuilt-in-anticipation-of-novel-behavior-training",
+      "type": "is-overbuilt-in-anticipation-of",
+      "source": "reward-model",
+      "target": "novel-behavior-training",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "novel-behaviors-without-reward-functions",
+      "prose": "The reward predictor used for the MuJoCo tasks is a full two-layer neural network even though the true reward functions for those standard benchmarks are, as the paper notes, all just second-degree polynomials of the input features, simple enough that a much simpler regression method would have sufficed (deep-rl-human-prefs, §\"A.1 Simulated Robotics Tasks\", p. 14). The paper is explicit that this is a deliberate overprovision: \"using this more flexible architecture allows us to immediately generalize to tasks for which the reward function is not so simple,\" pointing directly at the novel-behavior experiments (deep-rl-human-prefs, §\"A.1 Simulated Robotics Tasks\", p. 14). In other words, the reward model's capacity was sized for tasks the authors had not yet run at the time it was built, not for the benchmark tasks it was first validated against."
+    },
+    {
+      "id": "reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c",
+      "type": "is-reverse-engineered-to-avoid-retuning",
+      "source": "reward-normalization",
+      "target": "a2c",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "policy-optimization-under-learned-rewards",
+      "prose": "For the Atari experiments the reward predictor's output is rescaled to a standard deviation of exactly 0.05, a figure the paper calls arbitrary in principle but chosen specifically so the same A2C hyperparameters used against the true reward, entropy bonus, learning rate, and the rest, could be reused completely unchanged (deep-rl-human-prefs, §\"A.2 Atari\", p. 15). The authors note they could equivalently have compensated for a different normalization scale by adjusting the learning rate and entropy bonus instead, which means the 0.05 figure was reverse-engineered from A2C's existing settings rather than the other way around (deep-rl-human-prefs, §\"A.2 Atari\", p. 15). This is also why A2C needed no hyperparameter changes at all under the learned reward, in contrast to TRPO on MuJoCo, where the entropy bonus still had to be raised despite an analogous normalization step (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 5)."
+    }
+  ]
+}

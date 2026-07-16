@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward Prediction Normalization — fixes the underdetermined scale of → Reward model (RM) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward Prediction Normalization — fixes the underdetermined scale of → Reward model (RM)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></p>
+<section class="prose-section"><p>A reward model trained only on comparisons never sees an absolute number, so its output's zero point and scale are free parameters left unconstrained by the training objective (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 5</a>). Reward normalization pins both down by rescaling the predictor's output to zero mean and a fixed standard deviation before it reaches the RL algorithm. That fixed standard deviation is chosen per domain specifically so existing RL hyperparameters could be reused unchanged: 1 for the MuJoCo tasks and 0.05 for Atari, a choice the paper says let it keep the same entropy bonus and learning rate as its true-reward baselines rather than retune them for an arbitrarily-scaled learned reward (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>). Without this step, the same reward model, valid up to any positive affine transformation of its output, could silently break RL hyperparameters that were tuned assuming a particular reward magnitude.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/reward-normalization.html">Reward Prediction Normalization</a> and <a href="../concept/reward-model.html">Reward model (RM)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/what-comparisons-leave-undetermined.html">What comparison training leaves undetermined</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=41" target="_blank" rel="noopener">&sect;&ldquo;C.2 Details of RM training&rdquo;, p. 41</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;1.2 The Constitutional AI Approach&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;4.1 Method&rdquo;, p. 10</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

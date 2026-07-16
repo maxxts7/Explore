@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Keeping the reward model on-distribution — shares non stationarity with → Policy optimization under a learned, changing reward — Super edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-superedge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-superedge">super edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Keeping the reward model on-distribution — shares non stationarity with → Policy optimization under a learned, changing reward</h1>
+<p class="edge-meta">part of the supertheme <a href="../supertheme/deep-rl-from-preferences-proof-of-concept.html">Deep RL from Human Preferences: the 2017 proof of concept</a></p>
+<section class="prose-section"><p>These two themes are the same non-stationarity viewed from either side of the training loop, and each narrative describes its own half without naming the other as the reason it exists. On the reward-model side, online training, ensembling, regularization, and label annealing exist because the predictor is chasing a policy that keeps visiting new states, an unlabeled region the fixed early fit never saw (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.2 Our Method", p. 4</a>). On the policy side, the paper picks A2C and TRPO specifically because policy-gradient methods tolerate a reward that keeps moving, and it raises TRPO's entropy bonus above standard settings for exactly this reason: "TRPO relies on the trust region to ensure adequate exploration, which can lead to inadequate exploration if the reward function is changing" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 5</a>). Neither fix alone would hold: an optimizer built to tolerate a stale reward gains nothing if the reward model never refreshes, and a constantly-refreshed reward model gains nothing if the optimizer's own exploration collapses before the refreshed signal reaches the states that need it. The two themes are better read as a single design decision split across two pieces of the architecture, one absorbing the non-stationarity by adapting the reward, the other by choosing an optimizer built to survive it.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a> and <a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a></p></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind the two endpoint themes&rsquo; concepts.</p><details class="sources-details"><summary>13 source passages in 3 papers</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=42" target="_blank" rel="noopener">&sect;&ldquo;C.4 Details of RLHF training&rdquo;, p. 42</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;6.1 Future Directions&rdquo;, p. 15</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2 Our Method&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.3 Fitting the Reward Function&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.1.2 Atari&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;3.3 Ablation Studies&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;4 Discussion and Conclusions&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A Experimental Details&rdquo;, p. 14</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;A.2 Atari&rdquo;, p. 15</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

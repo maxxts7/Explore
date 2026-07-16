@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Human-Feedback Implicit Reward Shaping — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Human-Feedback Implicit Reward Shaping</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An observed phenomenon in which reward predictors learned from human preferences sometimes outperform the ground-truth RL reward function, because human raters implicitly reward-shape the task (e.g. rewarding &#x27;standing upright&#x27; on Ant, or rewarding any progress passing cars on Enduro), yielding denser or better-shaped guidance than the original hand-written reward.</p>
+<div class="page-intro"><p>The expectation going in was modest: comparisons might match a hand-written reward, not beat it. On two tasks, human feedback did better than the reward function it was only supposed to approximate.</p>
+<p>The page covers where this happened and what the raters were actually rewarding, then a twist, the same advantage shows up with no human involved at all, before closing on why, once the paper turns to entirely new behaviors, this shaping stops being a bonus and becomes the whole signal.</p></div>
+<section class="prose-section">
+<h2>The phenomenon</h2>
+<p>The paper's default expectation is that learning from a handful of human comparisons can approach, but not exceed, what training directly on the true reward achieves. On two tasks it does better. On the Ant robotics task, human raters instructed to prefer trajectories where the robot is "standing upright" produce a reward signal that outperforms the ground truth reward's own hand-crafted upright bonus (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>). On Enduro, human labelers "tend to reward any progress towards passing cars," implicitly shaping a dense signal out of a task whose sparse true reward is hard for A2C's asynchronous relative A3C to learn by direct exploration (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">§"3.1.2 Atari", p. 8</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Not uniquely a human phenomenon</h2>
+<p>The natural story is that human judgment specifically supplies better shaping than a hand-written bonus. But the paper reports the same advantage with no human in the loop at all: at 1400 labels, training against <a href="../concept/synthetic-oracle-feedback.html">Synthetic Oracle Feedback</a>'s comparisons "performs slightly better than if it had simply been given the true reward," because "the learned reward function is slightly better shaped" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>). Some of the shaping advantage, in other words, comes from how the reward model generalizes from comparisons, not solely from a person's judgment about what "good" looks like.</p>
+</section>
+<section class="prose-section">
+<h2>From bonus to the entire signal</h2>
+<p>On Ant and Enduro, implicit shaping is a bonus layered on top of a true reward that still exists and is used only to score the outcome, never to train on. <a href="../concept/novel-behavior-training.html">Novel Behavior Training</a>'s three demonstrations remove that safety net entirely: there is no withheld true reward for a backflip, a one-legged gait, or driving level with traffic, so whatever shaping the raters supply during training is the entire signal the policy ever sees (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">§"3.2 Novel behaviors", p. 8</a>). A curiosity observed in §3.1 becomes, in §3.2, the thing the whole method depends on.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Enduro (Atari game) — <a href="../edge/enduro-task-supplies-the-hard-exploration-case-for-human-feedback-implicit-reward-shaping.html">supplies the hard exploration case for</a> → <strong>Human-Feedback Implicit Reward Shaping</strong></li><li><strong>Human-Feedback Implicit Reward Shaping</strong> — <a href="../edge/human-feedback-implicit-reward-shaping-becomes-the-only-signal-in-novel-behavior-training.html">becomes the only signal in</a> → Novel Behavior Training</li><li>Synthetic Oracle Feedback — <a href="../edge/synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping.html">reveals a non human instance of</a> → <strong>Human-Feedback Implicit Reward Shaping</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/hidden-reward-experimental-design.html">Hiding the reward: experimental design for preference-only learning</a></li><li><a href="../theme/novel-behaviors-without-reward-functions.html">Novel behaviors without reward functions</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3.1.1 Simulated Robotics&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.1.2 Atari&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

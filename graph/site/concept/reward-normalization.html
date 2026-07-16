@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reward Prediction Normalization — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reward Prediction Normalization</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A preprocessing step in which the reward predictor&#x27;s output is rescaled to have zero mean and a fixed standard deviation before being used by the RL algorithm, since the absolute scale and offset of a learned reward function is otherwise underdetermined by the comparison-based training objective.</p>
+<div class="page-intro"><p>A reward model trained only on comparisons never sees an absolute number, which leaves its output's scale and zero point free to drift wherever training happens to put them.</p>
+<p>The page covers how the paper pins that scale down before handing the reward model's output to the RL algorithm, then why the specific number chosen for Atari was picked to avoid retuning anything else, and closes on how a later system solves the identical problem inside its loss function instead of as a separate step.</p></div>
+<section class="prose-section">
+<h2>An underdetermined scale, pinned down</h2>
+<p>A reward predictor trained only on comparisons never sees an absolute number — nothing in the Bradley-Terry loss changes if a constant is added to every predicted reward, since only differences between two segments' summed rewards enter the softmax. The paper closes off this free parameter by rescaling the output of $\hat r$ to zero mean and a fixed standard deviation before it reaches the RL algorithm, calling this "a typical preprocessing step which is particularly appropriate here since the position of the rewards is underdetermined by our learning problem" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.1 Optimizing the Policy", p. 5</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Choosing the standard deviation to avoid retuning A2C</h2>
+<p>The fixed standard deviation is not the same across domains: it is 1 for the MuJoCo tasks (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A.1 Simulated Robotics Tasks", p. 14</a>) and 0.05 for Atari (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>). The paper calls the Atari figure arbitrary in principle but chosen specifically so the same <a href="../concept/a2c.html">A2C</a> hyperparameters used against the true reward — entropy bonus, learning rate — could be reused unchanged, rather than retuned for a learned reward's different scale (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">§"A.2 Atari", p. 15</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A fix later folded into the loss itself</h2>
+<p>This paper solves the scale problem as a preprocessing step external to the loss: normalize, then hand the result to an unmodified RL algorithm. InstructGPT's reward-model loss folds an equivalent fix into training instead — its sigmoid-of-a-difference form is scale-invariant by construction, so no separate renormalization step is needed before optimization. The underlying problem is the one this concept names first: a comparison-only objective leaves a reward model's absolute scale undetermined, and something downstream has to pin it down, whether by explicit renormalization or by a loss whose gradient never depended on the absolute scale to begin with. The concept sits at the intersection of the <a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a> and <a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a> themes.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/reward-model.html">Reward model (RM)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Reward Prediction Normalization</strong> — <a href="../edge/reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c.html">is reverse engineered to avoid retuning</a> → Advantage Actor-Critic (A2C/A3C)</li><li><strong>Reward Prediction Normalization</strong> — <a href="../edge/reward-normalization-fixes-the-underdetermined-scale-of-reward-model.html">fixes the underdetermined scale of</a> → Reward model (RM)</li><li><strong>Reward Prediction Normalization</strong> — <a href="../edge/reward-normalization-prefigures-the-scale-fix-in-reward-model-loss.html">prefigures the scale fix in</a> → Reward model pairwise comparison loss <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/keeping-reward-models-on-distribution.html">Keeping the reward model on-distribution</a></li><li><a href="../theme/policy-optimization-under-learned-rewards.html">Policy optimization under a learned, changing reward</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2.1 Optimizing the Policy&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A.1 Simulated Robotics Tasks&rdquo;, p. 14</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

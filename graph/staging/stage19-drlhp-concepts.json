@@ -1,0 +1,577 @@
+{
+  "paper": {
+    "id": "deep-rl-human-prefs",
+    "title": "Deep Reinforcement Learning from Human Preferences",
+    "arxiv": "1706.03741",
+    "pdf": "papers/deep-rl-human-prefs.pdf",
+    "pages": 17
+  },
+  "concepts": [
+    {
+      "id": "async-reward-learning-architecture",
+      "name": "Asynchronous Reward-Learning Architecture",
+      "role": "introduced",
+      "summary": "The paper's overall training architecture in which a policy, a reward predictor, and a human-preference-collection process run as three concurrent, asynchronously-coupled loops: the policy acts to generate trajectories, segment pairs are sent to a human for comparison, and the reward predictor is retrained on the growing preference database, with each process's outputs continuously feeding the next.",
+      "parent": null,
+      "locators": [
+        {"section": "2.2 Our Method", "page": 4},
+        {"section": "1 Introduction", "page": 2}
+      ],
+      "notes": "Illustrated in Figure 1. This is the paper's central contribution; the InstructGPT/Constitutional-AI-era RLHF pipelines descend from this architecture. See also 'rlhf'."
+    },
+    {
+      "id": "rlhf",
+      "name": "Reinforcement Learning from Human Feedback (RLHF)",
+      "role": "introduced",
+      "summary": "The general paradigm of training an RL policy by learning a reward model from human preference judgments (rather than a hand-specified reward function) and optimizing that learned reward with a standard RL algorithm.",
+      "parent": null,
+      "locators": [
+        {"section": "2.2 Our Method", "page": 4},
+        {"section": "Abstract", "page": 1}
+      ],
+      "notes": "This paper is the origin work for the deep-RL RLHF pipeline later named and scaled up by InstructGPT (2022). Registry currently marks 'rlhf' as 'refined' for instructgpt and 'inherited' for constitutional-ai; this paper is the introducing anchor."
+    },
+    {
+      "id": "trajectory-segment",
+      "name": "Trajectory Segment",
+      "role": "introduced",
+      "summary": "A short fixed-length sequence of observation-action pairs sampled from an agent's trajectory (1-2 seconds of behavior in this paper's experiments), used as the basic unit shown to and compared by a human, rather than whole trajectories or single states.",
+      "parent": null,
+      "locators": [
+        {"section": "2.1 Setting and Goal", "page": 3},
+        {"section": "2.2.2 Preference Elicitation", "page": 5}
+      ],
+      "notes": "Contrasted with Wilson et al. (2012) and Akrour et al.'s whole-trajectory preference queries. The 'no segments' ablation tests length-1 segments (single states/frames); see 'clip-length-effects'."
+    },
+    {
+      "id": "preference-elicitation-protocol",
+      "name": "Preference Elicitation Protocol",
+      "role": "introduced",
+      "summary": "The procedure by which a human overseer is shown two rendered trajectory-segment video clips and indicates a preference, a tie, or that the segments are incomparable, with responses recorded as a probability distribution over the two segments in a preference database.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "2.2.2 Preference Elicitation", "page": 5}
+      ],
+      "notes": "Ties are recorded as a uniform distribution over the two segments; 'incomparable' judgments are dropped from the database entirely."
+    },
+    {
+      "id": "reward-model",
+      "name": "Reward Model (RM)",
+      "role": "introduced",
+      "summary": "A neural network reward predictor trained via supervised learning to predict a scalar reward consistent with a human's pairwise preferences over trajectory segments, used in place of the environment's true reward signal to train the policy with RL.",
+      "parent": null,
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5}
+      ],
+      "notes": "Central learned artifact of the paper; canonical id shared with InstructGPT and Constitutional AI reward models, marked 'introduced' here as the earliest of the three papers. Instantiates the general 'supervised reward learning' proposal from Concrete Problems in AI Safety (2016)."
+    },
+    {
+      "id": "bradley-terry-model",
+      "name": "Bradley-Terry Model",
+      "role": "inherited",
+      "summary": "A statistical model (Bradley and Terry, 1952) for estimating latent scores from pairwise comparison outcomes, used here to convert predicted per-segment summed reward into a probability that a human prefers one segment over another via a softmax over the two sums.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5}
+      ],
+      "notes": "Paper also notes this is a specialization of the Luce-Shepard choice rule."
+    },
+    {
+      "id": "elo-rating-analogy",
+      "name": "Elo Rating Analogy",
+      "role": "inherited",
+      "summary": "An explicit analogy drawn between the paper's reward-difference-to-preference-probability model and the Elo chess rating system, noting that a difference in predicted reward between two segments plays the same explanatory role as a difference in Elo rating between two chess players.",
+      "parent": "bradley-terry-model",
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5}
+      ],
+      "notes": "Possible loose duplicate of canonical id 'elo-score' (Constitutional AI's Elo-based model ranking); flagged since CAI actually computes Elo scores to rank models whereas this paper only invokes Elo as an explanatory analogy for its Bradley-Terry loss. Reviewer should judge whether to merge."
+    },
+    {
+      "id": "reward-predictor-ensemble",
+      "name": "Reward Predictor Ensemble",
+      "role": "introduced",
+      "summary": "The reward model is implemented as an ensemble of independently-trained predictors (3 by default), each fit on a bootstrap resample of the preference database drawn with replacement, with the final reward estimate given by averaging the independently-normalized outputs of each member.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5}
+      ],
+      "notes": "Also used for query selection: variance across ensemble members estimates predictor uncertainty (see 'uncertainty-based-query-selection'). The 'no ensemble' ablation trains a single predictor and falls back to random queries."
+    },
+    {
+      "id": "adaptive-l2-regularization",
+      "name": "Adaptive L2 Regularization for the Reward Predictor",
+      "role": "introduced",
+      "summary": "A regularization scheme in which the l2 penalty coefficient on the reward predictor is adaptively adjusted during training to keep held-out validation loss between 1.1 and 1.5 times training loss, with 1/e of the preference data held out as a validation set; dropout is additionally used in some domains.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5},
+        {"section": "3.3 Ablation Studies", "page": 9}
+      ],
+      "notes": "The 'no regularization' ablation removes the l2 term and relies on dropout alone."
+    },
+    {
+      "id": "rater-error-noise-model",
+      "name": "Constant Rater-Error Noise Model",
+      "role": "introduced",
+      "summary": "A modification to the preference-prediction softmax assuming a constant 10% chance the human responds uniformly at random, modeling the fact that human raters have a non-vanishing error rate rather than becoming perfectly accurate as the true reward difference grows extreme.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2.3 Fitting the Reward Function", "page": 5}
+      ],
+      "notes": "Distinguishes this from a pure softmax applied directly to Equation 1."
+    },
+    {
+      "id": "semi-supervised-active-reward-learning",
+      "name": "Semi-supervised or active reward learning",
+      "role": "refined",
+      "summary": "Selecting which trajectory-segment pairs to send to the human for labeling based on an estimate of the reward predictor's uncertainty, rather than querying at random, so scarce human feedback is spent on the most informative comparisons.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "2.2.4 Selecting Queries", "page": 6}
+      ],
+      "notes": "Concrete Problems in AI Safety (2016) introduced this as a general research proposal; this paper gives one of the first concrete deep-RL implementations, following Daniel et al. (2014)'s 'active reward learning.' Reused canonical id (concrete-problems: introduced) rather than coining a new one."
+    },
+    {
+      "id": "uncertainty-based-query-selection",
+      "name": "Uncertainty-Based Query Selection (Ensemble Variance)",
+      "role": "introduced",
+      "summary": "The specific query-selection heuristic used: sample a large batch of candidate segment pairs, have every member of the reward-predictor ensemble predict a preference for each, and present to the human those pairs whose predicted preference has the highest variance across ensemble members.",
+      "parent": "semi-supervised-active-reward-learning",
+      "locators": [
+        {"section": "2.2.4 Selecting Queries", "page": 6}
+      ],
+      "notes": "The authors call this 'a crude approximation'; the 'random queries' ablation replaces it with uniform random selection and sometimes performs comparably or better, per the ablation results."
+    },
+    {
+      "id": "label-annealing",
+      "name": "Label Annealing",
+      "role": "introduced",
+      "summary": "A schedule that decreases the rate at which new preference labels are requested over the course of training, roughly inversely proportional to elapsed timesteps, balancing the value of a good reward predictor early in training against the need to keep adapting it as the policy visits new states.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "A Experimental Details", "page": 14}
+      ],
+      "notes": "Applied approximately even with real human feedback, since contractors give feedback at uneven rates."
+    },
+    {
+      "id": "reward-predictor-pretraining",
+      "name": "Reward Predictor Pretraining",
+      "role": "introduced",
+      "summary": "In the Atari experiments, the reward predictor is pretrained for 200 epochs on an initial batch of comparisons (drawn from an untrained, randomly-initialized policy) before RL training begins, reducing the risk of the policy irreversibly converging on a bad behavior guided by an untrained predictor.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "A Experimental Details", "page": 14}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "iterated-online-training",
+      "name": "Iterated (Online) Training",
+      "role": "introduced",
+      "summary": "Collecting preference labels continuously throughout policy training, rather than gathering all labels upfront from a fixed/offline batch of trajectories, so the reward predictor keeps adapting to the changing state distribution the policy visits.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "3.3 Ablation Studies", "page": 9},
+        {"section": "4 Discussion and Conclusions", "page": 10}
+      ],
+      "notes": "The 'no online queries' ablation (offline reward training) demonstrates this matters: a predictor trained only on early labels captures only part of the true reward, and optimizing against it can produce reward-hacking-like exploitative behavior (see 'reward-hacking'). Reused canonical id (constitutional-ai: inherited); this paper is arguably its origin."
+    },
+    {
+      "id": "reward-hacking",
+      "name": "Reward hacking (avoiding)",
+      "role": "refined",
+      "summary": "The phenomenon, observed in the 'no online queries' (offline reward training) ablation, where optimizing a static/incompletely-trained learned reward predictor produces behavior that scores well under the predictor but is bizarre or undesirable under the true task reward, e.g. an agent that learns to avoid losing points in Pong without learning to score, producing endless rallies.",
+      "parent": null,
+      "locators": [
+        {"section": "3.3 Ablation Studies", "page": 9}
+      ],
+      "notes": "Paper explicitly cites Amodei et al. 2016 (Concrete Problems in AI Safety) for this behavior; this is an empirical demonstration of reward hacking in a deep-RL-from-preferences setting, predating InstructGPT's 'reward model over-optimization' framing of the same underlying issue."
+    },
+    {
+      "id": "comparisons-vs-absolute-scores",
+      "name": "Comparisons vs. Absolute Scores (Target Ablation)",
+      "role": "introduced",
+      "summary": "An ablation ('target') replacing the comparison-based cross-entropy loss with direct regression of the reward predictor to an oracle's true total reward over a segment via mean squared error, testing whether eliciting comparisons rather than absolute scores is important to the method's success.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "3.3 Ablation Studies", "page": 9}
+      ],
+      "notes": "Motivated by the authors' finding that humans give more consistent comparisons than consistent absolute scores; comparisons and score-regression performed differently across tasks with neither consistently outperforming the other."
+    },
+    {
+      "id": "clip-length-effects",
+      "name": "Clip-Length Effects on Human Evaluation",
+      "role": "introduced",
+      "summary": "An empirical finding that comparing longer video clips is more informative per clip (though less informative per frame) than comparing single frames, because short clips take raters longer to understand relative to the information they convey; the paper chooses the shortest clip length for which rater evaluation time scales roughly linearly with length.",
+      "parent": "trajectory-segment",
+      "locators": [
+        {"section": "3.3 Ablation Studies", "page": 10}
+      ],
+      "notes": "Tested via the 'no segments' (length-1) ablation on the robotics tasks only, since the Atari reward model depends on a stack of consecutive frames rather than a single frame."
+    },
+    {
+      "id": "synthetic-oracle-feedback",
+      "name": "Synthetic Oracle Feedback",
+      "role": "introduced",
+      "summary": "An experimental device in which a synthetic 'oracle' answers preference queries according to the ground-truth task reward (indicating whichever segment actually receives higher true reward), used to isolate the effect of the reward-learning method from the noise and cost of real human raters.",
+      "parent": null,
+      "locators": [
+        {"section": "3.1 Reinforcement Learning Tasks with Unobserved Rewards", "page": 6}
+      ],
+      "notes": "Outputs indifference (tie) when both segments have equal true reward, common in sparse-reward Atari games."
+    },
+    {
+      "id": "reward-normalization",
+      "name": "Reward Prediction Normalization",
+      "role": "introduced",
+      "summary": "A preprocessing step in which the reward predictor's output is rescaled to have zero mean and a fixed standard deviation before being used by the RL algorithm, since the absolute scale and offset of a learned reward function is otherwise underdetermined by the comparison-based training objective.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2.1 Optimizing the Policy", "page": 4},
+        {"section": "A.1 Simulated Robotics Tasks", "page": 14}
+      ],
+      "notes": "Standard deviation is set to 1 for MuJoCo tasks and 0.05 for Atari, chosen so the same RL hyperparameters (entropy bonus, learning rate) as the true-reward baselines could be reused."
+    },
+    {
+      "id": "non-stationary-reward-challenge",
+      "name": "Non-Stationary Reward Function Challenge",
+      "role": "introduced",
+      "summary": "The observation that because the reward predictor is repeatedly updated during training, the policy is effectively solving an RL problem with a non-stationary reward function; this motivated favoring policy-gradient methods robust to a changing reward and increasing the entropy bonus (particularly for TRPO) to maintain adequate exploration.",
+      "parent": "async-reward-learning-architecture",
+      "locators": [
+        {"section": "2.2.1 Optimizing the Policy", "page": 4},
+        {"section": "A.1 Simulated Robotics Tasks", "page": 14}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "environment-modifications-for-preference-learning",
+      "name": "Environment Modifications for Preference Learning",
+      "role": "introduced",
+      "summary": "Modifications made to standard Gym/Atari environments to prevent the environment itself from leaking task-objective information outside of human feedback: removing variable-length episode termination (replacing 'falling over' resets with a learned penalty in MuJoCo, disabling life-loss/episode-end signals in Atari), removing torque penalties from Gym reward functions, and blanking on-screen score displays in Atari.",
+      "parent": null,
+      "locators": [
+        {"section": "A Experimental Details", "page": 14},
+        {"section": "A.2 Atari", "page": 15}
+      ],
+      "notes": "Includes blanking the enemy-ship counter in BeamRider and the speedometer in Enduro specifically."
+    },
+    {
+      "id": "quantitative-qualitative-evaluation",
+      "name": "Quantitative vs. Qualitative Evaluation Methodology",
+      "role": "introduced",
+      "summary": "The paper's two-track evaluation methodology: 'quantitative' evaluation compares agent performance against a known-but-withheld true reward function on standard RL benchmark tasks, while 'qualitative' evaluation, used for tasks with no reward function at all, judges whether the trained agent fulfills a natural-language goal description as assessed by a human watching videos of its behavior.",
+      "parent": null,
+      "locators": [
+        {"section": "2.1 Setting and Goal", "page": 3}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "human-feedback-sample-efficiency",
+      "name": "Human-Feedback Sample Efficiency",
+      "role": "introduced",
+      "summary": "The paper's headline efficiency result: complex RL tasks and novel behaviors can be learned while a human provides feedback on less than 1% of the agent's environment interactions, reducing the interaction complexity of learning from human oversight by roughly three orders of magnitude compared to per-timestep feedback.",
+      "parent": null,
+      "locators": [
+        {"section": "Abstract", "page": 1},
+        {"section": "4 Discussion and Conclusions", "page": 10}
+      ],
+      "notes": "Directly supports the canonical 'scalable-oversight' concept; this paper is an empirical scaling demonstration of that idea applied to deep RL."
+    },
+    {
+      "id": "scalable-oversight",
+      "name": "Scalable oversight",
+      "role": "refined",
+      "summary": "Training deep RL agents from sparse, cheap, non-expert human feedback rather than requiring a human to supply a reward signal or demonstration at every timestep, as a concrete instantiation of scaling human oversight to large modern RL systems.",
+      "parent": null,
+      "locators": [
+        {"section": "1 Introduction", "page": 2},
+        {"section": "4 Discussion and Conclusions", "page": 10}
+      ],
+      "notes": "Concrete Problems in AI Safety (2016) introduced 'scalable oversight' as a named research problem; this 2017 paper is a direct algorithmic and empirical follow-through, predating its further refinement in Constitutional AI (2022)."
+    },
+    {
+      "id": "novel-behavior-training",
+      "name": "Novel Behavior Training",
+      "role": "introduced",
+      "summary": "A set of experiments demonstrating that the method can teach agents entirely new behaviors that were never associated with a programmatic reward function, specified only via roughly an hour of human feedback: a robot performing repeated backflips, a half-cheetah moving forward on one leg, and a car agent that drives level with surrounding traffic.",
+      "parent": null,
+      "locators": [
+        {"section": "3.2 Novel behaviors", "page": 8}
+      ],
+      "notes": "Presented as the paper's demonstration of flexibility beyond matching existing RL benchmarks; feedback for these was provided by the paper's authors rather than contractors."
+    },
+    {
+      "id": "hopper-backflip-demonstration",
+      "name": "Hopper Backflip Demonstration",
+      "role": "introduced",
+      "summary": "A novel behavior in which the simulated Hopper robot is trained, using 900 human preference queries in under an hour, to perform a sequence of backflips and land upright each time, despite there being no natural hand-engineered reward function for 'doing a backflip.'",
+      "parent": "novel-behavior-training",
+      "locators": [
+        {"section": "3.2 Novel behaviors", "page": 8}
+      ],
+      "notes": "One of the paper's most frequently cited illustrative results in later RLHF literature (Figure 4)."
+    },
+    {
+      "id": "half-cheetah-one-leg-demonstration",
+      "name": "Half-Cheetah One-Leg Demonstration",
+      "role": "introduced",
+      "summary": "A novel behavior in which the simulated Half-Cheetah robot is trained, using 800 human preference queries in under an hour, to move forward while balancing and standing on a single leg.",
+      "parent": "novel-behavior-training",
+      "locators": [
+        {"section": "3.2 Novel behaviors", "page": 9}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "enduro-keeping-pace-demonstration",
+      "name": "Enduro Keeping-Pace Demonstration",
+      "role": "introduced",
+      "summary": "A novel behavior in which an agent playing the Atari game Enduro is trained, using roughly 1,300 queries and 4 million frames, to drive alongside other cars and stay roughly level with traffic, rather than the game's usual objective of passing as many cars as possible.",
+      "parent": "novel-behavior-training",
+      "locators": [
+        {"section": "3.2 Novel behaviors", "page": 9}
+      ],
+      "notes": "Corresponds to the 'even mode' contractor instructions in Appendix B.2; the agent gets confused by changes in background."
+    },
+    {
+      "id": "mujoco",
+      "name": "MuJoCo",
+      "role": "inherited",
+      "summary": "A physics simulator (Todorov et al., 2012) used to implement the paper's simulated-robotics locomotion and control tasks (Hopper, Walker, Swimmer, Half-Cheetah, Ant, Reacher, Pendulum, Double-pendulum), accessed via OpenAI Gym.",
+      "parent": null,
+      "locators": [
+        {"section": "3.1.1 Simulated Robotics", "page": 6}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "atari-games-environment",
+      "name": "Atari games (as an RL testbed)",
+      "role": "inherited",
+      "summary": "Used here as the paper's second experimental domain via the Arcade Learning Environment, with seven games (BeamRider, Breakout, Enduro, Pong, Qbert, SpaceInvaders, Seaquest) drawn from the set studied by Mnih et al. (2013), accessed through OpenAI Gym.",
+      "parent": null,
+      "locators": [
+        {"section": "3.1.2 Atari", "page": 7}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "openai-gym",
+      "name": "OpenAI Gym",
+      "role": "inherited",
+      "summary": "A toolkit (Brockman et al., 2016) providing a common interface to the MuJoCo and Arcade Learning Environment tasks used in the paper's experiments.",
+      "parent": null,
+      "locators": [
+        {"section": "3 Experimental Results", "page": 6}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "hopper-task",
+      "name": "Hopper (MuJoCo task)",
+      "role": "inherited",
+      "summary": "A MuJoCo continuous-control benchmark task in which a single-legged robot must hop/move forward without falling; used both as a standard RL benchmark learned from unobserved reward and as the setting for the backflip novel-behavior demonstration.",
+      "parent": "mujoco",
+      "locators": [
+        {"section": "B.1 MuJoCo", "page": 15}
+      ],
+      "notes": "The irregular learning progress on Hopper in Figure 2 is attributed to one contractor deviating from the typical labeling schedule."
+    },
+    {
+      "id": "half-cheetah-task",
+      "name": "Half-Cheetah (MuJoCo task)",
+      "role": "inherited",
+      "summary": "A MuJoCo continuous-control benchmark task requiring a two-legged 'cheetah' robot to run forward as fast as possible; used as a standard RL benchmark and as the setting for the one-legged-running novel behavior.",
+      "parent": "mujoco",
+      "locators": [
+        {"section": "B.1 MuJoCo", "page": 16}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "ant-task",
+      "name": "Ant (MuJoCo task)",
+      "role": "inherited",
+      "summary": "A MuJoCo continuous-control benchmark task involving a four-legged robot that should remain upright and move forward; notable because human feedback, which emphasized keeping the robot 'standing upright,' outperformed synthetic oracle feedback, apparently providing better reward shaping than the hand-crafted upright bonus in the true reward function.",
+      "parent": "mujoco",
+      "locators": [
+        {"section": "3.1.1 Simulated Robotics", "page": 7},
+        {"section": "B.1 MuJoCo", "page": 16}
+      ],
+      "notes": "Illustrates 'human-feedback-implicit-reward-shaping'."
+    },
+    {
+      "id": "human-feedback-implicit-reward-shaping",
+      "name": "Human-Feedback Implicit Reward Shaping",
+      "role": "introduced",
+      "summary": "An observed phenomenon in which reward predictors learned from human preferences sometimes outperform the ground-truth RL reward function, because human raters implicitly reward-shape the task (e.g. rewarding 'standing upright' on Ant, or rewarding any progress passing cars on Enduro), yielding denser or better-shaped guidance than the original hand-written reward.",
+      "parent": null,
+      "locators": [
+        {"section": "3.1.1 Simulated Robotics", "page": 7},
+        {"section": "3.1.2 Atari", "page": 8}
+      ],
+      "notes": "Relates to 'ant-task' and 'enduro-task' results; also observed at the aggregate level where 1400 synthetic labels slightly outperform training on the true reward directly."
+    },
+    {
+      "id": "enduro-task",
+      "name": "Enduro (Atari game)",
+      "role": "inherited",
+      "summary": "An Atari racing game in the Arcade Learning Environment whose standard objective is to pass as many cars as possible; used both as a standard benchmark task and, in a modified 'even mode,' as the setting for the traffic-pace-keeping novel behavior; notable because human feedback outperformed A3C by shaping reward around incremental progress passing cars, matching DQN-level results.",
+      "parent": "atari-games-environment",
+      "locators": [
+        {"section": "3.1.2 Atari", "page": 8},
+        {"section": "B.2 Atari", "page": 17}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "pong-task",
+      "name": "Pong (Atari game)",
+      "role": "inherited",
+      "summary": "An Atari game used as a standard benchmark task; notable in the ablation studies because training the reward predictor offline (without ongoing online queries) sometimes caused the agent to learn to avoid losing points without learning to score, producing pathologically long volleys.",
+      "parent": "atari-games-environment",
+      "locators": [
+        {"section": "3.3 Ablation Studies", "page": 9}
+      ],
+      "notes": "Illustrates 'iterated-online-training' and 'reward-hacking' findings; synthetic labels matched RL on Pong with as few as 3,300 labels."
+    },
+    {
+      "id": "qbert-task",
+      "name": "Qbert (Atari game)",
+      "role": "inherited",
+      "summary": "An Atari game used as a standard benchmark task; the paper's method failed to learn to beat the first level using real human feedback, possibly because short video clips of Qbert are confusing and difficult for raters to evaluate.",
+      "parent": "atari-games-environment",
+      "locators": [
+        {"section": "3.1.2 Atari", "page": 8}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "a2c",
+      "name": "Advantage Actor-Critic (A2C/A3C)",
+      "role": "inherited",
+      "summary": "A policy-gradient RL algorithm; the paper uses the synchronous variant (A2C) of Mnih et al. (2016)'s asynchronous A3C algorithm to train the policy on the seven Atari tasks against predicted reward from the learned reward model.",
+      "parent": null,
+      "locators": [
+        {"section": "2.2.1 Optimizing the Policy", "page": 4},
+        {"section": "A.2 Atari", "page": 15}
+      ],
+      "notes": "Standard hyperparameters from Mnih et al. (2015, 2016) were reused essentially unchanged."
+    },
+    {
+      "id": "trpo",
+      "name": "Trust Region Policy Optimization (TRPO)",
+      "role": "inherited",
+      "summary": "A policy-gradient RL algorithm (Schulman et al., 2015) used to train the policy on the simulated MuJoCo robotics tasks; the paper increases TRPO's entropy bonus above standard settings to compensate for reduced exploration under a changing, learned reward function.",
+      "parent": null,
+      "locators": [
+        {"section": "2.2.1 Optimizing the Policy", "page": 4},
+        {"section": "A.1 Simulated Robotics Tasks", "page": 14}
+      ],
+      "notes": "The entropy bonus was the only hyperparameter the authors adjusted away from standard settings."
+    },
+    {
+      "id": "dqn",
+      "name": "Deep Q-Network (DQN)",
+      "role": "inherited",
+      "summary": "A value-based deep RL algorithm (Mnih et al., 2015), mentioned as a baseline whose reported Enduro performance is comparable to what the paper's preference-based method achieves.",
+      "parent": null,
+      "locators": [
+        {"section": "3.1.2 Atari", "page": 8}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "inverse-reinforcement-learning",
+      "name": "Inverse reinforcement learning (IRL)",
+      "role": "inherited",
+      "summary": "An alternative approach, mentioned in the introduction, that extracts a reward function from demonstrations of a desired task (Ng and Russell, 2000) rather than from preference comparisons; noted as inapplicable when the desired behavior is hard for a human to demonstrate.",
+      "parent": null,
+      "locators": [
+        {"section": "1 Introduction", "page": 1}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "imitation-learning",
+      "name": "Imitation Learning",
+      "role": "inherited",
+      "summary": "An alternative approach, mentioned in the introduction, of directly cloning demonstrated behavior rather than learning from preferences; noted as inapplicable to behaviors difficult for humans to demonstrate, such as controlling non-human robot morphologies.",
+      "parent": null,
+      "locators": [
+        {"section": "1 Introduction", "page": 1}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "cooperative-inverse-reinforcement-learning",
+      "name": "Cooperative Inverse Reinforcement Learning (CIRL)",
+      "role": "inherited",
+      "summary": "A two-player game-theoretic framework (Hadfield-Menell et al., 2016) for a human and a robot cooperating to maximize the human's reward function; the paper's setting is characterized as a specific instance of this framework in which the human can only interact by stating preferences.",
+      "parent": null,
+      "locators": [
+        {"section": "1.1 Related Work", "page": 3}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "tamer-framework",
+      "name": "TAMER Framework",
+      "role": "inherited",
+      "summary": "A prior framework (Knox and Stone, 2009; Knox, 2012) for learning a reward function from real-time human feedback, discussed in related work as tackling much simpler settings where the desired policy can be learned relatively quickly, unlike the thousands of hours of experience required in this paper's Atari domain.",
+      "parent": null,
+      "locators": [
+        {"section": "1.1 Related Work", "page": 3}
+      ],
+      "notes": "none"
+    },
+    {
+      "id": "contractor-preference-labeling",
+      "name": "Contractor Preference-Labeling Protocol",
+      "role": "introduced",
+      "summary": "The paper's protocol for collecting real (non-synthetic) preference data at scale: paid contractors sign up for time slots, receive a 1-2 sentence task description (and, for Atari, first play the game themselves for five minutes), then repeatedly compare pairs of video clips via a keyboard-driven interface offering 'prefer left,' 'prefer right,' 'tie,' and 'can't tell' responses.",
+      "parent": "preference-elicitation-protocol",
+      "locators": [
+        {"section": "B Instructions Provided to Contractors", "page": 15},
+        {"section": "B.2 Atari", "page": 16}
+      ],
+      "notes": "Possible loose relation to the later, more formalized canonical ids 'labeling-interface' and 'labeler-screening-process' from InstructGPT; flagged for reviewer judgment since the concrete implementations differ substantially (ad hoc clip server plus spreadsheet sign-up vs. a dedicated web product)."
+    },
+    {
+      "id": "recurrent-reward-model-extension",
+      "name": "Recurrent Reward Model (Proposed Extension)",
+      "role": "introduced",
+      "summary": "A noted but unimplemented extension: in a general partially-observable environment, the reward function could be modeled as depending on the whole history of observations via a recurrent neural network, rather than on a fixed window of recent observations as used in the paper's actual experiments.",
+      "parent": "reward-model",
+      "locators": [
+        {"section": "2.2 Our Method", "page": 4}
+      ],
+      "notes": "Footnote 1; not implemented in this paper's experiments (Atari uses a fixed 4-frame stack instead)."
+    },
+    {
+      "id": "expected-value-of-information-query-selection",
+      "name": "Expected-Value-of-Information Query Selection",
+      "role": "inherited",
+      "summary": "A more principled query-selection criterion, mentioned as future work, that would choose queries by their expected value of information rather than by ensemble disagreement, attributed to Akrour et al. (2012) and Krueger et al. (2016).",
+      "parent": "semi-supervised-active-reward-learning",
+      "locators": [
+        {"section": "2.2.4 Selecting Queries", "page": 6}
+      ],
+      "notes": "Left to future work; not implemented in this paper."
+    },
+    {
+      "id": "compute-vs-human-cost-analysis",
+      "name": "Compute vs. Human Feedback Cost Analysis",
+      "role": "introduced",
+      "summary": "A cost analysis (footnote) estimating that the Atari experiments' compute cost (about $25 for roughly a day of training on a 16-CPU, one-GPU cloud VM) is already comparable to the cost of the non-expert human feedback used (about $36 at US minimum wage for 5,000 labels), used to argue that further reductions in the number of human labels required would yield diminishing practical returns.",
+      "parent": null,
+      "locators": [
+        {"section": "4 Discussion and Conclusions", "page": 11}
+      ],
+      "notes": "none"
+    }
+  ]
+}

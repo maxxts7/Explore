@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Compute vs. Human Feedback Cost Analysis — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Compute vs. Human Feedback Cost Analysis</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A cost analysis (footnote) estimating that the Atari experiments&#x27; compute cost (about $25 for roughly a day of training on a 16-CPU, one-GPU cloud VM) is already comparable to the cost of the non-expert human feedback used (about $36 at US minimum wage for 5,000 labels), used to argue that further reductions in the number of human labels required would yield diminishing practical returns.</p>
+<div class="page-intro"><p>It's tempting to assume that cutting the number of human labels needed is always worth chasing further. A footnote tucked into the paper's discussion section quietly complicates that assumption with one back-of-envelope calculation.</p>
+<p>The page walks through the footnote's own numbers, cloud compute against minimum-wage labor for one Atari run, then the argument built on them, that once the two costs sit close together, squeezing labels further saves less than it seems, and closes on where the estimate does and doesn't generalize.</p></div>
+<section class="prose-section">
+<h2>What the footnote computes</h2>
+<p>Tucked into the discussion section as a footnote, this is a back-of-envelope cost comparison rather than a formal result: "For the Atari experiments we are using a virtual machine with 16 CPUs and one Nvidia K80 GPU which costs ~$700/month on GCE. Training takes about a day, so the compute cost is ~$25. Training with 5k labels corresponds roughly to 5 hours of human labour, at US minimum wage this totals ~$36" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=11" target="_blank" rel="noopener">§"4 Discussion and Conclusions", p. 11</a>). The two numbers, roughly $25 of cloud compute and roughly $36 of non-expert human labor for a single Atari run, land close enough together to support the paper's point without needing precision.</p>
+</section>
+<section class="prose-section">
+<h2>The argument it is used to make</h2>
+<p>The estimate answers an implicit objection to the paper's framing: if the point of learning from comparisons is to save expensive human attention, why not push the label count down further? The <a href="../concept/human-feedback-sample-efficiency.html">Human-Feedback Sample Efficiency</a> edge shows how directly this footnote answers that question: right after quantifying the roughly three-orders-of-magnitude reduction in interaction complexity, the paper states it is "already hitting diminishing returns on further sample-complexity improvements" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=10" target="_blank" rel="noopener">§"4 Discussion and Conclusions", p. 10</a>) precisely "because the cost of compute is already comparable to the cost of non-expert feedback" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=11" target="_blank" rel="noopener">§"4 Discussion and Conclusions", p. 11</a>). Once compute and labor cost sit at roughly the same order of magnitude, shaving labels further would save money on one side of a ledger that is already balanced, rather than unlocking a fundamentally cheaper method.</p>
+</section>
+<section class="prose-section">
+<h2>Its place in the paper&#x27;s economics</h2>
+<p>This is the paper's only explicit dollar figure, and it sits alongside <a href="../concept/contractor-preference-labeling.html">Contractor Preference-Labeling Protocol</a> and <a href="../concept/clip-length-effects.html">Clip-Length Effects on Human Evaluation</a> as one of the ways the paper reasons about how expensive a human rater actually is per unit of information extracted. Unlike the sample-efficiency headline, this analysis is scoped specifically to the Atari setup (a 16-CPU, one-GPU cloud VM and 5,000 labels), and the paper does not claim the same cost comparison would hold for the MuJoCo robotics tasks, which used far smaller label budgets of 350-1400 queries.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Compute vs. Human Feedback Cost Analysis</strong> — <a href="../edge/compute-vs-human-cost-analysis-caps-the-marginal-value-of-human-feedback-sample-efficiency.html">caps the marginal value of</a> → Human-Feedback Sample Efficiency</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/economics-of-human-feedback.html">The economics of human feedback</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;4 Discussion and Conclusions&rdquo;, p. 11</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

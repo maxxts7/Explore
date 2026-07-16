@@ -1,0 +1,433 @@
+{
+ "examples": {
+  "concept-example (kl-penalty)": "A model being optimized against a learned reward will happily wander into strange territory to please it. The per-token KL penalty is the leash: at every token, the policy pays a small cost for straying from the supervised model it started as.\n\nWhat follows moves from what a KL penalty is in general to why this one bites at every token rather than once per episode, then out to the corpus's wider story about proxies going wrong. Its tradeoff against pretraining-gradient mixing is the part worth lingering on.",
+  "theme-example (cai-core-method)": "Constitutional AI (2022) trains a harmless assistant from a short written list of principles instead of thousands of human harm judgments. This theme covers the mechanics of how that substitution actually works: a model critiques its own harmful response against a sampled principle, then revises the response to remove what it identified, and the result becomes the model that seeds everything downstream.\n\nThe critique-and-revision pipeline unfolds step by step, closing with the direct-revision ablation, which tests whether the critique step was ever necessary in the first place.",
+  "tissue-example (mirror-image-pairs)": "A handful of mechanisms in this corpus turn out to be the same blueprint, built twice, and pointed at opposite ends. One measure gets minimized where its closest relative gets maximized; a single written constitution gets re-expressed in the opposite grammatical mood.\n\nSecurity and abuse sit on opposite sides of one attack; an agent and the human teaching it swap which one becomes legible to the other. Two InstructGPT failure modes close the page, hedging and evasiveness, the identical over-rewarded move wearing different disguises."
+ },
+ "newThemes": [
+  {
+   "id": "learning-rewards-from-comparisons",
+   "name": "Comparisons as the atomic unit of human feedback",
+   "narrative": "This theme's claim is that one design decision, asking a human to compare two outcomes rather than score one, is the load-bearing joint connecting the 2017 paper's robots to the chatbots of 2022. The trajectory segment is the unit being compared: a short clip of observations and actions, one to two seconds long, rather than a whole episode or a single state. The preference elicitation protocol is the procedure that shows a human two such clips and records a preference, a tie, or an incomparable judgment in a growing database. The Bradley-Terry model is the statistical machinery, borrowed from 1950s paired-comparison theory, that turns those recorded preferences into a scalar reward scale via a softmax over predicted per-segment reward; the same comparison-to-scale logic reappears, unnamed but unchanged, in the reward model loss that trains InstructGPT's (2022) reward model on ranked completions. The paper explains its own scale with an Elo score analogy, noting that a difference in predicted reward plays the same role as a difference in chess rating, the same rating concept Constitutional AI (2022) later computes literally to rank model snapshots. The comparisons vs. absolute scores ablation is the paper's direct test of the choice to elicit comparisons at all, motivated by the finding that humans give more consistent comparisons than consistent scores, though regressing directly to a score performs about as well on some tasks. Because raters are not perfectly accurate even on easy comparisons, the constant rater-error noise model adds a floor probability of a random response so the predicted preference distribution never asymptotes to certainty. The reward model is the artifact all of this produces: a network trained on comparisons that stands in for the missing reward function, the same canonical model InstructGPT (2022) later trains on human rankings of language outputs.",
+   "memberNames": [
+    "Trajectory Segment",
+    "Preference Elicitation Protocol",
+    "Bradley-Terry Model",
+    "Comparisons vs. Absolute Scores (Target Ablation)",
+    "Constant Rater-Error Noise Model",
+    "Elo Score (helpfulness/harmlessness)",
+    "Reward model (RM)",
+    "Reward model pairwise comparison loss"
+   ],
+   "walkOrder": [
+    "trajectory-segment",
+    "preference-elicitation-protocol",
+    "bradley-terry-model",
+    "comparisons-vs-absolute-scores",
+    "rater-error-noise-model",
+    "elo-score",
+    "reward-model-loss",
+    "reward-model"
+   ]
+  },
+  {
+   "id": "keeping-reward-models-on-distribution",
+   "name": "Keeping the reward model on-distribution",
+   "narrative": "A learned reward model is only trustworthy on the states the policy that trained it actually visited, and this theme collects the 2017 paper's countermeasures against a policy that drifts off that distribution. The asynchronous reward-learning architecture is the design that makes any countermeasure possible at all: policy, labeling, and reward-fitting run as three concurrent loops rather than one fixed pass, so the reward predictor can keep adapting as the policy's own behavior changes. Iterated (online) training is the discipline that architecture enables, collecting preference labels continuously through training rather than only at the start; the paper's own ablation shows this matters, since training only on early labels lets the policy exploit gaps in an incompletely-trained predictor. The non-stationary reward function challenge names the cost of that choice: because the reward keeps changing under the policy's feet, the RL optimizer is effectively solving a moving-target problem, addressed here by favoring policy-gradient methods and raising the entropy bonus. The reward predictor ensemble and adaptive L2 regularization for the reward predictor are the two safeguards against the predictor overfitting the comparisons it currently has. Reward predictor pretraining gives the predictor an initial fit on comparisons from an untrained policy before RL begins, and label annealing then tapers the rate of new labels as training proceeds, roughly inversely with elapsed timesteps. Reward prediction normalization rescales the predictor's output to a fixed mean and standard deviation, since a comparison-only training objective leaves the reward's absolute scale undetermined. The recurrent reward model extension is the paper's own unimplemented proposal for the general case: modeling reward as a function of an agent's whole observation history via a recurrent network, rather than the fixed window used in the actual experiments.",
+   "memberNames": [
+    "Iterated (Online) Training",
+    "Non-Stationary Reward Function Challenge",
+    "Reward Predictor Ensemble",
+    "Adaptive L2 Regularization for the Reward Predictor",
+    "Reward Predictor Pretraining",
+    "Label Annealing",
+    "Reward Prediction Normalization",
+    "Recurrent Reward Model (Proposed Extension)",
+    "Asynchronous Reward-Learning Architecture"
+   ],
+   "walkOrder": [
+    "async-reward-learning-architecture",
+    "iterated-online-training",
+    "non-stationary-reward-challenge",
+    "reward-predictor-ensemble",
+    "adaptive-l2-regularization",
+    "reward-predictor-pretraining",
+    "label-annealing",
+    "reward-normalization",
+    "recurrent-reward-model-extension"
+   ]
+  },
+  {
+   "id": "economics-of-human-feedback",
+   "name": "The economics of human feedback",
+   "narrative": "Every method in the 2017 paper answers to a single constraint, how many minutes of a non-expert human's attention the system can afford to spend, and this theme is the paper's own accounting of that budget. Human-feedback sample efficiency is the headline result the budget makes possible: complex tasks and novel behaviors learned while a human labels less than 1% of the agent's environment interactions, roughly three orders of magnitude less than per-timestep feedback would require. The trajectory segment keeps each individual query cheap, a clip of one to two seconds rather than a full episode, and clip-length effects on human evaluation is the finding that justifies that specific length: shorter clips take a rater longer to understand relative to the information they convey, so the paper picks the shortest length for which evaluation time still scales linearly with duration. Uncertainty-based query selection spends the budget on the comparisons a reward-predictor ensemble disagrees about most, while expected-value-of-information query selection is the more principled criterion the authors flag as future work but do not implement. The contractor preference-labeling protocol is where the budget is actually spent: paid contractors, briefed with a one-to-two sentence task description, compare clips through a keyboard-driven interface at a pace of a few seconds per query. Label annealing tapers the query rate over the course of training, front-loading the budget when the predictor needs it most. Compute vs. human feedback cost analysis is the paper's own closing arithmetic, finding that its roughly $25 of Atari compute is already comparable to the roughly $36 of minimum-wage labor behind 5,000 labels, the calculation that made oversight of deep RL look economically practical for the first time.",
+   "memberNames": [
+    "Human-Feedback Sample Efficiency",
+    "Compute vs. Human Feedback Cost Analysis",
+    "Uncertainty-Based Query Selection (Ensemble Variance)",
+    "Expected-Value-of-Information Query Selection",
+    "Label Annealing",
+    "Clip-Length Effects on Human Evaluation",
+    "Contractor Preference-Labeling Protocol",
+    "Trajectory Segment"
+   ],
+   "walkOrder": [
+    "human-feedback-sample-efficiency",
+    "trajectory-segment",
+    "clip-length-effects",
+    "uncertainty-based-query-selection",
+    "expected-value-of-information-query-selection",
+    "contractor-preference-labeling",
+    "label-annealing",
+    "compute-vs-human-cost-analysis"
+   ]
+  },
+  {
+   "id": "hidden-reward-experimental-design",
+   "name": "Hiding the reward: experimental design for preference-only learning",
+   "narrative": "Proving that an agent learned a behavior from preferences alone, and not from some other leaked signal, took as much experimental design as the learning method itself. The quantitative vs. qualitative evaluation methodology sets up the two-track test: quantitative tasks compare the trained agent against a true reward function withheld from training, while qualitative tasks, where no reward function exists at all, are judged by a human watching video against a natural-language goal description. Environment modifications for preference learning close off the side channels that would make quantitative comparisons meaningless: on-screen score displays are blanked, variable-length episode termination is replaced with a learned penalty, and torque penalties are stripped from the Gym reward functions, so nothing beyond the human's feedback carries information about the task. Synthetic oracle feedback is the controlled comparison this design enables: a synthetic rater that always answers according to the true, withheld reward, letting the authors isolate the reward-learning method's own effect from the noise and cost of real human raters. Human-feedback implicit reward shaping is the finding this whole apparatus surfaces: on tasks like Ant and Enduro, real human comparisons sometimes outperform the synthetic oracle, because a human's preferences shape the reward more usefully than the hand-written objective they are approximating.",
+   "memberNames": [
+    "Quantitative vs. Qualitative Evaluation Methodology",
+    "Synthetic Oracle Feedback",
+    "Environment Modifications for Preference Learning",
+    "Human-Feedback Implicit Reward Shaping"
+   ],
+   "walkOrder": [
+    "quantitative-qualitative-evaluation",
+    "environment-modifications-for-preference-learning",
+    "synthetic-oracle-feedback",
+    "human-feedback-implicit-reward-shaping"
+   ]
+  },
+  {
+   "id": "deep-rl-testbeds",
+   "name": "The 2017 deep-RL testbeds: MuJoCo and Atari",
+   "narrative": "The 2017 paper needed testbeds complex enough that learning from preferences would mean something, and it drew them from two existing sources accessed through a common interface, OpenAI Gym, the toolkit providing a shared API to both domains. MuJoCo supplies the physics-simulated robotics tasks, of which this theme covers three: Hopper, a single-legged robot that must move forward without falling, later also the setting for the backflip demonstration; Half-Cheetah, a two-legged robot run forward as fast as possible, later the setting for the one-legged-running demonstration; and Ant, a four-legged robot whose task is to stay upright and move forward, notable because human feedback about staying upright outperformed the synthetic oracle. Atari games (as an RL testbed) supplies the second domain, seven titles from the Arcade Learning Environment, of which this theme covers three: Enduro, a racing game whose usual objective is passing cars, later modified for the pace-keeping demonstration; Pong, notable in the ablation studies for the reward-exploiting behavior that appeared under offline reward training; and Qbert, the one task the method failed to learn from real human feedback, plausibly because its short clips are hard for a rater to parse. Across both domains the same pattern holds: the testbeds themselves are standard RL benchmarks, but the individual tasks are where the paper's successes, near-misses, and one outright failure become legible.",
+   "memberNames": [
+    "MuJoCo",
+    "OpenAI Gym",
+    "Atari games (as an RL testbed)",
+    "Hopper (MuJoCo task)",
+    "Half-Cheetah (MuJoCo task)",
+    "Ant (MuJoCo task)",
+    "Enduro (Atari game)",
+    "Pong (Atari game)",
+    "Qbert (Atari game)"
+   ],
+   "walkOrder": [
+    "openai-gym",
+    "mujoco",
+    "hopper-task",
+    "half-cheetah-task",
+    "ant-task",
+    "atari-games-environment",
+    "enduro-task",
+    "pong-task",
+    "qbert-task"
+   ]
+  },
+  {
+   "id": "novel-behaviors-without-reward-functions",
+   "name": "Novel behaviors without reward functions",
+   "narrative": "Matching existing RL benchmarks proves the method works; teaching behaviors nobody could have hand-coded a reward for is the point of it, and novel behavior training is the paper's demonstration of exactly that, using roughly an hour of human feedback per behavior and no programmatic reward at all. The Hopper backflip demonstration trains the simulated Hopper robot, using 900 preference queries, to perform a sequence of backflips and land upright each time, a behavior with no natural hand-engineered reward. The Half-Cheetah one-leg demonstration trains the Half-Cheetah robot, using 800 queries, to move forward balanced on a single leg. The Enduro keeping-pace demonstration retrains the Atari racing task against a different goal than the game's own scoring: using roughly 1,300 queries, the agent learns to stay level with surrounding traffic rather than pass cars. Human-feedback implicit reward shaping is the reason these demonstrations work as well as they do: a human's comparisons often carry denser or better-shaped guidance than a hand-written reward would, the same shaping effect observed on the Ant and Enduro benchmark tasks.",
+   "memberNames": [
+    "Novel Behavior Training",
+    "Hopper Backflip Demonstration",
+    "Half-Cheetah One-Leg Demonstration",
+    "Enduro Keeping-Pace Demonstration",
+    "Human-Feedback Implicit Reward Shaping"
+   ],
+   "walkOrder": [
+    "novel-behavior-training",
+    "hopper-backflip-demonstration",
+    "half-cheetah-one-leg-demonstration",
+    "enduro-keeping-pace-demonstration",
+    "human-feedback-implicit-reward-shaping"
+   ]
+  },
+  {
+   "id": "policy-optimization-under-learned-rewards",
+   "name": "Policy optimization under a learned, changing reward",
+   "narrative": "Once a policy is trained against a reward model rather than a fixed environment signal, the reward itself keeps changing underneath it, and this theme is about the RL algorithms built to tolerate that. The non-stationary reward function challenge is the underlying constraint: because the reward predictor is repeatedly refit during training, the policy is solving a moving-target problem, which the 2017 paper addresses by favoring policy-gradient methods and raising the entropy bonus. Advantage Actor-Critic is the algorithm chosen for the paper's seven Atari tasks, run in its synchronous form with standard hyperparameters reused from prior work. Trust Region Policy Optimization is the algorithm chosen for the MuJoCo robotics tasks, with its entropy bonus raised above standard settings, the one hyperparameter the authors adjusted, specifically to restore exploration lost to the trust region under a shifting reward. Deep Q-Network appears as a comparison point rather than a method used here: the paper notes its own Enduro results are comparable to DQN's reported performance. Reward prediction normalization is the shared preprocessing step feeding both optimizers a reward of fixed scale, since a comparison-trained predictor leaves the reward's absolute scale undetermined. The same constraint reappears six years later inside PPO training, the RL stage of InstructGPT (2022), where the policy is likewise optimized against a reward model that shifts as training proceeds.",
+   "memberNames": [
+    "Advantage Actor-Critic (A2C/A3C)",
+    "Trust Region Policy Optimization (TRPO)",
+    "Deep Q-Network (DQN)",
+    "PPO fine-tuning stage (RLHF policy optimization)",
+    "Non-Stationary Reward Function Challenge",
+    "Reward Prediction Normalization"
+   ],
+   "walkOrder": [
+    "non-stationary-reward-challenge",
+    "a2c",
+    "trpo",
+    "dqn",
+    "reward-normalization",
+    "ppo-training"
+   ]
+  },
+  {
+   "id": "prior-human-in-the-loop-rl",
+   "name": "Prior human-in-the-loop RL and why it didn't scale",
+   "narrative": "Learning a task from something other than a hand-specified reward did not start in 2017, and this theme is the lineage the paper places itself against in its own related-work discussion. Inverse reinforcement learning extracts a reward function from demonstrations of the desired task, an approach the paper notes is inapplicable when the desired behavior is hard for a human to demonstrate in the first place, such as controlling a non-human robot morphology. Imitation learning sidesteps reward learning entirely by cloning demonstrated behavior directly, and fails for the same reason: some behaviors cannot be demonstrated even if they can be recognized. The TAMER framework learns a reward function from real-time human feedback, but the paper distinguishes its own setting by scale: TAMER's prior experiments involve policies learnable relatively quickly, not the thousands of hours of experience the paper's Atari tasks require. Cooperative inverse reinforcement learning frames a human and an agent as two players cooperating to maximize the human's reward function, and the paper positions its own method as a specific instance of this framework, one in which the human's only available move is to state a preference between two segments. None of the four approaches, on their own, could absorb the deep-RL scale the 2017 paper needed: they required either expert demonstrations, hand-coded features, or an amount of continuous human attention that does not fit a budget of minutes.",
+   "memberNames": [
+    "TAMER Framework",
+    "Cooperative Inverse Reinforcement Learning (CIRL)",
+    "Imitation Learning",
+    "Inverse reinforcement learning (IRL)"
+   ],
+   "walkOrder": [
+    "inverse-reinforcement-learning",
+    "imitation-learning",
+    "tamer-framework",
+    "cooperative-inverse-reinforcement-learning"
+   ]
+  }
+ ],
+ "refreshThemes": [
+  {
+   "id": "scalable-oversight-lineage",
+   "name": "From an open problem to reward models to AI feedback",
+   "narrative": "This theme traces the corpus's most important cross-paper throughline, and the 2017 paper is now its explicit middle link between an open problem and a built pipeline. Concrete Problems (2016) names scalable oversight as an open problem: safe behavior requires evaluating a true objective too costly to check on every training example. The 2017 paper answers it first: its asynchronous reward-learning architecture runs a policy, a human-comparison process, and a reward predictor as three concurrent loops, each feeding the next, so a learned reward can stand in for the missing objective while the policy trains, and human-feedback sample efficiency is the result that made the answer credible, learning complex tasks and novel behaviors from feedback on less than 1% of the agent's environment interactions. InstructGPT's (2022) reward model is, functionally, that same architecture scaled to language: a model trained to predict which of two outputs human labelers would prefer, letting reinforcement learning from human feedback optimize a cheap, dense proxy for a genuinely expensive human judgment across an entire training distribution. Constitutional AI's (2022) RL from AI Feedback pushes the same lineage one step further: the feedback model that produces harmlessness preference labels replaces even the human labeler, and the hybrid human/AI preference model blends human-labeled helpfulness comparisons with AI-labeled harmlessness ones into a single reward signal. Iterated online training, periodically refreshing the preference model on the current policy's own outputs, is not new at this last step either: the 2017 paper already implements it as a core part of its architecture, and Constitutional AI (2022) flags the same technique as a further scaling step now made easier once an AI, rather than a human, is doing the labeling.",
+   "memberNames": [
+    "Scalable oversight",
+    "Asynchronous Reward-Learning Architecture",
+    "Human-Feedback Sample Efficiency",
+    "Reward model (RM)",
+    "Reinforcement learning from human feedback (RLHF)",
+    "RL from AI Feedback (RLAIF)",
+    "Feedback Model",
+    "Hybrid Human/AI Preference Model",
+    "Iterated (Online) Training"
+   ],
+   "walkOrder": [
+    "scalable-oversight",
+    "async-reward-learning-architecture",
+    "human-feedback-sample-efficiency",
+    "reward-model",
+    "rlhf",
+    "rlaif",
+    "feedback-model",
+    "hybrid-human-ai-preference-model",
+    "iterated-online-training"
+   ],
+   "currentIntro": "Scalable oversight is this corpus's clearest throughline: a problem Concrete Problems (2016) could only name, InstructGPT (2022) turns into a working reward model, and Constitutional AI (2022) then scales again by replacing the human labeler with an AI one. This theme follows that lineage across all three papers.\n\nTold as one continuous story rather than three separate ones, it slows down at RL from AI Feedback, the point where an AI's judgment starts doing the job a human used to do."
+  },
+  {
+   "id": "semi-supervised-reward-learning-proposals",
+   "name": "Scaling oversight by predicting reward on unlabeled episodes",
+   "narrative": "Scalable oversight is the problem of ensuring safe behavior when the true objective is too costly to evaluate on every training example. This theme covers Concrete Problems' (2016) central technical answer: semi-supervised reinforcement learning, a framework in which an agent observes its true reward on only a small fraction of timesteps but is evaluated throughout, instantiated through four concrete proposals. Supervised reward learning trains a model to predict reward from state and uses that prediction, weighted by its own uncertainty, to estimate payoff on unlabeled episodes. Semi-supervised or active reward learning adds the ability to flag salient events and request feedback on them specifically; the 2017 paper gives this proposal its first concrete deep-RL implementation, choosing which segment pairs to query through uncertainty-based query selection, sampling candidates and asking the human about whichever pair a reward-predictor ensemble disagrees about most. Expected-value-of-information query selection is the more principled alternative that the 2017 paper leaves to future work rather than implementing. Unsupervised value iteration and unsupervised model learning both extract information from the transitions of unlabeled episodes alone, improving Bellman updates or a dynamics model respectively without needing reward labels at all. Atari games served as the toy testbed proposed here, and became, the following year, one of the two domains in which the 2017 paper actually ran these ideas. The shared claim is that a cheap, sparse true-reward signal can be stretched to cover dense training data by learning to predict it rather than evaluating it everywhere, a claim the 2017 paper is the first to test at deep-RL scale.",
+   "memberNames": [
+    "Scalable oversight",
+    "Semi-supervised reinforcement learning",
+    "Supervised reward learning",
+    "Semi-supervised or active reward learning",
+    "Uncertainty-Based Query Selection (Ensemble Variance)",
+    "Expected-Value-of-Information Query Selection",
+    "Unsupervised value iteration",
+    "Unsupervised model learning",
+    "Atari games (as an RL testbed)"
+   ],
+   "walkOrder": [
+    "scalable-oversight",
+    "semi-supervised-reinforcement-learning",
+    "supervised-reward-learning",
+    "semi-supervised-active-reward-learning",
+    "uncertainty-based-query-selection",
+    "expected-value-of-information-query-selection",
+    "unsupervised-value-iteration",
+    "unsupervised-model-learning",
+    "atari-games-environment"
+   ],
+   "currentIntro": "Evaluating an agent's true objective on every single training example can simply be too expensive. This theme covers the main answer Concrete Problems (2016) gives to that constraint: let an agent see its real reward only occasionally, and have it learn to predict that reward the rest of the time, stretching a sparse signal to cover dense training data.\n\nSupervised reward learning carries the core idea that the theme's other proposals largely extend or specialize, ending with Atari games as the toy testbed proposed for putting all of them to the test."
+  },
+  {
+   "id": "human-feedback-data-infrastructure",
+   "name": "Building the human side of the RLHF pipeline",
+   "narrative": "RLHF is often described algorithmically, but it depends on an entire human-data infrastructure, and this theme now traces that infrastructure back to its first working version. The 2017 paper's preference elicitation protocol is the primitive ancestor: a human overseer watches two rendered video clips and records a preference, a tie, or an incomparable judgment into a growing database, the same three-way response structure InstructGPT's labeling apparatus still offers five years later. The contractor preference-labeling protocol is how that primitive was actually staffed in 2017: paid contractors sign up for time slots, receive a one-to-two sentence task description, and compare clips through a keyboard-driven interface. InstructGPT (2022) scales the same idea into a purpose-built pipeline. The API prompt distribution, text submitted by real users to an earlier InstructGPT model, deduplicated and filtered, supplies the raw prompts behind the SFT dataset of roughly 13,000 demonstrations, the RM dataset of roughly 33,000 ranked comparison sets, and the PPO dataset of roughly 31,000 unlabeled rollout prompts. None of this data exists without the roughly 40 contractors selected via a four-criterion labeler screening process, who record their judgments through a purpose-built web labeling interface using a fixed labeler metadata annotation taxonomy covering failures like hallucination or denigration of a protected class. Two further concepts test whether this whole human pipeline is trustworthy: inter-labeler agreement rate measures whether independent labelers agree with each other at all, and the held-out labeler generalization test checks whether models trained on one group of labelers' preferences hold up for a separate group who contributed no training data.",
+   "memberNames": [
+    "Preference Elicitation Protocol",
+    "Contractor Preference-Labeling Protocol",
+    "SFT dataset",
+    "RM (comparison) dataset",
+    "PPO dataset",
+    "API prompt distribution",
+    "Labeler screening and selection process",
+    "Web labeling interface",
+    "Labeler metadata annotation taxonomy",
+    "Held-out labeler generalization test",
+    "Inter-labeler agreement rate"
+   ],
+   "walkOrder": [
+    "preference-elicitation-protocol",
+    "contractor-preference-labeling",
+    "api-prompt-distribution",
+    "sft-dataset",
+    "rm-dataset",
+    "ppo-dataset",
+    "labeler-screening-process",
+    "inter-annotator-agreement",
+    "labeling-interface",
+    "labeler-metadata-taxonomy",
+    "held-out-labeler-generalization"
+   ],
+   "currentIntro": "RLHF is usually described as an algorithm, but it runs on a supply chain of real people. This theme makes that infrastructure behind InstructGPT (2022) visible: contractors screened for the job, a purpose-built interface for recording their judgments, and prompts drawn from what actual users typed into an earlier version of the model.\n\nThe data's path runs from raw prompt to finished dataset, ending at inter-labeler agreement and the held-out labeler generalization test, the two checks on whether this whole human pipeline can actually be trusted."
+  },
+  {
+   "id": "demonstrations-not-specification",
+   "name": "Learning from demonstrations instead of a specified reward",
+   "narrative": "Concrete Problems (2016) proposes learning from demonstrations as a remedy for the risks of both reward hacking and unsafe exploration: rather than trial-and-error optimization of a hand-specified objective, an agent can learn a policy or reward function from expert trajectories via inverse reinforcement learning or apprenticeship learning, clone the demonstrated behavior directly through imitation learning, or infer a human's goals cooperatively as in cooperative inverse reinforcement learning, optionally bounding further exploration around the resulting baseline. The 2017 paper takes up the same menu of demonstration-based approaches in its own related work, and argues preferences are needed precisely where they fail: inverse reinforcement learning and imitation learning both require a human able to demonstrate the desired behavior, which breaks down for tasks like controlling a non-human robot morphology that a person can recognize but cannot perform. InstructGPT (2022) operationalizes the demonstration side of this menu as the first, and structurally simplest, step of its training pipeline: supervised fine-tuning trains a pretrained GPT-3 model directly on roughly 13,000 human-written demonstrations of desired behavior, collected in the SFT dataset, to produce the SFT model, which serves both as a standalone baseline and as the initialization for everything that follows. This theme's claim is now a three-paper one: a technique the 2016 paper proposed as one option among several for avoiding specification failures is, in the 2017 paper, explicitly weighed against and set aside in favor of preferences, before becoming, in 2022, the concrete, load-bearing first stage of a real alignment pipeline.",
+   "memberNames": [
+    "Inverse reinforcement learning (IRL)",
+    "Imitation Learning",
+    "Apprenticeship learning",
+    "Use demonstrations (safe exploration)",
+    "Cooperative Inverse Reinforcement Learning (CIRL)",
+    "Supervised fine-tuning (SFT)",
+    "Supervised fine-tuned (SFT) model",
+    "SFT dataset"
+   ],
+   "walkOrder": [
+    "inverse-reinforcement-learning",
+    "imitation-learning",
+    "apprenticeship-learning",
+    "use-demonstrations",
+    "cooperative-inverse-reinforcement-learning",
+    "supervised-fine-tuning",
+    "sft-dataset",
+    "sft-model"
+   ],
+   "currentIntro": "Concrete Problems (2016) suggests, almost in passing, that an agent could learn from being shown good behavior instead of from a hand-written reward. This theme follows that suggestion to where it lands: as supervised fine-tuning, the literal first stage of the training pipeline in InstructGPT (2022), built on roughly 13,000 human-written demonstrations.\n\nThe concepts run from inverse reinforcement learning, the abstract 2016 proposal, through to the resulting SFT model, which becomes the starting point for everything InstructGPT does afterward."
+  }
+ ],
+ "newSupertheme": {
+  "id": "deep-rl-from-preferences-proof-of-concept",
+  "name": "Deep RL from Human Preferences: the 2017 proof of concept",
+  "narrative": "This supertheme is the 2017 paper's full proof of concept: everything it took to make human preferences into a usable training signal for deep reinforcement learning, from the mechanism to the countermeasures to the proof that it worked. Prior human-in-the-loop RL and why it didn't scale sets up the gap the paper closes, a decade of demonstration-based, evaluative-feedback, and cooperative-game approaches each blocked from deep RL by needing expert demonstrations, hand-coded features, or constant human attention. Comparisons as the atomic unit of human feedback is the mechanism that closes it: humans compare pairs of trajectory segments rather than score them, and Bradley-Terry machinery turns those comparisons into a scalar reward. Keeping the reward model on-distribution covers the engineering that keeps that mechanism from breaking down once a policy starts optimizing against it, online labels, ensembles, regularization, and normalization, all needed because a static learned reward is exploitable. Policy optimization under a learned, changing reward is the RL side of the same problem, the reason A2C and TRPO were chosen specifically because the reward they optimize keeps moving under them. The economics of human feedback is the constraint that makes the whole design defensible: every choice traces back to a budget of minutes of non-expert attention, and the paper's own cost accounting is what made oversight of deep RL look practical for the first time. The 2017 deep-RL testbeds: MuJoCo and Atari is where the method first had to scale, and hiding the reward: experimental design for preference-only learning is how the authors proved it was really learning from preferences alone, stripping every side channel and building a synthetic oracle as a controlled comparison. Novel behaviors without reward functions is the payoff all of this was for: a backflip, a one-legged run, and even-paced driving, tasks nobody could specify a reward for, trained in under an hour of human time each.",
+  "memberThemeNames": [
+   "Comparisons as the atomic unit of human feedback",
+   "Keeping the reward model on-distribution",
+   "The economics of human feedback",
+   "Hiding the reward: experimental design for preference-only learning",
+   "The 2017 deep-RL testbeds: MuJoCo and Atari",
+   "Novel behaviors without reward functions",
+   "Policy optimization under a learned, changing reward",
+   "Prior human-in-the-loop RL and why it didn't scale"
+  ]
+ },
+ "newConnectiveThemes": [
+  {
+   "id": "ablations-carry-the-design-argument",
+   "name": "The ablation is the argument",
+   "narrative": "The 2017 paper backs up nearly every major design decision not with a first-principles argument but with an ablation that removes the choice and shows what happens when it is gone. The reward predictor ensemble supplies the disagreement signal that uncertainty-based query selection needs to pick which pairs to query; the paper's own ablation removes the ensemble, leaving query selection nothing to disagree over and forcing it to fall back on picking pairs at random. Adaptive L2 regularization keeps the reward model's validation loss inside a fixed band above training loss as the comparison dataset grows; a paired 'no regularization' ablation drops the term and relies on dropout alone, isolating the adaptive scheme as a distinct safeguard. The comparisons-vs-absolute-scores ablation swaps in mean-squared-error regression against an oracle's true score in place of the Bradley-Terry comparison loss, and finds comparisons win clearly on continuous control but not consistently on Atari, complicating rather than simply vindicating the choice of Bradley-Terry. Iterated online training's necessity is demonstrated by removing it: freezing the reward predictor after an initial batch of labels produces the paper's own Pong reward-hacking example, an agent that avoids losing points but never learns to score. Clip-length effects calibrates the length of the trajectory segment, and the 'no segments' ablation collapses a segment to a single frame, producing large performance drops that show segment duration is carrying real information rather than just amortizing overhead. Uncertainty-based query selection is conceded by its own authors to be a crude approximation of the more principled expected-value-of-information query selection they leave to future work, and their ablations show the crude version can sometimes perform worse than querying at random.",
+   "memberEdgeIds": [
+    "reward-predictor-ensemble-supplies-the-disagreement-signal-for-uncertainty-based-query-selection",
+    "adaptive-l2-regularization-bounds-the-generalization-gap-of-reward-model",
+    "comparisons-vs-absolute-scores-swaps-in-regression-in-place-of-bradley-terry-model",
+    "iterated-online-training-guards-against-reward-hacking",
+    "clip-length-effects-calibrates-the-length-of-trajectory-segment",
+    "uncertainty-based-query-selection-is-a-crude-approximation-of-expected-value-of-information-query-selection"
+   ]
+  },
+  {
+   "id": "primitive-parts-acquire-industrial-replacements",
+   "name": "2017's ad hoc parts become 2022's industrial ones",
+   "narrative": "Read pairwise, the 2017 system and InstructGPT are the same machine built at two different levels of industrialization: nearly every ad hoc part of Deep RL from Human Preferences acquires a formal replacement in InstructGPT, and what carries over unchanged is as informative as what gets replaced. Contractor preference labeling, an unscreened sign-up sheet with no test of rater quality, becomes a screened operation in the labeler screening process, where InstructGPT scores prospective labelers on four separate criteria before letting roughly 40 of them contribute any data; the same ad hoc labeling setup is also formalized as the labeling interface, turning a clip server and a plea to 'ping @tom on slack' into an internal tool that records Likert scores, a fixed metadata taxonomy, and full rankings. The Bradley-Terry model that gives the 2017 reward predictor its comparison loss is carried over unchanged into the InstructGPT reward model loss, the identical softmax-over-summed-score structure now applied to language completions instead of trajectory segments. The async reward learning architecture's three concurrent loops, in which the reward predictor is continually refit throughout training, trade their concurrency for a fixed dataset in the InstructGPT reward model, which is trained once on a static set of comparisons and then held frozen through PPO. The rater error noise model's assumed constant 10 percent error rate is replaced by a measured one: InstructGPT's inter-annotator agreement statistic reports what the 2017 paper could only assume. The preference elicitation protocol's strictly pairwise design meant the 2017 paper never had to face a problem InstructGPT's k-choose-2 batching exists to solve, the overfitting caused by correlated comparisons that come from ranking several outputs in one sitting. Reward normalization's rescaling of the 2017 reward predictor's output to a fixed standard deviation prefigures the scale fix built into the InstructGPT reward model loss, which anchors its own zero point to labeler demonstrations for interpretability rather than optimizer convenience. And the trajectory segment, a one-to-two-second clip chosen to be quick for a human to render and judge, generalizes into the RM dataset's atomic unit, a complete generated text completion, carrying forward the same principle of comparing the smallest self-contained item a human can evaluate.",
+   "memberEdgeIds": [
+    "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+    "contractor-preference-labeling-is-formalized-as-labeling-interface",
+    "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss",
+    "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+    "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "preference-elicitation-protocol-avoids-the-overfitting-problem-solved-by-k-choose-2-batching",
+    "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss",
+    "trajectory-segment-generalizes-into-rm-dataset"
+   ]
+  },
+  {
+   "id": "downstream-of-a-moving-reward",
+   "name": "Everything downstream of a moving reward",
+   "narrative": "One root fact drives a whole family of coping mechanisms in the 2017 paper: the reward predictor is repeatedly refit on new comparisons while the policy trains against it, so the reward the policy is optimizing keeps changing during training, and each of these edges traces a consequence or a countermeasure back to that single source of non-stationarity. Iterated online training is the direct cause of the non-stationary reward challenge: refitting the predictor throughout training, rather than fixing it once at the start, is what makes the reward the policy optimizes keep changing at all. That same continuous refitting creates a cold-start problem for the async reward learning architecture, since at the very start of training no comparisons exist yet; reward predictor pretraining solves this by fitting the predictor for 200 epochs on comparisons gathered from an untrained, randomly initialized policy before RL training begins. Within iterated online training, label annealing paces the query rate, decaying it roughly inversely with elapsed timesteps so that early labels supply a usable signal quickly while a reduced but continuing rate of later labels keeps the predictor from falling behind as the policy visits new states. Iterated online training also guards against reward hacking directly: the ablation that freezes the predictor early, rather than continuing to refit it, produces the paper's own Pong failure case, an agent that learns to avoid losing points but never learns to score. The non-stationary reward challenge motivates the choice of A2C for the Atari experiments, a policy-gradient method used specifically because it tolerates a changing reward without further tuning, and forces an entropy-bonus increase in TRPO for the MuJoCo experiments, the one hyperparameter change made anywhere in the robotics experiments, to compensate for a trust region whose exploration guarantee weakens when the reward driving it is being rewritten during training. The same non-stationary reward challenge resurfaces under iteration in PPO training five years later: InstructGPT's reward-model-then-PPO loop looks stationary because it is normally run only once, but the paper itself notes the two steps can be iterated continuously, and whenever they are, each new policy is again optimized against a reward that has just changed under it.",
+   "memberEdgeIds": [
+    "iterated-online-training-is-the-cause-of-non-stationary-reward-challenge",
+    "reward-predictor-pretraining-solves-the-cold-start-problem-of-async-reward-learning-architecture",
+    "label-annealing-paces-the-query-rate-within-iterated-online-training",
+    "iterated-online-training-guards-against-reward-hacking",
+    "non-stationary-reward-challenge-motivates-the-choice-of-a2c",
+    "non-stationary-reward-challenge-forces-an-entropy-bonus-increase-in-trpo",
+    "non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training"
+   ]
+  },
+  {
+   "id": "what-comparisons-leave-undetermined",
+   "name": "What comparison training leaves undetermined",
+   "narrative": "A reward model learned only from comparisons is pinned down only up to order-preserving transformations, so these edges are the patches that nail down what pairwise ranking alone leaves free: the loss function itself, the asymptotic confidence of that loss, the model's absolute scale, and the timing assumptions within a single clip. The Bradley-Terry model supplies the loss for the reward model, fitting predicted summed reward as a latent score inside a pairwise-comparison softmax rather than regressing to any absolute number, since comparisons are all the training data provides. The rater error noise model corrects an asymptotic property a bare Bradley-Terry softmax gets wrong, capping predicted confidence well below certainty with an assumed constant 10 percent error rate rather than letting confidence approach 1 as the reward gap between two segments grows. Reward normalization fixes the underdetermined scale of the reward model, rescaling its output to zero mean and a fixed standard deviation before the RL algorithm sees it, since the comparison loss alone leaves both the zero point and the magnitude unconstrained. The trajectory segment is summed without discount by the Bradley-Terry model, an explicit choice that treats an event at the start of a one-to-two-second clip as equally decisive as the same event at the end, one more free parameter the comparison framing has to fix by assumption rather than infer from the data. Reward normalization is reverse-engineered to avoid retuning A2C: the fixed standard deviation of 0.05 chosen for Atari was picked backward from A2C's existing hyperparameters rather than from any principled measure of scale. And reward normalization prefigures the scale fix that reappears in the reward model loss five years later, when InstructGPT anchors its own zero point to labeler demonstrations instead, patching the identical underdetermination for interpretability rather than for optimizer convenience.",
+   "memberEdgeIds": [
+    "bradley-terry-model-supplies-the-loss-for-reward-model",
+    "rater-error-noise-model-corrects-the-asymptotics-of-bradley-terry-model",
+    "reward-normalization-fixes-the-underdetermined-scale-of-reward-model",
+    "trajectory-segment-is-summed-without-discount-by-bradley-terry-model",
+    "reward-normalization-is-reverse-engineered-to-avoid-retuning-a2c",
+    "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss"
+   ]
+  },
+  {
+   "id": "human-fingerprints-in-the-learning-curve",
+   "name": "Human fingerprints in the learning curves",
+   "narrative": "The 2017 learning curves record the humans in the loop as much as the algorithm: how fast raters respond sets the headline arithmetic, uneven labeling schedules visibly change a curve, switching from contractors to authors changes the experimental condition itself, and human judgment leaks into the reward as shaping whether or not anyone intended it to. Contractor preference labeling grounds the headline efficiency claim of human feedback sample efficiency, since converting a label count into 3-to-5-second response times is what turns 700 or 5,500 labels into the well-under-an-hour and under-eight-hours figures the paper's efficiency claim actually rests on. A compute-vs-human cost analysis then caps the marginal value of squeezing that efficiency further, showing roughly $25 of cloud compute against roughly $36 of labor for the same day of Atari training, a comparable pair of costs the paper reads as diminishing returns on chasing still-fewer labels. The Enduro task supplies the hard exploration case for human feedback's implicit reward shaping: raters told only to reward progress toward passing cars give the policy a signal far richer than random exploration ever finds on its own, closing an exploration gap that neither the true reward nor synthetic oracle labels close as well. The Hopper task exposes the scheduling fragility of contractor preference labeling, its visibly irregular learning curve traced by the paper to a single contractor who deviated from the expected labeling schedule; label annealing's decaying query-rate schedule is correspondingly only approximated under contractor labeling in general, exact when a synthetic oracle supplies labels on demand but uneven whenever real contractors set their own pace. The Half-Cheetah task was exempted from contractor preference labeling entirely, its benchmark feedback supplied by an author under time pressure rather than by an unfamiliar contractor, which makes its curve a different experimental condition from the rest of the figure; the half-cheetah one-leg demonstration nonetheless costs barely more in queries than the ordinary half-cheetah task, 800 versus 700, suggesting query cost tracks how hard a behavior is to elicit rather than whether a hand-written reward for it already exists. Synthetic oracle feedback reveals a non-human instance of the same implicit reward shaping, since training against a mechanical oracle at 1,400 labels still slightly outperforms the true reward it approximates, showing that at least part of the shaping benefit comes from learning through comparisons at all, not from anything a human rater specifically notices. And human feedback's implicit reward shaping becomes the only signal in novel behavior training: the backflip, one-leg, and keeping-pace demonstrations have no true reward to fall back on, so getting the shaping right, in the very experiments rated by the paper's own authors rather than contractors, is the only thing standing between the policy and an uncorrected proxy.",
+   "memberEdgeIds": [
+    "contractor-preference-labeling-grounds-the-headline-efficiency-claim-of-human-feedback-sample-efficiency",
+    "compute-vs-human-cost-analysis-caps-the-marginal-value-of-human-feedback-sample-efficiency",
+    "enduro-task-supplies-the-hard-exploration-case-for-human-feedback-implicit-reward-shaping",
+    "hopper-task-exposes-the-scheduling-fragility-of-contractor-preference-labeling",
+    "synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping",
+    "label-annealing-is-only-approximated-under-contractor-preference-labeling",
+    "half-cheetah-task-was-exempted-from-contractor-preference-labeling",
+    "human-feedback-implicit-reward-shaping-becomes-the-only-signal-in-novel-behavior-training",
+    "half-cheetah-one-leg-demonstration-costs-barely-more-in-queries-than-half-cheetah-task"
+   ]
+  }
+ ],
+ "refreshConnectiveThemes": [
+  {
+   "id": "hindsight-seams-2016-to-2022",
+   "name": "Connections the source papers never draw, visible only by reading them together",
+   "narrative": "Nineteen edges in the store are flagged as hindsight links: connections that exist only because a later paper can be read against an earlier one, not because either paper states the link itself, and they now reach across all three earlier papers into 2022 rather than only from 2016. Goodhart's law is empirically instantiated by reward overoptimization, and further specializes into excessive hedging and evasiveness, one 2016 principle fragmenting into several nameable 2022 phenomena; the edge between excessive hedging and evasiveness shows the fragments sharing one shape across a helpfulness/harmlessness axis, while the edge showing the KL penalty was not the fix applied to evasiveness demonstrates the two fragments needed different repairs. Use demonstrations is operationalized as supervised fine-tuning, shedding the reward-inference machinery the 2016 paper considered but keeping the core wager that demonstrations can substitute for a hand-specified objective. Scalable oversight is retroactively operationalized by the reward model, a match neither the 2016 paper nor InstructGPT itself draws, visible only once Constitutional AI names reward models as scaled supervision. And the Elo score generalizes win rate, one paper's single-anchor metric becoming the next paper's multi-snapshot instrument. A second cluster of seams runs from the 2017 paper straight to InstructGPT, five years apart, on matches neither paper draws itself. The Pong ablation's frozen, partially-trained reward predictor produces bizarre, exploit-driven behavior that anticipates reward overoptimization, InstructGPT's own reward model being gamed by a policy at a different scale and in a different domain, a resemblance InstructGPT never cites the earlier paper for. The 2017 paper's fallback for tasks with no reward function, ask a human whether generated behavior fulfills a natural-language goal, prefigures instruction following outright, the same wager that human judgment of goal-fulfillment can substitute for a reward nobody knows how to write down, five years before it became a primary training paradigm rather than a one-off grading method. The non-stationary reward problem the 2017 architecture was built around resurfaces under iteration in PPO training whenever InstructGPT's own RM-then-PPO loop is repeated rather than run once, reproducing the moving target the earlier paper's whole design responds to. And where the 2017 paper assumed a constant rater error rate as a modeling convenience, InstructGPT's inter-annotator agreement is what it looks like to go and measure that rate instead, one paper guessing what the other later checked. A third cluster reads the 2017 paper's machinery as ad hoc and InstructGPT's as its industrial replacement. Contractor preference labeling, an unscreened sign-up sheet with no quality check, becomes a screened operation in the labeler screening process, and the same 2017 protocol, an ad hoc clip server and keyboard interface, is formalized as InstructGPT's labeling interface, a purpose-built tool capturing structured judgments the 2017 setup only sketched. The Bradley-Terry model is carried over unchanged into the reward model loss, the identical 1952 pairwise-comparison mathematics still fitting a language-model reward five years after fitting a robot's; the asynchronous reward-learning architecture trades its concurrency for a fixed dataset in the reward model, InstructGPT training once on a static set of comparisons rather than refitting continuously against a moving policy. The trajectory segment generalizes into the RM dataset, the same design principle, judge the smallest unit a human can evaluate quickly, surviving the jump from a two-second clip to a full completion. Reward normalization prefigures the scale fix in reward model loss, since a comparison-only objective leaves scale undetermined in both papers, though 2022's fix anchors to an interpretable zero rather than an optimizer-convenient one; and the preference elicitation protocol avoids the overfitting problem solved by k-choose-2 batching only because its strictly pairwise design never had to face the correlated comparisons a K-wise ranking produces.",
+   "memberEdgeIds": [
+    "goodharts-law-is-empirically-instantiated-by-reward-overoptimization",
+    "goodharts-law-operates-at-the-subfeature-level-in-excessive-hedging",
+    "goodharts-law-is-instantiated-through-mislabeled-proxy-in-evasiveness",
+    "excessive-hedging-is-the-harmlessness-axis-mirror-of-evasiveness",
+    "kl-penalty-was-not-the-fix-applied-to-evasiveness",
+    "use-demonstrations-operationalized-as-supervised-fine-tuning",
+    "scalable-oversight-is-retroactively-operationalized-by-reward-model",
+    "elo-score-generalizes-win-rate",
+    "pong-task-anticipates-reward-overoptimization",
+    "quantitative-qualitative-evaluation-prefigures-instruction-following",
+    "non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training",
+    "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+    "contractor-preference-labeling-is-formalized-as-labeling-interface",
+    "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss",
+    "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+    "trajectory-segment-generalizes-into-rm-dataset",
+    "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss",
+    "preference-elicitation-protocol-avoids-the-overfitting-problem-solved-by-k-choose-2-batching"
+   ],
+   "currentIntro": "Neither paper ever states these links directly; they only become visible once a later paper is set beside an earlier one and read for the echo. One 2016 principle turns out to fragment into several distinctly named 2022 phenomena, none of which cites it.\n\nThe clearest case is Goodhart's law itself, breaking into reward over-optimization, hedging, and evasiveness across two papers that never use the term. Nearby sits demonstrations quietly becoming supervised fine-tuning once the reward-inference machinery drops away, and, faintest of all, scalable oversight lining up with the reward model only because Constitutional AI's own later framing lets you see it."
+  },
+  {
+   "id": "goodhart-names-itself-across-six-years",
+   "name": "Goodhart's law gets a name, one instance at a time",
+   "narrative": "Concrete Problems states Goodhart's law as an abstract principle in 2016: a proxy that correlates with a goal decorrelates once optimized directly. The edge from Goodhart's law to reward-overoptimization shows InstructGPT's RM-score-versus-quality divergence as that principle running at the aggregate level, six years later, without the paper ever using the word. A year after the law is stated, the Pong task anticipates reward overoptimization in miniature and five years early: the 2017 paper's frozen-predictor ablation shows a policy exploiting exactly the part of the true reward its stale reward model happens to capture, indefinite defensive volleys instead of any attempt to score, the identical curve InstructGPT would later draw at language-model scale, both papers citing Amodei et al. (2016) for the same underlying phenomenon. The edge from reward-overoptimization to excessive hedging (InstructGPT) shows the same law biting one level down, on a single learned subfeature invisible to any aggregate training curve. The edge from Goodhart's law to evasiveness (Constitutional AI) shows a variant where the proxy was miscorrelated with the goal from its very first labeled example rather than decorrelating under optimization. Only by Constitutional AI does the corpus name the phenomenon \"Goodharting\" outright, closing a terminological loop none of the four papers draws on its own.",
+   "memberEdgeIds": [
+    "goodharts-law-is-empirically-instantiated-by-reward-overoptimization",
+    "pong-task-anticipates-reward-overoptimization",
+    "goodharts-law-operates-at-the-subfeature-level-in-excessive-hedging",
+    "goodharts-law-is-instantiated-through-mislabeled-proxy-in-evasiveness",
+    "reward-overoptimization-surfaces-as-excessive-hedging"
+   ],
+   "currentIntro": "Goodhart's law sat in Concrete Problems as an abstract warning in 2016: a proxy that tracks a goal stops tracking it once optimized directly. Both 2022 papers walked straight into that warning without ever citing it, one of them twice.\n\nInstructGPT supplies the law's aggregate form first, a reward-model score drifting from actual quality, then its subfeature form, a single hedging habit invisible to any training curve. Constitutional AI closes the loop, catching a variant where the proxy was wrong from its first labeled example, and finally saying the word 'Goodharting' out loud."
+  }
+ ]
+}

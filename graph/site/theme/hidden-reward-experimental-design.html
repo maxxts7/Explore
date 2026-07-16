@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Hiding the reward: experimental design for preference-only learning — Theme</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-theme">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-theme">theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Hiding the reward: experimental design for preference-only learning</h1>
+<div class="page-intro"><p>Showing an agent learned a behavior from preferences alone, not some leaked score or timer, took almost as much design work as the learning method itself. The 2017 paper strips its environments of every side channel, on-screen scores, variable episode length, hand-written torque penalties, so nothing but a rater's judgment carries information about the task.</p>
+<p>The walk moves from the two-track evaluation scheme, quantitative tasks against a withheld true reward and qualitative tasks judged by a human, through the environment scrubbing that makes it fair, to a synthetic oracle standing in for a perfect rater, closing on the finding that real humans sometimes beat it.</p></div>
+<section class="prose-section"><p>Proving that an agent learned a behavior from preferences alone, and not from some other leaked signal, took as much experimental design as the learning method itself. The quantitative vs. qualitative evaluation methodology sets up the two-track test: quantitative tasks compare the trained agent against a true reward function withheld from training, while qualitative tasks, where no reward function exists at all, are judged by a human watching video against a natural-language goal description. Environment modifications for preference learning close off the side channels that would make quantitative comparisons meaningless: on-screen score displays are blanked, variable-length episode termination is replaced with a learned penalty, and torque penalties are stripped from the Gym reward functions, so nothing beyond the human's feedback carries information about the task. Synthetic oracle feedback is the controlled comparison this design enables: a synthetic rater that always answers according to the true, withheld reward, letting the authors isolate the reward-learning method's own effect from the noise and cost of real human raters. Human-feedback implicit reward shaping is the finding this whole apparatus surfaces: on tasks like Ant and Enduro, real human comparisons sometimes outperform the synthetic oracle, because a human's preferences shape the reward more usefully than the hand-written objective they are approximating.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Members &mdash; a guided walk</h2><ol class="walk"><li><a href="../concept/quantitative-qualitative-evaluation.html">Quantitative vs. Qualitative Evaluation Methodology</a><div class="walk-prose"><p>Quantitative vs. qualitative evaluation methodology sets up the 2017 paper's two-track test that this whole theme is designed to make trustworthy: quantitative tasks compare a trained agent against a true reward function that exists but is withheld from training, while qualitative tasks, which have no reward function at all, are judged by a human watching video against a natural-language goal description. Making the quantitative track meaningful requires closing off every other way the true objective could leak in.</p></div></li><li><a href="../concept/environment-modifications-for-preference-learning.html">Environment Modifications for Preference Learning</a><div class="walk-prose"><p>Environment modifications for preference learning do exactly that closing-off: on-screen score displays in Atari are blanked, variable-length episode termination (like resets when a MuJoCo robot falls over) is replaced with a learned penalty, and torque penalties are stripped from the Gym reward functions. Without these changes, an agent could pick up task information from the environment itself rather than from human feedback, making the quantitative comparison meaningless.</p></div></li><li><a href="../concept/synthetic-oracle-feedback.html">Synthetic Oracle Feedback</a><div class="walk-prose"><p>Synthetic oracle feedback is the controlled comparison this cleaned-up environment enables: a synthetic rater that always answers according to the true, withheld reward, standing in for a human so the authors can isolate the reward-learning method's own effect from the noise and cost of real raters. Comparing real human feedback against this oracle on the same modified environments is what the next finding depends on.</p></div></li><li><a href="../concept/human-feedback-implicit-reward-shaping.html">Human-Feedback Implicit Reward Shaping</a><div class="walk-prose"><p>Human-feedback implicit reward shaping is the finding that whole apparatus surfaces: on tasks like Ant and Enduro, real human comparisons sometimes outperform the synthetic oracle drawing on the true reward, because a human's preferences shape the reward more usefully than the hand-written objective they are meant to approximate. The experimental design built to isolate the method's effect ends up revealing that human judgment can beat the ground truth it was tested against.</p></div></li></ol></section>
+<section class="nav-block"><h2>Superthemes</h2><ul><li><a href="../supertheme/deep-rl-from-preferences-proof-of-concept.html">Deep RL from Human Preferences: the 2017 proof of concept</a></li></ul></section>
+<section class="nav-block"><h2>Edges explored within this theme</h2><ul><li><a href="../edge/synthetic-oracle-feedback-is-only-realizable-within-quantitative-qualitative-evaluation.html">Synthetic Oracle Feedback — is only realizable within → Quantitative vs. Qualitative Evaluation Methodology</a></li><li><a href="../edge/environment-modifications-for-preference-learning-exempts-pong-from-synthetic-oracle-feedback.html">Environment Modifications for Preference Learning — exempts pong from → Synthetic Oracle Feedback</a></li><li><a href="../edge/synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping.html">Synthetic Oracle Feedback — reveals a non human instance of → Human-Feedback Implicit Reward Shaping</a></li><li><a href="../edge/quantitative-qualitative-evaluation-prefigures-instruction-following.html">Quantitative vs. Qualitative Evaluation Methodology — prefigures → Instruction following (as a fine-tuning objective)</a> <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Super edges touching this theme</h2><ul><li><a href="../superedge/hidden-reward-design-licenses-results-of-testbeds.html">Hiding the reward: experimental design for preference-only learning — licenses the results of → The 2017 deep-RL testbeds: MuJoCo and Atari</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind this theme&rsquo;s member concepts.</p><details class="sources-details"><summary>6 source passages in 1 paper</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Setting and Goal&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3.1 Reinforcement Learning Tasks with Unobserved Rewards&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;3.1.1 Simulated Robotics&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.1.2 Atari&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;A Experimental Details&rdquo;, p. 14</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;A.2 Atari&rdquo;, p. 15</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

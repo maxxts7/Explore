@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Synthetic Oracle Feedback — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Synthetic Oracle Feedback</h1>
+<p class="origins"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An experimental device in which a synthetic &#x27;oracle&#x27; answers preference queries according to the ground-truth task reward (indicating whichever segment actually receives higher true reward), used to isolate the effect of the reward-learning method from the noise and cost of real human raters.</p>
+<div class="page-intro"><p>Checking a method that works without an observable reward against the truth requires access to that same reward somewhere, just not where the agent or the labelers can see it. A synthetic stand-in for a human answers exactly this need.</p>
+<p>The page covers how the oracle answers and where it stays silent, then closes on a surprising shaping advantage that shows up even with no human anywhere in the loop, complicating a simpler story about human judgment being what mattered.</p></div>
+<section class="prose-section">
+<h2>Why the paper needs a synthetic oracle</h2>
+<p>The paper's whole method is built to work when no reward function is observable, but demonstrating that convincingly requires a way to check the method against ground truth without cheating. The synthetic oracle supplies exactly that check: rather than sending a query to a human, the experiment "immediately repl[ies] by indicating a preference for whichever trajectory segment actually receives a higher reward in the underlying task" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3.1 Reinforcement Learning Tasks with Unobserved Rewards", p. 6</a>). This isolates the effect of the reward-learning algorithm itself from the noise, inconsistency, and expense of a real rater, letting Figures 2 and 3 compare human feedback, oracle feedback, and direct RL on the true reward side by side. As the <a href="../concept/quantitative-qualitative-evaluation.html">Quantitative vs. Qualitative Evaluation Methodology</a> edge notes, the oracle only makes sense on the quantitative half of the paper's evaluation methodology, since manufacturing its answer requires a withheld ground-truth reward function that the qualitative tasks (backflips, one-legged running) deliberately lack (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">§"2.1 Setting and Goal", p. 4</a>).</p>
+</section>
+<section class="prose-section">
+<h2>How the oracle answers, and where it goes silent</h2>
+<p>The oracle's rule is mechanical: compare the true total reward summed over each segment and prefer whichever is higher. When both segments earn identical true reward, which the paper notes is "relatively common" in sparse-reward Atari games, the oracle outputs indifference rather than a forced choice; the paper reports that "such ties never made up a large majority of our data" while still carrying "significant information to the reward predictor as long as they are not too common" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">§"3.1 Reinforcement Learning Tasks with Unobserved Rewards", p. 6</a>, footnote 4). The <a href="../concept/environment-modifications-for-preference-learning.html">Environment Modifications for Preference Learning</a> edge marks one place where oracle feedback is treated differently from the general rule: the standard Atari modification strips life-loss and episode-end signals from every game so termination itself cannot leak task information, but "when providing synthetic oracle feedback we replace episode ends with a penalty in all games except Pong" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=14" target="_blank" rel="noopener">§"A Experimental Details", p. 14</a>) — <a href="../concept/pong-task.html">Pong (Atari game)</a> alone keeps its natural termination under the oracle.</p>
+</section>
+<section class="prose-section">
+<h2>A non-human instance of reward shaping</h2>
+<p>The paper's other headline shaping result, illustrated by <a href="../concept/ant-task.html">Ant (MuJoCo task)</a>, is usually told as a story about human judgment specifically. The oracle results complicate that story: at 1400 labels, an agent trained against the synthetic oracle's comparisons "performs slightly better than if it had simply been given the true reward, perhaps because the learned reward function is slightly better shaped" (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=7" target="_blank" rel="noopener">§"3.1.1 Simulated Robotics", p. 7</a>). The same shaping advantage attributed elsewhere to human preferences also shows up with no human in the loop, via the <a href="../concept/human-feedback-implicit-reward-shaping.html">Human-Feedback Implicit Reward Shaping</a> edge — the reward-model architecture itself, not only human judgment, contributes to the improved shaping.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Environment Modifications for Preference Learning — <a href="../edge/environment-modifications-for-preference-learning-exempts-pong-from-synthetic-oracle-feedback.html">exempts pong from</a> → <strong>Synthetic Oracle Feedback</strong></li><li><strong>Synthetic Oracle Feedback</strong> — <a href="../edge/synthetic-oracle-feedback-reveals-a-non-human-instance-of-human-feedback-implicit-reward-shaping.html">reveals a non human instance of</a> → Human-Feedback Implicit Reward Shaping</li><li><strong>Synthetic Oracle Feedback</strong> — <a href="../edge/synthetic-oracle-feedback-is-only-realizable-within-quantitative-qualitative-evaluation.html">is only realizable within</a> → Quantitative vs. Qualitative Evaluation Methodology</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/hidden-reward-experimental-design.html">Hiding the reward: experimental design for preference-only learning</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3.1 Reinforcement Learning Tasks with Unobserved Rewards&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Preference Elicitation Protocol — avoids the overfitting problem solved by → K-choose-2 single-batch comparison training — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/popup.js"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Preference Elicitation Protocol — avoids the overfitting problem solved by → K-choose-2 single-batch comparison training</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &middot; explored within the theme <a href="../theme/human-feedback-data-infrastructure.html">Building the human side of the RLHF pipeline</a></p>
+<section class="prose-section"><p>The 2017 protocol only ever asks about one pair at a time: a human sees two clips and returns a single preference, tie, or incomparable judgment, stored as one triple in the preference database with no reference to any other comparison (deep-rl-human-prefs, <a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">§"2.2.2 Preference Elicitation", p. 5</a>). Because every training example is an independent pairwise draw, the 2017 paper never faces a problem InstructGPT has to solve directly: what to do when several comparisons all come from the same underlying judgment. InstructGPT collects a full ranking over K = 4 to 9 outputs per prompt in one sitting, which decomposes into C(K,2) pairwise comparisons that are correlated with each other rather than independent; naively shuffling them into ordinary training batches caused the reward model to overfit, so the paper instead places all comparisons from one ranking into a single batch element (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">§"3.5 Models", p. 8</a>). The k-choose-2 batching trick, in other words, is a fix for a problem the 2017 protocol's strictly one-pair-at-a-time design structurally could not have — a cost of collecting richer, K-wise preference data that pairwise-only elicitation never had to pay.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/preference-elicitation-protocol.html">Preference Elicitation Protocol</a> and <a href="../concept/k-choose-2-batching.html">K-choose-2 single-batch comparison training</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/primitive-parts-acquire-industrial-replacements.html">2017&#x27;s ad hoc parts become 2022&#x27;s industrial ones</a></li><li><a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;3.5 Models&rdquo;, p. 8</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;2.2.2 Preference Elicitation&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>
