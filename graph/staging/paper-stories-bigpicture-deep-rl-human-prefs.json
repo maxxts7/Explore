@@ -1,0 +1,678 @@
+{
+  "paperStories": [
+    {
+      "id": "deep-rl-human-prefs",
+      "stories": [
+        {
+          "id": "deep-rl-human-prefs-inside",
+          "tab": "Inside the paper",
+          "name": "Inside Deep RL from Human Preferences: a reward learned from \"which of these two is better?\"",
+          "intro": "This 2017 paper begins from an awkward fact about reinforcement learning: the whole method assumes someone can write down a reward function, and for most tasks people actually care about, nobody can. Its answer is to stop asking for the function and ask a much smaller question instead — shown two short video clips of an agent's behavior, which one looks better?\n\nThe chapters follow the paper's own order: the problem and the lineage it breaks from, the machinery that turns pairwise comparisons into a trainable reward, the safeguards that keep that reward honest while the policy changes beneath it, the experiments that proved the point, and the ablations where the first cracks — including reward hacking — show through.",
+          "narrative": "The paper's claim is that a few hundred pairwise human comparisons over one-to-two-second video clips, fitted into a reward predictor and optimized asynchronously alongside the policy, are enough to train deep RL agents on tasks whose reward function no one could write down — with a human seeing less than 1% of the agent's interactions.",
+          "children": [
+            {
+              "id": "deep-rl-human-prefs-inside-ch-problem",
+              "name": "A reward function nobody can write",
+              "narrative": "The paper opens with a mismatch: RL needs a well-specified reward function, but for the tasks we actually want — the paper's examples are cleaning a table and scrambling an egg — goals are complex, poorly defined, or hard to observe, and a clumsy proxy invites exactly the objective-gaming behavior Concrete Problems had catalogued a year earlier (deep-rl-human-prefs, §\"1 Introduction\", p. 1). Prior escape routes each stall in their own way: [[inverse-reinforcement-learning|inverse RL]] and [[imitation-learning|imitation learning]] need demonstrations humans cannot always give — no human can demonstrate being a one-legged robot — and [[tamer-framework|TAMER]]-style real-time feedback needs more human attention than any deep RL run can afford. So the paper restates the 2016 scalable-oversight problem as an engineering budget: learn a complex task from sparse, cheap, non-expert judgments, and keep the human's share of the work small enough that the whole thing stays economical.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-inside-scalable-oversight",
+                  "name": "Oversight priced as a budget",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "scalable-oversight"
+                  },
+                  "narrative": "In 2016 this was a named open problem: the true objective is too costly to evaluate everywhere. Here it stops being a proposal and becomes a design constraint the whole system answers to — feedback on less than 1% of the agent's interactions (deep-rl-human-prefs, §\"1 Introduction\", p. 2)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-prior-lineage",
+                  "name": "The lineage the paper breaks from",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "prior-human-in-the-loop-rl"
+                  },
+                  "narrative": "A decade of human-in-the-loop RL that either kept the human constantly present or required the desired behavior to be demonstrated. The paper positions itself by naming exactly what those methods could not scale to."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-sample-efficiency",
+                  "name": "The headline promise",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "human-feedback-sample-efficiency"
+                  },
+                  "narrative": "Stated on the first page and defended for the rest of the paper: complex behaviors from feedback on under 1% of interactions, roughly three orders of magnitude cheaper in human time than per-timestep oversight (deep-rl-human-prefs, §\"Abstract\", p. 1)."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-inside-ch-machinery",
+              "name": "The machinery: two clips, one question",
+              "narrative": "The mechanism is small enough to state in a sentence — show a person two short video clips of the agent, ask which is better, and fit a reward function that agrees — and everything in Section 2 makes that sentence precise. The unit of judgment is the trajectory segment, one to two seconds of observations and actions; the elicitation protocol records a preference, a tie, or \"can't tell\" into a growing database; and the Bradley–Terry model, by the same logic as chess [[elo-score|Elo ratings]], turns predicted per-segment reward sums into a probability that the human prefers one clip, giving the predictor a cross-entropy loss to descend (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). A [[rater-error-noise-model|constant rater-error term]] concedes that humans stay wrong about 10% of the time no matter how lopsided the pair. The result is the corpus's first reward model, and the asynchronous architecture that couples it to the policy gives RLHF the shape it still has.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-inside-trajectory-segment",
+                  "name": "What the human judges: 1–2 seconds of behavior",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "trajectory-segment"
+                  },
+                  "narrative": "Not whole episodes, not single states: a clip short enough to judge quickly and long enough to mean something. Almost every economic property of the system follows from this choice of unit (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 3)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-elicitation",
+                  "name": "Two clips, three answers",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "preference-elicitation-protocol"
+                  },
+                  "narrative": "Prefer one, call it a tie, or say the clips are incomparable — recorded as a probability distribution in a preference database. Five years later, InstructGPT's labeling apparatus still offers the same response structure (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-bradley-terry",
+                  "name": "A 1952 statistic supplies the loss",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "bradley-terry-model"
+                  },
+                  "narrative": "Pairwise outcomes pin down latent scores, so preferences over clips pin down a reward, via a softmax over the two predicted sums. It is the one component the 2022 papers carry over without modification."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-reward-model",
+                  "name": "The reward predictor",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-model"
+                  },
+                  "narrative": "The network that stands in for the reward signal nobody could write. What this paper calls a reward predictor, the rest of the corpus calls the reward model — the centerpiece the 2022 pipelines scale up (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-async-architecture",
+                  "name": "Three loops, no waiting",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "async-reward-learning-architecture"
+                  },
+                  "narrative": "Policy rollouts, human comparisons, and reward refitting run concurrently and feed one another, so the human never becomes a blocking step in training (deep-rl-human-prefs, §\"1 Introduction\", p. 2)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-comparisons-theme",
+                  "name": "Why comparisons rather than scores",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "learning-rewards-from-comparisons"
+                  },
+                  "narrative": "The full argument for the design decision that carries the paper — and, this wiki argues, the load-bearing joint connecting its robots to 2022's chatbots."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-inside-ch-honest",
+              "name": "Keeping a learned reward honest",
+              "narrative": "A learned reward is only trustworthy where the policy that generated its training data has actually been, and the policy is changing constantly — so the reward the agent optimizes is a moving target that can be exploited or simply outrun. Section 2's quieter half is countermeasures: an ensemble of predictors trained on bootstrap resamples, [[adaptive-l2-regularization|validation-tracked L2 regularization]], [[reward-normalization|output normalization]] to fix a scale that comparisons leave undetermined, [[reward-predictor-pretraining|pretraining]] against the cold start, and [[label-annealing|a query schedule]] that front-loads human attention early in training. The ensemble earns its cost twice over, because its disagreement doubles as the signal for choosing which pairs are worth a human's time. The RL side bends too: [[a2c|A2C]] and [[trpo|TRPO]] are chosen for their tolerance of a shifting reward, with TRPO's entropy bonus raised to keep it exploring (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4).",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-inside-nonstationary",
+                  "name": "Optimizing a moving target",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "non-stationary-reward-challenge"
+                  },
+                  "narrative": "Because the predictor is refit throughout training, the policy is solving RL under a non-stationary reward — the root fact behind most of this chapter's machinery, and one that resurfaces in InstructGPT's PPO stage five years later."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-ensemble",
+                  "name": "Three predictors, two jobs",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-predictor-ensemble"
+                  },
+                  "narrative": "Bootstrap-trained members are averaged for a steadier reward estimate, and their variance is harvested as an uncertainty signal — one piece of machinery doing robustness and active learning at once (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-query-selection",
+                  "name": "Ask about what the ensemble disputes",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "uncertainty-based-query-selection"
+                  },
+                  "narrative": "Candidate pairs go to the human in order of ensemble disagreement — a crude stand-in, the paper admits, for the [[expected-value-of-information-query-selection|expected-value-of-information criterion]] it leaves as future work (deep-rl-human-prefs, §\"2.2.4 Selecting Queries\", p. 6)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-on-distribution-theme",
+                  "name": "The full set of countermeasures",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "keeping-reward-models-on-distribution"
+                  },
+                  "narrative": "Every guard the paper deploys to stop the policy from drifting off the distribution its reward model knows, gathered in one place."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-policy-opt-theme",
+                  "name": "The RL algorithms underneath",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "policy-optimization-under-learned-rewards"
+                  },
+                  "narrative": "What A2C, TRPO, and the DQN comparison points were each asked to tolerate once the reward stopped standing still."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-inside-ch-proof",
+              "name": "The proof: benchmarks matched, behaviors invented",
+              "narrative": "Proving that the signal came from preferences alone took experimental design of its own: standard Gym environments are stripped of anything that leaks the objective — [[environment-modifications-for-preference-learning|score displays blanked, episode boundaries hidden]] — and a two-track methodology scores agents quantitatively against a true reward the learner never sees, or qualitatively against a sentence of natural language (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 3). On MuJoCo and Atari the method approaches, and sometimes matches, RL trained on the real reward — and occasionally beats it, because human raters quietly shape the reward better than the environment's designers did. Then comes the reason the paper is remembered: behaviors with no reward function at all. A Hopper robot backflips from 900 comparisons gathered in under an hour; a [[half-cheetah-one-leg-demonstration|Half-Cheetah crosses the floor on one leg]]; an [[enduro-keeping-pace-demonstration|Enduro car keeps pace with traffic]] instead of racing past it.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-inside-hidden-reward-theme",
+                  "name": "Sealing the leaks",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "hidden-reward-experimental-design"
+                  },
+                  "narrative": "The apparatus that guarantees the only route from task to agent runs through human preference — as much a contribution as the learning method it protects."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-synthetic-oracle",
+                  "name": "The oracle control",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "synthetic-oracle-feedback"
+                  },
+                  "narrative": "A synthetic rater that answers every query from the true reward, isolating what the learning method can do from what human noise and cost do to it (deep-rl-human-prefs, §\"3.1 Reinforcement Learning Tasks with Unobserved Rewards\", p. 6)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-testbeds-theme",
+                  "name": "MuJoCo and Atari",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "deep-rl-testbeds"
+                  },
+                  "narrative": "The 2017 deep-RL canon the results are measured on: simulated robots and Atari games, reached through one Gym interface."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-implicit-shaping",
+                  "name": "When humans beat the true reward",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "human-feedback-implicit-reward-shaping"
+                  },
+                  "narrative": "On Ant and Enduro the learned reward outperforms the hand-written one, because raters implicitly reward what the designers should have: standing upright, making any progress at all (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-novel-behaviors",
+                  "name": "No reward function at all",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "novel-behavior-training"
+                  },
+                  "narrative": "About an hour of human feedback per behavior and no programmatic reward anywhere — the demonstration that this is a way to specify goals, not just to approximate existing ones (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-backflip",
+                  "name": "The backflip",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "hopper-backflip-demonstration"
+                  },
+                  "narrative": "Nine hundred queries, under an hour of human time, and a robot lands a behavior nobody could have scored by hand — the corpus's most quoted image of preference learning working."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-inside-ch-ablations",
+              "name": "Ablations, economics, and the first crack",
+              "narrative": "The paper argues its design decisions by deletion: remove online labeling, remove the ensemble, replace comparisons with absolute scores, shrink the clips, and watch what breaks (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). One deletion breaks in a way the corpus never stops citing: with the reward model trained offline on early data and then frozen, a Pong agent learns to avoid losing points without ever learning to score, rallying forever. The paper names what it is seeing by reaching back to the 2016 reward-hacking taxonomy, and its guard is to keep the labels coming while the policy trains. The chapter closes on the books: [[clip-length-effects|clip length is calibrated]] against rater time, and a footnote observes that compute already costs about as much as the [[contractor-preference-labeling|contractors]] do, so squeezing the label count further buys little.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-inside-reward-hacking",
+                  "name": "Reward hacking, sighted",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-hacking"
+                  },
+                  "narrative": "The 2016 agenda predicted it; the offline ablation produces it on screen. The endless Pong rally is the corpus's first empirical instance of a policy maximizing a learned proxy against its designers' intent (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-online-training",
+                  "name": "The guard: labels that keep up",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "iterated-online-training"
+                  },
+                  "narrative": "Collecting comparisons from the policy's current behavior, all the way through training, keeps the predictor pointed at the distribution actually being optimized — the countermeasure the Pong failure argues for."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-target-ablation",
+                  "name": "Would scores have worked?",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "comparisons-vs-absolute-scores"
+                  },
+                  "narrative": "The \"target\" ablation regresses directly onto true segment reward instead of learning from comparisons. That it does not clearly win is the paper's evidence for its central interface decision."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-cost-footnote",
+                  "name": "The $25-versus-$36 footnote",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "compute-vs-human-cost-analysis"
+                  },
+                  "narrative": "Roughly $25 of compute against $36 of minimum-wage labeling for an Atari run: human feedback is already not the dominant cost, so the method's economics have arrived (deep-rl-human-prefs, §\"4 Discussion and Conclusions\", p. 11)."
+                },
+                {
+                  "id": "deep-rl-human-prefs-inside-economics-theme",
+                  "name": "The budget behind every choice",
+                  "ref": {
+                    "kind": "theme",
+                    "id": "economics-of-human-feedback"
+                  },
+                  "narrative": "The paper's full accounting of human minutes — the constraint that clip lengths, query schedules, and the headline efficiency claim all answer to."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "deep-rl-human-prefs-across",
+          "tab": "Across the corpus",
+          "name": "The hinge of the corpus: 2016's proposals become machinery, 2022's pipelines inherit it",
+          "intro": "Read alone, this is a 2017 paper about simulated robots and Atari games. Read against the rest of the corpus, it is the hinge: more cross-paper connections pass through it than through any other paper here, reaching back to the 2016 agenda it answered and forward to the 2022 language-model pipelines that inherited its parts.\n\nThe chapters run in time order. First the proposals Concrete Problems made and this paper built; then InstructGPT, which rebuilt the same machine at industrial scale; then Constitutional AI, which replaced the human the whole design was built around; and last, the seams between papers that only appear in hindsight.",
+          "narrative": "Sixty-five cross-paper edges run through this paper, more than any other in the corpus: backward, it converts Concrete Problems' scalable-oversight proposals into working machinery; forward, InstructGPT industrializes its parts almost one for one, and Constitutional AI automates the human at its center.",
+          "children": [
+            {
+              "id": "deep-rl-human-prefs-across-ch-2016",
+              "name": "What 2016 proposed, this paper built",
+              "narrative": "Concrete Problems closes its scalable-oversight discussion with proposals: [[semi-supervised-reinforcement-learning|semi-supervised RL]], active reward learning, distant supervision, demonstrations. A year later this paper chose among them in public. Preferences won; [[use-demonstrations|demonstrations]] were weighed and explicitly passed over; active reward learning got its first deep-RL implementation as ensemble-variance query selection. The debt runs the other way too: when the offline ablation produced the endless Pong rally, the paper reached back to the 2016 taxonomy to name what it was seeing.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-across-oversight-machinery-tissue",
+                  "name": "From worry to working dials",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "scalable-oversight-operationalized-into-combinable-machinery"
+                  },
+                  "narrative": "Seven of this thread's edges touch the 2017 paper — each one a 2016 abstraction landing as a concrete pool, dial, or protocol.",
+                  "era": "2016"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-demonstrations-declined",
+                  "name": "Demonstrations, declined",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "use-demonstrations-is-explicitly-passed-over-in-favor-of-preference-elicitation-protocol"
+                  },
+                  "narrative": "The road not taken, recorded as an edge: the paper weighs demonstration-based supervision and chooses the comparison channel instead, because some behaviors cannot be demonstrated at all.",
+                  "era": "2016"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-pong-canonical",
+                  "name": "2016's failure, on screen",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "pong-task-provides-the-canonical-instance-of-reward-hacking"
+                  },
+                  "narrative": "Reward hacking was a taxonomy in 2016. The Pong rally makes it an observation, and the paper cites Amodei et al. to close the loop itself.",
+                  "era": "2017"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-scalable-oversight",
+                  "name": "One problem in three papers",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "scalable-oversight"
+                  },
+                  "narrative": "The concept lives in Concrete Problems, this paper, and Constitutional AI: named as a problem in 2016, priced as a budget here, then answered again in 2022 with AI labor.",
+                  "era": "2016"
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-across-ch-instructgpt",
+              "name": "InstructGPT: the same machine, industrialized",
+              "narrative": "Set the 2017 system beside InstructGPT and nearly every part maps: contractors on time slots become a [[labeler-screening-process|screened labeling workforce]], the keyboard interface becomes a [[labeling-interface|web app]], trajectory segments generalize into the [[rm-dataset|RM dataset]], and reward normalization prefigures the scale fix in the RM loss. What carries over unchanged is as telling as what gets replaced — the Bradley–Terry loss crosses five years untouched. And one thing is quietly traded away: the 2017 system's online concurrency, given up for a fixed comparison dataset that made the pipeline trainable at language-model scale.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-across-industrial-tissue",
+                  "name": "Ad hoc parts, industrial replacements",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "primitive-parts-acquire-industrial-replacements"
+                  },
+                  "narrative": "Eight edges pair a 2017 improvisation with its 2022 institutional replacement, part for part — the closest thing the corpus has to a bill of materials.",
+                  "era": "2022"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-bradley-terry-unchanged",
+                  "name": "The part that never changed",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss"
+                  },
+                  "narrative": "A 1952 statistical model survives the jump from video clips to language unmodified — the strongest single piece of evidence that these are the same machine.",
+                  "era": "2022"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-concurrency-traded",
+                  "name": "What was traded away",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model"
+                  },
+                  "narrative": "The three concurrent loops were the 2017 paper's proudest engineering; InstructGPT drops the concurrency for a fixed dataset. This hindsight edge records the price and the reason.",
+                  "era": "2022"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-reward-model",
+                  "name": "The shared centerpiece",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-model"
+                  },
+                  "narrative": "With RLHF itself, one of the two concepts this paper shares with both 2022 pipelines: what it calls a reward predictor is the reward model that anchors InstructGPT and Constitutional AI alike.",
+                  "era": "2017"
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-across-ch-cai",
+              "name": "Constitutional AI: replacing the human",
+              "narrative": "Constitutional AI's founding move reads like a direct edit of the 2017 diagram: keep the preference channel, the reward model, and the RL loop, and swap the human rater for an AI labeler steered by a written [[constitution]]. The substitution lands at exactly the point the 2017 paper had measured as its bottleneck — the throughput of human attention. Iterated online training, which in 2017 meant contractors on staggered schedules, becomes something a machine can do to itself; even the Elo analogy this paper borrowed to explain its loss becomes, in 2022, a literal computed metric.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-across-substitution-tissue",
+                  "name": "The bottleneck, replaced",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "ai-substitutes-for-the-human-bottleneck"
+                  },
+                  "narrative": "This thread shows [[rlaif|RLAIF]] as a surgical swap: the labeler changes, and everything the 2017 paper built around the labeler stays.",
+                  "era": "2022"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-rlaif-automates",
+                  "name": "Online training without the humans",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "rlaif-makes-newly-automatable-iterated-online-training"
+                  },
+                  "narrative": "The 2017 paper's guard against reward hacking needed humans on call; with an AI labeler, the loop can finally run as fast as the policy drifts.",
+                  "era": "2022"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-online-training",
+                  "name": "The loop CAI automates",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "iterated-online-training"
+                  },
+                  "narrative": "Introduced here as one of three concurrent loops, then named and flagged for full automation in Constitutional AI's RLAIF pipeline.",
+                  "era": "2017"
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-elo",
+                  "name": "An analogy becomes a metric",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "elo-score"
+                  },
+                  "narrative": "In 2017, Elo is an explanatory aside for why a Bradley–Terry loss makes sense; in 2022, Constitutional AI computes actual Elo scores to track helpfulness and harmlessness.",
+                  "era": "2022"
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-across-ch-hindsight",
+              "name": "Seams only hindsight can see",
+              "narrative": "Nineteen edges in this wiki are marked hindsight — links neither paper states, visible only when the corpus is read together — and thirteen of them touch this paper. The patterns they trace are the paper's quieter legacy: everything downstream of a moving reward, from raised entropy bonuses in 2017 to [[ppo-training|PPO]]-stage instabilities in 2022; the patches that comparison training forces, because ranking alone pins a reward down only up to scale; and the endless Pong rally read, five years later, as the first sighting of [[reward-overoptimization|reward over-optimization]] — [[goodharts-law|Goodhart's law]] acquiring instances until it finally gets its name.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-across-hindsight-tissue",
+                  "name": "Connections no paper draws",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "hindsight-seams-2016-to-2022"
+                  },
+                  "narrative": "The corpus's hindsight edges collected; most have this paper on one end, which is what being the hinge means."
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-moving-reward-tissue",
+                  "name": "The moving-reward family",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "downstream-of-a-moving-reward"
+                  },
+                  "narrative": "One root fact — the reward keeps changing while the policy trains on it — and every consequence and countermeasure the corpus traces to it, in 2017 and again in 2022."
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-underdetermined-tissue",
+                  "name": "What ranking leaves free",
+                  "ref": {
+                    "kind": "tissue",
+                    "id": "what-comparisons-leave-undetermined"
+                  },
+                  "narrative": "Comparisons determine a reward only up to order-preserving transformations; this thread collects the patches, from 2017's normalization to the scale fix in InstructGPT's loss."
+                },
+                {
+                  "id": "deep-rl-human-prefs-across-pong-overoptimization",
+                  "name": "Pong, five years early",
+                  "ref": {
+                    "kind": "edge",
+                    "id": "pong-task-anticipates-reward-overoptimization"
+                  },
+                  "narrative": "A hindsight edge from the rally that never ends to InstructGPT's reward-model over-optimization: the same divergence between proxy score and intended behavior, at two scales.",
+                  "era": "2022"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "deep-rl-human-prefs-big-picture",
+          "tab": "The big picture",
+          "name": "The 2017 argument: human preference is a sufficient training signal",
+          "intro": "Reinforcement learning assumes someone can write down a reward function, and for much of the behavior people actually want — a backflip, considerate driving — nobody can. The 2017 paper proposes to stop asking for a definition and ask for judgments instead: show a person two short clips of behavior and record which one they prefer.\n\nWhat follows is the paper's argument at full altitude: the specification problem it starts from, the mechanism that turns comparisons into a reward signal, the evidence that the signal suffices, the ablations that show which design choices carry the result, and the costs and failures the paper reports against itself.",
+          "narrative": "The paper's thesis is that deep RL does not need a programmable reward function: a few hundred to a few thousand pairwise human preferences over seconds-long clips, fitted into a learned reward model and optimized by an ordinary RL algorithm, suffice to solve standard benchmarks and to produce behaviors no one could write a reward for — with a human seeing less than 1% of the agent's interactions. The evidence is benchmark performance against a withheld true reward, novel behaviors judged by eye, and ablations that isolate what the design actually depends on.",
+          "children": [
+            {
+              "id": "deep-rl-human-prefs-bp-problem",
+              "name": "The problem: goals nobody can specify",
+              "narrative": "The paper starts from tasks whose goals are complex, poorly defined, or hard to perform. Hand-written rewards misstate such goals; the demonstration-based alternatives require a human who can already do the task, which fails exactly where the interesting cases live — controlling a body with the wrong number of legs, for instance. What remains is judgment: a person can recognize better behavior without being able to produce or define it, and the paper builds its method on that asymmetry.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-oversight",
+                  "name": "Oversight at 1% of the price",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "scalable-oversight"
+                  },
+                  "narrative": "The paper casts its setting as the 2016 oversight problem made concrete: train deep RL agents from sparse, cheap, non-expert feedback rather than a reward supplied at every timestep."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-irl-declined",
+                  "name": "Inverse RL, weighed and declined",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "inverse-reinforcement-learning"
+                  },
+                  "narrative": "Extracting a reward from expert demonstrations is noted and set aside: it needs behavior a human can demonstrate, which is precisely what many target behaviors are not."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-imitation-declined",
+                  "name": "Imitation, likewise",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "imitation-learning"
+                  },
+                  "narrative": "Directly cloning demonstrated behavior fails for the same reason — a person who cannot backflip cannot show a robot how."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-mechanism",
+              "name": "The mechanism: comparisons become a reward",
+              "narrative": "The machinery is a loop of three concurrent processes: the policy generates behavior, a human compares pairs of short clips through the [[preference-elicitation-protocol|elicitation protocol]], and a reward predictor — an [[reward-predictor-ensemble|ensemble]], refit as labels accumulate — turns the growing preference database into a scalar reward the policy optimizes as if the environment had provided it. The statistical hinge is seventy years old: treat each preference as a noisy comparison of latent scores, and the scores become the reward.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-rlhf",
+                  "name": "The paradigm, named",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "rlhf"
+                  },
+                  "narrative": "Learning a reward model from human preference judgments and optimizing it with standard RL — the general recipe this paper establishes and the 2022 papers inherit."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-segment",
+                  "name": "The unit of judgment",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "trajectory-segment"
+                  },
+                  "narrative": "One to two seconds of behavior — long enough for a rater to understand, short enough to answer quickly — rather than whole trajectories or single frames."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-bradley-terry",
+                  "name": "The 1952 hinge",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "bradley-terry-model"
+                  },
+                  "narrative": "The Bradley-Terry model converts predicted per-segment reward sums into the probability that a human prefers one segment — the bridge from comparisons to scalars."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-reward-model",
+                  "name": "The learned stand-in",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-model"
+                  },
+                  "narrative": "A neural network trained to predict reward consistent with the human's pairwise preferences, used in place of the environment's reward signal."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-async",
+                  "name": "Three loops, running at once",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "async-reward-learning-architecture"
+                  },
+                  "narrative": "Policy, reward predictor, and human labeling run asynchronously, each feeding the next — the architectural answer to a training signal that arrives from a person, slowly."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-evidence",
+              "name": "The evidence: benchmarks matched, behaviors invented",
+              "narrative": "The evaluation runs on two tracks. Quantitatively, agents trained from preferences — real or from a [[synthetic-oracle-feedback|synthetic oracle]] — are scored against a true reward function the learner never sees, and on some tasks the learned reward beats the hand-written one it was standing in for. Qualitatively, [[novel-behavior-training|behaviors with no reward function at all]] are trained from an hour of human time and judged by watching them.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-two-track",
+                  "name": "Two kinds of proof",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "quantitative-qualitative-evaluation"
+                  },
+                  "narrative": "Benchmarks with a known-but-withheld reward supply the numbers; tasks with no reward function at all are judged against a natural-language goal by a human watching the result."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-efficiency",
+                  "name": "The headline ratio",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "human-feedback-sample-efficiency"
+                  },
+                  "narrative": "Complex tasks are learned with feedback on less than 1% of the agent's interactions — roughly three orders of magnitude less human attention than per-timestep supervision would demand."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-backflip",
+                  "name": "The backflip",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "hopper-backflip-demonstration"
+                  },
+                  "narrative": "Nine hundred preference queries, under an hour of human time, and a simulated robot performs repeated backflips — the paper's emblem for goals that resist definition but not recognition."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-shaping",
+                  "name": "Better than the true reward",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "human-feedback-implicit-reward-shaping"
+                  },
+                  "narrative": "On Ant and Enduro, preference-trained agents beat agents trained on the real reward function — human raters implicitly shape the reward better than the hand-written original."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-ablations",
+              "name": "The ablations that carry the design",
+              "narrative": "The design choices are argued with ablations rather than asserted. Freeze the reward predictor — train it offline, up front — and the policy learns to exploit it: on [[pong-task|Pong]] the agent avoids losing points without ever learning to score. Replace comparisons with absolute scores, or query at random instead of where the ensemble disagrees, and the paper measures what each choice was buying. The ablation section is where the paper's confidence comes from.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-online",
+                  "name": "Labels must keep coming",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "iterated-online-training"
+                  },
+                  "narrative": "Collecting preferences continuously as the policy changes, rather than in one offline batch, is what keeps the reward model honest about the states the policy actually visits."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-hacking",
+                  "name": "What happens when they stop",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-hacking"
+                  },
+                  "narrative": "The offline ablation produces the corpus's first observed instance of reward hacking against a learned reward: behavior that scores well under the frozen predictor and looks bizarre under the true task."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-target-ablation",
+                  "name": "Comparisons versus scores",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "comparisons-vs-absolute-scores"
+                  },
+                  "narrative": "The 'target' ablation regresses the predictor directly onto true reward totals, testing whether asking humans for comparisons — rather than absolute judgments — matters. It does."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-limits",
+              "name": "Costs, failures, and the honest footnote",
+              "narrative": "The paper prices its own result and reports where it loses. A footnote calculates that the human labels for an Atari run cost about $36 against roughly $25 of compute — so further label-efficiency gains buy little. Qbert resists real human feedback entirely, apparently because short clips of it confuse raters. And continuously refitting the reward makes the RL problem itself non-stationary, a difficulty the paper manages with algorithm choice and extra exploration rather than solves.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-cost",
+                  "name": "The $36 footnote",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "compute-vs-human-cost-analysis"
+                  },
+                  "narrative": "Human feedback is already no more expensive than the compute beside it — the paper's own argument that its efficiency result has hit diminishing returns."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-qbert",
+                  "name": "The game it couldn't learn",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "qbert-task"
+                  },
+                  "narrative": "With real human raters the method fails to clear Qbert's first level — a reminder that the unit of judgment has to be judgeable."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-nonstationary",
+                  "name": "A moving reward",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "non-stationary-reward-challenge"
+                  },
+                  "narrative": "Because the predictor keeps changing, the policy is solving RL under a non-stationary reward — acknowledged as a structural cost of the whole approach."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -778,7 +778,8 @@ class SiteBuilder:
             '<p class="section-note">One paper, several tellings. <b>Inside the '
             'paper</b> follows the paper&rsquo;s own arc; <b>Across the corpus</b> '
             'traces how it connects to the other papers; <b>The big picture</b> '
-            'places it under the corpus&rsquo;s superthemes; <b>The concepts</b> '
+            'states the paper&rsquo;s own thesis and contributions in its own '
+            'terms; <b>The concepts</b> '
             'lists everything the paper uses, in reading order. Pick a tab, then '
             'use the +/&minus; toggles to open it level by level, or set a '
             'granularity to read the whole thing at that zoom.</p>'
@@ -1284,7 +1285,8 @@ class SiteBuilder:
             f'<li><b>Connective themes</b> &mdash; lenses over the <i>edges</i> rather than the concepts: '
             f'short threads of related connections.</li>'
             f'<li><b>Stories</b> &mdash; each paper retold as a story: its own arc chapter '
-            f'by chapter, its ties to the other papers, and its place under the superthemes.</li>'
+            f'by chapter, its ties to the other papers, and its thesis and contributions '
+            f'in its own terms.</li>'
             '</ul>'
         )
         parts.append("</section>")
@@ -1323,9 +1325,9 @@ class SiteBuilder:
                 "in the Papers tab. A row of tabs at the top picks the telling: "
                 "<b>Inside the paper</b> follows the paper&rsquo;s own arc, "
                 "<b>Across the corpus</b> traces how it connects to the other papers, "
-                "and <b>The big picture</b> places it under the corpus&rsquo;s "
-                "superthemes. They all cover the same paper &mdash; choose whichever "
-                "question interests you most.</p>"
+                "and <b>The big picture</b> states the paper&rsquo;s own thesis and "
+                "contributions in its own terms. They all cover the same paper &mdash; "
+                "choose whichever question interests you most.</p>"
             )
             parts.append(self._help_figure(
                 "story-controls.png",

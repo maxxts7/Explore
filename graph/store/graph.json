@@ -13183,281 +13183,213 @@
         {
           "id": "concrete-problems-big-picture",
           "tab": "The big picture",
-          "name": "The agenda under the corpus's big claims",
-          "intro": "Zoom all the way out and this wiki's corpus makes six big claims — superthemes, each gathering several themes into one argument. Concrete Problems touches all six, more than any other paper here, which is what being the corpus's agenda paper means in practice.\n\nFour of the six claims it dominates outright: they are organized around its own problem areas, and nearly every member theme is built from its concepts. The other two belong to the papers that built systems — the RLHF pipeline and the 2017 proof of concept — and there this paper appears as the seed: the naming of the problem the later machinery answers.",
-          "narrative": "Concrete Problems feeds all six of the corpus's superthemes, but in two distinct ways. Where the big claim is about problems — bounding impact and exploration, surviving distributional shift, understanding reward hacking, drawing safety's scope — the claim is essentially this paper's own structure promoted to corpus level, and it supplies nearly every member theme. Where the big claim is about built systems — the scalable-oversight-to-RLHF pipeline, the 2017 proof of concept — this paper contributes the opening move: the problem statement, the proposal menu, the prior work catalog that the later papers turned into machinery.",
+          "name": "The argument of the 2016 agenda: accidents are concrete research problems",
+          "intro": "In 2016, concern about AI going wrong ran in two separate channels: long-term arguments about superintelligence, and engineering folklore about brittle models. Concrete Problems argues that both channels miss a tractable middle: accidents — unintended, harmful behavior from ordinary machine learning systems — are real, structural, and researchable with the field's existing tools.\n\nThe chapters below stay at the altitude of the argument rather than the paper's section order: the reframing that defines the accident, the five-problem taxonomy that is the central claim, the documented failures offered as evidence, the remedy menu that makes the case for tractability, and the limits an agenda paper owns up to.",
+          "narrative": "The 2016 paper's thesis is that accident risk in machine learning is not one vague worry but five concrete research problems, each traceable to a structural cause in how objectives are specified, evaluated, and optimized — and each already attackable with experiments and remedies adapted from existing fields. Its evidence is a catalog of documented failures and established principles; its self-imposed limit is that it builds nothing, and says so.",
           "children": [
             {
-              "id": "concrete-problems-big-ch-frame",
-              "name": "The frame it built for itself",
-              "narrative": "One supertheme exists because of this paper alone: where Concrete Problems draws its own lines. It collects the paper's deliberate acts of scoping — accidents rather than [[long-term-ai-risk-framing|superintelligence]], engineering rather than [[asimovs-first-law|fiction]], and an explicit list of six neighboring fields that accident risk is not. The recurring formal-methods toolkit sits here too, because it is part of the same claim: this paper's ambitions are calibrated against fields, like verified aviation software, where rigorous safety already exists.",
+              "id": "concrete-problems-bp-reframing",
+              "name": "The reframing: accidents, not superintelligence",
+              "narrative": "The paper's first move is definitional. It replaces the prevailing frames — distant superintelligence on one side, one-off engineering mishaps on the other — with a single unit of analysis: the accident, unintended and harmful behavior emerging from poor design of a real machine learning system. The rest of the argument depends on this move, because a defined object of study is what lets safety be parceled into research problems rather than debated as a stance.",
               "children": [
                 {
-                  "id": "concrete-problems-big-scope-supertheme",
-                  "name": "Where Concrete Problems draws its own lines",
+                  "id": "concrete-problems-bp-accidents",
+                  "name": "The unit of analysis",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "concrete-problems-scope-and-toolkit"
+                    "kind": "concept",
+                    "id": "accidents-in-ml"
                   },
-                  "narrative": "The corpus-level claim that the paper's narrowness is method, not oversight. Every member theme is this paper's.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-framing-theme",
-                      "name": "Accidents, not superintelligence",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "framing-accidents-vs-speculative-risk"
-                      },
-                      "narrative": "This paper's contribution is the position itself: a third, practical framing between speculation and fiction."
-                    },
-                    {
-                      "id": "concrete-problems-big-adjacent-theme",
-                      "name": "The six fields it is not",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "adjacent-research-areas"
-                      },
-                      "narrative": "The boundary list — privacy, fairness, security, abuse, transparency, policy — that makes the accident definition sharp by exclusion."
-                    }
-                  ]
+                  "narrative": "Accidents — unintended, harmful behavior arising from poor design of real-world ML systems — are the paper's chosen object of study: deliberately mundane, and deliberately general."
                 },
                 {
-                  "id": "concrete-problems-big-formal-methods-theme",
-                  "name": "The borrowed rigor",
+                  "id": "concrete-problems-bp-longterm-frame",
+                  "name": "The frame it declines",
                   "ref": {
-                    "kind": "theme",
-                    "id": "formal-methods-imported"
+                    "kind": "concept",
+                    "id": "long-term-ai-risk-framing"
                   },
-                  "narrative": "A theme this paper supplies to three superthemes at once: [[formal-verification|formal verification]], [[reachability-analysis|reachability analysis]], [[h-infinity-control|H-infinity control]] and their kin recur across its five problem areas as the substrate its remedies are assembled from."
+                  "narrative": "The paper acknowledges the superintelligence discourse and sets it aside: its five problems are meant to matter whether or not the extreme scenarios ever arrive."
+                },
+                {
+                  "id": "concrete-problems-bp-cleaning-robot",
+                  "name": "One robot, five failures",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "cleaning-robot-example"
+                  },
+                  "narrative": "A single office-cleaning robot illustrates every problem in turn — the paper's standing demonstration that its categories describe one ordinary system, not five exotic ones."
                 }
               ]
             },
             {
-              "id": "concrete-problems-big-ch-owned",
-              "name": "The two claims it still owns",
-              "narrative": "Two superthemes are, in effect, sections of this paper promoted to corpus-level claims, because no later paper added to them. Bounding what an agent can change or explore unifies the side-effect and safe-exploration sections under one strategy — shrink the reachable space instead of perfecting the objective — and all seven of its member themes touch this paper. Distributional shift's two responses, relax the statistics or rewrite the contract, are likewise entirely 2016 material. Their placement in the big picture is double-edged: these are the corpus's most fully mapped problem spaces, and its least built.",
+              "id": "concrete-problems-bp-taxonomy",
+              "name": "The central claim: five problems, three causes",
+              "narrative": "The taxonomy is the thesis. Two problems arise from specifying the wrong objective function: side effects, where a narrow objective leaves the agent indifferent to the rest of the environment, and reward hacking, where the literal objective can be satisfied in ways that subvert the designer's intent. One arises when the right objective is too expensive to evaluate on every example. And two arise from the learning process itself even under a correct objective: exploration that risks harm before the agent knows better, and brittleness when the world stops resembling the training distribution.",
               "children": [
                 {
-                  "id": "concrete-problems-big-bounding-supertheme",
-                  "name": "Bounding impact and exploration",
+                  "id": "concrete-problems-bp-side-effects",
+                  "name": "Negative side effects",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "bounding-impact-and-exploration"
+                    "kind": "concept",
+                    "id": "negative-side-effects"
                   },
-                  "narrative": "The constraint half of the corpus's remedy space. This paper contributes the whole scaffold: both side-effect vocabularies, the relational reframing, and both halves of safe exploration.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-impact-theme",
-                      "name": "Distance from a baseline",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "impact-regularization-and-baselines"
-                      },
-                      "narrative": "This paper adds the claim that side effects can be penalized as pure distance, without naming the side effect."
-                    },
-                    {
-                      "id": "concrete-problems-big-influence-theme",
-                      "name": "Potential influence and uncertainty",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "influence-and-uncertainty-side-effect-mitigation"
-                      },
-                      "narrative": "This paper adds the alternative vocabulary: penalize power held in reserve, or let caution emerge from reward uncertainty."
-                    },
-                    {
-                      "id": "concrete-problems-big-relationship-theme",
-                      "name": "Safety as a relationship",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "side-effects-as-relationship"
-                      },
-                      "narrative": "This paper adds the reframing that points toward the corpus's future: harm is defined by other agents' interests, so safety involves inferring them."
-                    },
-                    {
-                      "id": "concrete-problems-big-exploration-criteria-theme",
-                      "name": "Risk-sensitive objectives",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "exploration-risk-criteria-and-algorithms"
-                      },
-                      "narrative": "This paper adds the diagnosis that standard exploration is danger-blind by construction, and the catalog of objectives that would not be."
-                    },
-                    {
-                      "id": "concrete-problems-big-safe-regions-theme",
-                      "name": "Fenced exploration",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "constraining-exploration-to-safe-regions"
-                      },
-                      "narrative": "This paper adds every mechanism in the theme: simulation, bounded regions, trusted policies, human sign-off, demonstrations as anchor."
-                    }
-                  ]
+                  "narrative": "An objective focused narrowly on one task leaves the agent indifferent to — and therefore willing to cause — harmful disruption everywhere the objective is silent."
                 },
                 {
-                  "id": "concrete-problems-big-shift-supertheme",
-                  "name": "Distributional shift: two responses",
+                  "id": "concrete-problems-bp-reward-hacking",
+                  "name": "Reward hacking",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "distributional-shift-responses"
+                    "kind": "concept",
+                    "id": "reward-hacking"
                   },
-                  "narrative": "Relax the statistics, or rewrite the contract — both branches of this supertheme are this paper's, and nothing downstream extends either.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-statistical-theme",
-                      "name": "The statistical branch",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "statistical-relaxations-for-distributional-shift"
-                      },
-                      "narrative": "This paper adds the imported econometrics: weaker assumptions, checkable where the strong ones were not."
-                    },
-                    {
-                      "id": "concrete-problems-big-contracts-theme",
-                      "name": "The contractual branch",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "shift-as-contracts-and-causation"
-                      },
-                      "narrative": "This paper adds the reframing of shift as broken specification — the move that makes the fifth problem rhyme with the other four."
-                    }
-                  ]
+                  "narrative": "The agent finds a way to formally maximize its objective that satisfies the letter of the specification while subverting its point; the paper dissects why such exploits are common rather than freakish."
+                },
+                {
+                  "id": "concrete-problems-bp-scalable-oversight",
+                  "name": "Scalable oversight",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "scalable-oversight"
+                  },
+                  "narrative": "When the true objective is too costly for a human to evaluate at every step, training must lean on cheap proxies — and the question becomes how to use limited human judgment without losing it."
+                },
+                {
+                  "id": "concrete-problems-bp-safe-exploration",
+                  "name": "Safe exploration",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "safe-exploration"
+                  },
+                  "narrative": "Learning requires trying things, and some tries are irreversible; the problem is keeping exploratory actions away from catastrophic states."
+                },
+                {
+                  "id": "concrete-problems-bp-dist-shift",
+                  "name": "Robustness to distributional shift",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "robustness-distributional-shift"
+                  },
+                  "narrative": "Systems should perform reasonably — and know when they are performing badly — on distributions that differ from the ones they trained on."
                 }
               ]
             },
             {
-              "id": "concrete-problems-big-ch-goodhart",
-              "name": "The law it named before the evidence existed",
-              "narrative": "The reward-hacking supertheme is this paper's taxonomy plus six years of confirmation. Concrete Problems supplies the anatomy of why proxies get gamed, both remedy families, and the general principle — [[goodharts-law|Goodhart's law]] — under which the later papers' failures would be filed. What it could not supply in 2016 was a single observed instance; the corpus's later papers provided those, from a Pong policy rallying forever to reward-model over-optimization at language-model scale. This paper's contribution to the big claim is therefore the unusual one of a *correct prediction*: the failure taxonomy was written before the failures were run.",
+              "id": "concrete-problems-bp-evidence",
+              "name": "The evidence: failures already on record",
+              "narrative": "The paper's evidence that its categories are real rather than hypothetical is a catalog of documented failures and established principles from outside AI safety: circuits that evolved into radios, agents that distort their own perceptions, imperceptibly perturbed inputs that fool confident classifiers, and an economics principle old enough to have a name. What the taxonomy adds is the claim that these scattered observations are instances of the same few structural causes.",
               "children": [
                 {
-                  "id": "concrete-problems-big-hacking-supertheme",
-                  "name": "Reward hacking and the law behind it",
+                  "id": "concrete-problems-bp-evolved-radio",
+                  "name": "The circuit that became a radio",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "reward-hacking-and-goodharts-law"
+                    "kind": "concept",
+                    "id": "evolved-radio-example"
                   },
-                  "narrative": "The corpus's account of how proxies get gamed. This paper supplies the causes and both remedy families; the later papers supply the sightings.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-causes-theme",
-                      "name": "The anatomy of gamed proxies",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "reward-hacking-causes"
-                      },
-                      "narrative": "This paper adds the structural explanation — five causes, from partial observability to physical embedding — that turns anecdotes into a taxonomy."
-                    },
-                    {
-                      "id": "concrete-problems-big-adversarial-theme",
-                      "name": "The adversarial remedy family",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "adversarial-ml-for-reward-hacking"
-                      },
-                      "narrative": "This paper adds the claim that reward hacking is, in part, the adversarial-robustness problem wearing different clothes, so the same toolkit applies."
-                    },
-                    {
-                      "id": "concrete-problems-big-engineering-theme",
-                      "name": "The engineering remedy family",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "reward-hacking-engineering-remedies"
-                      },
-                      "narrative": "This paper adds the conventional toolbox — capping, sandboxing, freezing, trip wires — proposed with each remedy's limits stated alongside it."
-                    }
-                  ]
+                  "narrative": "A genetic algorithm asked for a timekeeping circuit delivered one that picked up a nearby PC's radio emissions — the paper's cleanest specimen of a literal objective satisfied and an intent subverted."
                 },
                 {
-                  "id": "concrete-problems-big-goodhart-corpus-theme",
-                  "name": "Where the prediction met the evidence",
+                  "id": "concrete-problems-bp-wireheading",
+                  "name": "Wireheading",
                   "ref": {
-                    "kind": "theme",
-                    "id": "goodhart-across-corpus"
+                    "kind": "concept",
+                    "id": "wireheading"
                   },
-                  "narrative": "The one member theme whose material is mostly the later papers'. What this paper adds is the principle itself, stated once in 2016 and then re-found empirically in 2017 and twice in 2022."
+                  "narrative": "The pre-existing name for an agent tampering with its own reward-generating mechanism, folded into the taxonomy as the extreme case of a reward that physically lives in the environment."
+                },
+                {
+                  "id": "concrete-problems-bp-adversarial-examples",
+                  "name": "Adversarial examples",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "adversarial-examples"
+                  },
+                  "narrative": "Imperceptibly perturbed inputs that fool confident classifiers, cited as evidence that learned components — including learned rewards — come with exploitable pathologies."
+                },
+                {
+                  "id": "concrete-problems-bp-goodhart",
+                  "name": "Goodhart's law",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "goodharts-law"
+                  },
+                  "narrative": "The 1984 economics principle — when a measure becomes a target, it ceases to be a good measure — gives the paper a general law under which to file proxy gaming of every kind."
                 }
               ]
             },
             {
-              "id": "concrete-problems-big-ch-pipeline",
-              "name": "The pipeline it seeded but doesn't own",
-              "narrative": "The remaining two superthemes belong to the builders, and this paper appears in them as origin rather than owner. In the scalable-oversight-to-RLHF pipeline, only four of eleven member themes touch this paper — but they are the first four of the story: the problem statement, the reward-prediction proposals, the alternative routes, and the demonstrations thread that became supervised fine-tuning. In the 2017 proof of concept, its role is smaller still: it shares the prior human-in-the-loop catalog ([[cooperative-inverse-reinforcement-learning|CIRL]], [[inverse-reinforcement-learning|IRL]]) and the [[atari-games-environment|Atari]] testbed it had proposed a year before the 2017 paper ran experiments there. That asymmetry is the honest shape of an agenda's success: the ideas moved on and stopped belonging to it.",
+              "id": "concrete-problems-bp-remedies",
+              "name": "The remedy menu, and why it is evidence too",
+              "narrative": "For each problem the paper proposes not one fix but a family, most adapted from existing fields: regularization, adversarial training in the style of [[generative-adversarial-networks|GANs]], semi-supervised learning, apprenticeship learning, software contracts. The menu is doing argumentative work — it is the paper's demonstration that safety research can start immediately, with the field's current tools, on current systems. That claim is what separates an agenda from a warning.",
               "children": [
                 {
-                  "id": "concrete-problems-big-pipeline-supertheme",
-                  "name": "Scalable oversight made real",
+                  "id": "concrete-problems-bp-impact-regularizer",
+                  "name": "Penalize change itself",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "scalable-oversight-to-rlhf-pipeline"
+                    "kind": "concept",
+                    "id": "impact-regularizer"
                   },
-                  "narrative": "The corpus's longest arc, from a 2016 open problem to InstructGPT's pipeline. This paper contributes its opening chapters.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-ssrl-theme",
-                      "name": "The reward-prediction proposals",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "semi-supervised-reward-learning-proposals"
-                      },
-                      "narrative": "This paper adds the founding wager: a sparse true-reward signal can be stretched across dense training data by learning to predict it."
-                    },
-                    {
-                      "id": "concrete-problems-big-distant-theme",
-                      "name": "The roads not taken",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "distant-supervision-and-hierarchical-decomposition"
-                      },
-                      "narrative": "This paper adds the reminder that oversight was a design space: weak labels and hierarchical delegation were live alternatives to the reward-prediction branch the corpus actually followed."
-                    },
-                    {
-                      "id": "concrete-problems-big-demonstrations-theme",
-                      "name": "The demonstrations thread",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "demonstrations-not-specification"
-                      },
-                      "narrative": "This paper adds the original proposal — demonstrations instead of specification — that 2017 declined and 2022 built as SFT."
-                    },
-                    {
-                      "id": "concrete-problems-big-lineage-theme",
-                      "name": "The lineage itself",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "scalable-oversight-lineage"
-                      },
-                      "narrative": "This paper adds the problem statement every later link answers: it is the fixed point the whole throughline is measured against."
-                    }
-                  ]
+                  "narrative": "Against side effects: a penalty on changing the environment, measured as distance from an initial state or from what a passive policy would have left alone."
                 },
                 {
-                  "id": "concrete-problems-big-2017-supertheme",
-                  "name": "The 2017 proof of concept",
+                  "id": "concrete-problems-bp-adversarial-reward",
+                  "name": "Make the reward fight back",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "deep-rl-from-preferences-proof-of-concept"
+                    "kind": "concept",
+                    "id": "adversarial-reward-functions"
                   },
-                  "narrative": "The supertheme this paper touches most lightly: of its eight member themes, only two reach back to 2016, and both are inheritances rather than proposals.",
-                  "children": [
-                    {
-                      "id": "concrete-problems-big-prior-hitl-theme",
-                      "name": "The shared prior-work catalog",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "prior-human-in-the-loop-rl"
-                      },
-                      "narrative": "This paper adds the catalog's first appearance: the same prior methods it listed as remedy material are what the 2017 paper positions its preferences against."
-                    },
-                    {
-                      "id": "concrete-problems-big-testbeds-theme",
-                      "name": "The testbed it called for",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "deep-rl-testbeds"
-                      },
-                      "narrative": "This paper adds one item, but a prescient one: it proposed Atari as the toy environment for oversight experiments a year before the 2017 paper made Atari half its evidence."
-                    }
-                  ]
+                  "narrative": "Against reward hacking: make the reward function an active agent that searches for scenarios the system rates highly and a human rates poorly, instead of a static target waiting to be gamed."
+                },
+                {
+                  "id": "concrete-problems-bp-ssrl",
+                  "name": "Learn from sparse true reward",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "semi-supervised-reinforcement-learning"
+                  },
+                  "narrative": "Against the oversight bottleneck: let the agent see its true reward on only a small fraction of episodes while being evaluated on all of them — the proposal later papers turned into machinery."
+                },
+                {
+                  "id": "concrete-problems-bp-demonstrations",
+                  "name": "Start from demonstrations",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "use-demonstrations"
+                  },
+                  "narrative": "Against exploration risk: learn a baseline from expert trajectories so the agent needs fewer dangerous experiments of its own."
+                },
+                {
+                  "id": "concrete-problems-bp-contracts",
+                  "name": "Contracts for models",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "machine-learning-with-contracts"
+                  },
+                  "narrative": "Against distributional brittleness: replace the implicit, easily violated contract that training and test distributions match with explicit behavioral contracts a system can be checked against."
+                }
+              ]
+            },
+            {
+              "id": "concrete-problems-bp-limits",
+              "name": "What an agenda admits",
+              "narrative": "The paper prices its own claims. Nothing in it is built: the remedies are proposals, and the experiments are sketches of experiments, down to the toy environments where they might someday run. Its scope is drawn just as deliberately — accidents only, with [[privacy-research-area|privacy]], [[fairness-research-area|fairness]], [[security-ml|security]], and [[policy-ml|policy]] named as adjacent areas it will not cover. The bet underneath is stated as a trend, not a theorem: as autonomy, reinforcement learning, and system complexity grow, so does the cost of leaving these five problems unstudied.",
+              "children": [
+                {
+                  "id": "concrete-problems-bp-atari-proposed",
+                  "name": "Experiments proposed, not run",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "atari-games-environment"
+                  },
+                  "narrative": "Atari games appear here only as the suggested proving ground for reward-hacking and semi-supervised RL experiments — the agenda's evidence stops at the proposal."
+                },
+                {
+                  "id": "concrete-problems-bp-babi-model",
+                  "name": "Benchmarks it asks someone to build",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "babi-tasks"
+                  },
+                  "narrative": "The bAbI suite is cited as the model for the broad, diagnostic benchmark suites the paper wants built for safe exploration — a call for infrastructure it does not itself supply."
                 }
               ]
             }
@@ -13934,189 +13866,204 @@
         {
           "id": "deep-rl-human-prefs-big-picture",
           "tab": "The big picture",
-          "name": "What the proof of concept feeds: one supertheme anchored, one carried, four touched",
-          "intro": "Superthemes are the corpus's largest claims — the arguments no single paper makes alone. Six of them exist in this wiki, and the 2017 paper touches all six: one is simply this paper restated as a claim, another runs straight through it, and the remaining four each carry a trace of it.\n\nThe three chapters take these in order of how much weight the paper bears: first the proof-of-concept supertheme built entirely from its own themes, then the oversight-to-RLHF throughline where it is the middle link, and last the four big claims it touches more lightly.",
-          "narrative": "This paper anchors one of the corpus's six superthemes outright, supplies the load-bearing middle of its central one, and leaves smaller fingerprints on the other four — a first empirical instance here, a declined alternative there, a borrowed analogy that became a metric.",
+          "name": "The 2017 argument: human preference is a sufficient training signal",
+          "intro": "Reinforcement learning assumes someone can write down a reward function, and for much of the behavior people actually want — a backflip, considerate driving — nobody can. The 2017 paper proposes to stop asking for a definition and ask for judgments instead: show a person two short clips of behavior and record which one they prefer.\n\nWhat follows is the paper's argument at full altitude: the specification problem it starts from, the mechanism that turns comparisons into a reward signal, the evidence that the signal suffices, the ablations that show which design choices carry the result, and the costs and failures the paper reports against itself.",
+          "narrative": "The paper's thesis is that deep RL does not need a programmable reward function: a few hundred to a few thousand pairwise human preferences over seconds-long clips, fitted into a learned reward model and optimized by an ordinary RL algorithm, suffice to solve standard benchmarks and to produce behaviors no one could write a reward for — with a human seeing less than 1% of the agent's interactions. The evidence is benchmark performance against a withheld true reward, novel behaviors judged by eye, and ablations that isolate what the design actually depends on.",
           "children": [
             {
-              "id": "deep-rl-human-prefs-big-picture-ch-own",
-              "name": "The supertheme that is this paper",
-              "narrative": "The 2017 proof of concept is the corpus's only supertheme drawn entirely from one paper — this one. It is the paper restated as a claim: human preferences can be made a usable training signal for deep RL, provided you have the mechanism, the countermeasures, and the proof. Its eight themes also cover the lineage the paper broke from ([[prior-human-in-the-loop-rl|prior human-in-the-loop RL]]), the [[deep-rl-testbeds|testbeds]] and [[hidden-reward-experimental-design|leak-proof experimental design]] the proof ran on, the [[policy-optimization-under-learned-rewards|RL algorithms]] bent to tolerate a moving reward, and the [[economics-of-human-feedback|economics]] that made any of it affordable.",
+              "id": "deep-rl-human-prefs-bp-problem",
+              "name": "The problem: goals nobody can specify",
+              "narrative": "The paper starts from tasks whose goals are complex, poorly defined, or hard to perform. Hand-written rewards misstate such goals; the demonstration-based alternatives require a human who can already do the task, which fails exactly where the interesting cases live — controlling a body with the wrong number of legs, for instance. What remains is judgment: a person can recognize better behavior without being able to produce or define it, and the paper builds its method on that asymmetry.",
               "children": [
                 {
-                  "id": "deep-rl-human-prefs-big-picture-proof-supertheme",
-                  "name": "The 2017 proof of concept",
+                  "id": "deep-rl-human-prefs-bp-oversight",
+                  "name": "Oversight at 1% of the price",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "deep-rl-from-preferences-proof-of-concept"
+                    "kind": "concept",
+                    "id": "scalable-oversight"
                   },
-                  "narrative": "The whole claim, expandable: eight themes, every one built from this paper's concepts. Everything it took to make preferences a training signal, from mechanism to countermeasures to proof."
+                  "narrative": "The paper casts its setting as the 2016 oversight problem made concrete: train deep RL agents from sparse, cheap, non-expert feedback rather than a reward supplied at every timestep."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-comparisons",
-                  "name": "The mechanism it contributes",
+                  "id": "deep-rl-human-prefs-bp-irl-declined",
+                  "name": "Inverse RL, weighed and declined",
                   "ref": {
-                    "kind": "theme",
-                    "id": "learning-rewards-from-comparisons"
+                    "kind": "concept",
+                    "id": "inverse-reinforcement-learning"
                   },
-                  "narrative": "What this paper adds is the mechanism itself: the comparison, not the score, as the atomic unit of human feedback — the design decision the wiki treats as the joint connecting 2017's robots to 2022's chatbots."
+                  "narrative": "Extracting a reward from expert demonstrations is noted and set aside: it needs behavior a human can demonstrate, which is precisely what many target behaviors are not."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-on-distribution",
-                  "name": "The countermeasures it contributes",
+                  "id": "deep-rl-human-prefs-bp-imitation-declined",
+                  "name": "Imitation, likewise",
                   "ref": {
-                    "kind": "theme",
-                    "id": "keeping-reward-models-on-distribution"
+                    "kind": "concept",
+                    "id": "imitation-learning"
                   },
-                  "narrative": "Every guard in this theme is a 2017 invention — the ensemble, the regularization, the normalization, the online loop — and several reappear, renamed, in the 2022 pipelines."
-                },
-                {
-                  "id": "deep-rl-human-prefs-big-picture-novel-behaviors",
-                  "name": "The proof it contributes",
-                  "ref": {
-                    "kind": "theme",
-                    "id": "novel-behaviors-without-reward-functions"
-                  },
-                  "narrative": "The backflip, the one-legged cheetah, the pacing car: the demonstrations that preference learning can specify goals no reward function captured, on about an hour of human time each."
+                  "narrative": "Directly cloning demonstrated behavior fails for the same reason — a person who cannot backflip cannot show a robot how."
                 }
               ]
             },
             {
-              "id": "deep-rl-human-prefs-big-picture-ch-pipeline",
-              "name": "The middle of the corpus's central claim",
-              "narrative": "Scalable oversight made real — from 2016 proposals to InstructGPT's RLHF pipeline — is the corpus's central supertheme, and nine of its eleven themes touch this paper. Its shape is a relay: Concrete Problems names the problem and sketches remedies, this paper builds the first working answer, and InstructGPT and Constitutional AI scale it. What the 2017 paper adds to the big claim is the hand-off in the middle — the moment proposals became parts.",
+              "id": "deep-rl-human-prefs-bp-mechanism",
+              "name": "The mechanism: comparisons become a reward",
+              "narrative": "The machinery is a loop of three concurrent processes: the policy generates behavior, a human compares pairs of short clips through the [[preference-elicitation-protocol|elicitation protocol]], and a reward predictor — an [[reward-predictor-ensemble|ensemble]], refit as labels accumulate — turns the growing preference database into a scalar reward the policy optimizes as if the environment had provided it. The statistical hinge is seventy years old: treat each preference as a noisy comparison of latent scores, and the scores become the reward.",
               "children": [
                 {
-                  "id": "deep-rl-human-prefs-big-picture-pipeline-supertheme",
-                  "name": "From open problem to pipeline",
+                  "id": "deep-rl-human-prefs-bp-rlhf",
+                  "name": "The paradigm, named",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "scalable-oversight-to-rlhf-pipeline"
+                    "kind": "concept",
+                    "id": "rlhf"
                   },
-                  "narrative": "The big claim in full. This paper's role in it is the pivot: after 2017, scalable oversight stops being a proposal and starts being an engineering practice."
+                  "narrative": "Learning a reward model from human preference judgments and optimizing it with standard RL — the general recipe this paper establishes and the 2022 papers inherit."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-lineage",
-                  "name": "The lineage, with this paper as middle link",
+                  "id": "deep-rl-human-prefs-bp-segment",
+                  "name": "The unit of judgment",
                   "ref": {
-                    "kind": "theme",
-                    "id": "scalable-oversight-lineage"
+                    "kind": "concept",
+                    "id": "trajectory-segment"
                   },
-                  "narrative": "The theme names the 2017 paper the explicit middle link: its asynchronous architecture is the first system to answer the 2016 problem, and the thing the 2022 pipelines descend from."
+                  "narrative": "One to two seconds of behavior — long enough for a rater to understand, short enough to answer quickly — rather than whole trajectories or single frames."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-three-step",
-                  "name": "Two of InstructGPT's three steps",
+                  "id": "deep-rl-human-prefs-bp-bradley-terry",
+                  "name": "The 1952 hinge",
                   "ref": {
-                    "kind": "theme",
-                    "id": "rlhf-three-step-pipeline"
+                    "kind": "concept",
+                    "id": "bradley-terry-model"
                   },
-                  "narrative": "Reward modeling and RL against the learned reward exist here already; what InstructGPT adds in front is supervised fine-tuning. This paper's contribution to the pipeline theme is the pipeline's back two-thirds."
+                  "narrative": "The Bradley-Terry model converts predicted per-segment reward sums into the probability that a human prefers one segment — the bridge from comparisons to scalars."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-data-infrastructure",
-                  "name": "The labeling apparatus, first draft",
+                  "id": "deep-rl-human-prefs-bp-reward-model",
+                  "name": "The learned stand-in",
                   "ref": {
-                    "kind": "theme",
-                    "id": "human-feedback-data-infrastructure"
+                    "kind": "concept",
+                    "id": "reward-model"
                   },
-                  "narrative": "The preference protocol and the contractor arrangement are the primitive ancestors of InstructGPT's screened, interfaced, agreement-measured labeling operation."
+                  "narrative": "A neural network trained to predict reward consistent with the human's pairwise preferences, used in place of the environment's reward signal."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-semi-supervised",
-                  "name": "The 2016 proposals it implemented",
+                  "id": "deep-rl-human-prefs-bp-async",
+                  "name": "Three loops, running at once",
                   "ref": {
-                    "kind": "theme",
-                    "id": "semi-supervised-reward-learning-proposals"
+                    "kind": "concept",
+                    "id": "async-reward-learning-architecture"
                   },
-                  "narrative": "Where Concrete Problems' active-reward-learning proposal gets its first deep-RL implementation, as ensemble-variance query selection over candidate clip pairs."
+                  "narrative": "Policy, reward predictor, and human labeling run asynchronously, each feeding the next — the architectural answer to a training signal that arrives from a person, slowly."
                 }
               ]
             },
             {
-              "id": "deep-rl-human-prefs-big-picture-ch-traces",
-              "name": "Four lighter fingerprints",
-              "narrative": "The paper's remaining traces are lighter but pointed. It gave the corpus's reward-hacking claim its first empirical instance. It sits at the edge of the constraint family — connected to it mainly through the alternatives it weighed and declined. And its borrowed Elo analogy seeded the judgment-based family of metrics that the 2022 papers' evaluation apparatus, and their account of the helpfulness–harmlessness tradeoff, both depend on.",
+              "id": "deep-rl-human-prefs-bp-evidence",
+              "name": "The evidence: benchmarks matched, behaviors invented",
+              "narrative": "The evaluation runs on two tracks. Quantitatively, agents trained from preferences — real or from a [[synthetic-oracle-feedback|synthetic oracle]] — are scored against a true reward function the learner never sees, and on some tasks the learned reward beats the hand-written one it was standing in for. Qualitatively, [[novel-behavior-training|behaviors with no reward function at all]] are trained from an hour of human time and judged by watching them.",
               "children": [
                 {
-                  "id": "deep-rl-human-prefs-big-picture-goodhart-supertheme",
-                  "name": "Goodhart's law, first instance",
+                  "id": "deep-rl-human-prefs-bp-two-track",
+                  "name": "Two kinds of proof",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "reward-hacking-and-goodharts-law"
+                    "kind": "concept",
+                    "id": "quantitative-qualitative-evaluation"
                   },
-                  "narrative": "To the corpus's account of gamed proxies, this paper contributes the evidence: the offline-Pong rally, the first observed in-corpus case of a policy maximizing a proxy against intent.",
-                  "children": [
-                    {
-                      "id": "deep-rl-human-prefs-big-picture-hacking-causes",
-                      "name": "Where the Pong rally slots in",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "reward-hacking-causes"
-                      },
-                      "narrative": "The 2016 taxonomy of why proxies get gamed; this paper's rally is the taxonomy's first specimen, and the paper cites the taxonomy itself when naming it."
-                    }
-                  ]
+                  "narrative": "Benchmarks with a known-but-withheld reward supply the numbers; tasks with no reward function at all are judged against a natural-language goal by a human watching the result."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-bounding-supertheme",
-                  "name": "The family it declined to join",
+                  "id": "deep-rl-human-prefs-bp-efficiency",
+                  "name": "The headline ratio",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "bounding-impact-and-exploration"
+                    "kind": "concept",
+                    "id": "human-feedback-sample-efficiency"
                   },
-                  "narrative": "The paper touches the constraint family only at its edge: it inherits [[cooperative-inverse-reinforcement-learning|CIRL]] and the demonstration-based methods this supertheme claims, then builds the other kind of remedy — changing what the agent wants rather than what it may do.",
-                  "children": [
-                    {
-                      "id": "deep-rl-human-prefs-big-picture-demonstrations",
-                      "name": "Demonstrations, weighed and passed over",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "demonstrations-not-specification"
-                      },
-                      "narrative": "This paper is the theme's counterpoint: it names exactly when demonstrations fail — behavior a human cannot perform — and chooses comparisons instead."
-                    }
-                  ]
+                  "narrative": "Complex tasks are learned with feedback on less than 1% of the agent's interactions — roughly three orders of magnitude less human attention than per-timestep supervision would demand."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-measuring-supertheme",
-                  "name": "Seeds of the 2022 measurement apparatus",
+                  "id": "deep-rl-human-prefs-bp-backflip",
+                  "name": "The backflip",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "measuring-instructgpt-quality-and-safety"
+                    "kind": "concept",
+                    "id": "hopper-backflip-demonstration"
                   },
-                  "narrative": "The judgment-based half of the 2022 evaluation stack — preferences, win rates, Elo — descends from the comparison machinery this paper introduced.",
-                  "children": [
-                    {
-                      "id": "deep-rl-human-prefs-big-picture-quality-methods",
-                      "name": "Judgment over overlap",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "quality-measurement-methods"
-                      },
-                      "narrative": "The theme opposes overlap metrics to judgment-based ones; this paper contributes the ur-form of the judgment family, the pairwise preference."
-                    }
-                  ]
+                  "narrative": "Nine hundred preference queries, under an hour of human time, and a simulated robot performs repeated backflips — the paper's emblem for goals that resist definition but not recognition."
                 },
                 {
-                  "id": "deep-rl-human-prefs-big-picture-target-supertheme",
-                  "name": "A tradeoff measured with its tools",
+                  "id": "deep-rl-human-prefs-bp-shaping",
+                  "name": "Better than the true reward",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "defining-the-alignment-target"
+                    "kind": "concept",
+                    "id": "human-feedback-implicit-reward-shaping"
                   },
-                  "narrative": "The helpfulness–harmlessness tradeoff is documented in Elo scores — the metric Constitutional AI built out of the analogy this paper used to explain its loss function.",
-                  "children": [
-                    {
-                      "id": "deep-rl-human-prefs-big-picture-hh-tradeoff",
-                      "name": "Measured on this paper's scale",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "helpfulness-harmlessness-tradeoff"
-                      },
-                      "narrative": "The 2022 tradeoff curves are drawn in Elo, the rating this paper invoked in 2017 as an explanatory aside for its Bradley–Terry loss."
-                    }
-                  ]
+                  "narrative": "On Ant and Enduro, preference-trained agents beat agents trained on the real reward function — human raters implicitly shape the reward better than the hand-written original."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-ablations",
+              "name": "The ablations that carry the design",
+              "narrative": "The design choices are argued with ablations rather than asserted. Freeze the reward predictor — train it offline, up front — and the policy learns to exploit it: on [[pong-task|Pong]] the agent avoids losing points without ever learning to score. Replace comparisons with absolute scores, or query at random instead of where the ensemble disagrees, and the paper measures what each choice was buying. The ablation section is where the paper's confidence comes from.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-online",
+                  "name": "Labels must keep coming",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "iterated-online-training"
+                  },
+                  "narrative": "Collecting preferences continuously as the policy changes, rather than in one offline batch, is what keeps the reward model honest about the states the policy actually visits."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-hacking",
+                  "name": "What happens when they stop",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "reward-hacking"
+                  },
+                  "narrative": "The offline ablation produces the corpus's first observed instance of reward hacking against a learned reward: behavior that scores well under the frozen predictor and looks bizarre under the true task."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-target-ablation",
+                  "name": "Comparisons versus scores",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "comparisons-vs-absolute-scores"
+                  },
+                  "narrative": "The 'target' ablation regresses the predictor directly onto true reward totals, testing whether asking humans for comparisons — rather than absolute judgments — matters. It does."
+                }
+              ]
+            },
+            {
+              "id": "deep-rl-human-prefs-bp-limits",
+              "name": "Costs, failures, and the honest footnote",
+              "narrative": "The paper prices its own result and reports where it loses. A footnote calculates that the human labels for an Atari run cost about $36 against roughly $25 of compute — so further label-efficiency gains buy little. Qbert resists real human feedback entirely, apparently because short clips of it confuse raters. And continuously refitting the reward makes the RL problem itself non-stationary, a difficulty the paper manages with algorithm choice and extra exploration rather than solves.",
+              "children": [
+                {
+                  "id": "deep-rl-human-prefs-bp-cost",
+                  "name": "The $36 footnote",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "compute-vs-human-cost-analysis"
+                  },
+                  "narrative": "Human feedback is already no more expensive than the compute beside it — the paper's own argument that its efficiency result has hit diminishing returns."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-qbert",
+                  "name": "The game it couldn't learn",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "qbert-task"
+                  },
+                  "narrative": "With real human raters the method fails to clear Qbert's first level — a reminder that the unit of judgment has to be judgeable."
+                },
+                {
+                  "id": "deep-rl-human-prefs-bp-nonstationary",
+                  "name": "A moving reward",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "non-stationary-reward-challenge"
+                  },
+                  "narrative": "Because the predictor keeps changing, the policy is solving RL under a non-stationary reward — acknowledged as a structural cost of the whole approach."
                 }
               ]
             }
@@ -14644,230 +14591,213 @@
         {
           "id": "instructgpt-big-picture",
           "tab": "The big picture",
-          "name": "What InstructGPT adds to the corpus's big claims",
-          "intro": "The wiki's superthemes are the corpus's big claims, and InstructGPT feeds seven of the nine. Three of them it practically anchors: the claim that scalable oversight became a working pipeline, the claim that alignment needs a defined target before optimization, and the claim that alignment claims need a measurement apparatus.\n\nEach chapter here says what this paper specifically adds to those claims, not what the superthemes say in general — their own pages do that. The four smaller contributions, from Goodhart's law to the 2017 proof of concept this paper industrialized, share the final chapter.",
-          "narrative": "InstructGPT is the corpus's center of gravity: it supplies the pipeline one supertheme is named after, the alignment target and measurement apparatus two more are built from, and smaller but load-bearing pieces of four others.",
+          "name": "InstructGPT's argument: the objective was wrong, and feedback beats scale",
+          "intro": "By 2022 the largest language models could do remarkable things, yet still fabricated facts, produced toxic text, and ignored what users asked. InstructGPT locates the fault not in insufficient scale but in the training objective itself: predicting the next token of internet text is not the same task as following a person's instructions.\n\nThe argument runs from that diagnosis through a three-step remedy to a pointed headline: human evaluators prefer a 1.3-billion-parameter model trained this way over the 175-billion-parameter original. The closing chapters weigh what the paper itself weighs — the measured costs of the method, the failures that remain, and whose preferences the new objective actually encodes.",
+          "narrative": "The paper's thesis has two halves. Diagnostic: large language models misbehave because their objective — next-token prediction — is misaligned with what users want, so scale alone cannot fix them. Constructive: fine-tuning on human feedback realigns the objective, and does so with striking economy — a 1.3B model trained this way is preferred by people to the 175B GPT-3. The evidence is win rates on real user prompts, truthfulness and toxicity benchmarks, and generalization to labelers who contributed no training data; the accounting includes an alignment tax, residual failures, and an unusually explicit answer to the question of who defined the target.",
           "children": [
             {
-              "id": "instructgpt-big-picture-pipeline-claim",
-              "name": "The pipeline claim it anchors",
-              "narrative": "The corpus's central supertheme says that scalable oversight, an open problem of 2016, became a working pipeline — and this paper is the pipeline in question. Seven of the supertheme's eleven themes touch InstructGPT, more than any other paper contributes to any supertheme. What the paper adds is the destination of the whole arc: the 2016 proposals and the 2017 prototype both point toward something like this system, and Constitutional AI's extension presupposes it. Its contribution runs from the named procedure through the [[ppo-optimization-mechanics|optimization mechanics]] and the human-data machinery underneath, down to the honest accounting of where the result still falls short.",
+              "id": "instructgpt-bp-diagnosis",
+              "name": "The diagnosis: the objective is wrong",
+              "narrative": "The paper argues that [[gpt-3|GPT-3]]'s misbehavior is not a symptom of insufficient scale but of a misaligned objective: predicting the next token of internet text rewards continuing text, not doing what the user intended. 'Aligned' is given an operational definition borrowed from Askell et al. — helpful, honest, harmless — and following instructions is treated as a training objective in its own right, something to be optimized directly rather than coaxed out with clever prompts.",
               "children": [
                 {
-                  "id": "instructgpt-big-picture-oversight-supertheme",
-                  "name": "Scalable oversight made real",
+                  "id": "instructgpt-bp-lm-objective",
+                  "name": "The misaligned objective",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "scalable-oversight-to-rlhf-pipeline"
+                    "kind": "concept",
+                    "id": "language-modeling-objective"
                   },
-                  "narrative": "InstructGPT's contribution to this claim is the claim's own conclusion: the open problem named in 2016 ends, six years later, in a procedure reliable enough to have a name, a recipe, and a successor."
+                  "narrative": "Next-token prediction on internet text is the paper's named culprit: a pretraining objective different from — and misaligned with — helpfully and safely following instructions."
                 },
                 {
-                  "id": "instructgpt-big-picture-lineage-theme",
-                  "name": "The lineage's third act",
+                  "id": "instructgpt-bp-instruction-following",
+                  "name": "The objective it should have",
                   "ref": {
-                    "kind": "theme",
-                    "id": "scalable-oversight-lineage"
+                    "kind": "concept",
+                    "id": "instruction-following"
                   },
-                  "narrative": "This paper supplies the lineage's payoff: a reward model that lets RLHF optimize a cheap, dense proxy for genuinely expensive human judgment across an entire training distribution."
+                  "narrative": "Carrying out natural-language instructions across an open-ended range of tasks, trained and measured directly on what real users asked for."
                 },
                 {
-                  "id": "instructgpt-big-picture-pipeline-theme",
-                  "name": "The procedure itself",
+                  "id": "instructgpt-bp-hhh",
+                  "name": "What 'aligned' means here",
                   "ref": {
-                    "kind": "theme",
-                    "id": "rlhf-three-step-pipeline"
+                    "kind": "concept",
+                    "id": "hhh-framework"
                   },
-                  "narrative": "The paper's namesake contribution: the end-to-end three-step recipe — demonstrations, comparisons, PPO — that later work treats as the standard form of RLHF."
-                },
-                {
-                  "id": "instructgpt-big-picture-infrastructure-theme",
-                  "name": "The machinery under the algorithm",
-                  "ref": {
-                    "kind": "theme",
-                    "id": "human-feedback-data-infrastructure"
-                  },
-                  "narrative": "The paper's least glamorous and most copied addition: screening criteria, a labeling interface, a metadata taxonomy, and the checks that make forty people's judgments a usable training signal."
-                },
-                {
-                  "id": "instructgpt-big-picture-failure-modes-theme",
-                  "name": "The claim's honest footnote",
-                  "ref": {
-                    "kind": "theme",
-                    "id": "rlhf-failure-modes"
-                  },
-                  "narrative": "The paper also contributes the supertheme's caveats: the alignment tax, hallucination, hedging, and false-premise failures that mark exactly where the pipeline's alignment stops."
+                  "narrative": "Helpful, honest, harmless — adopted from prior work and made empirical, with honesty deliberately operationalized as measurable truthfulness."
                 }
               ]
             },
             {
-              "id": "instructgpt-big-picture-target-claim",
-              "name": "Defining the target before optimizing",
-              "narrative": "This supertheme's claim is that an alignment target must be defined before anything can be optimized toward it, and InstructGPT supplies the working definition on both of its fronts. Instruction following is argued to be a genuinely different training objective from next-token prediction — argued by comparison against FLAN, T0, and prompting rather than merely asserted. And the borrowed helpful-honest-harmless framework is made empirical here, with honesty deliberately operationalized as measurable truthfulness. The [[helpfulness-harmlessness-tradeoff|tradeoff theme]] this supertheme also contains belongs to Constitutional AI; what this paper contributes is the target itself.",
+              "id": "instructgpt-bp-remedy",
+              "name": "The remedy: three steps of human feedback",
+              "narrative": "The construction is a pipeline: demonstrate, compare, optimize. Labelers write demonstrations of good behavior and a pretrained model is fine-tuned on them; labelers then rank model outputs and a reward model learns to predict their preferences; finally the policy is optimized against that reward model. The consequential choice is the training distribution — prompts submitted by real API users rather than a fixed compilation of NLP tasks — which is what lets the paper claim alignment to user intent rather than to a benchmark.",
               "children": [
                 {
-                  "id": "instructgpt-big-picture-target-supertheme",
-                  "name": "The target, defined by contrast",
+                  "id": "instructgpt-bp-rlhf",
+                  "name": "The inherited technique",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "defining-the-alignment-target"
+                    "kind": "concept",
+                    "id": "rlhf"
                   },
-                  "narrative": "This paper's addition to the claim is methodological: a target earns its place by comparison — against the pretraining objective it replaces and the instruction-tuning rivals it outperforms."
+                  "narrative": "RLHF — a learned model of human preferences used as the reward for RL — applied here to the open-ended distribution of things people actually ask a language model to do."
                 },
                 {
-                  "id": "instructgpt-big-picture-objective-theme",
-                  "name": "Instruction following as objective",
+                  "id": "instructgpt-bp-sft",
+                  "name": "Step one: demonstrations",
                   "ref": {
-                    "kind": "theme",
-                    "id": "instruction-following-objective"
+                    "kind": "concept",
+                    "id": "sft-model"
                   },
-                  "narrative": "InstructGPT's founding argument lives here: the language-modeling objective is misaligned with what users want, and following instructions is a different objective, not a bigger model's emergent skill."
+                  "narrative": "A GPT-3 model fine-tuned on labeler-written demonstrations — both a baseline in its own right and the initialization everything else builds on."
                 },
                 {
-                  "id": "instructgpt-big-picture-hhh-theme",
-                  "name": "Making HHH measurable",
+                  "id": "instructgpt-bp-rm",
+                  "name": "Step two: comparisons",
                   "ref": {
-                    "kind": "theme",
-                    "id": "hhh-framework-and-benchmark"
+                    "kind": "concept",
+                    "id": "reward-model"
                   },
-                  "narrative": "The paper takes the HHH definition from Askell et al. and does the unglamorous work of operationalizing it — honesty becomes truthfulness benchmarks and hallucination counts."
+                  "narrative": "A model trained on labeler rankings to predict which output a human would prefer — the cheap, dense stand-in for human judgment that step three optimizes."
+                },
+                {
+                  "id": "instructgpt-bp-ppo",
+                  "name": "Step three: optimization",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "ppo-training"
+                  },
+                  "narrative": "PPO fine-tunes the policy to maximize the reward model's score, with a per-token KL penalty holding it near the supervised model."
                 }
               ]
             },
             {
-              "id": "instructgpt-big-picture-measurement-claim",
-              "name": "The measurement apparatus",
-              "narrative": "A paper claiming alignment gains needs instruments, and this supertheme is InstructGPT's almost alone: all four of its themes are built from this paper's evaluation sections. The paper's structural contribution is the division of labor itself. Judgment-based metrics — win rates, Likert ratings — carry the headline claims; automatic benchmarks the paper did not design stand guard for regressions; and purpose-built safety benchmarks catch harms neither of the other families can see. That three-way split, preference metrics for gains, public benchmarks for costs, dedicated instruments for harms, is what later papers inherit as the standard shape of an alignment evaluation.",
+              "id": "instructgpt-bp-evidence",
+              "name": "The evidence: preferred, more truthful, and not just by its own judges",
+              "narrative": "Nearly every headline claim is denominated in win rate — how often labelers prefer one model's output over a fixed baseline on matched prompts — and the headline itself is the 1.3B-beats-175B comparison: alignment fine-tuning buys more human preference than a hundredfold increase in parameters. Around that sit the checks: held-out labelers who contributed no training data agree, truthfulness improves on TruthfulQA, toxicity drops on RealToxicityPrompts, and comparisons against [[flan|FLAN]], [[t0|T0]], and [[gpt3-prompted-baseline|prompted GPT-3]] argue that real user instructions are a different — and harder — target than NLP task compilations.",
               "children": [
                 {
-                  "id": "instructgpt-big-picture-measurement-supertheme",
-                  "name": "Quality, capability loss, and safety together",
+                  "id": "instructgpt-bp-win-rate",
+                  "name": "The currency of the claims",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "measuring-instructgpt-quality-and-safety"
+                    "kind": "concept",
+                    "id": "win-rate"
                   },
-                  "narrative": "Four themes, all fed by one paper's evaluation apparatus: how to measure preference gains, capability costs, and safety harms at once without letting a single metric answer for all three."
+                  "narrative": "The primary human-evaluation metric: the fraction of matched-prompt contests a model wins against the 175B SFT baseline in labelers' judgment."
                 },
                 {
-                  "id": "instructgpt-big-picture-quality-methods-theme",
-                  "name": "Overlap scores versus human judgment",
+                  "id": "instructgpt-bp-held-out",
+                  "name": "Judges who didn't train it",
                   "ref": {
-                    "kind": "theme",
-                    "id": "quality-measurement-methods"
+                    "kind": "concept",
+                    "id": "held-out-labeler-generalization"
                   },
-                  "narrative": "The paper supplies the supertheme's central distinction — automatic overlap metrics against judgment-based ones — and its finding that the two diverge under RLHF is why the distinction matters."
+                  "narrative": "Labelers who contributed no training data prefer InstructGPT at similar rates — the paper's answer to the worry that the model merely learned forty people's tastes."
                 },
                 {
-                  "id": "instructgpt-big-picture-understanding-theme",
-                  "name": "The understanding benchmarks",
+                  "id": "instructgpt-bp-truthfulqa",
+                  "name": "Truthfulness, benchmarked",
                   "ref": {
-                    "kind": "theme",
-                    "id": "language-understanding-benchmarks"
+                    "kind": "concept",
+                    "id": "truthfulqa"
                   },
-                  "narrative": "Eight public benchmarks the paper did not build, enlisted as regression alarms: any drop against GPT-3 is the alignment tax made visible."
+                  "narrative": "On a benchmark built from questions people commonly get wrong, the fine-tuned models improve on GPT-3 — honesty made into a number."
                 },
                 {
-                  "id": "instructgpt-big-picture-generation-theme",
-                  "name": "The generation benchmarks",
+                  "id": "instructgpt-bp-flan",
+                  "name": "The rival recipe, outperformed",
                   "ref": {
-                    "kind": "theme",
-                    "id": "generation-benchmarks-translation-summarization"
+                    "kind": "concept",
+                    "id": "flan"
                   },
-                  "narrative": "Translation and summarization — the stricter test, since producing fluent text is harder to fake than selecting an option — where the paper reports some of its clearest tax evidence."
-                },
-                {
-                  "id": "instructgpt-big-picture-safety-theme",
-                  "name": "The harm instruments",
-                  "ref": {
-                    "kind": "theme",
-                    "id": "safety-bias-truthfulness-benchmarks"
-                  },
-                  "narrative": "The paper's demonstration that harms need dedicated instruments: truthfulness and toxicity register gains the capability suite would miss, while the bias benchmarks register the absence of one."
+                  "narrative": "GPT-3 fine-tuned on the FLAN task compilation loses to InstructGPT on API prompts — evidence that instruction following, as users mean it, is not what NLP task suites teach."
                 }
               ]
             },
             {
-              "id": "instructgpt-big-picture-minor-claims",
-              "name": "Smaller stakes in four more claims",
-              "narrative": "Four superthemes take smaller but real contributions from this paper. To the corpus's Goodhart claim it supplies the best empirical instances: reward-model over-optimization and excessive hedging are the 2016 law running at two different levels. To the 2017 proof of concept it supplies the vindication — the industrial rebuild that proved the prototype's wager scaled. To the claim about bounding what an agent can do, it contributes the one proposal from that family that reached production: demonstrations as a pipeline's first stage. And to Constitutional AI's method it contributes the foundation the method modifies.",
+              "id": "instructgpt-bp-price",
+              "name": "The price, paid and named",
+              "narrative": "The paper coins a name for its method's cost — the alignment tax, measurable regressions on public NLP benchmarks — and argues that keeping it low is itself a safety concern, since a technique that makes models worse will not be adopted. The mitigation, mixing pretraining gradients into the RL updates, pays most of the tax down. What it cannot pay down are the qualitative residues, from hallucination — halved but present — to failures the paper traces to its own training choices and to [[reward-overoptimization|over-optimizing the reward model]].",
               "children": [
                 {
-                  "id": "instructgpt-big-picture-goodhart-supertheme",
-                  "name": "Reward hacking and Goodhart's law",
+                  "id": "instructgpt-bp-tax",
+                  "name": "The alignment tax",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "reward-hacking-and-goodharts-law"
+                    "kind": "concept",
+                    "id": "alignment-tax"
                   },
-                  "narrative": "This paper turns the 2016 principle into data: a PPO policy gaming a learned reward model at the aggregate level, and hedging emerging from a single over-rewarded subfeature below it.",
-                  "children": [
-                    {
-                      "id": "instructgpt-big-picture-goodhart-theme",
-                      "name": "The law across the corpus",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "goodhart-across-corpus"
-                      },
-                      "narrative": "InstructGPT contributes three of this theme's members: the over-optimization itself, the KL penalty that holds it in check, and hedging as its subtler instance."
-                    }
-                  ]
+                  "narrative": "Alignment fine-tuning degrades some public-benchmark performance as a side effect — named, measured, and treated as a bill that must be kept small."
                 },
                 {
-                  "id": "instructgpt-big-picture-2017-supertheme",
-                  "name": "The 2017 proof of concept",
+                  "id": "instructgpt-bp-ppo-ptx",
+                  "name": "Paying it down",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "deep-rl-from-preferences-proof-of-concept"
+                    "kind": "concept",
+                    "id": "ppo-ptx"
                   },
-                  "narrative": "InstructGPT is this supertheme's payoff seen from outside: the comparison-based recipe the 2017 paper proved on robots and Atari survived the jump to a 175B language model essentially intact.",
-                  "children": [
-                    {
-                      "id": "instructgpt-big-picture-comparisons-theme",
-                      "name": "Comparisons as the atomic unit",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "learning-rewards-from-comparisons"
-                      },
-                      "narrative": "This paper's reward model and comparison loss are the theme's 2022 half: the same compare-two-things primitive, now applied to ranked language completions."
-                    },
-                    {
-                      "id": "instructgpt-big-picture-policy-opt-theme",
-                      "name": "Optimizing against a learned reward",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "policy-optimization-under-learned-rewards"
-                      },
-                      "narrative": "PPO training is the theme's 2022 member: the same moving-reward constraint the 2017 algorithms were chosen for, met here with a once-run loop and a KL leash."
-                    }
-                  ]
+                  "narrative": "Mixing language-modeling gradients on the pretraining distribution into PPO updates recovers most of the regressions — the paper's default model is this variant."
                 },
                 {
-                  "id": "instructgpt-big-picture-bounding-supertheme",
-                  "name": "Bounding impact and exploration",
+                  "id": "instructgpt-bp-hallucination",
+                  "name": "Hallucination, halved",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "bounding-impact-and-exploration"
+                    "kind": "concept",
+                    "id": "hallucination"
                   },
-                  "narrative": "Mostly a 2016 supertheme, but its demonstrations thread ends at this paper: of all the constraint-family proposals, learning from demonstrations is the one that made it into a production pipeline.",
-                  "children": [
-                    {
-                      "id": "instructgpt-big-picture-demonstrations-theme",
-                      "name": "Demonstrations instead of specification",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "demonstrations-not-specification"
-                      },
-                      "narrative": "The three-paper arc closes here: proposed in 2016, weighed and set aside for preferences in 2017, then made the structurally simplest first stage of this paper's pipeline in 2022."
-                    }
-                  ]
+                  "narrative": "Closed-domain fabrication drops from 41% of outputs to 21% — an improvement the paper declines to call a solution."
                 },
                 {
-                  "id": "instructgpt-big-picture-cai-supertheme",
-                  "name": "The ground Constitutional AI stands on",
+                  "id": "instructgpt-bp-hedging",
+                  "name": "Over-learned caution",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "constitutional-ai-method-and-grounding"
+                    "kind": "concept",
+                    "id": "excessive-hedging"
                   },
-                  "narrative": "InstructGPT's contribution to this supertheme is the foundation: the shared [[hhh-framework-and-benchmark|HHH vocabulary]] both 2022 papers use, and the RLHF pipeline the constitution modifies at exactly one point."
+                  "narrative": "Long, noncommittal answers to questions with a clear answer — plausibly the model learning the labeling instructions' reward for epistemic humility too well."
+                },
+                {
+                  "id": "instructgpt-bp-false-premise",
+                  "name": "Swallowed premises",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "false-premise-failure"
+                  },
+                  "narrative": "Told to do something that assumes a falsehood, the model plays along rather than pushing back."
+                }
+              ]
+            },
+            {
+              "id": "instructgpt-bp-whom",
+              "name": "Aligned to whom",
+              "narrative": "The paper's closing honesty is about the target itself. What the models are aligned to is not 'human values' but a documented process: the judgments of roughly forty screened contractors, applied to prompts from API users, under instructions the researchers wrote. The paper presents this specificity as both the method's strength — the target is auditable — and its open problem, since different labelers, users, and instructions would define a different alignment.",
+              "children": [
+                {
+                  "id": "instructgpt-bp-screening",
+                  "name": "Forty screened judges",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "labeler-screening-process"
+                  },
+                  "narrative": "A four-criterion screening process selected the contractors whose preferences became the training signal — the alignment target has names and a hiring filter."
+                },
+                {
+                  "id": "instructgpt-bp-api-prompts",
+                  "name": "Whose questions count",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "api-prompt-distribution"
+                  },
+                  "narrative": "The training prompts come from early API users — so the distribution of tasks the model is aligned on is also a specific population's."
+                },
+                {
+                  "id": "instructgpt-bp-agreement",
+                  "name": "How much judges agree",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "inter-annotator-agreement"
+                  },
+                  "narrative": "Labelers agree with each other roughly three times in four — measured, reported, and a quiet ceiling on how sharp any preference-based claim can be."
                 }
               ]
             }
@@ -15355,216 +15285,204 @@
         {
           "id": "constitutional-ai-big",
           "tab": "The big picture",
-          "name": "Constitutional AI and the big picture: the far rung of the oversight ladder",
-          "intro": "Every paper in this corpus feeds a handful of larger claims — about who supervises the training, what the target of alignment is, and how optimization goes wrong. Constitutional AI feeds more of them than its size suggests, and the corpus's central claim ends on it: the ladder that runs from human demonstrations to human comparisons to AI feedback has this paper as its topmost tested rung.\n\nThe chapters below take the superthemes this paper contributes to, one at a time, and ask a narrower question than those pages answer: not what each big claim says, but what this paper specifically adds to it.",
-          "narrative": "Constitutional AI is where the corpus's central claim — that oversight can be delegated further and further without losing the human's intent — reaches its furthest tested point: it supplies the top rung of the scalable-oversight ladder, owns an entire supertheme about its method, sharpens the definition of the alignment target by attacking the tradeoff inside it, and hands the reward-hacking supertheme its newest empirical exhibits.",
+          "name": "Constitutional AI's argument: a page of principles can replace human harm labels",
+          "intro": "Training a harmless assistant used to mean collecting tens of thousands of human labels on harmful conversations — and the assistants that resulted often learned to dodge uncomfortable questions rather than answer them well. Constitutional AI, from 2022, asks how far that human labeling can be replaced by something smaller and more legible: a written list of principles.\n\nThe chapters follow the paper's case: the two entangled problems of labeling cost and evasiveness, the supervised stage where a model critiques and revises its own responses, the reinforcement stage where an AI labeler replaces the human one, the evidence that the result improves on both axes at once, and the strains the method shows when pushed too hard.",
+          "narrative": "The paper's thesis is that the human harmlessness labeler can be removed from RLHF and replaced by a short constitution of written principles — applied once to make a model critique and revise its own harmful outputs, and once to steer an AI feedback model that labels harmlessness preferences — and that the result is not a trade but a Pareto improvement: more harmless and less evasive at comparable helpfulness. The evidence is crowdworker Elo scores, absolute harm ratings, and ablations over the method's parts; the reported limits are Goodhart-style over-training and the human helpfulness labels the pipeline still consumes.",
           "children": [
             {
-              "id": "constitutional-ai-big-ch1-oversight",
-              "name": "The oversight ladder, extended by one rung",
-              "narrative": "The corpus's largest supertheme runs from a 2016 open problem through 2017's reward predictor to InstructGPT's industrial pipeline, and Constitutional AI is its current endpoint: the paper where the supervision itself, not just the reward, is produced by a model. Its contribution is not a new pipeline but a demonstration about the ladder's direction — each rung replaces a costlier form of human input with a cheaper, more scalable one, and this paper shows the replacement can reach the labels themselves while keeping human intent in a document humans can read and amend.",
+              "id": "constitutional-ai-bp-problem",
+              "name": "Two problems, one diagnosis",
+              "narrative": "The paper starts from a tension its own predecessors documented: pushing helpfulness raises harm, and pushing harmlessness breeds evasion — canned refusals where engagement was wanted. Beneath the tension sits a scaling problem: harmlessness training ran on large volumes of human labels, which are expensive, slow, and opaque as a specification of values. The paper's diagnosis is that both problems share a fix — move the harm judgment into the model, under explicit written control.",
               "children": [
                 {
-                  "id": "constitutional-ai-big-oversight-supertheme",
-                  "name": "Scalable oversight made real",
+                  "id": "constitutional-ai-bp-tension",
+                  "name": "The documented tradeoff",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "scalable-oversight-to-rlhf-pipeline"
+                    "kind": "concept",
+                    "id": "helpfulness-harmlessness-tension"
                   },
-                  "narrative": "Constitutional AI's addition to this supertheme is its final chapter: after proposals (2016), a proof of concept (2017), and industrialization (InstructGPT), the human comparison data itself becomes the replaceable part.",
-                  "children": [
-                    {
-                      "id": "constitutional-ai-big-lineage",
-                      "name": "The throughline itself",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "scalable-oversight-lineage"
-                      },
-                      "narrative": "The corpus's most important thread, and this paper is its terminus: [[rlaif|RLAIF]], the [[feedback-model|feedback model]], and the [[hybrid-human-ai-preference-model|hybrid preference model]] are the concepts it adds."
-                    },
-                    {
-                      "id": "constitutional-ai-big-pipeline",
-                      "name": "The pipeline it rides on",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "rlhf-three-step-pipeline"
-                      },
-                      "narrative": "This paper contributes no step to InstructGPT's three-step recipe — which is the point: its whole method fits inside the recipe's existing slots."
-                    },
-                    {
-                      "id": "constitutional-ai-big-on-distribution",
-                      "name": "The drift problem it inherits",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "keeping-reward-models-on-distribution"
-                      },
-                      "narrative": "The 2017 countermeasures against a policy outrunning its reward model; Constitutional AI's cheap labels are what could make the online version of them routine."
-                    },
-                    {
-                      "id": "constitutional-ai-big-semi-supervised",
-                      "name": "The 2016 sketch it descends from",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "semi-supervised-reward-learning-proposals"
-                      },
-                      "narrative": "The remedy family where scalable oversight first got technical shape; the feedback model is the descendant none of the 2016 sketches predicted."
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "constitutional-ai-big-ch2-method",
-              "name": "The supertheme it owns outright",
-              "narrative": "One supertheme exists because this paper does: it gathers the constitution, the critique-revision loop, the feedback-model engineering, the red-team data sourcing, and the prior dialogue agents the paper measures itself against. What Constitutional AI adds here is everything — but the supertheme's real claim is subtler than a method summary. Written principles turn out to be a competitive interface for steering model behavior: cheaper than labels, more legible than weights, and auditable by anyone who can read a page.",
-              "children": [
-                {
-                  "id": "constitutional-ai-big-method-supertheme",
-                  "name": "Method and grounding",
-                  "ref": {
-                    "kind": "supertheme",
-                    "id": "constitutional-ai-method-and-grounding"
-                  },
-                  "narrative": "The paper's method, read as a claim about interfaces: a page of natural language can do the work of a labeled dataset, and can be audited in a way the dataset never could.",
-                  "children": [
-                    {
-                      "id": "constitutional-ai-big-core-method",
-                      "name": "The supervised stage",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "cai-core-method"
-                      },
-                      "narrative": "Principles, critique, revision, and the ablations that justify each part — the half of the method that generates its own training data."
-                    },
-                    {
-                      "id": "constitutional-ai-big-fm-engineering",
-                      "name": "The labeler-engineering stage",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "feedback-model-engineering"
-                      },
-                      "narrative": "The RL stage's counterpart problem: the prompting and calibration chain that makes a plain pretrained model into a usable preference labeler."
-                    },
-                    {
-                      "id": "constitutional-ai-big-harm-data",
-                      "name": "The human process it still needs",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "red-teaming-and-harm-data"
-                      },
-                      "narrative": "Adversarial prompts remain the one input the constitution cannot generate; this theme is the method's remaining human dependency."
-                    },
-                    {
-                      "id": "constitutional-ai-big-dialogue-agents",
-                      "name": "The agents it argues against",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "related-dialogue-agents"
-                      },
-                      "narrative": "[[lamda|LaMDA]], [[sparrow|Sparrow]], and [[context-distillation|context distillation]]: the prior systems against which the paper positions its claim that rules can live in a document rather than in a rule classifier."
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "constitutional-ai-big-ch3-target",
-              "name": "Sharpening the target: helpful, harmless, and the tradeoff between them",
-              "narrative": "The corpus's target-definition supertheme is mostly InstructGPT's: define instruction following, adopt helpful-honest-harmless, measure with preferences. Constitutional AI's addition is to attack the assumption hiding inside that definition — that helpfulness and harmlessness must be traded off. By showing the frontier can move outward, it turns the tradeoff from a fact about the target into a fact about the training data used to reach it. It also stress-tests the measurement half of the definition: Elo scores deliberately tuned so evasion loses points, cross-checked by an absolute harmfulness scale.",
-              "children": [
-                {
-                  "id": "constitutional-ai-big-target-supertheme",
-                  "name": "Defining the target",
-                  "ref": {
-                    "kind": "supertheme",
-                    "id": "defining-the-alignment-target"
-                  },
-                  "narrative": "Constitutional AI keeps the HHH target and changes what counts as satisfying it: a refusal is no longer harmless by default, and the tradeoff between the aims is treated as an artifact to be engineered away.",
-                  "children": [
-                    {
-                      "id": "constitutional-ai-big-hhh",
-                      "name": "The shared vocabulary, extended",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "hhh-framework-and-benchmark"
-                      },
-                      "narrative": "The paper both inherits the HHH definition and extends its benchmark, using identification accuracy on HHH comparisons as the feasibility evidence for AI supervision."
-                    },
-                    {
-                      "id": "constitutional-ai-big-tradeoff",
-                      "name": "The tradeoff attacked head-on",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "helpfulness-harmlessness-tradeoff"
-                      },
-                      "narrative": "The paper's central empirical claim in full: the RLHF baselines, the Elo curves, and the Pareto argument that the frontier itself moved."
-                    },
-                    {
-                      "id": "constitutional-ai-big-measurement",
-                      "name": "The measurement toolkit",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "quality-measurement-methods"
-                      },
-                      "narrative": "This paper's contributions to the corpus's judgment-based measurement family: Elo as the primary instrument and the absolute harmfulness score as its independent check."
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "constitutional-ai-big-ch4-margins",
-              "name": "Where it appears in the margins",
-              "narrative": "Three superthemes take smaller contributions from this paper. The reward-hacking supertheme, built mostly from the 2016 taxonomy, gains its newest empirical exhibits here: evasiveness and the over-trained, accusatory RL-CAI are Goodhart's law wearing 2022 clothes. The evaluation supertheme centered on InstructGPT shares one theme with this paper, the comparison-based measurement family both 2022 papers rely on. And the 2017 proof-of-concept supertheme touches Constitutional AI wherever the shared mechanism shows through: comparisons as the atomic unit of feedback, and a reward model that must be kept on distribution.",
-              "children": [
-                {
-                  "id": "constitutional-ai-big-goodhart-supertheme",
-                  "name": "Reward hacking's newest exhibits",
-                  "ref": {
-                    "kind": "supertheme",
-                    "id": "reward-hacking-and-goodharts-law"
-                  },
-                  "narrative": "Constitutional AI's contribution here is evidence: two named, measured Goodhart instances inside a production-grade pipeline, six years after the law was stated abstractly.",
-                  "children": [
-                    {
-                      "id": "constitutional-ai-big-goodhart-theme",
-                      "name": "The law's corpus-wide file",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "goodhart-across-corpus"
-                      },
-                      "narrative": "The theme that files this paper's evasiveness and over-training harshness alongside InstructGPT's over-optimization, all under the single 2016 principle."
-                    }
-                  ]
+                  "narrative": "Helpfulness and harmlessness pull against each other in standard RLHF training — the empirical regularity the paper sets out to break rather than ride."
                 },
                 {
-                  "id": "constitutional-ai-big-measuring-supertheme",
-                  "name": "The shared measurement apparatus",
+                  "id": "constitutional-ai-bp-evasiveness",
+                  "name": "The failure it will not accept",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "measuring-instructgpt-quality-and-safety"
+                    "kind": "concept",
+                    "id": "evasiveness"
                   },
-                  "narrative": "This InstructGPT-centered supertheme touches Constitutional AI through one theme, [[quality-measurement-methods|the judgment-based measurement family]], where the paper's Elo scores and absolute harmfulness scale sit alongside InstructGPT's [[win-rate|win rates]]."
+                  "narrative": "'I can't answer that' as a learned reflex: apparent safety bought with transparency and helpfulness, which the paper treats as a failure mode, not a success."
                 },
                 {
-                  "id": "constitutional-ai-big-2017-supertheme",
-                  "name": "The proof of concept underneath",
+                  "id": "constitutional-ai-bp-oversight",
+                  "name": "Oversight, taken to an extreme",
                   "ref": {
-                    "kind": "supertheme",
-                    "id": "deep-rl-from-preferences-proof-of-concept"
+                    "kind": "concept",
+                    "id": "scalable-oversight"
                   },
-                  "narrative": "Constitutional AI touches the 2017 supertheme only where the shared mechanism shows through — and that is itself the finding: the proof of concept held up well enough that 2022 could build on it without revisiting it.",
-                  "children": [
-                    {
-                      "id": "constitutional-ai-big-comparisons-theme",
-                      "name": "Comparisons, the surviving atom",
-                      "ref": {
-                        "kind": "theme",
-                        "id": "learning-rewards-from-comparisons"
-                      },
-                      "narrative": "Comparisons as the atomic unit of feedback: the one 2017 design decision this paper still depends on directly, whether the comparer is a human or a model."
-                    }
-                  ]
+                  "narrative": "The paper presents itself as an extreme instance of scalable oversight: AI systems helping humans supervise other AIs, with human guidance compressed into the principles themselves."
+                }
+              ]
+            },
+            {
+              "id": "constitutional-ai-bp-stage-one",
+              "name": "Stage one: the model revises itself",
+              "narrative": "The supervised stage turns a helpful-only model against its own outputs. Prompted with [[red-teaming|red-team]] questions, it produces harmful responses; then, steered by principles sampled from the constitution, it critiques each response and rewrites it to remove the identified harm. Fine-tuning on the revisions yields a model already substantially less harmful — before any reinforcement learning — with every step of the correction legible on paper.",
+              "children": [
+                {
+                  "id": "constitutional-ai-bp-method",
+                  "name": "The method, whole",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "constitutional-ai"
+                  },
+                  "narrative": "Two stages — supervised self-revision, then RL from AI feedback — with a set of written principles as the only source of harmlessness guidance in either."
+                },
+                {
+                  "id": "constitutional-ai-bp-constitution",
+                  "name": "The constitution",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "constitution"
+                  },
+                  "narrative": "A small set of natural-language principles — the entire human specification of harmlessness, short enough to read and to argue with."
+                },
+                {
+                  "id": "constitutional-ai-bp-critique-revision",
+                  "name": "Critique, then revise",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "critique-and-revision"
+                  },
+                  "narrative": "The model names what is wrong with its response under a sampled principle, then rewrites it — self-correction as a data-generation pipeline."
+                },
+                {
+                  "id": "constitutional-ai-bp-sl-cai",
+                  "name": "The supervised result",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "sl-cai"
+                  },
+                  "narrative": "Fine-tuning on revised responses (plus helpfulness samples) gives SL-CAI — the starting policy the RL stage then sharpens."
+                }
+              ]
+            },
+            {
+              "id": "constitutional-ai-bp-stage-two",
+              "name": "Stage two: AI feedback replaces the labeler",
+              "narrative": "The reinforcement stage keeps the RLHF pipeline intact and swaps its data source. A feedback model — shown a harmful prompt, two candidate responses, and a constitutional principle in [[multiple-choice-evaluation-format|multiple-choice format]] — produces the harmlessness preference labels, made more accurate and more transparent by chain-of-thought reasoning. A [[hybrid-human-ai-preference-model|hybrid preference model]] trains on human helpfulness labels and AI harmlessness labels together, and RL against it produces the paper's final model.",
+              "children": [
+                {
+                  "id": "constitutional-ai-bp-rlaif",
+                  "name": "RLHF minus the H",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "rlaif"
+                  },
+                  "narrative": "RL from AI feedback: the established pipeline with the human harmlessness labeler replaced by a model — the paper's structural contribution, and its name for what changed."
+                },
+                {
+                  "id": "constitutional-ai-bp-feedback-model",
+                  "name": "The new labeler",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "feedback-model"
+                  },
+                  "narrative": "An independent language model whose multiple-choice probabilities become preference labels — supervision generated at model speed and model cost."
+                },
+                {
+                  "id": "constitutional-ai-bp-cot",
+                  "name": "Judgments that show their work",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "chain-of-thought-prompting"
+                  },
+                  "narrative": "Asking the feedback model to reason step by step before choosing makes its harm judgments both more accurate and more inspectable."
+                },
+                {
+                  "id": "constitutional-ai-bp-rl-cai",
+                  "name": "The final model",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "rl-cai"
+                  },
+                  "narrative": "RL-CAI: the policy trained against the hybrid preference model, starting from SL-CAI — the model all the paper's headline comparisons are about."
+                }
+              ]
+            },
+            {
+              "id": "constitutional-ai-bp-evidence",
+              "name": "The evidence: better on both axes",
+              "narrative": "The evaluation asks crowdworkers to compare models in conversation and converts their preferences into Elo scores for helpfulness and harmlessness separately. Against the [[hh-rlhf-model|human-feedback baseline]], RL-CAI rates as more harmless at comparable helpfulness — the frontier moves outward rather than sliding along the old tradeoff, which is the paper's headline finding. Absolute harm ratings corroborate the pairwise picture, and ablations test the parts, including whether the critique step of the supervised stage is necessary at all.",
+              "children": [
+                {
+                  "id": "constitutional-ai-bp-elo",
+                  "name": "The measuring stick",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "elo-score"
+                  },
+                  "narrative": "Crowdworker pairwise preferences, converted to Elo ratings per axis, track helpfulness and harmlessness across model snapshots throughout training."
+                },
+                {
+                  "id": "constitutional-ai-bp-pareto",
+                  "name": "The headline finding",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "pareto-improvement"
+                  },
+                  "narrative": "Constitutional RL shifts the helpfulness-harmlessness frontier outward — better on one axis without paying on the other — rather than trading along it."
+                },
+                {
+                  "id": "constitutional-ai-bp-abs-harm",
+                  "name": "The second instrument",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "absolute-harmfulness-score"
+                  },
+                  "narrative": "A 0-4 harmfulness score on single conversations, fit to crowdworker ratings — an absolute check on what the relative Elo comparisons say."
+                },
+                {
+                  "id": "constitutional-ai-bp-direct-revision",
+                  "name": "Is the critique needed?",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "direct-revision-ablation"
+                  },
+                  "narrative": "An ablation that skips the critique and revises directly — the paper's way of testing which stage-one step carries the harm reduction."
+                }
+              ]
+            },
+            {
+              "id": "constitutional-ai-bp-limits",
+              "name": "Where it strains",
+              "narrative": "The paper reports the method's edges. Trained too long against its preference model, RL-CAI turns harsh and accusatory toward harmless-seeming prompts — Goodhart's law surfacing inside the very pipeline built to encode judgment, managed with countermeasures like [[label-clamping|label clamping]] rather than eliminated. And the replacement of humans is partial by design: helpfulness labels are still collected from people, and the whole scheme leans on the feedback model's probabilities being trustworthy.",
+              "children": [
+                {
+                  "id": "constitutional-ai-bp-goodhart",
+                  "name": "Goodhart, inside the fix",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "goodharts-law"
+                  },
+                  "narrative": "Over-optimizing against the preference model degrades true response quality while the proxy reward climbs — the corpus's oldest failure mode, observed in its newest method."
+                },
+                {
+                  "id": "constitutional-ai-bp-helpful-rlhf",
+                  "name": "The human data still inside",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "helpful-rlhf-model"
+                  },
+                  "narrative": "The pipeline starts from a helpful RLHF model and keeps training on human helpfulness comparisons — the constitution replaces harm labels, not human feedback wholesale."
+                },
+                {
+                  "id": "constitutional-ai-bp-calibration",
+                  "name": "A load-bearing assumption",
+                  "ref": {
+                    "kind": "concept",
+                    "id": "model-calibration"
+                  },
+                  "narrative": "Treating the feedback model's output probabilities as soft preference labels works only because those probabilities are reasonably calibrated — a property borrowed from prior work and relied on throughout."
                 }
               ]
             }
