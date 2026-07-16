@@ -14,6 +14,7 @@ Usage:
   python merge.py superedges <staged.json>...
   python merge.py tissue-themes <staged.json>
   python merge.py stories <staged.json>
+  python merge.py paper-stories <staged.json>...
   python merge.py paper-overlay <staged.json>
   python merge.py walks <staged.json>...
   python merge.py pages <staged.json>...
@@ -46,6 +47,7 @@ EMPTY = {
     "superedges": [],
     "tissueThemes": [],
     "stories": [],
+    "paperStories": [],
     "paperOverlay": None,
 }
 
@@ -190,14 +192,15 @@ def validate(store):
         for e in edge_ids - covered:
             err(f"edge {e} belongs to no connective theme (coverage must be total)")
 
+    kind_ids = {"concept": concept_ids, "edge": edge_ids, "theme": theme_ids,
+                "supertheme": supertheme_ids,
+                "superedge": ids(store["superedges"]),
+                "tissue": ids(store["tissueThemes"])}
+
     stories = store.get("stories") or []
     if store.get("overlay"):  # legacy single-story form, validated the same way
         stories = [store["overlay"]] + stories
     if stories:
-        kind_ids = {"concept": concept_ids, "edge": edge_ids, "theme": theme_ids,
-                    "supertheme": supertheme_ids,
-                    "superedge": ids(store["superedges"]),
-                    "tissue": ids(store["tissueThemes"])}
         seen_nodes = set()  # global: node ids become DOM ids on one index page
         seen_roots, seen_tabs = set(), set()
 
@@ -254,6 +257,63 @@ def validate(store):
                     err(f"story {sid}: uses superthemes but leaves out {st} "
                         f"(supertheme coverage is all-or-nothing)")
 
+    paper_stories = store.get("paperStories") or []
+    if paper_stories:
+        seen_entries = set()
+        for entry in paper_stories:
+            pid = entry.get("id", "?")
+            if pid not in paper_ids:
+                err(f"paper stories: paper {pid!r} does not exist")
+            if pid in seen_entries:
+                err(f"paper stories: duplicate entry for {pid!r}")
+            seen_entries.add(pid)
+            p_stories = entry.get("stories") or []
+            if not p_stories:
+                err(f"paper stories {pid}: no stories")
+            seen_nodes_p = set()  # node ids become DOM ids on the paper's page
+            seen_tabs_p = set()
+            for s in p_stories:
+                sid = s.get("id", "?")
+                tab = (s.get("tab") or "").strip()
+                if not tab:
+                    err(f"paper story {sid}: needs a short 'tab' label")
+                elif tab.lower() in seen_tabs_p:
+                    err(f"paper story {sid}: duplicate tab label {tab!r}")
+                seen_tabs_p.add(tab.lower())
+                if not (s.get("intro") or "").strip():
+                    err(f"paper story {sid}: missing intro")
+                themes_placed = set()
+
+                def walk_ps(node, _sid=sid, _placed=themes_placed):
+                    nid = node.get("id", "")
+                    if not KEBAB.match(nid):
+                        err(f"paper story {_sid}: node id not kebab-case: {nid!r}")
+                    if nid in seen_nodes_p:
+                        err(f"paper story {_sid}: duplicate node id {nid!r} "
+                            f"(must be unique across the paper's stories)")
+                    seen_nodes_p.add(nid)
+                    if not node.get("name"):
+                        err(f"paper story {_sid} node {nid}: missing name")
+                    if node.get("children") and len(node.get("narrative", "").strip()) < 50:
+                        err(f"paper story {_sid} node {nid}: internal node needs a narrative")
+                    ref = node.get("ref")
+                    if ref:
+                        kind, rid = ref.get("kind"), ref.get("id")
+                        if kind not in kind_ids:
+                            err(f"paper story {_sid} node {nid}: unknown ref kind {kind!r}")
+                        elif rid not in kind_ids[kind]:
+                            err(f"paper story {_sid} node {nid}: ref {kind}:{rid!r} does not exist")
+                        elif kind == "theme":
+                            if rid in _placed:
+                                err(f"paper story {_sid}: theme {rid} placed more than once")
+                            _placed.add(rid)
+                    for ch in node.get("children", []):
+                        walk_ps(ch, _sid, _placed)
+
+                walk_ps(s)
+        for pid in paper_ids - seen_entries:
+            err(f"paper stories: paper {pid} has no entry (coverage must be total)")
+
     paper_overlay = store.get("paperOverlay")
     if paper_overlay:
         if len(paper_overlay.get("narrative", "").strip()) < 50:
@@ -295,6 +355,10 @@ def validate(store):
     for s in store.get("stories") or []:
         if s.get("intro"):
             check_intro(f"story {s['id']}", s["intro"])
+    for entry in store.get("paperStories") or []:
+        for s in entry.get("stories") or []:
+            if s.get("intro"):
+                check_intro(f"paper story {s['id']}", s["intro"])
 
     return errors
 
@@ -391,6 +455,9 @@ def run_step(store, cmd, files, aliases):
         data = json.loads(Path(files[0]).read_text(encoding="utf-8"))
         store["stories"] = data["stories"]
         store.pop("overlay", None)  # legacy single-story key, superseded
+    elif cmd == "paper-stories":
+        store.setdefault("paperStories", [])
+        merge_simple(store, "paperStories", files)
     elif cmd == "paper-overlay":
         data = json.loads(Path(files[0]).read_text(encoding="utf-8"))
         store["paperOverlay"] = data["paperOverlay"]

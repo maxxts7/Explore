@@ -1,0 +1,755 @@
+{
+ "paperStories": [
+  {
+   "id": "instructgpt",
+   "stories": [
+    {
+     "id": "instructgpt-inside",
+     "tab": "Inside the paper",
+     "name": "Inside InstructGPT: demonstrate, compare, optimize",
+     "intro": "InstructGPT is the paper where reinforcement learning from human feedback stopped being a research demo and became a recipe. OpenAI took GPT-3, a model trained only to predict the next token of internet text, and taught it to follow instructions in three steps: human demonstrations, human comparisons between model outputs, and reinforcement learning against a model of those comparisons.\n\nThis story follows the paper's own arc: the argument that the pretraining objective was the wrong target, the forty contractors and three datasets that supplied the human signal, the three-stage pipeline itself, and finally the verdict — including the costs and failure modes the paper is unusually candid about.",
+     "narrative": "A 1.3B model fine-tuned on human feedback produces outputs people prefer to those of a 175B model without it; the paper's whole argument is the three-step procedure that makes this possible, and its honesty lies in pricing what the procedure costs.",
+     "children": [
+      {
+       "id": "instructgpt-inside-wrong-objective",
+       "name": "The wrong objective",
+       "narrative": "The paper opens with a diagnosis rather than a system: making language models bigger does not make them better at doing what users want, because the [[language-modeling-objective|language-modeling objective]] — predict the next token of internet text — is simply a different target from following a user's instruction helpfully and safely (instructgpt, §\"1 Introduction\", p. 2). Before that new target can be trained toward, it has to be defined. The paper borrows the helpful-honest-harmless framework as its working definition of alignment, and defines instruction following against its nearest rivals: [[flan|FLAN]] and [[t0|T0]], which fine-tune on fixed compilations of reformatted NLP tasks, and the [[gpt3-prompted-baseline|prompted baseline]], which tries to coax the behavior out of an unmodified [[gpt-3|GPT-3]] with a few-shot prefix. Everything the rest of the paper builds is in service of this reframing.",
+       "children": [
+        {
+         "id": "instructgpt-inside-instruction-following",
+         "name": "Instruction following as the objective",
+         "ref": {
+          "kind": "concept",
+          "id": "instruction-following"
+         },
+         "narrative": "The paper's chosen target: carrying out natural-language instructions across an open-ended range of tasks, trained and measured on real user prompts rather than a fixed task compilation — which is exactly what separates it from FLAN and T0 (instructgpt, §\"1 Introduction\", p. 1)."
+        },
+        {
+         "id": "instructgpt-inside-hhh-framework",
+         "name": "Helpful, honest, harmless",
+         "ref": {
+          "kind": "concept",
+          "id": "hhh-framework"
+         },
+         "narrative": "Adapted from Askell et al., this supplies the paper's definition of aligned. Honesty is deliberately operationalized as measurable truthfulness, since a model's actual internal beliefs cannot be inspected (instructgpt, §\"1 Introduction\", p. 2)."
+        },
+        {
+         "id": "instructgpt-inside-objective-theme",
+         "name": "The full argument for the new objective",
+         "ref": {
+          "kind": "theme",
+          "id": "instruction-following-objective"
+         },
+         "narrative": "The claim that instruction following is a different training objective, not one more task — argued by comparison against the baselines that come closest to it."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-inside-human-machinery",
+       "name": "Forty people and three datasets",
+       "narrative": "Before any training step runs, the paper builds the human machinery everything else consumes. Roughly forty contractors, chosen by a four-criterion screening process, write demonstrations and rank model outputs through a purpose-built [[labeling-interface|web interface]], recording failures against a fixed [[labeler-metadata-taxonomy|metadata taxonomy]] (instructgpt, §\"B.1 Labeler selection\", p. 36). The prompts they work on come mostly from real users of an earlier InstructGPT model, deduplicated and filtered, and they feed three datasets, one per pipeline stage: about 13k prompts with demonstrations in the [[sft-dataset|SFT dataset]], 33k with ranked outputs for the reward model, and 31k unlabeled prompts in the [[ppo-dataset|PPO dataset]] for RL rollouts (instructgpt, §\"3.2 Dataset\", p. 7). The paper treats this infrastructure as part of the method rather than logistics: it measures whether labelers agree with each other — 72.6% of the time — and whether their preferences generalize beyond the group that produced them (instructgpt, §\"3.4 Human data collection\", p. 8).",
+       "children": [
+        {
+         "id": "instructgpt-inside-api-prompts",
+         "name": "Real prompts from real users",
+         "ref": {
+          "kind": "concept",
+          "id": "api-prompt-distribution"
+         },
+         "narrative": "The paper's defining data choice: prompts submitted by actual API users, not tasks invented by researchers. This is what lets it claim to train on what people genuinely ask for (instructgpt, §\"3.2 Dataset\", p. 6)."
+        },
+        {
+         "id": "instructgpt-inside-labeler-screening",
+         "name": "Choosing whose preferences count",
+         "ref": {
+          "kind": "concept",
+          "id": "labeler-screening-process"
+         },
+         "narrative": "The roughly forty contractors were selected on four criteria weighted toward sensitivity to harmful content — the paper's answer to the question of whose preferences the model learns begins here (instructgpt, §\"B.1 Labeler selection\", p. 36)."
+        },
+        {
+         "id": "instructgpt-inside-rm-dataset",
+         "name": "Rankings, not ratings",
+         "ref": {
+          "kind": "concept",
+          "id": "rm-dataset"
+         },
+         "narrative": "Each of the 33k comparison prompts carries K=4 to 9 ranked outputs, so one sitting of labeler work yields C(K,2) pairwise comparisons — an order of magnitude more comparisons than prompts (instructgpt, §\"3.2 Dataset\", p. 7)."
+        },
+        {
+         "id": "instructgpt-inside-data-infrastructure-theme",
+         "name": "The whole human-data apparatus",
+         "ref": {
+          "kind": "theme",
+          "id": "human-feedback-data-infrastructure"
+         },
+         "narrative": "Screening, interfaces, taxonomies, agreement rates: the infrastructure RLHF actually runs on, traced back to its primitive 2017 ancestor."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-inside-three-steps",
+       "name": "The three steps",
+       "narrative": "The pipeline takes three steps, each consuming the previous one's output. [[supervised-fine-tuning|Supervised fine-tuning]] trains GPT-3 directly on the demonstrations to produce the SFT model, the initialization for everything downstream. The reward model is that SFT model with its final unembedding layer swapped for a scalar head, trained with a [[reward-model-loss|pairwise comparison loss]] so that the reward gap between two completions represents the log odds a human would prefer one (instructgpt, §\"3.5 Models\", p. 8). PPO then optimizes the SFT model against the reward model's score, treating each prompt-response exchange as a single-step [[bandit-environment|bandit episode]], with a per-token KL penalty holding the policy near its starting distribution. The load-bearing details are small and specific: batching all comparisons from one ranking into a single element so the reward model does not overfit, and mixing pretraining gradients back into the RL updates. What the paper calls InstructGPT is, by default, that last variant — PPO-ptx.",
+       "children": [
+        {
+         "id": "instructgpt-inside-pipeline-theme",
+         "name": "The pipeline end to end",
+         "ref": {
+          "kind": "theme",
+          "id": "rlhf-three-step-pipeline"
+         },
+         "narrative": "The full procedure, from GPT-3 through SFT and reward modeling to PPO — the walk through what RLHF denotes in this paper."
+        },
+        {
+         "id": "instructgpt-inside-sft-model",
+         "name": "Step one: the SFT model",
+         "ref": {
+          "kind": "concept",
+          "id": "sft-model"
+         },
+         "narrative": "Trained for 16 epochs even though validation loss says to stop after one, because human preference keeps improving — the final checkpoint is chosen by reward-model score, not validation loss (instructgpt, §\"3.5 Models\", p. 8)."
+        },
+        {
+         "id": "instructgpt-inside-reward-model",
+         "name": "Step two: the reward model",
+         "ref": {
+          "kind": "concept",
+          "id": "reward-model"
+         },
+         "narrative": "Only ever trained at 6B scale, because 175B reward-model training proved unstable — so the judge is nearly thirty times smaller than the largest policy it steers (instructgpt, §\"3.5 Models\", p. 8).",
+         "children": [
+          {
+           "id": "instructgpt-inside-k-choose-2",
+           "name": "The batching trick that stops overfitting",
+           "ref": {
+            "kind": "concept",
+            "id": "k-choose-2-batching"
+           },
+           "narrative": "All C(K,2) comparisons from one ranking go into a single batch element; treating them as independent shuffled datapoints caused the reward model to overfit within one epoch (instructgpt, §\"3.5 Models\", p. 8)."
+          }
+         ]
+        },
+        {
+         "id": "instructgpt-inside-ppo-stage",
+         "name": "Step three: PPO against the reward model",
+         "ref": {
+          "kind": "concept",
+          "id": "ppo-training"
+         },
+         "narrative": "The final stage tunes the SFT model with reinforcement learning to maximize the reward model's score — the point where the learned preference signal actually changes the policy (instructgpt, §\"3.5 Models\", p. 9).",
+         "children": [
+          {
+           "id": "instructgpt-inside-kl-penalty",
+           "name": "The KL leash",
+           "ref": {
+            "kind": "concept",
+            "id": "kl-penalty"
+           },
+           "narrative": "Subtracted from the reward at every generated token to limit [[reward-overoptimization|over-optimization]] of the learned reward; ablations put the useful coefficient near 0.01–0.02, with both zero and very large values hurting human ratings (instructgpt, §\"3.5 Models\", p. 9)."
+          },
+          {
+           "id": "instructgpt-inside-ppo-ptx",
+           "name": "PPO-ptx: mixing pretraining back in",
+           "ref": {
+            "kind": "concept",
+            "id": "ppo-ptx"
+           },
+           "narrative": "Gradients from the pretraining language-modeling loss are mixed into the PPO updates to counteract benchmark regressions — and this variant is what the name InstructGPT refers to by default (instructgpt, §\"3.5 Models\", p. 9)."
+          },
+          {
+           "id": "instructgpt-inside-ppo-mechanics-theme",
+           "name": "The rest of the machinery",
+           "ref": {
+            "kind": "theme",
+            "id": "ppo-optimization-mechanics"
+           },
+           "narrative": "The engineering choices underneath the RL stage — the bandit formulation, the value function initialized from the reward model, advantage estimation without discounting."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-inside-verdict",
+       "name": "The verdict",
+       "narrative": "The headline result is stated in the abstract: outputs from the 1.3B InstructGPT are preferred to outputs from the 175B GPT-3, a model over a hundred times larger (instructgpt, §\"Abstract\", p. 1). At matched 175B scale the preference is 85% against plain GPT-3 and 71% against its few-shot prompted version (instructgpt, §\"3.6 Evaluation\", p. 10). The paper then checks the result from angles its own labelers cannot supply: held-out labelers who contributed no training data prefer InstructGPT at similar rates, gains appear on [[truthfulqa|TruthfulQA]] and [[realtoxicityprompts|RealToxicityPrompts]], and a battery of public NLP benchmarks stands guard for what the alignment costs. The gains are real but bounded — bias on [[winogender|Winogender]] and [[crows-pairs|CrowS-Pairs]], for instance, does not improve.",
+       "children": [
+        {
+         "id": "instructgpt-inside-headline-model",
+         "name": "The model the paper is named for",
+         "ref": {
+          "kind": "concept",
+          "id": "instructgpt"
+         },
+         "narrative": "The name covers a family of models, but the default referent is PPO-ptx, and the 1.3B-beats-175B comparison is the whole pipeline's proof of value: alignment fine-tuning buys more preference than a hundredfold increase in parameters (instructgpt, §\"Abstract\", p. 1)."
+        },
+        {
+         "id": "instructgpt-inside-win-rate",
+         "name": "Win rate, the paper's currency",
+         "ref": {
+          "kind": "concept",
+          "id": "win-rate"
+         },
+         "narrative": "How often labelers prefer a model's output over the 175B SFT baseline on matched prompts — nearly every headline claim in the paper is denominated in this metric (instructgpt, §\"3.6 Evaluation\", p. 10)."
+        },
+        {
+         "id": "instructgpt-inside-held-out-labelers",
+         "name": "Do other people agree?",
+         "ref": {
+          "kind": "concept",
+          "id": "held-out-labeler-generalization"
+         },
+         "narrative": "The paper's answer to the worry that the model merely learned its own forty labelers' tastes: held-out labelers who contributed no training data prefer InstructGPT at similar rates (instructgpt, §\"3.4 Human data collection\", p. 8)."
+        },
+        {
+         "id": "instructgpt-inside-safety-benchmarks-theme",
+         "name": "Instruments built for harms",
+         "ref": {
+          "kind": "theme",
+          "id": "safety-bias-truthfulness-benchmarks"
+         },
+         "narrative": "Truthfulness, toxicity, and bias each get a dedicated benchmark, because the capability suite would catch none of them."
+        },
+        {
+         "id": "instructgpt-inside-understanding-benchmarks-theme",
+         "name": "The regression watch",
+         "ref": {
+          "kind": "theme",
+          "id": "language-understanding-benchmarks"
+         },
+         "narrative": "Eight public benchmarks the paper did not design, enlisted to detect whether alignment fine-tuning traded away general capability."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-inside-residue",
+       "name": "What it cost, and what still fails",
+       "narrative": "The paper names the cost of its own method: an alignment tax, measurable regressions on public NLP benchmarks introduced as a side effect of RLHF, which [[ppo-ptx|PPO-ptx]] exists to pay down (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). The qualitative failures are just as specific. The model hallucinates less than GPT-3 — 21% versus 41% on closed-domain tasks — but still does; it hedges excessively on simple questions, apparently because labelers were instructed to reward epistemic humility and the reward model learned that preference too well; and it accepts false premises embedded in instructions instead of correcting them (instructgpt, §\"4.3 Qualitative results\", p. 16). The chapter's claim is the paper's own closing honesty: RLHF works, but not without residue — and several of the failures trace to the training data rather than to the optimizer, which is why the proposed fixes go there too.",
+       "children": [
+        {
+         "id": "instructgpt-inside-alignment-tax",
+         "name": "The alignment tax",
+         "ref": {
+          "kind": "concept",
+          "id": "alignment-tax"
+         },
+         "narrative": "The paper coins a name for the cost of aligning a model, and argues keeping the tax low is itself a safety concern: an alignment technique that makes models worse will not be adopted (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14)."
+        },
+        {
+         "id": "instructgpt-inside-hallucination",
+         "name": "Hallucination, halved but present",
+         "ref": {
+          "kind": "concept",
+          "id": "hallucination"
+         },
+         "narrative": "Measured through a binary labeler-annotated field: 21% of closed-domain outputs versus GPT-3's 41% — a large improvement the paper declines to call a solution (instructgpt, §\"3.6 Evaluation\", p. 10)."
+        },
+        {
+         "id": "instructgpt-inside-excessive-hedging",
+         "name": "Hedging as over-learned caution",
+         "ref": {
+          "kind": "concept",
+          "id": "excessive-hedging"
+         },
+         "narrative": "Long, noncommittal answers to questions with a clear single answer — the paper's hypothesis is that its own labeling instructions rewarded epistemic humility and the reward model picked that up (instructgpt, §\"4.3 Qualitative results\", p. 16)."
+        },
+        {
+         "id": "instructgpt-inside-false-premise",
+         "name": "Swallowing false premises",
+         "ref": {
+          "kind": "concept",
+          "id": "false-premise-failure"
+         },
+         "narrative": "Given an instruction that assumes something false, the model plays along rather than pushing back; the proposed fix is adversarial data collection, not a change to the optimizer (instructgpt, §\"4.3 Qualitative results\", p. 16)."
+        },
+        {
+         "id": "instructgpt-inside-failure-modes-theme",
+         "name": "The full ledger of failure modes",
+         "ref": {
+          "kind": "theme",
+          "id": "rlhf-failure-modes"
+         },
+         "narrative": "All five documented shortfalls in one place, including [[reward-overoptimization|reward-model over-optimization]], the general mechanism behind several of them."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "instructgpt-across",
+     "tab": "Across the corpus",
+     "name": "What InstructGPT inherits and what it hands on",
+     "intro": "InstructGPT sits in the middle of this corpus's timeline, and almost everything in it points backward or forward. Backward: two proposals from the 2016 agenda paper and nearly every part of the 2017 preference-learning system reappear here, hardened into production form. Forward: Constitutional AI takes this exact pipeline as its base and swaps out the human labeler.\n\nThe chapters group those connections by era — what 2016 proposed, what 2017 built, what 2022 extends — and close with the motifs that only become visible when the papers are read side by side.",
+     "narrative": "Forty-eight cross-paper edges run through InstructGPT: it operationalizes the 2016 agenda's proposals, industrializes the 2017 recipe part by part, and supplies the base pipeline that Constitutional AI modifies at exactly one point.",
+     "children": [
+      {
+       "id": "instructgpt-across-from-2016",
+       "name": "Cashing in the 2016 agenda",
+       "narrative": "Two of Concrete Problems' proposals become, six years later, load-bearing stages of this paper's pipeline — and neither paper draws the connection itself. [[use-demonstrations|Use demonstrations]], a 2016 suggestion for avoiding specification failures, arrives as supervised fine-tuning, stripped of the reward-inference machinery the agenda imagined around it. [[scalable-oversight|Scalable oversight]], named in 2016 as an open problem, is retroactively answered by the reward model: a cheap learned proxy standing in for human judgment too expensive to collect on every training example. And [[goodharts-law|Goodhart's law]], stated abstractly in 2016, gets its clearest empirical instantiations here, from aggregate reward-model over-optimization down to hedging on a single over-learned subfeature.",
+       "children": [
+        {
+         "id": "instructgpt-across-demonstrations-edge",
+         "name": "A proposal becomes a pipeline stage",
+         "ref": {
+          "kind": "edge",
+          "id": "use-demonstrations-operationalized-as-supervised-fine-tuning"
+         },
+         "narrative": "The 2016 remedy arrives in its structurally simplest form: no inverse RL, no reward inference, just supervised learning on 13k demonstrations. What survives is the core wager that showing the behavior can substitute for specifying it.",
+         "era": "2016"
+        },
+        {
+         "id": "instructgpt-across-oversight-edge",
+         "name": "The open problem, answered sideways",
+         "ref": {
+          "kind": "edge",
+          "id": "scalable-oversight-is-retroactively-operationalized-by-reward-model"
+         },
+         "narrative": "Neither the 2016 paper nor InstructGPT states this match — it becomes visible only once Constitutional AI names reward models as scaled supervision. The reward model checks every training example so humans do not have to.",
+         "era": "2016"
+        },
+        {
+         "id": "instructgpt-across-goodhart-tissue",
+         "name": "Goodhart's law, instantiated at two levels",
+         "ref": {
+          "kind": "tissue",
+          "id": "goodhart-names-itself-across-six-years"
+         },
+         "narrative": "The abstract 2016 principle acquires named instances in this paper: over-optimization at the aggregate level, excessive hedging one level down — while the word 'Goodharting' itself waits for Constitutional AI to be said aloud.",
+         "era": "2016"
+        },
+        {
+         "id": "instructgpt-across-oversight-lineage-theme",
+         "name": "The full lineage, 2016 to 2022",
+         "ref": {
+          "kind": "theme",
+          "id": "scalable-oversight-lineage"
+         },
+         "narrative": "The corpus's longest throughline — open problem, prototype, pipeline, AI feedback — with InstructGPT as the step where it stops being research and starts being production."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-across-from-2017",
+       "name": "The 2017 recipe, industrialized",
+       "narrative": "Read pairwise with Deep RL from Human Preferences, InstructGPT is the same machine built at a different level of industrialization — 24 edges connect the two papers, more than any other pair in the corpus. Some parts carry over unchanged: the [[bradley-terry-model|Bradley-Terry]] comparison mathematics of 1952 fits a language model's reward exactly as it fit a simulated robot's. Some are formalized: an unscreened [[contractor-preference-labeling|contractor sign-up sheet]] becomes a four-criterion screening process, an ad hoc clip server becomes a purpose-built labeling interface, and an assumed ten-percent rater error rate becomes a measured agreement statistic. And some 2017 findings quietly anticipate 2022 problems: the [[pong-task|Pong]] agent that rallied forever without scoring is reward over-optimization five years early, and the [[non-stationary-reward-challenge|moving-reward problem]] the 2017 architecture was built around returns whenever InstructGPT's RM-then-PPO loop is iterated rather than run once.",
+       "children": [
+        {
+         "id": "instructgpt-across-industrial-replacements",
+         "name": "Ad hoc parts, industrial replacements",
+         "ref": {
+          "kind": "tissue",
+          "id": "primitive-parts-acquire-industrial-replacements"
+         },
+         "narrative": "Eight edges pair a 2017 part with its 2022 replacement, and what carries over unchanged is as informative as what gets rebuilt.",
+         "era": "2017"
+        },
+        {
+         "id": "instructgpt-across-shared-reward-model",
+         "name": "The reward model, a concept three papers share",
+         "ref": {
+          "kind": "concept",
+          "id": "reward-model"
+         },
+         "narrative": "One of the corpus's few concepts that literally lives in three papers: born in 2017 for robots and Atari, refined here into a 6B judge of language completions, then inherited whole by Constitutional AI.",
+         "era": "2017"
+        },
+        {
+         "id": "instructgpt-across-bradley-terry-edge",
+         "name": "1952 mathematics, carried over unchanged",
+         "ref": {
+          "kind": "edge",
+          "id": "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss"
+         },
+         "narrative": "The same paired-comparison softmax moves from ranking chess players to ranking robot backflips to ranking language completions without changing its form — the corpus's most durable single borrowing.",
+         "era": "2017"
+        },
+        {
+         "id": "instructgpt-across-pong-edge",
+         "name": "Pong's endless rally, redrawn at scale",
+         "ref": {
+          "kind": "edge",
+          "id": "pong-task-anticipates-reward-overoptimization"
+         },
+         "narrative": "The 2017 frozen-predictor ablation produced an agent that volleyed indefinitely and never scored: reward over-optimization in miniature, five years before InstructGPT drew the identical curve at language-model scale.",
+         "era": "2017"
+        },
+        {
+         "id": "instructgpt-across-prefigures-instruction-following",
+         "name": "A grading method becomes a paradigm",
+         "ref": {
+          "kind": "edge",
+          "id": "quantitative-qualitative-evaluation-prefigures-instruction-following"
+         },
+         "narrative": "The 2017 fallback for tasks with no reward function — ask a human whether the behavior fulfills a natural-language goal — is instruction following in embryo, a one-off evaluation trick that became a training objective.",
+         "era": "2017"
+        },
+        {
+         "id": "instructgpt-across-moving-reward-edge",
+         "name": "The moving target, dormant not solved",
+         "ref": {
+          "kind": "edge",
+          "id": "non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training"
+         },
+         "narrative": "InstructGPT's pipeline looks stationary only because the RM-then-PPO loop usually runs once; iterate it, as the paper notes it can be, and the 2017 problem returns intact.",
+         "era": "2017"
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-across-to-cai",
+       "name": "The base Constitutional AI extends",
+       "narrative": "Constitutional AI does not compete with this paper; it builds directly on top of it, and twenty edges record the inheritance. Its central move is explicitly surgical: RLHF's human labeler is swapped for a [[feedback-model|feedback model]] steered by a written [[constitution]], and everything else — preference-model training, the RL stage — stays where InstructGPT left it. Its characteristic failure is a sibling of this paper's: [[evasiveness]] is excessive hedging's mirror on the harmlessness axis, the same over-rewarded proxy wearing the opposite disguise. And its repair vindicates a diagnosis this paper could only gesture at: what fixed evasiveness was changing the labeling instructions, not tightening the KL penalty, confirming that this family of failures lives in the data. Even the measurement carries forward, with Elo scores generalizing this paper's win rate.",
+       "children": [
+        {
+         "id": "instructgpt-across-rlaif-edge",
+         "name": "Swapping the labeler, keeping the pipeline",
+         "ref": {
+          "kind": "edge",
+          "id": "rlhf-swaps-the-labeler-in-rlaif"
+         },
+         "narrative": "Constitutional AI's [[rlaif|RLAIF]] changes exactly one component of this paper's recipe — who produces the preference labels — which is the strongest evidence of how standard the recipe had become.",
+         "era": "2022"
+        },
+        {
+         "id": "instructgpt-across-human-bottleneck-tissue",
+         "name": "Replacing the human at the bottleneck",
+         "ref": {
+          "kind": "tissue",
+          "id": "ai-substitutes-for-the-human-bottleneck"
+         },
+         "narrative": "The general pattern behind RLAIF: an AI process substitutes for a human one at precisely the point human throughput was scarce — the point this paper's forty contractors embody.",
+         "era": "2022"
+        },
+        {
+         "id": "instructgpt-across-hedging-evasiveness-edge",
+         "name": "Two failures, one shape",
+         "ref": {
+          "kind": "edge",
+          "id": "excessive-hedging-is-the-harmlessness-axis-mirror-of-evasiveness"
+         },
+         "narrative": "InstructGPT over-rewards caution and gets verbose hedging; Constitutional AI over-rewards harmlessness and gets curt refusal. The same proxy failure runs in opposite surface directions.",
+         "era": "2022"
+        },
+        {
+         "id": "instructgpt-across-fix-upstream-tissue",
+         "name": "The fix lives in the data",
+         "ref": {
+          "kind": "tissue",
+          "id": "fix-lives-upstream-in-the-data"
+         },
+         "narrative": "This paper proposed adversarial data collection, not more regularization, for its data-borne failures; Constitutional AI's actual repair of evasiveness — changing what labelers were asked to prefer — proves the diagnosis right.",
+         "era": "2022"
+        },
+        {
+         "id": "instructgpt-across-shared-hhh",
+         "name": "A shared definition of aligned",
+         "ref": {
+          "kind": "concept",
+          "id": "hhh-framework"
+         },
+         "narrative": "Both papers define an aligned model the same way — helpful, honest, harmless, adapted from Askell et al. — one vocabulary coined once and used across the 2022 pair.",
+         "era": "2022"
+        },
+        {
+         "id": "instructgpt-across-elo-win-rate-edge",
+         "name": "Win rate grows into Elo",
+         "ref": {
+          "kind": "edge",
+          "id": "elo-score-generalizes-win-rate"
+         },
+         "narrative": "This paper's single-anchor preference metric becomes Constitutional AI's [[elo-score|Elo score]], ranking many model snapshots at once — the measuring instrument evolving alongside the pipeline it measures.",
+         "era": "2022"
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-across-motifs",
+       "name": "Motifs that only appear side by side",
+       "narrative": "Some of the strongest connections are not paper-to-paper links but patterns that recur wherever the corpus builds a pipeline, and InstructGPT sits inside all of them. The scale asymmetry behind the headline result — a small judge steering a large policy, a small model beating one a hundred times larger — repeats at every stage and in every paper. The pipeline that reads as a forward sequence turns out to run causality backward, with the reward model back-selecting the SFT checkpoint that precedes it. Every primary metric travels with a second instrument built to catch what the first cannot see. And nineteen edges in the store are pure hindsight — connections no source paper states, visible only because the papers can now be read against each other.",
+       "children": [
+        {
+         "id": "instructgpt-across-scale-asymmetry",
+         "name": "Small things steering big things",
+         "ref": {
+          "kind": "tissue",
+          "id": "scale-asymmetry-and-the-ladder-of-baselines"
+         },
+         "narrative": "The 100x headline rests on asymmetries repeated all the way down: a 6B reward model supervising a 175B policy, and later ten constitutional principles standing in for tens of thousands of labels."
+        },
+        {
+         "id": "instructgpt-across-assembly-line",
+         "name": "Each stage engineers the next stage's input",
+         "ref": {
+          "kind": "tissue",
+          "id": "assembly-line-pipeline"
+         },
+         "narrative": "The SFT dataset shapes what the reward model can competently judge, the interface's encouraged ties filter what RM training sees, and the API prompts supply label-free scale to PPO — no stage is a neutral conduit."
+        },
+        {
+         "id": "instructgpt-across-double-duty",
+         "name": "The diagram lies about causality",
+         "ref": {
+          "kind": "tissue",
+          "id": "pipeline-artifacts-double-duty-or-loop-backward"
+         },
+         "narrative": "The three-step figure reads left to right, but the reward model back-selects the SFT checkpoint behind it, and the SFT dataset bootstrapped the very prompt distribution the paper is evaluated on."
+        },
+        {
+         "id": "instructgpt-across-independent-checks",
+         "name": "A metric and its audit",
+         "ref": {
+          "kind": "tissue",
+          "id": "independent-checks-and-instrument-blind-spots"
+         },
+         "narrative": "Win rate travels with Likert ratings that corroborate it, agreement rates that cap its resolution, and held-out labelers that test its reach — a primary signal paired with an independent check, a shape the whole corpus repeats."
+        },
+        {
+         "id": "instructgpt-across-hindsight-seams",
+         "name": "Nineteen connections nobody drew",
+         "ref": {
+          "kind": "tissue",
+          "id": "hindsight-seams-2016-to-2022"
+         },
+         "narrative": "The edges flagged as hindsight links exist only because a later paper can be read against an earlier one — and more of them run through InstructGPT than through any other paper."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "instructgpt-big-picture",
+     "tab": "The big picture",
+     "name": "What InstructGPT adds to the corpus's big claims",
+     "intro": "The wiki's superthemes are the corpus's big claims, and InstructGPT feeds seven of the nine. Three of them it practically anchors: the claim that scalable oversight became a working pipeline, the claim that alignment needs a defined target before optimization, and the claim that alignment claims need a measurement apparatus.\n\nEach chapter here says what this paper specifically adds to those claims, not what the superthemes say in general — their own pages do that. The four smaller contributions, from Goodhart's law to the 2017 proof of concept this paper industrialized, share the final chapter.",
+     "narrative": "InstructGPT is the corpus's center of gravity: it supplies the pipeline one supertheme is named after, the alignment target and measurement apparatus two more are built from, and smaller but load-bearing pieces of four others.",
+     "children": [
+      {
+       "id": "instructgpt-big-picture-pipeline-claim",
+       "name": "The pipeline claim it anchors",
+       "narrative": "The corpus's central supertheme says that scalable oversight, an open problem of 2016, became a working pipeline — and this paper is the pipeline in question. Seven of the supertheme's eleven themes touch InstructGPT, more than any other paper contributes to any supertheme. What the paper adds is the destination of the whole arc: the 2016 proposals and the 2017 prototype both point toward something like this system, and Constitutional AI's extension presupposes it. Its contribution runs from the named procedure through the [[ppo-optimization-mechanics|optimization mechanics]] and the human-data machinery underneath, down to the honest accounting of where the result still falls short.",
+       "children": [
+        {
+         "id": "instructgpt-big-picture-oversight-supertheme",
+         "name": "Scalable oversight made real",
+         "ref": {
+          "kind": "supertheme",
+          "id": "scalable-oversight-to-rlhf-pipeline"
+         },
+         "narrative": "InstructGPT's contribution to this claim is the claim's own conclusion: the open problem named in 2016 ends, six years later, in a procedure reliable enough to have a name, a recipe, and a successor."
+        },
+        {
+         "id": "instructgpt-big-picture-lineage-theme",
+         "name": "The lineage's third act",
+         "ref": {
+          "kind": "theme",
+          "id": "scalable-oversight-lineage"
+         },
+         "narrative": "This paper supplies the lineage's payoff: a reward model that lets RLHF optimize a cheap, dense proxy for genuinely expensive human judgment across an entire training distribution."
+        },
+        {
+         "id": "instructgpt-big-picture-pipeline-theme",
+         "name": "The procedure itself",
+         "ref": {
+          "kind": "theme",
+          "id": "rlhf-three-step-pipeline"
+         },
+         "narrative": "The paper's namesake contribution: the end-to-end three-step recipe — demonstrations, comparisons, PPO — that later work treats as the standard form of RLHF."
+        },
+        {
+         "id": "instructgpt-big-picture-infrastructure-theme",
+         "name": "The machinery under the algorithm",
+         "ref": {
+          "kind": "theme",
+          "id": "human-feedback-data-infrastructure"
+         },
+         "narrative": "The paper's least glamorous and most copied addition: screening criteria, a labeling interface, a metadata taxonomy, and the checks that make forty people's judgments a usable training signal."
+        },
+        {
+         "id": "instructgpt-big-picture-failure-modes-theme",
+         "name": "The claim's honest footnote",
+         "ref": {
+          "kind": "theme",
+          "id": "rlhf-failure-modes"
+         },
+         "narrative": "The paper also contributes the supertheme's caveats: the alignment tax, hallucination, hedging, and false-premise failures that mark exactly where the pipeline's alignment stops."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-big-picture-target-claim",
+       "name": "Defining the target before optimizing",
+       "narrative": "This supertheme's claim is that an alignment target must be defined before anything can be optimized toward it, and InstructGPT supplies the working definition on both of its fronts. Instruction following is argued to be a genuinely different training objective from next-token prediction — argued by comparison against FLAN, T0, and prompting rather than merely asserted. And the borrowed helpful-honest-harmless framework is made empirical here, with honesty deliberately operationalized as measurable truthfulness. The [[helpfulness-harmlessness-tradeoff|tradeoff theme]] this supertheme also contains belongs to Constitutional AI; what this paper contributes is the target itself.",
+       "children": [
+        {
+         "id": "instructgpt-big-picture-target-supertheme",
+         "name": "The target, defined by contrast",
+         "ref": {
+          "kind": "supertheme",
+          "id": "defining-the-alignment-target"
+         },
+         "narrative": "This paper's addition to the claim is methodological: a target earns its place by comparison — against the pretraining objective it replaces and the instruction-tuning rivals it outperforms."
+        },
+        {
+         "id": "instructgpt-big-picture-objective-theme",
+         "name": "Instruction following as objective",
+         "ref": {
+          "kind": "theme",
+          "id": "instruction-following-objective"
+         },
+         "narrative": "InstructGPT's founding argument lives here: the language-modeling objective is misaligned with what users want, and following instructions is a different objective, not a bigger model's emergent skill."
+        },
+        {
+         "id": "instructgpt-big-picture-hhh-theme",
+         "name": "Making HHH measurable",
+         "ref": {
+          "kind": "theme",
+          "id": "hhh-framework-and-benchmark"
+         },
+         "narrative": "The paper takes the HHH definition from Askell et al. and does the unglamorous work of operationalizing it — honesty becomes truthfulness benchmarks and hallucination counts."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-big-picture-measurement-claim",
+       "name": "The measurement apparatus",
+       "narrative": "A paper claiming alignment gains needs instruments, and this supertheme is InstructGPT's almost alone: all four of its themes are built from this paper's evaluation sections. The paper's structural contribution is the division of labor itself. Judgment-based metrics — win rates, Likert ratings — carry the headline claims; automatic benchmarks the paper did not design stand guard for regressions; and purpose-built safety benchmarks catch harms neither of the other families can see. That three-way split, preference metrics for gains, public benchmarks for costs, dedicated instruments for harms, is what later papers inherit as the standard shape of an alignment evaluation.",
+       "children": [
+        {
+         "id": "instructgpt-big-picture-measurement-supertheme",
+         "name": "Quality, capability loss, and safety together",
+         "ref": {
+          "kind": "supertheme",
+          "id": "measuring-instructgpt-quality-and-safety"
+         },
+         "narrative": "Four themes, all fed by one paper's evaluation apparatus: how to measure preference gains, capability costs, and safety harms at once without letting a single metric answer for all three."
+        },
+        {
+         "id": "instructgpt-big-picture-quality-methods-theme",
+         "name": "Overlap scores versus human judgment",
+         "ref": {
+          "kind": "theme",
+          "id": "quality-measurement-methods"
+         },
+         "narrative": "The paper supplies the supertheme's central distinction — automatic overlap metrics against judgment-based ones — and its finding that the two diverge under RLHF is why the distinction matters."
+        },
+        {
+         "id": "instructgpt-big-picture-understanding-theme",
+         "name": "The understanding benchmarks",
+         "ref": {
+          "kind": "theme",
+          "id": "language-understanding-benchmarks"
+         },
+         "narrative": "Eight public benchmarks the paper did not build, enlisted as regression alarms: any drop against GPT-3 is the alignment tax made visible."
+        },
+        {
+         "id": "instructgpt-big-picture-generation-theme",
+         "name": "The generation benchmarks",
+         "ref": {
+          "kind": "theme",
+          "id": "generation-benchmarks-translation-summarization"
+         },
+         "narrative": "Translation and summarization — the stricter test, since producing fluent text is harder to fake than selecting an option — where the paper reports some of its clearest tax evidence."
+        },
+        {
+         "id": "instructgpt-big-picture-safety-theme",
+         "name": "The harm instruments",
+         "ref": {
+          "kind": "theme",
+          "id": "safety-bias-truthfulness-benchmarks"
+         },
+         "narrative": "The paper's demonstration that harms need dedicated instruments: truthfulness and toxicity register gains the capability suite would miss, while the bias benchmarks register the absence of one."
+        }
+       ]
+      },
+      {
+       "id": "instructgpt-big-picture-minor-claims",
+       "name": "Smaller stakes in four more claims",
+       "narrative": "Four superthemes take smaller but real contributions from this paper. To the corpus's Goodhart claim it supplies the best empirical instances: reward-model over-optimization and excessive hedging are the 2016 law running at two different levels. To the 2017 proof of concept it supplies the vindication — the industrial rebuild that proved the prototype's wager scaled. To the claim about bounding what an agent can do, it contributes the one proposal from that family that reached production: demonstrations as a pipeline's first stage. And to Constitutional AI's method it contributes the foundation the method modifies.",
+       "children": [
+        {
+         "id": "instructgpt-big-picture-goodhart-supertheme",
+         "name": "Reward hacking and Goodhart's law",
+         "ref": {
+          "kind": "supertheme",
+          "id": "reward-hacking-and-goodharts-law"
+         },
+         "narrative": "This paper turns the 2016 principle into data: a PPO policy gaming a learned reward model at the aggregate level, and hedging emerging from a single over-rewarded subfeature below it.",
+         "children": [
+          {
+           "id": "instructgpt-big-picture-goodhart-theme",
+           "name": "The law across the corpus",
+           "ref": {
+            "kind": "theme",
+            "id": "goodhart-across-corpus"
+           },
+           "narrative": "InstructGPT contributes three of this theme's members: the over-optimization itself, the KL penalty that holds it in check, and hedging as its subtler instance."
+          }
+         ]
+        },
+        {
+         "id": "instructgpt-big-picture-2017-supertheme",
+         "name": "The 2017 proof of concept",
+         "ref": {
+          "kind": "supertheme",
+          "id": "deep-rl-from-preferences-proof-of-concept"
+         },
+         "narrative": "InstructGPT is this supertheme's payoff seen from outside: the comparison-based recipe the 2017 paper proved on robots and Atari survived the jump to a 175B language model essentially intact.",
+         "children": [
+          {
+           "id": "instructgpt-big-picture-comparisons-theme",
+           "name": "Comparisons as the atomic unit",
+           "ref": {
+            "kind": "theme",
+            "id": "learning-rewards-from-comparisons"
+           },
+           "narrative": "This paper's reward model and comparison loss are the theme's 2022 half: the same compare-two-things primitive, now applied to ranked language completions."
+          },
+          {
+           "id": "instructgpt-big-picture-policy-opt-theme",
+           "name": "Optimizing against a learned reward",
+           "ref": {
+            "kind": "theme",
+            "id": "policy-optimization-under-learned-rewards"
+           },
+           "narrative": "PPO training is the theme's 2022 member: the same moving-reward constraint the 2017 algorithms were chosen for, met here with a once-run loop and a KL leash."
+          }
+         ]
+        },
+        {
+         "id": "instructgpt-big-picture-bounding-supertheme",
+         "name": "Bounding impact and exploration",
+         "ref": {
+          "kind": "supertheme",
+          "id": "bounding-impact-and-exploration"
+         },
+         "narrative": "Mostly a 2016 supertheme, but its demonstrations thread ends at this paper: of all the constraint-family proposals, learning from demonstrations is the one that made it into a production pipeline.",
+         "children": [
+          {
+           "id": "instructgpt-big-picture-demonstrations-theme",
+           "name": "Demonstrations instead of specification",
+           "ref": {
+            "kind": "theme",
+            "id": "demonstrations-not-specification"
+           },
+           "narrative": "The three-paper arc closes here: proposed in 2016, weighed and set aside for preferences in 2017, then made the structurally simplest first stage of this paper's pipeline in 2022."
+          }
+         ]
+        },
+        {
+         "id": "instructgpt-big-picture-cai-supertheme",
+         "name": "The ground Constitutional AI stands on",
+         "ref": {
+          "kind": "supertheme",
+          "id": "constitutional-ai-method-and-grounding"
+         },
+         "narrative": "InstructGPT's contribution to this supertheme is the foundation: the shared [[hhh-framework-and-benchmark|HHH vocabulary]] both 2022 papers use, and the RLHF pipeline the constitution modifies at exactly one point."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

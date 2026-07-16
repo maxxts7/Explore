@@ -48,6 +48,7 @@
   --k-supertheme: #a21caf;
   --k-superedge: #4d7c0f;
   --k-tissue: #0e7490;
+  --k-story: #be123c;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -79,6 +80,7 @@
     --k-supertheme: #e879f9;
     --k-superedge: #bccf5a;
     --k-tissue: #67e8f9;
+    --k-story: #fb7185;
   }
 }
 
@@ -423,6 +425,7 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 .kind-supertheme { --k: var(--k-supertheme); }
 .kind-superedge  { --k: var(--k-superedge); }
 .kind-tissue     { --k: var(--k-tissue); }
+.kind-story      { --k: var(--k-story); }
 .role-introduced { --k: var(--k-concept); }
 .role-refined    { --k: var(--k-theme); }
 .role-inherited  { --k: var(--muted); }
@@ -851,6 +854,136 @@ ol.walk .walk-prose { margin-left: 0; }
   margin: 0.9rem auto 1.4rem;
   width: min(1060px, 100% - 1.1rem);
 }
+
+/* ---- paper-selection filter --------------------------------------------- */
+
+.pf-hide { display: none !important; }
+
+.pf-dim { opacity: 0.45; }
+.pf-dim .pf-dim { opacity: 1; } /* don't compound nested dimming */
+a.pf-dim { color: var(--muted); }
+
+.pf-widget { position: relative; display: inline-flex; }
+.pf-widget-btn {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: none;
+  padding: 0.2rem 0.66rem;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pf-widget-btn:hover { color: var(--acc-a); border-color: var(--acc-a); }
+.pf-widget-btn.pf-widget-active { color: var(--acc-c); border-color: var(--acc-c); }
+.pf-pop {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 60;
+  min-width: 250px;
+  padding: 0.7rem 0.85rem;
+  background: var(--dialog-bg);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 14px;
+  box-shadow: var(--panel-shadow);
+}
+.pf-pop-head {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+}
+.pf-pop-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.22rem 0;
+  font-family: var(--sans);
+  font-size: 0.86rem;
+  color: var(--fg);
+  cursor: pointer;
+}
+.pf-pop-row input { accent-color: var(--acc-b); }
+
+.pf-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.6rem;
+  margin: 0.4rem 0 1.3rem;
+}
+.pf-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.pf-card input { accent-color: var(--acc-b); margin-top: 0.2rem; }
+.pf-card-title { flex: 1; }
+.pf-card-state {
+  align-self: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--acc-a);
+}
+.pf-card-off { opacity: 0.62; }
+.pf-card-off .pf-card-state { color: var(--faint); }
+
+details.node-paper.pf-off > summary { opacity: 0.5; pointer-events: none; }
+details.node-paper.pf-off > summary::after {
+  content: "excluded";
+  margin-left: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+details.node-paper.pf-off > .node-body { display: none; }
+
+.pf-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1.3rem;
+  padding: 0.7rem 0.95rem;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  color: var(--muted);
+  background: var(--chip);
+  border: 1px dashed var(--stroke-strong);
+  border-radius: 12px;
+}
+.pf-banner-btn {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--link);
+  background: none;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 999px;
+  padding: 0.18rem 0.7rem;
+  cursor: pointer;
+}
+.pf-banner-btn:hover { color: var(--acc-a); border-color: var(--acc-a); }
 
 /* ---- math / misc ------------------------------------------------------- */
 
