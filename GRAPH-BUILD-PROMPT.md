@@ -56,13 +56,26 @@ something up, follow a connection, keep digging?
 - lenses over the edges, same rules as themes
 - the recursion ends here: no edges between edges
 
+**Paper stories**
+- every paper gets a story page: its material retold as rooted trees the reader
+  opens level by level, with connective narrative at every branching node
+- a fixed trio of tellings per paper: inside the paper (its own arc, chapter by
+  chapter), across the corpus (how it connects to the other papers), the big
+  picture (its place under the superthemes)
+- a story places what already exists — concepts, themes, superthemes, connective
+  themes — it never invents new concepts or framing metaphors
+- story prose stays grounded: name papers by year, state documented relationships
+  only
+- stories are per paper, and only per paper — there is no corpus-wide telling;
+  every paper has its stories
+
 **Writing**
 - objective and foundational: intuition first, then the real math, with rendered
   equations
 - every name — concept, relation, theme, page section — is a plain descriptive label
 - pages get the sections they need; no fixed template
-- concept page content is written last of all — only after the themes, superthemes,
-  and edges exist
+- concept page content is written only after the themes, superthemes, and edges
+  exist; paper stories are written after that, last of all
 - a concept page covers: how the concept fits the overall picture, what it enables
   downstream, and what it actually is
 - a page states its key relations in its own prose; links supplement, never replace
@@ -71,7 +84,8 @@ something up, follow a connection, keep digging?
 
 **Store and site**
 - the extracted data is stored as JSON — the single source of truth
-- the wiki is rendered from it as static HTML: a page per concept, per edge, per lens
+- the wiki is rendered from it as static HTML: a page per concept, per edge, per
+  lens, and a story page per paper — the papers are the front page's entry point
 - no graph visualization — the purpose is reading; the graph is walked page by page,
   never drawn as a diagram
 - the site is always regenerated from the JSON, never hand-edited
@@ -118,14 +132,20 @@ start with three papers
                      what it enables downstream,
                      what it actually is                          (inherited ⇒ full page, labeled inherited)
 
-8  render          regenerate the static HTML site from the JSON —
+8  paper stories   agents in parallel, one paper each, with the whole
+                   graph in hand:
+                     three tellings — inside the paper, across the
+                     corpus, the big picture                        (place existing nodes; invent nothing)
+
+9  render          regenerate the static HTML site from the JSON —
                    rerun after any change to the data
 
 when a new paper joins:
                    run stage 1 for it, rebuild the lens layers over the
                    enlarged pool — the right lenses over three papers are not
                    the right lenses over twenty — then rerun the stages after
-                   them
+                   them, the new paper's stories included (story coverage is
+                   total, so they land in the same merge as its concepts)
 ```
 
 Everything below is explanation.
@@ -246,6 +266,26 @@ changed.)
 
 The recursion ends here. Do not build edges between edges — the connective theme's
 narrative does that connecting work in prose.
+
+### Paper stories
+
+Every structure so far cuts across the papers; the story pages restore them. A paper
+is the entry point a reader actually arrives with — they come having heard of a
+paper, not of a lens — so each paper's page of stories retells its material as rooted
+trees the reader opens level by level, with connective narrative at every branch.
+Three tellings per paper: the paper's own arc chapter by chapter, its ties to the
+other papers, and its place under the superthemes.
+
+A story is placement, not invention. Its nodes reference concepts, themes,
+superthemes, and connective themes that already exist, which is why stories are
+written last of all, with the whole graph in hand — a story can only place what is
+already there. Its prose stays in the grounded register: papers named by year,
+documented relationships only, no framing metaphors coined for the telling.
+
+An earlier design carried corpus-wide tellings as well — the whole corpus regrouped
+under one claim per telling. They were removed: readers enter through papers, not
+through the corpus, and every corpus-wide telling had to be rebuilt each time a paper
+joined. Stories are per paper only.
 
 ### How everything is written
 

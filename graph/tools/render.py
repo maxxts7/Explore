@@ -965,23 +965,6 @@ class SiteBuilder:
             return True
         return any(self._story_has_kind(ch, kind) for ch in node.get("children", []))
 
-    def _index_tab_story(self, stories: list[dict]) -> str:
-        multi_note = (
-            '<p class="section-note">One corpus, several tellings. Each story below '
-            'is a lens over the same material &mdash; every theme appears in every '
-            'telling, regrouped under a different claim. Pick a telling, then use '
-            'the +/&minus; toggles to open it level by level, or set a granularity '
-            'to read the whole story at that zoom.</p>'
-        )
-        single_note = (
-            '<p class="section-note">The whole wiki hung off one root claim: '
-            'chapters in reading order, each opening into themes, their member '
-            'concepts in a guided order, and every concept&rsquo;s connections. '
-            'Use the +/&minus; toggles to open the story level by level, or set a '
-            'granularity to read the whole story at that zoom.</p>'
-        )
-        return self._story_tabs(stories, "index", multi_note, single_note)
-
     def _story_tabs(self, stories: list[dict], pk: str,
                     multi_note: str, single_note: str) -> str:
         parts = []
@@ -1126,11 +1109,15 @@ class SiteBuilder:
         )
         body = [meta]
         if pid in self.paper_stories:
-            tabs = " &middot; ".join(
-                esc(s.get("tab") or s["name"]) for s in self.paper_stories[pid]["stories"])
+            story_page = self.href(pk, "story", pid)
+            lenses = " ".join(
+                f'<a class="ps-lens" href="{story_page}#{esc(s["id"])}">'
+                f'{esc(s.get("tab") or s["name"])}</a>'
+                for s in self.paper_stories[pid]["stories"])
             body.append(
-                f'<p class="edge-meta"><a href="{self.href(pk, "story", pid)}">'
-                f'Read it as stories</a> &mdash; {tabs}</p>')
+                f'<div class="paper-stories">'
+                f'<a class="ps-lead" href="{story_page}">Stories</a>'
+                f'<span class="ps-lenses">{lenses}</span></div>')
         body.append(
             f'<div class="node-narrative">{self.process_body(entry["narrative"], pk, "paper-overlay")}</div>')
         for role in self.ROLE_ORDER:
@@ -1224,13 +1211,13 @@ class SiteBuilder:
     });
   });
   if (document.getElementById('subtabbtn-' + location.hash.slice(1))) {
-    activate('story');
     activateStory(location.hash.slice(1));
   }
   Array.prototype.forEach.call(document.querySelectorAll('[data-gran]'), function (btn) {
     btn.addEventListener('click', function () {
       var g = parseInt(btn.getAttribute('data-gran'), 10);
-      var scope = btn.getAttribute('data-scope') || 'tab-story';
+      var scope = btn.getAttribute('data-scope');
+      if (!scope) return;
       Array.prototype.forEach.call(
         document.querySelectorAll('#' + scope + ' details[data-depth]'),
         function (d) { d.open = parseInt(d.getAttribute('data-depth'), 10) < g; }
@@ -1249,7 +1236,6 @@ class SiteBuilder:
     def build_index_page(self) -> str:
         pk = "index"
         d = self.data
-        stories = d.get("stories") or ([d["overlay"]] if d.get("overlay") else [])
         paper_overlay = d.get("paperOverlay")
 
         parts = []
@@ -1260,16 +1246,14 @@ class SiteBuilder:
             "Each paper is taken down to its bare-bones concepts, so you can see "
             "what it&rsquo;s really made of and follow how the ideas connect &mdash; "
             "within the paper itself, and out across the wider field. "
-            "The papers are all in <a href=\"#tab-papers\">the papers section</a>.</p>"
+            "Every paper also comes with its own stories &mdash; several tellings "
+            "of the same paper, told chapter by chapter.</p>"
         )
         parts.append(
             '<p class="section-note">First visit? <a href="help.html">How to use this '
             'wiki</a> &mdash; a short illustrated guide to the pieces and the controls.</p>'
         )
         tabs: list[tuple[str, str, str]] = []
-        if stories:
-            story_label = "Stories" if len(stories) > 1 else "The story"
-            tabs.append(("story", story_label, self._index_tab_story(stories)))
         if paper_overlay:
             tabs.append(("papers", "Papers", self._index_tab_paper_overlay(paper_overlay)))
         tabs.append(("superthemes", "Superthemes", self._index_tab_superthemes()))
@@ -1317,7 +1301,7 @@ class SiteBuilder:
     def build_help_page(self) -> str:
         pk = "help"
         d = self.data
-        stories = d.get("stories") or ([d["overlay"]] if d.get("overlay") else [])
+        paper_stories = d.get("paperStories") or []
         paper_overlay = d.get("paperOverlay")
         n_papers = self._SMALL_NUMBERS.get(len(d["papers"]), str(len(d["papers"])))
         n_concepts = len(d["concepts"])
@@ -1353,8 +1337,8 @@ class SiteBuilder:
             f'<li><b>Superthemes</b> &mdash; groups of themes; the largest structures in the wiki.</li>'
             f'<li><b>Connective themes</b> &mdash; lenses over the <i>edges</i> rather than the concepts: '
             f'short threads of related connections.</li>'
-            f'<li><b>Stories</b> &mdash; complete tellings of the corpus. Every theme appears in every '
-            f'story, regrouped under a different claim.</li>'
+            f'<li><b>Stories</b> &mdash; each paper retold as a story: its own arc chapter '
+            f'by chapter, its ties to the other papers, and its place under the superthemes.</li>'
             '</ul>'
         )
         parts.append("</section>")
@@ -1368,29 +1352,19 @@ class SiteBuilder:
             "The front page. Each tab is a different view of the same material.",
         ))
         tab_bullets = []
-        if stories:
-            n_stories = self._SMALL_NUMBERS.get(len(stories), str(len(stories)))
-            if len(stories) > 1:
-                story_desc = (f'{n_stories} tellings of the whole corpus, each a tree '
-                              f'you can open level by level.')
-            else:
-                story_desc = 'the whole corpus as one tree you can open level by level.'
-            tab_bullets.append(
-                f'<li><b>{"Stories" if len(stories) > 1 else "The story"}</b> &mdash; '
-                f'{story_desc} The best place to start reading.</li>'
-            )
         if paper_overlay:
             paper_story_extra = ""
-            if d.get("paperStories"):
+            if paper_stories:
                 paper_story_extra = (
-                    ' Each paper also links to its own story page &mdash; several '
-                    'tellings of just that paper: its own arc, its ties to the other '
-                    'papers, and its place under the superthemes.'
+                    ' Each paper carries a <b>Stories</b> box linking to its own story '
+                    'page &mdash; several tellings of just that paper. The best place '
+                    'to start reading.'
                 )
             tab_bullets.append(
-                '<li><b>Papers</b> &mdash; each paper on its own, with its concepts in '
-                'reading order and links into the PDF. Also where you choose which '
-                f'papers are in view.{paper_story_extra}</li>'
+                '<li><b>Papers</b> &mdash; where the front page opens: each paper on '
+                'its own, with its concepts in reading order and links into the PDF. '
+                'Also where you choose which papers are in '
+                f'view.{paper_story_extra}</li>'
             )
         tab_bullets.append('<li><b>Superthemes</b> &mdash; the big structures, each listing its themes.</li>')
         tab_bullets.append('<li><b>Connective themes</b> &mdash; the threads of connections.</li>')
@@ -1407,15 +1381,18 @@ class SiteBuilder:
         parts.append("</section>")
 
         # -- reading a story ---------------------------------------------------
-        if stories:
+        if paper_stories:
             parts.append('<section class="prose-section">')
-            parts.append("<h2>Reading a story</h2>")
-            if len(stories) > 1:
-                parts.append(
-                    "<p>Under the Stories tab, a second row of tabs picks the telling. "
-                    "They all cover the same material &mdash; choose whichever question "
-                    "interests you most.</p>"
-                )
+            parts.append("<h2>Reading a paper as stories</h2>")
+            parts.append(
+                "<p>Every paper has its own story page &mdash; open it from the "
+                "paper&rsquo;s <b>Stories</b> box in the Papers tab. A row of tabs at "
+                "the top picks the telling: <b>Inside the paper</b> follows the "
+                "paper&rsquo;s own arc, <b>Across the corpus</b> traces how it connects "
+                "to the other papers, and <b>The big picture</b> places it under the "
+                "corpus&rsquo;s superthemes. They all cover the same paper &mdash; "
+                "choose whichever question interests you most.</p>"
+            )
             parts.append(self._help_figure(
                 "story-controls.png",
                 "The story sub-tabs with the row of 'Read at' granularity buttons below them",
@@ -2309,6 +2286,45 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 .node-superedges > summary { font-family: var(--sans); font-size: 0.88rem; color: var(--muted); }
 .node-paper > summary { font-family: var(--sans); font-size: 1.05rem; font-weight: 650; }
 .node-rolegroup > summary { font-family: var(--sans); font-size: 0.95rem; font-weight: 600; }
+
+/* ---- per-paper stories block ------------------------------------------- */
+
+.paper-stories {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin: 0.7rem 0 0.95rem;
+  padding: 0.55rem 0.85rem;
+  font-family: var(--sans);
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-left: 3px solid var(--k-story);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+}
+.ps-lead {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--k-story);
+  text-decoration: none;
+}
+.ps-lead:hover { text-decoration: underline; }
+.ps-lenses { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
+.ps-lens {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg);
+  text-decoration: none;
+  background: var(--chip);
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.ps-lens:hover { border-color: var(--stroke-strong); background: var(--hover); }
 
 .arc-num {
   color: var(--acc-a);

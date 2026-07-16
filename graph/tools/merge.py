@@ -13,8 +13,8 @@ Usage:
   python merge.py superthemes <staged.json>
   python merge.py superedges <staged.json>...
   python merge.py tissue-themes <staged.json>
-  python merge.py stories <staged.json>
   python merge.py paper-stories <staged.json>...
+  python merge.py drop-stories
   python merge.py paper-overlay <staged.json>
   python merge.py walks <staged.json>...
   python merge.py pages <staged.json>...
@@ -46,7 +46,6 @@ EMPTY = {
     "superthemes": [],
     "superedges": [],
     "tissueThemes": [],
-    "stories": [],
     "paperStories": [],
     "paperOverlay": None,
 }
@@ -197,66 +196,6 @@ def validate(store):
                 "superedge": ids(store["superedges"]),
                 "tissue": ids(store["tissueThemes"])}
 
-    stories = store.get("stories") or []
-    if store.get("overlay"):  # legacy single-story form, validated the same way
-        stories = [store["overlay"]] + stories
-    if stories:
-        seen_nodes = set()  # global: node ids become DOM ids on one index page
-        seen_roots, seen_tabs = set(), set()
-
-        for s in stories:
-            sid = s.get("id", "?")
-            if sid in seen_roots:
-                err(f"stories: duplicate story id {sid!r}")
-            seen_roots.add(sid)
-            if len(stories) > 1:
-                tab = (s.get("tab") or "").strip()
-                if not tab:
-                    err(f"story {sid}: needs a short 'tab' label")
-                elif tab.lower() in seen_tabs:
-                    err(f"story {sid}: duplicate tab label {tab!r}")
-                seen_tabs.add(tab.lower())
-            ref_seen = {"theme": [], "supertheme": []}
-
-            def walk(node, path):
-                nid = node.get("id", "")
-                if not KEBAB.match(nid):
-                    err(f"story {sid}: node id not kebab-case: {nid!r}")
-                if nid in seen_nodes:
-                    err(f"story {sid}: duplicate node id {nid!r} (must be unique across all stories)")
-                seen_nodes.add(nid)
-                if not node.get("name"):
-                    err(f"story {sid} node {nid}: missing name")
-                if node.get("children") and len(node.get("narrative", "").strip()) < 50:
-                    err(f"story {sid} node {nid}: internal node needs a narrative")
-                ref = node.get("ref")
-                if ref:
-                    kind, rid = ref.get("kind"), ref.get("id")
-                    if kind not in kind_ids:
-                        err(f"story {sid} node {nid}: unknown ref kind {kind!r}")
-                    elif rid not in kind_ids[kind]:
-                        err(f"story {sid} node {nid}: ref {kind}:{rid!r} does not exist")
-                    elif kind in ref_seen:
-                        ref_seen[kind].append(rid)
-                for ch in node.get("children", []):
-                    walk(ch, path + [nid])
-
-            walk(s, [])
-            # every story is a total lens: each theme placed exactly once
-            placed = ref_seen["theme"]
-            for t in sorted(set(t for t in placed if placed.count(t) > 1)):
-                err(f"story {sid}: theme {t} placed more than once")
-            for t in theme_ids - set(placed):
-                err(f"story {sid}: theme {t} not placed (coverage must be total)")
-            # superthemes: optional per story, but all-or-nothing and no repeats
-            st_placed = ref_seen["supertheme"]
-            for st in sorted(set(t for t in st_placed if st_placed.count(t) > 1)):
-                err(f"story {sid}: supertheme {st} placed more than once")
-            if st_placed:
-                for st in supertheme_ids - set(st_placed):
-                    err(f"story {sid}: uses superthemes but leaves out {st} "
-                        f"(supertheme coverage is all-or-nothing)")
-
     paper_stories = store.get("paperStories") or []
     if paper_stories:
         seen_entries = set()
@@ -352,9 +291,6 @@ def validate(store):
         for item in store[coll]:
             if item.get("intro"):
                 check_intro(f"{kindname} {item['id']}", item["intro"])
-    for s in store.get("stories") or []:
-        if s.get("intro"):
-            check_intro(f"story {s['id']}", s["intro"])
     for entry in store.get("paperStories") or []:
         for s in entry.get("stories") or []:
             if s.get("intro"):
@@ -406,8 +342,7 @@ def merge_simple(store, key, staged_files):
 
 
 INTRO_KIND_COLL = {"concept": "concepts", "theme": "themes",
-                   "supertheme": "superthemes", "tissue": "tissueThemes",
-                   "story": "stories"}
+                   "supertheme": "superthemes", "tissue": "tissueThemes"}
 
 
 def merge_intros(store, staged_files):
@@ -451,10 +386,11 @@ def run_step(store, cmd, files, aliases):
         merge_simple(store, "superedges", files)
     elif cmd == "tissue-themes":
         merge_simple(store, "tissueThemes", files)
-    elif cmd == "stories":
-        data = json.loads(Path(files[0]).read_text(encoding="utf-8"))
-        store["stories"] = data["stories"]
-        store.pop("overlay", None)  # legacy single-story key, superseded
+    elif cmd == "drop-stories":
+        # Corpus-wide stories are retired; the paper story pages are the only
+        # stories. Also drops the legacy single-story "overlay" key.
+        store.pop("stories", None)
+        store.pop("overlay", None)
     elif cmd == "paper-stories":
         store.setdefault("paperStories", [])
         merge_simple(store, "paperStories", files)

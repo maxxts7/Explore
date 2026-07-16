@@ -98,13 +98,13 @@
     });
   });
   if (document.getElementById('subtabbtn-' + location.hash.slice(1))) {
-    activate('story');
     activateStory(location.hash.slice(1));
   }
   Array.prototype.forEach.call(document.querySelectorAll('[data-gran]'), function (btn) {
     btn.addEventListener('click', function () {
       var g = parseInt(btn.getAttribute('data-gran'), 10);
-      var scope = btn.getAttribute('data-scope') || 'tab-story';
+      var scope = btn.getAttribute('data-scope');
+      if (!scope) return;
       Array.prototype.forEach.call(
         document.querySelectorAll('#' + scope + ' details[data-depth]'),
         function (d) { d.open = parseInt(d.getAttribute('data-depth'), 10) < g; }
