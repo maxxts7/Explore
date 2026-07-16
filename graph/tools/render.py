@@ -14,6 +14,7 @@ will try to install it automatically if it is missing.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
@@ -394,8 +395,11 @@ class SiteBuilder:
     # ---- page shell --------------------------------------------------
 
     def shell(self, page_kind: str, title: str, body: str) -> str:
-        css_href = self.asset_href(page_kind, "style.css")
-        popup_js = self.asset_href(page_kind, "popup.js")
+        # Content-hash version on the assets that change between deploys, so
+        # returning visitors never pair fresh HTML with a stale cached
+        # stylesheet (Netlify caches /assets/* for a week).
+        css_href = f'{self.asset_href(page_kind, "style.css")}?v={ASSET_VERSION}'
+        popup_js = f'{self.asset_href(page_kind, "popup.js")}?v={ASSET_VERSION}'
         katex_css = self.asset_href(page_kind, "katex.min.css")
         katex_js = self.asset_href(page_kind, "katex.min.js")
         autorender_js = self.asset_href(page_kind, "auto-render.min.js")
@@ -2592,7 +2596,7 @@ def crawl_links(site_dir: Path) -> list[tuple[Path, str]]:
             target = m.group(1)
             if target.startswith(("http://", "https://", "mailto:", "//", "#")):
                 continue
-            target_no_frag = target.split("#", 1)[0]
+            target_no_frag = target.split("#", 1)[0].split("?", 1)[0]
             if not target_no_frag:
                 continue
             resolved = (f.parent / target_no_frag).resolve()
@@ -2612,6 +2616,12 @@ def scan_markdown_artifacts(site_dir: Path) -> list[tuple[Path, str]]:
             if p in text:
                 found.append((f, p))
     return found
+
+
+# Version tag appended to the style.css / popup.js URLs in every page head.
+# Content-derived, so it changes exactly when those files change and browser
+# caches (Netlify serves /assets/* with a 7-day max-age) are busted on deploy.
+ASSET_VERSION = hashlib.sha1((CSS + POPUP_JS).encode("utf-8")).hexdigest()[:10]
 
 
 # --------------------------------------------------------------------------
