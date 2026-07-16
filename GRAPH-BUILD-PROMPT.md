@@ -52,7 +52,7 @@ something up, follow a connection, keep digging?
 - edges one level up: theme → theme connections within a supertheme
 - same rules as edges: typed, prose-bearing, its own page, must say something new
 
-**Tissue themes**
+**Connective themes**
 - lenses over the edges, same rules as themes
 - the recursion ends here: no edges between edges
 
@@ -110,7 +110,7 @@ start with three papers
 5  super edges     agents in parallel, one supertheme each:
                      theme → theme edges among its member themes
 
-6  tissue themes   one mind groups all the edges into lenses
+6  connective themes   one mind groups all the edges into lenses
 
 7  concept pages   agents in parallel, written only now, with the lenses
                    and the edges in hand:
@@ -229,7 +229,7 @@ sentences must say something neither theme's narrative already says. Superthemes
 supply the pairs: super edges are written among themes grouped under the same
 supertheme.
 
-### Tissue themes
+### Connective themes
 
 One pattern is still invisible. The edges themselves, read together, have shapes of
 their own: several edges across the corpus may all be displacement stories, where a
@@ -237,12 +237,14 @@ new method pushes an old one out; several may be stabilization stories; several 
 trace a benchmark slowly losing its meaning. No grouping of concepts can surface this,
 because the pattern lives in the relations, not in the things related.
 
-Tissue themes apply the lens idea to the edges — edges are the wiki's connective
-tissue, hence the name. A tissue theme groups edges under a claim, with the same kind
-of short narrative, so that *how things connect* becomes something the reader can
-browse in its own right.
+Connective themes apply the lens idea to the edges — edges are the wiki's
+connections, hence the name. A connective theme groups edges under a claim, with the
+same kind of short narrative, so that *how things connect* becomes something the
+reader can browse in its own right. (Internally these are still stored under the
+`tissueThemes` key and rendered under `site/tissue/` — only the reader-facing name
+changed.)
 
-The recursion ends here. Do not build edges between edges — the tissue theme's
+The recursion ends here. Do not build edges between edges — the connective theme's
 narrative does that connecting work in prose.
 
 ### How everything is written
@@ -307,12 +309,12 @@ record.
 
 ### Lens design
 
-Themes, superthemes, and tissue themes are all the same kind of act: choosing the
+Themes, superthemes, and connective themes are all the same kind of act: choosing the
 lenses. Two things follow.
 
 First, lens design needs its full material before it starts. A lens is right or wrong
 relative to everything it has to cover — which is why themes wait until every paper's
-concepts are extracted and pooled, and why tissue themes wait until all the edges
+concepts are extracted and pooled, and why connective themes wait until all the edges
 exist. Design lenses over a third of the corpus and you are guessing about the rest.
 
 Second, lens design is one mind, never parallelized. Split the job across workers and
@@ -328,14 +330,14 @@ thousand possible pairs, almost all of them meaningless. The groupings are what 
 the pair space worth working: sub-concepts of one family, concepts sharing a theme,
 themes sharing a supertheme — these are exactly the neighborhoods where real relations
 live. That is why themes are designed before any edge is written (the groupings
-generate the pairs), why super edges wait for superthemes, and why tissue themes come
+generate the pairs), why super edges wait for superthemes, and why connective themes come
 last of all: they group the edges, which have to exist first.
 
 ### Why concept pages are written last
 
 A concept page written at extraction time can only say what the thing is, because
-that is all that exists yet. Written after the lenses are designed and the tissue is
-in place, the writer holds the whole picture: the themes the concept serves, the edges
+that is all that exists yet. Written after the lenses are designed and the connections
+are in place, the writer holds the whole picture: the themes the concept serves, the edges
 that touch it, everything downstream that was built on it. That is what lets the page
 do its three jobs — say how the concept fits the overall picture, what it enabled
 downstream, and what it actually is. The first two are the ones a reader cannot get

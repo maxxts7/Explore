@@ -169,17 +169,17 @@ def validate(store):
 
     for tt in store["tissueThemes"]:
         if not tt.get("narrative", "").strip():
-            err(f"tissue theme {tt['id']}: missing narrative")
+            err(f"connective theme {tt['id']}: missing narrative")
         for m in tt.get("members", []):
             if m not in edge_ids:
-                err(f"tissue theme {tt['id']}: member {m!r} not an edge")
+                err(f"connective theme {tt['id']}: member {m!r} not an edge")
 
     if store["tissueThemes"]:
         covered = set()
         for tt in store["tissueThemes"]:
             covered.update(tt.get("members", []))
         for e in edge_ids - covered:
-            err(f"edge {e} belongs to no tissue theme (coverage must be total)")
+            err(f"edge {e} belongs to no connective theme (coverage must be total)")
 
     stories = store.get("stories") or []
     if store.get("overlay"):  # legacy single-story form, validated the same way
@@ -279,7 +279,7 @@ def validate(store):
             err(f"{owner}: intro is {words} words, outside 35-160")
 
     for coll, kindname in (("concepts", "concept"), ("themes", "theme"),
-                           ("superthemes", "supertheme"), ("tissueThemes", "tissue theme")):
+                           ("superthemes", "supertheme"), ("tissueThemes", "connective theme")):
         for item in store[coll]:
             if item.get("intro"):
                 check_intro(f"{kindname} {item['id']}", item["intro"])

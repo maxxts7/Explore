@@ -34,6 +34,7 @@ BASE_DIR = TOOLS_DIR.parent
 STORE_PATH = BASE_DIR / "store" / "graph.json"
 SITE_DIR = BASE_DIR / "site"
 ASSETS_DIR = SITE_DIR / "assets"
+HELP_SHOTS_DIR = BASE_DIR / "help-shots"  # source screenshots for the help page (site/ is wiped)
 
 # --------------------------------------------------------------------------
 # Dependency bootstrap
@@ -62,11 +63,14 @@ KIND_INFO = {
     "theme":      ("themes",       "theme",      "theme"),
     "supertheme": ("superthemes",  "supertheme", "supertheme"),
     "superedge":  ("superedges",   "superedge",  "super edge"),
-    "tissue":     ("tissueThemes", "tissue",     "tissue theme"),
+    "tissue":     ("tissueThemes", "tissue",     "connective theme"),
 }
 
 KIND_DIR = {k: v[1] for k, v in KIND_INFO.items()}
 KIND_LABEL = {k: v[2] for k, v in KIND_INFO.items()}
+
+# page kinds whose html lives at the site root (everything else is one dir down)
+ROOT_KINDS = {"index", "help"}
 
 # --------------------------------------------------------------------------
 # Load data
@@ -223,13 +227,15 @@ class SiteBuilder:
     def href(self, from_kind: str, to_kind: str, to_id: str | None) -> str:
         if to_kind == "index":
             rel = "index.html"
+        elif to_kind == "help":
+            rel = "help.html"
         else:
             rel = f"{KIND_DIR[to_kind]}/{to_id}.html"
-        return rel if from_kind == "index" else "../" + rel
+        return rel if from_kind in ROOT_KINDS else "../" + rel
 
     def asset_href(self, from_kind: str, name: str) -> str:
         rel = f"assets/{name}"
-        return rel if from_kind == "index" else "../" + rel
+        return rel if from_kind in ROOT_KINDS else "../" + rel
 
     def paper_href(self, paper_id: str) -> str:
         p = self.papers[paper_id]
@@ -389,6 +395,8 @@ class SiteBuilder:
         katex_js = self.asset_href(page_kind, "katex.min.js")
         autorender_js = self.asset_href(page_kind, "auto-render.min.js")
         index_href = self.href(page_kind, "index", None)
+        help_href = self.href(page_kind, "help", None)
+        help_current = ' aria-current="page"' if page_kind == "help" else ''
         label = KIND_LABEL.get(page_kind, "")
 
         if KATEX_LOCAL:
@@ -430,7 +438,7 @@ class SiteBuilder:
     <header class="site-header">
       <div class="header-inner">
         <a class="home-link" href="{index_href}">{'&larr; ' if page_kind != 'index' else ''}<b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
-        {f'<span class="kind-badge kind-{page_kind}">{esc(label)}</span>' if label else ''}
+        <span class="header-tools">{f'<span class="kind-badge kind-{page_kind}">{esc(label)}</span>' if label else ''}<a class="help-link" href="{help_href}"{help_current}>Help</a></span>
       </div>
     </header>
     <div class="page">
@@ -598,7 +606,7 @@ class SiteBuilder:
         if tissue_ids:
             items = "".join(f"<li>{self.tissue_link(pk, tid)}</li>" for tid in sorted(
                 tissue_ids, key=lambda tid: self.tissues[tid]["name"].lower()))
-            parts.append(f"<section class=\"nav-block\"><h2>Appears in tissue themes</h2><ul>{items}</ul></section>")
+            parts.append(f"<section class=\"nav-block\"><h2>Appears in connective themes</h2><ul>{items}</ul></section>")
 
         src = self.sources_block(pk, self.edge_locators(e), paper_first=e.get("groundedIn"))
         if src:
@@ -740,7 +748,7 @@ class SiteBuilder:
                          f'<p class="section-note">Every passage behind the concepts its member '
                          f'edges connect.</p>{src}</section>')
 
-        return self.shell(pk, f"{t['name']} — Tissue theme", "\n".join(parts))
+        return self.shell(pk, f"{t['name']} — Connective theme", "\n".join(parts))
 
     # ---- index page: tabs + overlay tree --------------------------------
 
@@ -921,7 +929,7 @@ class SiteBuilder:
     def _index_tab_tissues(self) -> str:
         pk = "index"
         parts = []
-        parts.append("<p class=\"section-note\">Twenty-eight tissue themes, each a short thread of edges.</p>")
+        parts.append("<p class=\"section-note\">Twenty-eight connective themes, each a short thread of edges.</p>")
         parts.append("<ul>")
         for tt in sorted(self.data["tissueThemes"], key=lambda t: t["name"].lower()):
             n = len(tt["members"])
@@ -1128,6 +1136,10 @@ class SiteBuilder:
             "within the paper itself, and out across the wider field. "
             "The papers are all in <a href=\"#tab-papers\">the papers section</a>.</p>"
         )
+        parts.append(
+            '<p class="section-note">First visit? <a href="help.html">How to use this '
+            'wiki</a> &mdash; a short illustrated guide to the pieces and the controls.</p>'
+        )
         tabs: list[tuple[str, str, str]] = []
         if stories:
             story_label = "Stories" if len(stories) > 1 else "The story"
@@ -1135,7 +1147,7 @@ class SiteBuilder:
         if paper_overlay:
             tabs.append(("papers", "By paper", self._index_tab_paper_overlay(paper_overlay)))
         tabs.append(("superthemes", "Superthemes", self._index_tab_superthemes()))
-        tabs.append(("tissue", "Tissue themes", self._index_tab_tissues()))
+        tabs.append(("tissue", "Connective themes", self._index_tab_tissues()))
         tabs.append(("concepts", "Concepts A–Z", self._index_tab_concepts()))
         if not paper_overlay:
             tabs.append(("papers", "Papers", self._index_tab_papers()))
@@ -1161,6 +1173,204 @@ class SiteBuilder:
         parts.append(self.INDEX_TABS_JS)
 
         return self.shell(pk, "Explore — an AI safety wiki", "\n".join(parts))
+
+    # ---- help page ---------------------------------------------------------
+
+    def _help_figure(self, filename: str, alt: str, caption: str) -> str:
+        """A screenshot figure for the help page. Renders nothing if the
+        source image is absent, so the build never emits a broken link."""
+        if not (HELP_SHOTS_DIR / filename).is_file():
+            return ""
+        src = self.asset_href("help", f"help/{filename}")
+        return (f'<figure class="help-figure"><img src="{src}" alt="{esc(alt)}" loading="lazy">'
+                f'<figcaption>{caption}</figcaption></figure>')
+
+    _SMALL_NUMBERS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+                      6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+
+    def build_help_page(self) -> str:
+        pk = "help"
+        d = self.data
+        stories = d.get("stories") or ([d["overlay"]] if d.get("overlay") else [])
+        paper_overlay = d.get("paperOverlay")
+        n_papers = self._SMALL_NUMBERS.get(len(d["papers"]), str(len(d["papers"])))
+        n_concepts = len(d["concepts"])
+        n_edges = len(d["edges"])
+        n_themes = len(d["themes"])
+
+        parts = []
+        parts.append("<h1>How to use this wiki</h1>")
+        parts.append(
+            f'<p class="lede">Everything here is built from {n_papers} AI-safety papers, '
+            f'taken apart into their bare-bones ideas and wired back together. '
+            f'This page shows what the pieces are and how to move around them. '
+            f'It reads top to bottom in a few minutes.</p>'
+        )
+
+        # -- the pieces ------------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>What the pieces are</h2>")
+        parts.append(
+            f"<p>The wiki has a small vocabulary, and every page is one of these kinds "
+            f"(the coloured badge in the top-right corner of a page tells you which one "
+            f"you are reading):</p>"
+        )
+        parts.append(
+            '<ul class="help-kinds">'
+            f'<li><b>Concepts</b> &mdash; the atoms. Each of the {n_concepts} concept pages '
+            f'explains one idea from one or more of the papers, in plain prose.</li>'
+            f'<li><b>Edges</b> &mdash; the wiring. Each of the {n_edges} edge pages explains how '
+            f'two concepts relate; a few are marked <i>hindsight</i>, meaning the link only '
+            f'became visible after a later paper.</li>'
+            f'<li><b>Themes</b> &mdash; small groups of concepts that belong together, each with '
+            f'a guided walk through its members in reading order ({n_themes} of them).</li>'
+            f'<li><b>Superthemes</b> &mdash; groups of themes; the largest structures in the wiki.</li>'
+            f'<li><b>Connective themes</b> &mdash; lenses over the <i>edges</i> rather than the concepts: '
+            f'short threads of related connections.</li>'
+            f'<li><b>Stories</b> &mdash; complete tellings of the corpus. Every theme appears in every '
+            f'story, regrouped under a different claim.</li>'
+            '</ul>'
+        )
+        parts.append("</section>")
+
+        # -- the front page ----------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>The front page</h2>")
+        parts.append(self._help_figure(
+            "index-tabs.png",
+            "The front page of the wiki, with its row of view tabs under the title",
+            "The front page. Each tab is a different view of the same material.",
+        ))
+        tab_bullets = []
+        if stories:
+            n_stories = self._SMALL_NUMBERS.get(len(stories), str(len(stories)))
+            if len(stories) > 1:
+                story_desc = (f'{n_stories} tellings of the whole corpus, each a tree '
+                              f'you can open level by level.')
+            else:
+                story_desc = 'the whole corpus as one tree you can open level by level.'
+            tab_bullets.append(
+                f'<li><b>{"Stories" if len(stories) > 1 else "The story"}</b> &mdash; '
+                f'{story_desc} The best place to start reading.</li>'
+            )
+        if paper_overlay:
+            tab_bullets.append(
+                '<li><b>By paper</b> &mdash; each paper on its own, with its concepts in '
+                'reading order and links into the PDF.</li>'
+            )
+        tab_bullets.append('<li><b>Superthemes</b> &mdash; the big structures, each listing its themes.</li>')
+        tab_bullets.append('<li><b>Connective themes</b> &mdash; the threads of connections.</li>')
+        tab_bullets.append('<li><b>Concepts A&ndash;Z</b> &mdash; every concept, alphabetically. '
+                           'Use it when you already know what you are looking for.</li>')
+        if not paper_overlay:
+            tab_bullets.append('<li><b>Papers</b> &mdash; the source papers.</li>')
+        parts.append(f'<ul>{"".join(tab_bullets)}</ul>')
+        parts.append(
+            '<p>The address bar follows the tab you are on (<code>#tab-concepts</code>, '
+            '<code>#tab-superthemes</code>, &hellip;), so you can bookmark or share a '
+            'particular view.</p>'
+        )
+        parts.append("</section>")
+
+        # -- reading a story ---------------------------------------------------
+        if stories:
+            parts.append('<section class="prose-section">')
+            parts.append("<h2>Reading a story</h2>")
+            if len(stories) > 1:
+                parts.append(
+                    "<p>Under the Stories tab, a second row of tabs picks the telling. "
+                    "They all cover the same material &mdash; choose whichever question "
+                    "interests you most.</p>"
+                )
+            parts.append(self._help_figure(
+                "story-controls.png",
+                "The story sub-tabs with the row of 'Read at' granularity buttons below them",
+                "Pick a telling, then pick a zoom. &ldquo;Read at&rdquo; opens the whole story "
+                "to one depth: <i>root claim</i> is a single sentence, <i>everything</i> is the "
+                "full tree.",
+            ))
+            parts.append(
+                "<p>Each story is a collapsible tree. The <b>Read at</b> buttons set how "
+                "deep it opens &mdash; from the root claim alone down to every concept and "
+                "its connections. You can also open and close any single branch by hand "
+                "with the +/&minus; markers.</p>"
+            )
+            parts.append(self._help_figure(
+                "story-tree.png",
+                "A story tree with chapters partially expanded, showing the +/− toggles",
+                "A story opened to chapter level. Click a marker to open one branch; "
+                "the prose at each level explains what the level below contains.",
+            ))
+            parts.append("</section>")
+
+        # -- concept pages -----------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>Concept pages</h2>")
+        parts.append(self._help_figure(
+            "concept-page.png",
+            "The top of a concept page: title, origin line, summary, and introduction",
+            "The top of a concept page: which papers it comes from, a one-line summary, "
+            "then a gentle introduction before the detail.",
+        ))
+        parts.append(
+            "<p>Every concept page follows the same shape. Prose first; then, after the "
+            "divider, its place in the graph: <b>Part of / Contains</b> (parent and child "
+            "concepts), <b>Connections</b> (its edges, each one sentence), <b>Lenses</b> "
+            "(the themes it belongs to), and <b>Sources</b>. Highlighted phrases in the "
+            "prose are links to other pages.</p>"
+        )
+        parts.append("</section>")
+
+        # -- popups --------------------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>Links open in a popup</h2>")
+        parts.append(self._help_figure(
+            "popup.png",
+            "A concept page open in a popup dialog over the index",
+            "Following a link opens the page in a popup, so you never lose your place.",
+        ))
+        parts.append(
+            "<p>Clicking any concept, edge, or theme link opens the page in a popup over "
+            "where you are, so a quick side-glance never costs you your place. Close it "
+            "with the <b>&times;</b>, the <b>Esc</b> key, or a click outside; "
+            "<b>open as full page&nbsp;&#8599;</b> in its top bar promotes the popup to a "
+            "real visit. To skip the popup entirely, open the link in a new tab as usual "
+            "(ctrl-click, cmd-click, or middle-click).</p>"
+        )
+        parts.append("</section>")
+
+        # -- sources ---------------------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>Sources go straight into the papers</h2>")
+        parts.append(self._help_figure(
+            "sources.png",
+            "A Sources block listing section and page citations grouped by paper",
+            "Every page ends with its sources: each entry opens the paper&rsquo;s PDF "
+            "at that page.",
+        ))
+        parts.append(
+            "<p>Nothing here is invented: every page cites the passages it is built from. "
+            "The PDFs ship with the wiki, and both the <b>Sources</b> lists and the inline "
+            "citations in the prose (the <i>&sect;&hellip;, p.&nbsp;N</i> parts) open the "
+            "right paper at the right page, in a new tab.</p>"
+        )
+        parts.append("</section>")
+
+        # -- small print -------------------------------------------------------------
+        parts.append('<section class="prose-section">')
+        parts.append("<h2>Small print</h2>")
+        parts.append(
+            '<ul>'
+            '<li>The wiki is fully self-contained &mdash; pages, papers, fonts, and math '
+            'all work offline.</li>'
+            '<li>Without JavaScript everything still reads: tabs and trees simply stack '
+            'as one long page, and links navigate normally instead of opening popups.</li>'
+            '<li>Lost? The <b>Explore</b> mark in the header always returns to the front page.</li>'
+            '</ul>'
+        )
+        parts.append("</section>")
+
+        return self.shell(pk, "How to use this wiki — Explore", "\n".join(parts))
 
     # ---- top-level build --------------------------------------------------
 
@@ -1188,6 +1398,9 @@ class SiteBuilder:
 
         (SITE_DIR / "index.html").write_text(self.build_index_page(), encoding="utf-8")
         counts["index"] = 1
+
+        (SITE_DIR / "help.html").write_text(self.build_help_page(), encoding="utf-8")
+        counts["help"] = 1
 
         return counts
 
@@ -1412,6 +1625,46 @@ body::after {
 }
 .home-link:hover b { color: var(--acc-a); }
 @media (max-width: 560px) { .home-sub { display: none; } }
+
+.header-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.help-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.66rem;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 999px;
+}
+.help-link:hover { color: var(--acc-a); border-color: var(--acc-a); }
+.help-link[aria-current="page"] { color: var(--fg); border-color: var(--stroke-strong); }
+
+/* ---- help page ----------------------------------------------------------- */
+
+.help-figure {
+  margin: 1.15rem 0 1.5rem;
+}
+.help-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+}
+.help-figure figcaption {
+  font-family: var(--sans);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin-top: 0.55rem;
+}
+.help-kinds li { margin: 0.45rem 0; }
 
 .page {
   width: min(1060px, 100% - 1.4rem);
@@ -2280,6 +2533,17 @@ def main():
     for pdf in (BASE_DIR / "papers").glob("*.pdf"):
         shutil.copy2(pdf, papers_dst / pdf.name)
 
+    if HELP_SHOTS_DIR.is_dir():
+        shots = sorted(HELP_SHOTS_DIR.glob("*.png"))
+        if shots:
+            print(f"[render] copying {len(shots)} help screenshots into site/assets/help/")
+            help_dst = ASSETS_DIR / "help"
+            help_dst.mkdir(parents=True, exist_ok=True)
+            for shot in shots:
+                shutil.copy2(shot, help_dst / shot.name)
+    else:
+        print("[render] no help-shots/ directory -- help page renders without figures")
+
     print("[render] downloading webfonts ...")
     if download_fonts():
         print("[render] webfonts downloaded into site/assets/typefaces/")
@@ -2304,6 +2568,7 @@ def main():
         "superedge": len(data["superedges"]),
         "tissue": len(data["tissueThemes"]),
         "index": 1,
+        "help": 1,
     }
     total_generated = 0
     total_expected = 0
