@@ -778,9 +778,10 @@ class SiteBuilder:
             '<p class="section-note">One paper, several tellings. <b>Inside the '
             'paper</b> follows the paper&rsquo;s own arc; <b>Across the corpus</b> '
             'traces how it connects to the other papers; <b>The big picture</b> '
-            'places it under the corpus&rsquo;s superthemes. Pick a telling, then '
+            'places it under the corpus&rsquo;s superthemes; <b>The concepts</b> '
+            'lists everything the paper uses, in reading order. Pick a tab, then '
             'use the +/&minus; toggles to open it level by level, or set a '
-            'granularity to read the whole story at that zoom.</p>'
+            'granularity to read the whole thing at that zoom.</p>'
         )
         single_note = (
             '<p class="section-note">This paper told as a story: chapters in '
@@ -788,8 +789,11 @@ class SiteBuilder:
             'it. Use the +/&minus; toggles to open the story level by level, or '
             'set a granularity to read the whole story at that zoom.</p>'
         )
-        parts.append(self._story_tabs(stories, pk, multi_note, single_note))
-        parts.append(self._paper_concepts_section(pid))
+        extra = []
+        concepts_body = self._paper_concepts_panel(pid)
+        if concepts_body:
+            extra.append(("paper-concepts", "The concepts", concepts_body))
+        parts.append(self._story_tabs(stories, pk, multi_note, single_note, extra))
         parts.append(self.INDEX_TABS_JS)
         return self.shell(pk, f"{p['title']} — Stories", "\n".join(parts))
 
@@ -926,18 +930,24 @@ class SiteBuilder:
         return any(self._story_has_kind(ch, kind) for ch in node.get("children", []))
 
     def _story_tabs(self, stories: list[dict], pk: str,
-                    multi_note: str, single_note: str) -> str:
+                    multi_note: str, single_note: str,
+                    extra: list[tuple[str, str, str]] = ()) -> str:
+        """The sub-tab row and its panels. `extra` adds non-story tabs after
+        the tellings, as (panel_id, tab_label, body_html) triples — they share
+        the same tab/hash behaviour as the story panels."""
         parts = []
-        if len(stories) > 1:
+        if len(stories) + len(extra) > 1:
             parts.append(multi_note)
             buttons = []
-            for i, s in enumerate(stories):
+            for i, (sid, label) in enumerate(
+                    [(s["id"], s.get("tab") or s["name"]) for s in stories]
+                    + [(xid, xlabel) for xid, xlabel, _ in extra]):
                 active = ' active' if i == 0 else ''
                 selected = 'true' if i == 0 else 'false'
                 buttons.append(
-                    f'<button type="button" class="subtab{active}" id="subtabbtn-{esc(s["id"])}" '
-                    f'role="tab" aria-selected="{selected}" aria-controls="{esc(s["id"])}">'
-                    f'{esc(s.get("tab") or s["name"])}</button>'
+                    f'<button type="button" class="subtab{active}" id="subtabbtn-{esc(sid)}" '
+                    f'role="tab" aria-selected="{selected}" aria-controls="{esc(sid)}">'
+                    f'{esc(label)}</button>'
                 )
             parts.append('<nav class="subtabs" role="tablist" aria-label="Story lenses">'
                          + "".join(buttons) + '</nav>')
@@ -961,6 +971,12 @@ class SiteBuilder:
                 f'{self.intro_block(pk, s)}\n'
                 f'<p class="tree-controls"><span class="controls-label">Read at</span>{gran_buttons}</p>\n'
                 f'<div class="overlay-tree">{self._overlay_node(s, 0, pk=pk)}</div>\n</div>'
+            )
+        for xid, _xlabel, body in extra:
+            hidden = '' if not stories else ' hidden'
+            parts.append(
+                f'<div class="story-panel" id="{esc(xid)}" role="tabpanel" '
+                f'aria-labelledby="subtabbtn-{esc(xid)}"{hidden}>\n{body}\n</div>'
             )
         return "\n".join(parts)
 
@@ -1021,14 +1037,16 @@ class SiteBuilder:
             n = sum(len(v) for v in self.concepts_of_paper.get(pid, {}).values())
             stories = ""
             if pid in self.paper_stories:
-                lenses = " ".join(
+                pills = [
                     f'<a class="ps-lens" href="{page}#{esc(s["id"])}">'
                     f'{esc(s.get("tab") or s["name"])}</a>'
-                    for s in self.paper_stories[pid]["stories"])
+                    for s in self.paper_stories[pid]["stories"]]
+                if n:
+                    pills.append(f'<a class="ps-lens" href="{page}#paper-concepts">The concepts</a>')
                 stories = (
                     f'<div class="paper-stories">'
                     f'<a class="ps-lead" href="{page}">Stories</a>'
-                    f'<span class="ps-lenses">{lenses}</span></div>')
+                    f'<span class="ps-lenses">{" ".join(pills)}</span></div>')
             parts.append(
                 f'<div class="paper-card">'
                 f'<h3 class="pc-title"><a href="{page}">{esc(p["title"])}</a></h3>'
@@ -1074,17 +1092,15 @@ class SiteBuilder:
             )
         return f'<li class="walk-step tree-leaf">{clink}{cite}{prose_html}</li>'
 
-    def _paper_concepts_section(self, pid: str) -> str:
-        """The paper's concepts by role (introduced/refined/inherited, reading
-        order, PDF deep links) with its overlay narrative — rendered on the
-        paper's own page, below the stories."""
+    def _paper_concepts_panel(self, pid: str) -> str:
+        """Body of the paper page's "The concepts" tab: the paper's concepts
+        by role (introduced/refined/inherited, reading order, PDF deep links)
+        with its overlay narrative."""
         pk = "story"
         by_role = self.concepts_of_paper.get(pid, {})
-        total = sum(len(v) for v in by_role.values())
-        if not total:
+        if not any(by_role.values()):
             return ""
-        parts = ['<section class="nav-block paper-concepts" id="paper-concepts">']
-        parts.append(f'<h2>The paper&rsquo;s concepts <span class="tree-count">({total})</span></h2>')
+        parts = []
         narrative = self.paper_overlay_narrative.get(pid, "")
         if narrative:
             parts.append(
@@ -1108,7 +1124,7 @@ class SiteBuilder:
                 f'<span class="tree-count">({n} concept{"s" if n != 1 else ""}, in reading order)</span></summary>'
                 f'<ul class="tree-concepts">{items}</ul></details>'
             )
-        parts.append('</div></section>')
+        parts.append('</div>')
         return "\n".join(parts)
 
     INDEX_TABS_JS = """
@@ -1337,10 +1353,10 @@ class SiteBuilder:
                 "with the +/&minus; markers.</p>"
             )
             parts.append(
-                "<p>Below the stories, the same page holds the paper&rsquo;s concepts "
-                "&mdash; what it introduced, refined, and inherited, in reading order, "
-                "each deep-linked into the PDF &mdash; with a <b>Read at</b> zoom of "
-                "its own.</p>"
+                "<p>A last tab, <b>The concepts</b>, holds the paper&rsquo;s full "
+                "inventory &mdash; what it introduced, refined, and inherited, in "
+                "reading order, each deep-linked into the PDF &mdash; with a "
+                "<b>Read at</b> zoom of its own.</p>"
             )
             parts.append(self._help_figure(
                 "story-tree.png",
@@ -2209,9 +2225,6 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 .paper-card .pc-title a:hover { color: var(--link); }
 .paper-card .edge-meta { margin: 0 0 0.55rem; }
 .paper-card .paper-stories { margin: 0; }
-
-/* the paper page's own concepts section, below the stories */
-.paper-concepts { margin-top: 2.4rem; }
 
 /* ---- per-paper stories block ------------------------------------------- */
 

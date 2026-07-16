@@ -62,7 +62,7 @@ something up, follow a connection, keep digging?
 - a fixed trio of tellings per paper: inside the paper (its own arc, chapter by
   chapter), across the corpus (how it connects to the other papers), the big
   picture (its place under the superthemes)
-- below the tellings, the same page lists every concept the paper uses —
+- a further tab beside the tellings lists every concept the paper uses —
   introduced, refined, or inherited — in reading order, deep-linked into the
   source PDF, so the paper's page is the one place that fully explains the paper
 - a story places what already exists — concepts, themes, superthemes, connective
