@@ -1035,18 +1035,6 @@ class SiteBuilder:
             pid = p["id"]
             page = self.href(pk, "story", pid)
             n = sum(len(v) for v in self.concepts_of_paper.get(pid, {}).values())
-            stories = ""
-            if pid in self.paper_stories:
-                pills = [
-                    f'<a class="ps-lens" href="{page}#{esc(s["id"])}">'
-                    f'{esc(s.get("tab") or s["name"])}</a>'
-                    for s in self.paper_stories[pid]["stories"]]
-                if n:
-                    pills.append(f'<a class="ps-lens" href="{page}#paper-concepts">The concepts</a>')
-                stories = (
-                    f'<div class="paper-stories">'
-                    f'<a class="ps-lead" href="{page}">Stories</a>'
-                    f'<span class="ps-lenses">{" ".join(pills)}</span></div>')
             parts.append(
                 f'<div class="paper-card">'
                 f'<h3 class="pc-title"><a href="{page}">{esc(p["title"])}</a></h3>'
@@ -1054,7 +1042,7 @@ class SiteBuilder:
                 f'<a href="{self.paper_href(pid)}" target="_blank" rel="noopener">arXiv:{esc(p["arxiv"])}</a>'
                 f' &middot; <a href="{self.pdf_href(pk, pid)}" target="_blank" rel="noopener">PDF</a>'
                 f' &middot; {p["pages"]} pp. &middot; {n} concepts</p>'
-                f'{stories}</div>'
+                f'</div>'
             )
         parts.append("</div>")
         return "\n".join(parts)
@@ -1331,13 +1319,13 @@ class SiteBuilder:
             parts.append('<section class="prose-section">')
             parts.append("<h2>Reading a paper as stories</h2>")
             parts.append(
-                "<p>Every paper has its own story page &mdash; open it from the "
-                "paper&rsquo;s <b>Stories</b> box in the Papers tab. A row of tabs at "
-                "the top picks the telling: <b>Inside the paper</b> follows the "
-                "paper&rsquo;s own arc, <b>Across the corpus</b> traces how it connects "
-                "to the other papers, and <b>The big picture</b> places it under the "
-                "corpus&rsquo;s superthemes. They all cover the same paper &mdash; "
-                "choose whichever question interests you most.</p>"
+                "<p>Every paper has a page of its own &mdash; open it from its card "
+                "in the Papers tab. A row of tabs at the top picks the telling: "
+                "<b>Inside the paper</b> follows the paper&rsquo;s own arc, "
+                "<b>Across the corpus</b> traces how it connects to the other papers, "
+                "and <b>The big picture</b> places it under the corpus&rsquo;s "
+                "superthemes. They all cover the same paper &mdash; choose whichever "
+                "question interests you most.</p>"
             )
             parts.append(self._help_figure(
                 "story-controls.png",
@@ -2223,47 +2211,7 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 }
 .paper-card .pc-title a { color: var(--fg); text-decoration: none; }
 .paper-card .pc-title a:hover { color: var(--link); }
-.paper-card .edge-meta { margin: 0 0 0.55rem; }
-.paper-card .paper-stories { margin: 0; }
-
-/* ---- per-paper stories block ------------------------------------------- */
-
-.paper-stories {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.75rem;
-  margin: 0.7rem 0 0.95rem;
-  padding: 0.55rem 0.85rem;
-  font-family: var(--sans);
-  background: var(--card);
-  border: 1px solid var(--stroke);
-  border-left: 3px solid var(--k-story);
-  border-radius: 10px;
-  box-shadow: var(--card-shadow);
-}
-.ps-lead {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-  color: var(--k-story);
-  text-decoration: none;
-}
-.ps-lead:hover { text-decoration: underline; }
-.ps-lenses { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
-.ps-lens {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--fg);
-  text-decoration: none;
-  background: var(--chip);
-  border: 1px solid var(--stroke);
-  border-radius: 999px;
-  padding: 0.22rem 0.7rem;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-.ps-lens:hover { border-color: var(--stroke-strong); background: var(--hover); }
+.paper-card .edge-meta { margin: 0; }
 
 .arc-num {
   color: var(--acc-a);
