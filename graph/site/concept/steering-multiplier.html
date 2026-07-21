@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Steering multiplier — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Steering multiplier</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The scalar coefficient the steering vector is multiplied by before being added into the residual stream, giving continuous, signed control over the targeted behavior: positive multipliers amplify it, negative multipliers suppress it, and magnitude sets the dose. Large magnitudes degrade text quality, so the usable range is found by sweeping multipliers at the chosen steering layer.</p>
+<div class="page-intro"><p>A steering vector on its own only points in a direction; it takes a scalar multiplier to say how far along that direction to push. Turn the dial up and the targeted behavior gets stronger, turn it negative and the behavior reverses, but crank it too far in either direction and the generated text stops making sense before the behavior even finishes shifting.</p>
+<p>How that multiplier gets chosen is explained here: first sweeping across layers with a fixed multiplier to find where steering works best, then sweeping multipliers at that one layer to find the usable range before quality degrades.</p></div>
+<section class="prose-section">
+<h2>The one knob: sign and size</h2>
+<p>A <a href="../concept/steering-vector.html">Steering vector</a> fixes a direction; the multiplier is the only parameter that turns that direction into a controllable intervention. Added to the residual stream "with either a positive or negative coefficient," it allows "precise control over the degree of the targeted behavior" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=1" target="_blank" rel="noopener">§"Abstract", p. 1</a>): sign picks which way to move along the axis, toward the behavior or its opposite, and magnitude picks how far. Table 1's sycophancy example makes the dosing concrete at layer 13 of Llama 2 7B Chat: a multiplier of +2 produces enthusiastic agreement with a nonsensical all-dessert diet, while −2 produces pushback citing sugar and calories, the same question and the same model each time.</p>
+</section>
+<section class="prose-section">
+<h2>A ceiling on how hard you can push</h2>
+<p>The multiplier's usable range is not unlimited. After "initially exploring a wider range of multipliers," the authors found large magnitudes degrade open-ended generation quality by both GPT-4's and human readers' judgment, and restricted the reported range to balance steering strength against readability (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"4.2 Open-ended generation", p. 4</a>). The Discussion attributes this ceiling to where the vector is applied — uniformly, at every token position after the prompt — and proposes <a href="../concept/targeted-token-steering.html">Steering at targeted token positions (proposed extension)</a> as a way to relax it by concentrating the same perturbation budget more selectively rather than spreading it across every token.</p>
+</section>
+<section class="prose-section">
+<h2>Why one multiplier scale works across seven behaviors</h2>
+<p>Multipliers are only comparable across the seven behaviors CAA is tested on because of an upstream choice, <a href="../concept/steering-vector-normalization.html">Steering vector normalization choices</a>, which standardizes vector magnitude across behaviors before any multiplier is applied (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">§"Vector normalization choices", p. 10</a>). That normalization is deliberately partial — it leaves each layer's own natural norm untouched — which is why the paper's hyperparameter search runs in two stages rather than one joint sweep: <a href="../concept/multiple-choice-behavioral-evaluation.html">Multiple-choice behavioral evaluation and layer sweep</a> first finds the optimal layer holding the multiplier constant, and only afterward is the multiplier itself swept at that resulting layer.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Steering multiplier</strong> — <a href="../edge/steering-multiplier-sets-the-dose-for-steering-vector.html">sets the dose for</a> → Steering vector</li><li>Steering vector normalization choices — <a href="../edge/steering-vector-normalization-makes-cross-behavior-comparable-for-steering-multiplier.html">makes cross behavior comparable for</a> → <strong>Steering multiplier</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;4.2 Open-ended generation&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;Vector normalization choices&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

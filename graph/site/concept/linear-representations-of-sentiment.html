@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Linear representations of sentiment — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Linear representations of sentiment</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions.</p>
+<div class="page-intro"><p>A hypothesis is more convincing once someone has actually gone looking for the thing it predicts and found it. For sentiment, that search had already been done by the time CAA was written, with activations checked and confirmed to encode positive and negative sentiment along something close to a straight line.</p>
+<p>CAA leans on that earlier finding twice over: once as a specific case supporting linear representations more generally, and once for the narrower point that Mean Difference vectors turn out to resemble the directions PCA finds independently.</p></div>
+<section class="prose-section">
+<h2>Verifying linearity for one concept: sentiment</h2>
+<p>Where Park et al. formalize the linear representation hypothesis in general terms, Tigges et al. (2023) supply a concrete, empirically verified case of it: they show that sentiment -- whether a piece of text reads as positive or negative -- is linearly represented in LLM activations. CAA cites this work twice, for two different purposes. In the related-work survey, it appears alongside the <a href="../concept/linear-representation-hypothesis.html">Linear representation hypothesis</a> as part of "work on activation engineering [that] has... helped verify linear representations of sentiment in LLMs" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"2 Related work", p. 3</a>), general evidence that concepts occupy linear directions. In the method section, it is cited for something more specific and more load-bearing.</p>
+</section>
+<section class="prose-section">
+<h2>Cross-validating Mean Difference against PCA</h2>
+<p>When CAA introduces the Mean Difference (MD) procedure it uses to build steering vectors, it grounds the choice in Tigges et al.'s result: "this method of extracting the difference vector is called Mean Difference (MD) and has been shown to produce steering vectors similar to other techniques like PCA (Tigges et al., 2023)" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>). The significance is in what the two techniques don't share. MD is supervised -- it needs labeled positive and negative examples and simply averages their activation difference. <a href="../concept/pca.html">Principal Component Analysis (PCA)</a> is unsupervised -- it finds whichever direction accounts for the most variance in an unlabeled cloud of activations, with no access to which examples exhibit the behavior at all. Two procedures with different information requirements converging on the same direction for sentiment is evidence that the direction reflects something real about the model's representation, not an artifact of MD's particular averaging.</p>
+</section>
+<section class="prose-section">
+<h2>Why CAA can use bare MD for seven behaviors</h2>
+<p>That prior, sentiment-specific validation is part of why CAA can adopt plain <a href="../concept/mean-difference-method.html">Mean Difference (MD) vector extraction</a> across seven quite different behaviors -- from <a href="../concept/refusal-behavior.html">Refusal (as a steerable behavior)</a> to <a href="../concept/sycophancy.html">Sycophancy</a> to <a href="../concept/myopic-reward-behavior.html">Myopic Reward</a> -- without first re-deriving or re-justifying the extraction method for each one. The paper does not repeat Tigges et al.'s PCA-versus-MD comparison for every behavior it tests; it relies on the earlier, narrower result as license to treat MD as a reliable proxy for the "real" direction more generally, then spends its own analysis effort on <a href="../concept/activation-pca-visualization.html">PCA visualization of contrastive activations</a> as a lighter-weight check of whether a given dataset's activations separate at all.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Linear representations of sentiment</strong> — <a href="../edge/linear-representations-of-sentiment-cross-validates-against-pca-for-mean-difference-method.html">cross validates against pca for</a> → Mean Difference (MD) vector extraction</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/reading-the-residual-stream.html">Steering doubles as interpretability</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2 Related work&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3 Method&rdquo;, p. 3</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

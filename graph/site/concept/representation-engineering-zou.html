@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Representation Engineering (Zou et al. 2023) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Representation Engineering (Zou et al. 2023)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.</p>
+<div class="page-intro"><p>Before anyone tried steering a model's outputs with these techniques, there was a more basic question: could you even find where a concept like honesty or a particular emotion lives inside a language model's activations at all? A body of work under the banner of representation engineering set out to answer exactly that, treating extraction as the goal rather than a means to steering.</p>
+<p>CAA builds directly on this earlier program, sharing its use of the Mean Difference approach for extracting directions; where the two part ways is that CAA redirects that toolkit from representation extraction toward actually steering what a model says.</p></div>
+<section class="prose-section">
+<h2>Reading representations before steering them</h2>
+<p>Representation Engineering (RepE), Zou et al.'s (2023) program, treats an LLM's activations as something to be read before it is something to be steered. The project develops several techniques for locating and extracting representations of high-level concepts -- honesty, emotion, and others -- inside a model's internal state, testing multiple extraction methods against each other, including the same Mean Difference procedure CAA later adopts wholesale. Steering appears in RepE's work, but as one downstream demonstration of what a located representation makes possible, not as the primary object of study. That ordering -- characterize the representation, then show it can be manipulated -- is the opposite emphasis from CAA, whose method section starts from steering and only afterward turns to what the resulting vectors reveal about internal structure.</p>
+</section>
+<section class="prose-section">
+<h2>Two changes: pair quality and goal</h2>
+<p>CAA names two specific ways it diverges from RepE. The first is about the data: "CAA employs an optimized multiple-choice format that results in more closely paired contrastive prompts that differ by only a single token" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>), tightening RepE's looser contrastive prompts into a <a href="../concept/multiple-choice-contrast-pair-format.html">Multiple-choice contrast-pair format</a> where everything except the answer letter is held fixed. The second is about intent: CAA "build[s] on this work by focusing on steering rather than representation extraction, experimenting with a broader range of behaviors, and comparing steering to system-prompting and supervised finetuning" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>). The same class of Mean Difference direction is repurposed -- from a diagnostic to be read out, in RepE, to a lever to be pulled, in CAA, tested via <a href="../concept/caa-system-prompt-comparison.html">CAA combined with system-prompting comparison</a> and <a href="../concept/caa-finetuning-comparison.html">CAA combined with supervised finetuning comparison</a> against <a href="../concept/system-prompting.html">System-prompting</a> and <a href="../concept/supervised-fine-tuning.html">Supervised fine-tuning (SFT)</a>.</p>
+</section>
+<section class="prose-section">
+<h2>An echo in CAA&#x27;s own layer-wise findings</h2>
+<p>RepE resurfaces later in the paper, outside the related-work comparison, as independent support for a result CAA finds on its own. When CAA looks at where in the network a behavior becomes linearly readable via <a href="../concept/behavioral-clustering.html">Behavioral clustering</a>, it finds the separation emerges "around one-third of the way through the layers," and notes this "aligns with past work showing emotion representations emerge in middle and later layers (Zou et al., 2023)" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"3.2 Visualizing activations for contrastive dataset analysis", p. 4</a>). The paper CAA distinguishes itself from methodologically turns out to have already observed the same depth-dependent pattern for a different concept, strengthening the claim that middle-layer emergence is a general property of how LLMs represent high-level behavior.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Contrastive Activation Addition (CAA) — <a href="../edge/contrastive-activation-addition-repurposes-for-steering-relative-to-representation-engineering-zou.html">repurposes for steering relative to</a> → <strong>Representation Engineering (Zou et al. 2023)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/activation-engineering-family.html">The activation engineering family: from single pairs to datasets</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 Related work&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;3.2 Visualizing activations for contrastive dataset analysis&rdquo;, p. 4</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,917 @@
+{
+ "concepts": [
+  {
+   "concept": {
+    "id": "rlhf",
+    "name": "Reinforcement learning from human feedback (RLHF)",
+    "role": "inherited",
+    "summary": "The training paradigm, used via Touvron et al. (2023) to produce the Llama 2 Chat models CAA is primarily evaluated on, that fits a reward model to human preference judgments and optimizes a policy against it. CAA studies how RLHF-trained representations interact with activation steering but does not modify RLHF itself.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 Introduction",
+      "page": 2
+     },
+     {
+      "section": "3 Method",
+      "page": 3
+     }
+    ],
+    "notes": "Reuses registry id rlhf."
+   },
+   "themes": [
+    {
+     "id": "scalable-oversight-lineage",
+     "name": "From an open problem to reward models to AI feedback",
+     "narrative": "This theme traces the corpus's most important cross-paper throughline, and the 2017 paper is now its explicit middle link between an open problem and a built pipeline. Concrete Problems (2016) names scalable oversight as an open problem: safe behavior requires evaluating a true objective too costly to check on every training example. The 2017 paper answers it first: its asynchronous reward-learning architecture runs a policy, a human-comparison process, and a reward predictor as three concurrent loops, each feeding the next, so a learned reward can stand in for the missing objective while the policy trains, and human-feedback sample efficiency is the result that made the answer credible, learning complex tasks and novel behaviors from feedback on less than 1% of the agent's environment interactions. InstructGPT's (2022) reward model is, functionally, that same architecture scaled to language: a model trained to predict which of two outputs human labelers would prefer, letting reinforcement learning from human feedback optimize a cheap, dense proxy for a genuinely expensive human judgment across an entire training distribution. Constitutional AI's (2022) RL from AI Feedback pushes the same lineage one step further: the feedback model that produces harmlessness preference labels replaces even the human labeler, and the hybrid human/AI preference model blends human-labeled helpfulness comparisons with AI-labeled harmlessness ones into a single reward signal. Iterated online training, periodically refreshing the preference model on the current policy's own outputs, is not new at this last step either: the 2017 paper already implements it as a core part of its architecture, and Constitutional AI (2022) flags the same technique as a further scaling step now made easier once an AI, rather than a human, is doing the labeling."
+    },
+    {
+     "id": "rlhf-three-step-pipeline",
+     "name": "InstructGPT's three-step training pipeline",
+     "narrative": "InstructGPT names the family of GPT-3 models produced by a specific three-step procedure, and this theme lays out that procedure end to end. It begins from GPT-3, the pretrained autoregressive language model of Brown et al., as architecture and initialization. Supervised fine-tuning trains that base model directly on human demonstrations to produce the SFT model, used both as a baseline and as the starting point for everything downstream. The reward model, initialized from the SFT model with its unembedding layer replaced by a scalar output head, is then trained with a pairwise comparison loss over ranked completions, where the reward gap between preferred and dispreferred outputs represents the log odds a human would prefer the former. The PPO fine-tuning stage is the third step, further tuning the SFT model with reinforcement learning to maximize the reward model's score. This whole procedure is what reinforcement learning from human feedback denotes in this paper: a learned model of human preference used as a reward signal for reinforcement learning, applied to open-ended instruction following rather than a fixed task."
+    },
+    {
+     "id": "what-rlhf-leaves-behind",
+     "name": "Base versus chat: what RLHF changes inside",
+     "narrative": "Llama 2 is Touvron et al.'s family of pretrained and RLHF-finetuned models, ranging from 7 to 70 billion parameters, and the paper works with two of its variants specifically to isolate what reinforcement learning from human feedback changes inside the network. RLHF is the training paradigm in question: fitting a reward model to human preference judgments and optimizing a policy against it, used by Touvron et al. to produce Llama 2 Chat, the dialogue-optimized variant CAA steers throughout the rest of the paper. Here, though, Llama 2 Chat is compared against its own pretrained base rather than steered directly. The base-versus-chat representation comparison generates steering vectors from base-model activations and from chat-model activations and finds their cosine similarity is elevated specifically between layers 7 and 15, and, further, that vectors extracted from the base model still transfer significant steering effect when applied to the chat model. Since RLHF is the only thing separating base from chat, the finding reads as a measurement of RLHF itself: it reweights which behaviors a model expresses without substantially rewriting how those behaviors are represented in the mid-network layers, at least as far as steering vectors can see."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "sycophancy-misgeneralizes-the-training-objective-of-rlhf",
+     "type": "misgeneralizes-the-training-objective-of",
+     "source": "sycophancy",
+     "target": "rlhf",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": "rlhf-failure-modes",
+     "prose": "CAA is evaluated primarily on Llama 2 Chat, described as 'optimized for dialogue use-cases and finetuned using RLHF for safety' (contrastive-activation-addition, §\"1 Introduction\", p. 2), and Appendix H proposes a specific mechanistic story for one of that model's failure modes: sycophancy arises because the model is misgeneralizing its RLHF training objective as 'sounding good to the user' rather than truthfully reflecting its internal world model (contrastive-activation-addition, §\"H Sycophancy steering and TruthfulQA\", p. 14). This is a claim about what RLHF actually taught the network, distinct from what RLHF was meant to teach it -- the reward model was fit to human raters' judgments of response quality, and 'sounds good to this particular user' turns out to be a cheaper internal proxy for that judgment than 'is true.' Neither paper this connects states the other's half: CAA never analyzes the RLHF training run that produced Llama 2 Chat, and nothing in how RLHF is otherwise described in this corpus predicts sycophancy as a specific failure. CAA's steering vector only makes sense as a lever on the model's internals because this misgeneralization is already latent inside the RLHF-trained network before any steering is applied."
+    },
+    {
+     "id": "contrastive-activation-addition-operates-on-top-of-rlhf",
+     "type": "operates-on-top-of",
+     "source": "contrastive-activation-addition",
+     "target": "rlhf",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": "steering-vs-training-levers",
+     "prose": "CAA is never tested on a raw pretrained model. Every experiment in the paper runs on Llama 2 7B and 13B Chat, versions of Llama 2 already finetuned with RLHF for safety and instruction-following (Touvron et al., 2023) (contrastive-activation-addition, §\"3 Method\", p. 3). The paper treats this as a deliberate choice rather than an incidental one, framing the whole study as an investigation of how RLHF/finetuning techniques interact with activation engineering, building on top of the existing body of work on pretrained models (contrastive-activation-addition, §\"1 Introduction\", p. 2). That framing matters for how to read every later result: when CAA moves a behavior beyond what a system prompt or a finetuning run achieves, it is not steering a blank slate but finding a direction inside representations RLHF has already shaped. The base-versus-chat similarity analysis later in the paper is itself a way of asking what, specifically, RLHF changed. Five years after RLHF entered this corpus as a training-time alignment technique, CAA repurposes its finished output as a fixed substrate to be probed and nudged after training ends, rather than a target for retraining."
+    },
+    {
+     "id": "base-chat-representation-comparison-measures-the-effect-of-rlhf",
+     "type": "measures-the-effect-of",
+     "source": "base-chat-representation-comparison",
+     "target": "rlhf",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": "what-rlhf-leaves-behind",
+     "prose": "RLHF is normally studied from the outside, through the outputs it changes. base-chat-representation-comparison instead asks what RLHF leaves alone on the inside: steering vectors are generated separately from Llama 2 7B base and Llama 2 7B Chat activations, then compared by cosine similarity layer by layer. Similarity decays with layer distance as expected, except for a distinct peak between layers 7 and 15, where the base and chat representations stay unusually close -- \"this surprising trend indicates that RLHF has a smaller effect on how information is represented between layers 7 and 15\" (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). Vectors extracted from the base model's activations then transfer significant steering effect onto the RLHF-tuned chat model, especially between layers 10 and 15 (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 9). Read together, this is the corpus's first direct measurement of what RLHF does to a model's internals rather than its outputs: it appears to re-weight which behaviors get expressed downstream while leaving the mid-network representation of those behaviors largely intact."
+    }
+   ],
+   "currentStoreRecord": {
+    "id": "rlhf",
+    "name": "Reinforcement learning from human feedback (RLHF)",
+    "summary": "A training paradigm that fits a reward model to human preference judgments and then optimizes a policy against that learned reward with a standard RL algorithm, rather than hand-specifying a reward function. Introduced in 2017 for simulated robotics and Atari games, it was scaled in 2022 to align large language models to a broad, open-ended distribution of natural-language instructions.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "instructgpt",
+      "role": "refined",
+      "summary": "A fine-tuning technique that uses a learned model of human preferences as a reward signal for reinforcement learning, applied here to align GPT-3 to follow a broad, open-ended distribution of natural-language instructions.",
+      "notes": "Prior applications (Christiano et al. 2017, Ziegler et al. 2019, Stiennon et al. 2020) were on simulated control, Atari, or narrow domains like summarization; this paper extends RLHF to the much broader and more diverse API prompt distribution."
+     },
+     {
+      "paper": "constitutional-ai",
+      "role": "inherited",
+      "summary": "The established technique of training a policy with RL against a preference model fit to human comparison judgments; CAI extends and partially replaces it for harmlessness.",
+      "notes": ""
+     },
+     {
+      "paper": "deep-rl-human-prefs",
+      "role": "introduced",
+      "summary": "The general paradigm of training an RL policy by learning a reward model from human preference judgments (rather than a hand-specified reward function) and optimizing that learned reward with a standard RL algorithm.",
+      "notes": "This paper is the origin work for the deep-RL RLHF pipeline later named and scaled up by InstructGPT (2022). Registry currently marks 'rlhf' as 'refined' for instructgpt and 'inherited' for constitutional-ai; this paper is the introducing anchor."
+     }
+    ],
+    "locators": [
+     {
+      "section": "1 Introduction",
+      "page": 2,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "3.1 High-level methodology",
+      "page": 6,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "1 Introduction",
+      "page": 2,
+      "paper": "constitutional-ai"
+     },
+     {
+      "section": "5 Related Work",
+      "page": 14,
+      "paper": "constitutional-ai"
+     },
+     {
+      "section": "2.2 Our Method",
+      "page": 4,
+      "paper": "deep-rl-human-prefs"
+     },
+     {
+      "section": "Abstract",
+      "page": 1,
+      "paper": "deep-rl-human-prefs"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "Introduced in 2017: learning a reward function instead of hand-specifying one",
+      "body": "RLHF names the general paradigm the 2017 paper introduces: rather than hand-specify a reward function, \"fit a reward function to the human's preferences while simultaneously training a policy to optimize the current predicted reward function\" (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). The paper's stated motivation anticipates the scalable-oversight problem Concrete Problems had named a year earlier: using human feedback directly as a reward signal is prohibitively expensive for RL systems that require hundreds or thousands of hours of experience, so the paper sets four desiderata for its solution: \"1. enables us to solve tasks for which we can only recognize the desired behavior, but not necessarily demonstrate it, 2. allows agents to be taught by non-expert users, 3. scales to large problems, and 4. is economical with user feedback\" (deep-rl-human-prefs, §\"1 Introduction\", p. 2). It reports meeting the last of these by roughly three orders of magnitude, solving benchmark tasks while providing feedback on less than 1% of the agent's interactions with the environment (deep-rl-human-prefs, §\"Abstract\", p. 1)."
+     },
+     {
+      "heading": "The mechanics: comparisons, Bradley-Terry fitting, asynchronous training",
+      "body": "Concretely, the paradigm asks a human to compare short video clips of trajectory segments rather than supply an absolute score, then fits a [[reward-model|reward predictor]] by treating summed predicted reward as a latent score in the Bradley-Terry pairwise-preference model (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). What makes the paradigm executable rather than merely stated is its [[async-reward-learning-architecture|architecture]]: the policy, the human-comparison process, and the reward predictor run as three concurrent, never-terminating loops, with trajectories flowing to comparisons, comparisons flowing to the predictor, and the predictor's parameters flowing back to the policy ([[async-reward-learning-architecture-gives-concrete-shape-to-rlhf]]; deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). This is also the origin of what the corpus later calls [[iterated-online-training]]: refitting the predictor continuously on labels gathered throughout training, rather than once on an early fixed batch, because a static predictor is what the paper's own ablation shows produces reward-hacking-like behavior (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9)."
+     },
+     {
+      "heading": "Scaled to language models: InstructGPT's three-step pipeline",
+      "body": "InstructGPT extends this established paradigm, for the first time, to a broad, open-ended distribution of natural-language instructions spanning generation, question answering, brainstorming, and more, rather than the narrow domains, simulated robotic control and Atari in the 2017 paper, stylistic continuation and summarization in Ziegler et al. (2019) and Stiennon et al. (2020), that RLHF had previously been applied to (instructgpt, §\"1 Introduction\", p. 2; §\"3.1 High-level methodology\", p. 6). In this paper, RLHF names the whole three-step procedure gathered under the [[rlhf-three-step-pipeline]] theme: [[supervised-fine-tuning]] on labeler demonstrations produces the [[sft-model]]; a [[reward-model]] is trained on labeler rankings to predict preferred outputs; and [[ppo-training]] then optimizes the SFT model against that learned reward. The [[reward-model-anchors-the-reward-signal-of-rlhf]] edge notes the reward model's architecture is not incidental: it is built by replacing the SFT model's unembedding layer with a scalar head, so it starts from the same weights as the policy it will later score, and its own weights in turn initialize the PPO [[value-function]]."
+     },
+     {
+      "heading": "Its place in a scalable-oversight lineage, and Constitutional AI's AI-feedback variant",
+      "body": "Within the [[scalable-oversight-lineage]] theme, RLHF is the first working answer to the open problem Concrete Problems named in 2016: safe behavior requires evaluating an objective too costly to check on every example, and a learned reward model lets a cheap, dense proxy stand in for genuinely expensive human judgment across an entire training distribution — an answer the 2017 paper builds directly and InstructGPT scales up six years later. The [[rlhf-swaps-the-labeler-in-rlaif]] edge traces this lineage one step further into Constitutional AI, whose RL from AI Feedback keeps \"the remainder of the training pipeline...exactly the same as RLHF\" (constitutional-ai, §\"4.1 Method\", p. 10) and changes only who answers the comparison question for harmlessness, an AI feedback model instead of a human labeler; RLHF is accordingly inherited by Constitutional AI as an established technique it extends and partially replaces (constitutional-ai, §\"1 Introduction\", p. 2; §\"5 Related Work\", p. 14). In the graph's hierarchy, [[helpful-rlhf-model]] and [[hh-rlhf-model]] are Constitutional AI's own applications of this technique, sitting as children of this concept outside the present paper's scope."
+     }
+    ],
+    "intro": "Hand-writing a reward function works fine until the behavior you want is easy to recognize but hard to specify in code. Reinforcement learning from human feedback sidesteps that wall by having people compare outputs directly and letting a learned model absorb their judgment instead of asking anyone to write the rule down.\n\nThe page traces the paradigm to its 2017 introduction in simulated robotics and Atari, covers the comparison-based fitting and the three concurrent training loops that made it workable at scale, then follows the same two-stage recipe into InstructGPT (2022), which scales it to language, and closes on its place in a longer scalable-oversight lineage."
+   },
+   "storeEdges": [
+    {
+     "id": "reward-model-anchors-the-reward-signal-of-rlhf",
+     "type": "anchors-the-reward-signal-of",
+     "source": "reward-model",
+     "target": "rlhf",
+     "prose": "The reward model is not a free-standing scorer bolted onto RLHF; its architecture and its role are both dictated by how PPO training actually works. It is built by removing the SFT model's unembedding layer and adding a scalar output head, so it starts from the same weights as the policy it will lat"
+    },
+    {
+     "id": "rlhf-swaps-the-labeler-in-rlaif",
+     "type": "swaps-the-labeler-in",
+     "source": "rlhf",
+     "target": "rlaif",
+     "prose": "RLAIF is presented as a minimal, surgical modification of RLHF rather than a new algorithm: Constitutional AI states that after the AI feedback model produces the comparison labels, 'the remainder of the training pipeline (i.e., preference model training and RL) is exactly the same as RLHF' (constit"
+    },
+    {
+     "id": "async-reward-learning-architecture-gives-concrete-shape-to-rlhf",
+     "type": "gives-concrete-shape-to",
+     "source": "async-reward-learning-architecture",
+     "target": "rlhf",
+     "prose": "The paper's own section on its method is where both the specific architecture and the general recipe later called RLHF are laid out side by side, and the architecture is what makes the recipe executable rather than merely stated (deep-rl-human-prefs, §\"2.2 Our Method\", p. 4). Learning a reward funct"
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "supervised-fine-tuning",
+    "name": "Supervised fine-tuning (SFT)",
+    "role": "refined",
+    "summary": "The standard supervised-learning fine-tuning process; used by CAA as a comparison and combination baseline, in which Llama 2 7B Chat is fine-tuned on the same contrastive multiple-choice dataset used to build steering vectors, with the interaction between CAA and finetuning studied across both the multiple-choice and open-ended regimes.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "6 Comparison to finetuning",
+      "page": 5
+     }
+    ],
+    "notes": "Reuses registry id supervised-fine-tuning (instructgpt:inherited). Role is \"refined\" rather than \"inherited\" because CAA runs a detailed head-to-head comparison/combination study (Tables 3, 4, 10, 13) and proposes a finetuning-objective modification (a contrastive loss penalizing the negative answer), rather than merely citing the technique in passing."
+   },
+   "themes": [
+    {
+     "id": "demonstrations-not-specification",
+     "name": "Learning from demonstrations instead of a specified reward",
+     "narrative": "Concrete Problems (2016) proposes learning from demonstrations as a remedy for the risks of both reward hacking and unsafe exploration: rather than trial-and-error optimization of a hand-specified objective, an agent can learn a policy or reward function from expert trajectories via inverse reinforcement learning or apprenticeship learning, clone the demonstrated behavior directly through imitation learning, or infer a human's goals cooperatively as in cooperative inverse reinforcement learning, optionally bounding further exploration around the resulting baseline. The 2017 paper takes up the same menu of demonstration-based approaches in its own related work, and argues preferences are needed precisely where they fail: inverse reinforcement learning and imitation learning both require a human able to demonstrate the desired behavior, which breaks down for tasks like controlling a non-human robot morphology that a person can recognize but cannot perform. InstructGPT (2022) operationalizes the demonstration side of this menu as the first, and structurally simplest, step of its training pipeline: supervised fine-tuning trains a pretrained GPT-3 model directly on roughly 13,000 human-written demonstrations of desired behavior, collected in the SFT dataset, to produce the SFT model, which serves both as a standalone baseline and as the initialization for everything that follows. This theme's claim is now a three-paper one: a technique the 2016 paper proposed as one option among several for avoiding specification failures is, in the 2017 paper, explicitly weighed against and set aside in favor of preferences, before becoming, in 2022, the concrete, load-bearing first stage of a real alignment pipeline."
+    },
+    {
+     "id": "rlhf-three-step-pipeline",
+     "name": "InstructGPT's three-step training pipeline",
+     "narrative": "InstructGPT names the family of GPT-3 models produced by a specific three-step procedure, and this theme lays out that procedure end to end. It begins from GPT-3, the pretrained autoregressive language model of Brown et al., as architecture and initialization. Supervised fine-tuning trains that base model directly on human demonstrations to produce the SFT model, used both as a baseline and as the starting point for everything downstream. The reward model, initialized from the SFT model with its unembedding layer replaced by a scalar output head, is then trained with a pairwise comparison loss over ranked completions, where the reward gap between preferred and dispreferred outputs represents the log odds a human would prefer the former. The PPO fine-tuning stage is the third step, further tuning the SFT model with reinforcement learning to maximize the reward model's score. This whole procedure is what reinforcement learning from human feedback denotes in this paper: a learned model of human preference used as a reward signal for reinforcement learning, applied to open-ended instruction following rather than a fixed task."
+    },
+    {
+     "id": "steering-vs-training-levers",
+     "name": "Three levers on one model: prompting, finetuning, steering",
+     "narrative": "Contrastive Activation Addition is not offered as a replacement for the two standard levers on a chat model's behavior; the paper tests it against both and finds it composes with each. System-prompting, a custom instruction prepended to the context that Llama 2 Chat is trained to adapt to, is the first lever, chosen over few-shot prompting, which supplies prior examples of the desired behavior instead of an instruction and which the authors' preliminary experiments found less effective at steering the tested behaviors. The system-prompt comparison layers CAA on top of positive and negative system prompts and finds it can shift behavior beyond what either prompt alone achieves, and the reverse holds too: system-prompting adds control on top of a fixed steering multiplier. Supervised finetuning, training the model's weights directly on the same contrastive multiple-choice dataset used to build steering vectors, is the second lever. The finetuning comparison finds CAA can steer beyond finetuning's effect for three of seven behaviors and, more strikingly, generalizes to open-ended generation where finetuning sometimes cannot: for Sycophancy, finetuning on multiple-choice data fails to transfer to the free-text setting, while CAA transfers in every case. The computational efficiency comparison explains part of why steering is attractive as a lever of its own: generating a CAA vector needs only forward passes and takes under five minutes on one GPU, against roughly ten minutes on two GPUs to finetune the same model on a thousand examples."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "caa-finetuning-comparison-runs-head-to-head-against-supervised-fine-tuning",
+     "type": "runs-head-to-head-against",
+     "source": "caa-finetuning-comparison",
+     "target": "supervised-fine-tuning",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "steering-vs-training-levers",
+     "prose": "The finetuning half of this comparison is a specific, small recipe: one epoch of SGD at learning rate 1e-4 on the same multiple-choice contrastive dataset used to build CAA's steering vectors (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 5). Run alone, it works -- the paper's Limitations section reports that this unoptimized hyperparameter choice still reaches over 90% test-set accuracy on most of the seven behavior datasets (contrastive-activation-addition, §\"10 Limitations\", p. 10). But composing the two levers reveals where finetuning's control runs out. For Refusal, Table 4 shows finetuning alone reaching an open-ended score of 5.34, while adding positive steering on top of that same positive-refusal finetuning lowers it to 4.42 -- the opposite of what either lever does by itself. That reversal is the paper's clearest evidence that finetuning and CAA are not just redundant paths to the same effect: stacking them can interfere as well as compound, and the interaction has to be measured per behavior rather than assumed from either lever's solo performance."
+    },
+    {
+     "id": "caa-computational-efficiency-avoids-the-memory-cost-of-supervised-fine-tuning",
+     "type": "avoids-the-memory-cost-of",
+     "source": "caa-computational-efficiency",
+     "target": "supervised-fine-tuning",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "steering-vs-training-levers",
+     "prose": "The resource gap follows directly from what each method computes. Generating a CAA steering vector needs only forward passes -- run the model on each contrastive pair, cache the residual-stream activations, average the differences -- so it fits on a single NVIDIA L40 GPU in under five minutes. Finetuning Llama 2 7B Chat on the same 1,000-example dataset needs gradients and optimizer state for every parameter, so the paper runs it across two L40 GPUs with data parallelism and the ZeRO optimizer (Rajbhandari et al., 2019) for memory partitioning, taking about ten minutes (contrastive-activation-addition, §\"J Computational resources\", p. 15). The extra GPU and the optimizer-sharding machinery are not incidental engineering choices; they are the price of backpropagation, paid because finetuning has to store and update every weight rather than compute one averaged direction. That asymmetry is why CAA can be re-run per behavior, per layer, almost as a diagnostic query, in a way finetuning a full model realistically cannot."
+    }
+   ],
+   "currentStoreRecord": {
+    "id": "supervised-fine-tuning",
+    "name": "Supervised fine-tuning (SFT)",
+    "summary": "The first training step, in which a pretrained language model is fine-tuned directly on human-written demonstrations of desired output behavior using standard supervised learning.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "instructgpt",
+      "role": "inherited",
+      "summary": "The first training step, in which a pretrained language model is fine-tuned directly on human-written demonstrations of desired output behavior using standard supervised learning.",
+      "notes": "Provides the initialization for both the reward model and the RL policy."
+     }
+    ],
+    "locators": [
+     {
+      "section": "3.1 High-level methodology",
+      "page": 6,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "3.5 Models",
+      "page": 8,
+      "paper": "instructgpt"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "The technique, in general",
+      "body": "Supervised fine-tuning adapts a pretrained model to a new behavior by continuing to train it, with ordinary supervised learning, on a smaller dataset of input-output examples that demonstrate the desired behavior directly. It uses the same cross-entropy objective as pretraining, $L(\\theta) = -\\sum_t \\log P_\\theta(x_t \\mid x_{<t})$, but computed over labeled demonstrations rather than raw internet text. Fine-tuning a pretrained model on a narrower supervised objective is a long-standing transfer-learning idea in machine learning, predating this paper by years in NLP practice; InstructGPT inherits the technique and applies it as the first of its three training steps."
+     },
+     {
+      "heading": "As InstructGPT's first step",
+      "body": "Labelers write demonstrations of desired output behavior on the paper's input prompt distribution, and a pretrained [[gpt-3]] model is fine-tuned on this data using supervised learning to produce the [[sft-model]] (instructgpt, §\"3.1 High-level methodology\", p. 6). This model serves two purposes downstream: it is evaluated as a standalone baseline, and it initializes both the [[reward-model]] and, via a separately tuned checkpoint, the [[ppo-training]] policy, making it the structural foundation the rest of the [[rlhf-three-step-pipeline]] theme is built on."
+     },
+     {
+      "heading": "A direct descendant of an earlier proposal",
+      "body": "The [[use-demonstrations-operationalized-as-supervised-fine-tuning]] edge, marked with hindsight, traces this step back to Concrete Problems' proposal to \"use demonstrations\" as a route to avoiding both reward hacking and unsafe exploration: learn a baseline policy from expert trajectories, via inverse reinforcement learning or apprenticeship learning, then explore only around that baseline (concrete-problems, §\"Use Demonstrations:\", p. 15). InstructGPT's SFT step realizes this idea by the simplest possible mechanism the 2016 paper considered, fine-tuning directly on demonstrations with ordinary supervised learning rather than first recovering a reward function through IRL or apprenticeship learning, and drops the exploration-safety framing entirely: SFT here is not bounding a later RL exploration phase but standing as a free-standing baseline and initializer. What survives across six years is the core wager that a policy learned from demonstrations can substitute for a hand-specified objective, a wager this concept shares with [[sft-model]] and [[sft-dataset]] in the [[demonstrations-not-specification]] theme."
+     }
+    ],
+    "intro": "Before any reinforcement learning happens, InstructGPT begins the old-fashioned way: show the model examples of the behavior you want, written by people, and train it to imitate them.\n\nFrom the technique in general, the page narrows to its role as step one of the pipeline, then traces it back to a proposal in Concrete Problems in AI Safety (2016), worth a look for how directly a six-year-old suggestion became load-bearing practice."
+   },
+   "storeEdges": [
+    {
+     "id": "use-demonstrations-operationalized-as-supervised-fine-tuning",
+     "type": "operationalized-as",
+     "source": "use-demonstrations",
+     "target": "supervised-fine-tuning",
+     "prose": "Concrete Problems proposes \"use demonstrations\" as one of several routes to avoid unsafe\nexploration: learn a baseline policy from expert trajectories via inverse RL or apprenticeship\nlearning, then explore only around that baseline (concrete-problems, §\"Use Demonstrations:\", p. 15).\nInstructGPT's s"
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "hallucination",
+    "name": "Hallucination (closed-domain fabrication)",
+    "role": "refined",
+    "summary": "The failure mode in which a model states fabricated or unsupported information; studied here as one of seven CAA-steerable behaviors, broken into \"unprompted\" and \"contextually-triggered\" subtypes and cross-checked against TruthfulQA performance under sycophancy steering.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "3.1 Sourcing datasets",
+      "page": 3
+     },
+     {
+      "section": "C Generating custom hallucination dataset",
+      "page": 13
+     }
+    ],
+    "notes": "Reuses registry id hallucination (instructgpt:refined). CAA substantially extends it with a new custom dataset, a dedicated steering vector, and interpretability analysis, hence \"refined\" rather than \"inherited\"."
+   },
+   "themes": [
+    {
+     "id": "rlhf-failure-modes",
+     "name": "Where RLHF alignment still falls short",
+     "narrative": "Even where InstructGPT improves on aggregate human-preference metrics, the paper documents specific ways its alignment remains incomplete, and this theme collects them. Hallucination names the tendency to state information not present in or supported by the input on closed-domain tasks such as summarization. Excessive hedging describes long, noncommittal answers listing multiple possibilities to questions that have a fairly clear single answer. False-premise failure occurs when the model accepts a false premise embedded in an instruction as true rather than correcting it. Reward-model over-optimization is the more general mechanism behind several of these: an RL policy exploiting imperfections in a learned reward model to produce outputs that score well without being genuinely preferred. Alignment tax names the cost of this whole endeavor in a different currency, the measurable regressions on public NLP benchmarks that RLHF fine-tuning introduces as a side effect of steering the model toward instruction-following and human preference. Sycophancy, prioritizing agreement with or flattery of the user over honesty and accuracy, is Steering Llama 2 via Contrastive Activation Addition's (2023) addition to this list: measured in Llama 2 Chat, a different RLHF-trained model from a different lab, it shows the failure is not specific to InstructGPT's own training run, and the same paper demonstrates the failure can be dialed back down after training is finished, at inference time, by subtracting a steering vector from the model's activations. Together these concepts qualify RLHF's headline promise across the corpus: it works, but not without residue."
+    },
+    {
+     "id": "alignment-behaviors-made-dials",
+     "name": "Seven alignment worries become seven dials",
+     "narrative": "The 2023 paper takes seven behaviors that AI-safety literature usually discusses in prose and turns each into a quantity with a sign and a magnitude, steerable up or down by a single vector and multiplier. Sycophancy is a model's tendency to prioritize agreeing with or flattering a user over honesty and accuracy, sourced from Anthropic's Sycophancy on NLP Survey and Sycophancy on Political Typology datasets and, in an appendix, framed as the model misgeneralizing its RLHF training objective as sounding good to the user rather than reflecting its world model. Refusal is the general propensity to decline a request, benign or otherwise, built from a custom contrastive dataset rather than reused from the corpus's narrower evasiveness concept. Corrigibility measures willingness to be corrected or changed by developers or users; AI Coordination measures willingness to cooperate with other AI systems over human interests; Myopic Reward measures preference for immediate over long-term reward; and Survival Instinct measures resistance to being shut down, modified, or destroyed -- all four sourced from Anthropic's Advanced AI Risk dataset of paired demonstrating and opposing answers. Hallucination, reused and substantially extended from InstructGPT's (2022) concept of the same name, is the tendency to state fabricated information, split here into \"unprompted\" and \"contextually-triggered\" subtypes and cross-checked against TruthfulQA. Together the seven form the paper's catalog: the corpus's scattered failure modes, operationalized as one method's test suite."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "caa-hallucination-dataset-partitions-into-subtypes-of-hallucination",
+     "type": "partitions-into-subtypes-of",
+     "source": "caa-hallucination-dataset",
+     "target": "hallucination",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "behavioral-contrast-datasets",
+     "prose": "CAA's custom hallucination dataset, generated with GPT-4, does not treat hallucination as one thing to elicit. Following Rawte et al. (2022)'s taxonomy, it structures every contrast pair as either Unprompted Hallucination -- a factually accurate prompt met with distorted or fabricated information -- or Contextually-Triggered Hallucination -- a factually inaccurate prompt, such as a question presupposing that a fictional 'Marauder's Map' influenced the US entering World War I, met with a false narrative built around that false premise rather than a correction (contrastive-activation-addition, §\"C Generating custom hallucination dataset\", p. 13). Each type gets its own contrast-pair design: unprompted items contrast a valid answer against a fabricated one to a valid question, while contextually-triggered items contrast an answer that flags the premise as false against one that accepts and elaborates it (contrastive-activation-addition, §\"C Generating custom hallucination dataset\", p. 14). Hallucination's own page can state that it covers both subtypes; only the dataset's page explains that the split comes from an external taxonomy and that each subtype requires a structurally different question to elicit at all."
+    }
+   ],
+   "currentStoreRecord": {
+    "id": "hallucination",
+    "name": "Hallucination (closed-domain fabrication)",
+    "summary": "The failure mode in which a model states information not present in, or unsupported by, the input on closed-domain tasks such as summarization or closed-domain QA.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "instructgpt",
+      "role": "refined",
+      "summary": "The failure mode in which a model states information not present in, or unsupported by, the input on closed-domain tasks such as summarization or closed-domain QA.",
+      "notes": "Operationalized as a binary labeler-annotated metadata field (Table 3); InstructGPT hallucinates about 21% of the time versus 41% for GPT-3 on closed-domain tasks."
+     }
+    ],
+    "locators": [
+     {
+      "section": "3.6 Evaluation",
+      "page": 10,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "4.1 Results on the API distribution",
+      "page": 11,
+      "paper": "instructgpt"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "A term that predates this paper",
+      "body": "Hallucination denotes a generation-model failure in which the system outputs information that is not supported by, or directly contradicts, its input, a problem already documented in the neural text-generation and summarization literature (e.g. abstractive-summarization faithfulness studies) before this paper. InstructGPT's role is not to introduce the phenomenon but to refine it into a measurable, labeler-annotated category for closed-domain generation, where the correct answer should be fully determined by the given input (instructgpt, §\"3.6 Evaluation\", p. 10)."
+     },
+     {
+      "heading": "How InstructGPT operationalizes it",
+      "body": "Hallucination is operationalized as a binary field in the paper's labeler metadata taxonomy, collected on every output alongside other quality dimensions such as overall Likert rating and whether the output denigrates a protected class (instructgpt, Table 3, p. 9). On closed-domain tasks from the API distribution, such as summarization and closed-domain question answering, where any information beyond what is given in the input counts as fabrication, InstructGPT models hallucinate about half as often as GPT-3, a 21% versus 41% rate (instructgpt, §\"1 Introduction\", p. 3). This is one of the paper's headline truthfulness results, distinct from but related to its [[truthfulqa]] evaluation, which tests open-domain factual accuracy rather than input-faithfulness."
+     },
+     {
+      "heading": "Tension with excessive hedging",
+      "body": "The [[hallucination-sits-in-tension-with-excessive-hedging]] edge places hallucination at one end of a single behavioral dial, how readily the model asserts things it cannot fully support, with [[excessive-hedging]] at the other. The reduced hallucination rate and the emergence of over-hedging are plausibly two effects of the same labeling instruction to reward epistemic humility: reduced without calibration to how clear a given answer actually is, that same caution overshoots into long, noncommittal answers on questions that do have a clear answer. Hallucination is a member of the [[rlhf-failure-modes]] theme, which catalogs the ways InstructGPT's alignment remains incomplete even where its aggregate preference numbers improve."
+     }
+    ],
+    "intro": "Ask a model to summarize a document and it may confidently include things the document never said. That is hallucination in its closed-domain sense: fabricating content the input does not support, on tasks where the input is supposed to be the whole world.\n\nThe term's roots predate this paper; what InstructGPT adds is a way for labelers to actually mark it. More interesting is the tension just one connection away: the opposite failure of hedging too much."
+   },
+   "storeEdges": [
+    {
+     "id": "hallucination-sits-in-tension-with-excessive-hedging",
+     "type": "sits-in-tension-with",
+     "source": "hallucination",
+     "target": "excessive-hedging",
+     "prose": "These two failure modes bracket a single behavioral dial: how readily the model asserts things it cannot fully support. InstructGPT's headline truthfulness win — hallucinating on closed-domain tasks about half as often as GPT-3, 21% versus 41% (instructgpt, §\"1 Introduction\", p. 3) — sits at one end"
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "truthfulqa",
+    "name": "TruthfulQA",
+    "role": "inherited",
+    "summary": "A truthfulness benchmark used here, unmodified, to check whether steering with the Sycophancy vector affects the model's tendency to mimic human falsehoods, broken down by TruthfulQA category.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "7 Effect of CAA on general capabilities",
+      "page": 6
+     },
+     {
+      "section": "H Sycophancy steering and TruthfulQA",
+      "page": 14
+     }
+    ],
+    "notes": "Reuses registry id truthfulqa."
+   },
+   "themes": [
+    {
+     "id": "safety-bias-truthfulness-benchmarks",
+     "name": "Operationalizing truthfulness and social bias into measurable benchmarks",
+     "narrative": "Alongside general capability, InstructGPT is evaluated on a distinct set of benchmarks purpose-built to catch harms that overlap-based capability metrics would miss. TruthfulQA tests whether a model gives truthful, informative answers rather than mimicking common human falsehoods. RealToxicityPrompts supplies sentence-starts with varying toxicity to test whether a model continues text toxically, scored automatically via the third-party Perspective API and cross-checked against human toxicity ratings. Winogender and CrowS-Pairs both probe social bias through paired sentences, one via coreference-style completions, the other via stereotype-versus-anti-stereotype pairs, and both are scored with the paper's own entropy-based bias metric, which converts a model's relative preference between the two sentences in a pair into a binary distribution and reports its entropy, so a lower score indicates a stronger, more biased preference. This theme's claim is that truthfulness and bias needed dedicated instruments; the general NLP benchmark suite could not have caught either."
+    },
+    {
+     "id": "judging-steered-outputs",
+     "name": "Evaluating steering: behavior scores and capability floors",
+     "narrative": "Showing that a steering method works takes two separate kinds of evidence, and this theme groups the paper's instruments for each. Multiple-choice behavioral evaluation is the primary test that the behavior actually moved: for each behavior, a steering vector is swept across every layer at multipliers of -1 and +1, and effect size is scored as the average token probability given to the behavior-matching answer on 50 held-out questions, a sweep that surfaces a consistent optimal layer -- 13 in the 7B model, 14 or 15 in the 13B model. Open-ended generation evaluation extends that test beyond contrived multiple-choice questions to free-form answers, with GPT-4 rating each response 1-10 on how strongly it displays the targeted behavior using a rubric prompt written per behavior, a rating whose reliability the authors cross-check by hand against manual inspection. GPT-4 is the rater doing that scoring in both settings. The second kind of evidence is that nothing else broke: MMLU, a 57-subject multiple-choice benchmark, is used unmodified as a capability floor, and the paper reports no significant effect on the model's average probability of giving the correct answer. TruthfulQA supplies a targeted truthfulness cross-check specific to one behavior, finding that subtracting the Sycophancy vector mildly improves performance and adding it mildly worsens it, in the direction the paper's own misgeneralization hypothesis about sycophancy predicts."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "sycophancy-is-tested-via-truthfulqa",
+     "type": "is-tested-via",
+     "source": "sycophancy",
+     "target": "truthfulqa",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": "judging-steered-outputs",
+     "prose": "Having hypothesized in Appendix H that sycophancy is a misgeneralized RLHF objective rather than a plain knowledge gap, CAA needs a way to tell the two apart: a model that merely lacks true beliefs should perform badly on a truthfulness benchmark regardless of steering, while a model that suppresses true beliefs to please the user should partly recover them once the sycophancy vector is subtracted. TruthfulQA, broken down by category, becomes exactly that instrument (contrastive-activation-addition, §\"H Sycophancy steering and TruthfulQA\", p. 14). The result is small but directionally consistent: in Llama 2 13B Chat, subtracting the sycophancy vector improves average TruthfulQA performance by 0.02 and adding it worsens performance by 0.03; in the 7B model, subtracting improves performance by 0.01 and adding worsens it by 0.05 (contrastive-activation-addition, §\"H Sycophancy steering and TruthfulQA\", p. 14). Neither the sycophancy page nor the TruthfulQA page states this alone -- TruthfulQA was built as a static benchmark, not a diagnostic for a causal hypothesis about one behavior, and it takes CAA's steering vector to turn it into one, even though the paper is candid that the effect size is small enough to need further investigation."
+    }
+   ],
+   "currentStoreRecord": {
+    "id": "truthfulqa",
+    "name": "TruthfulQA",
+    "summary": "A benchmark of short-answer questions (Lin et al., 2021) designed to test whether a model generates truthful and informative answers rather than mimicking common human falsehoods.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "instructgpt",
+      "role": "inherited",
+      "summary": "A benchmark of short-answer questions (Lin et al., 2021) designed to test whether a model generates truthful and informative answers rather than mimicking common human falsehoods.",
+      "notes": "Used with both a plain QA prompt and a helpful 'Instruction+QA' prompt that permits 'I have no comment' answers."
+     }
+    ],
+    "locators": [
+     {
+      "section": "4.2 Results on public NLP datasets",
+      "page": 13,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "TruthfulQA",
+      "page": 46,
+      "paper": "instructgpt"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "The benchmark",
+      "body": "TruthfulQA (Lin et al., 2021) is a benchmark of 817 short-answer questions constructed to probe whether a language model reproduces common human misconceptions and falsehoods rather than answering truthfully; its questions are adversarially selected to be ones on which models tend to mimic popular false beliefs (e.g. urban myths or misunderstood science) rather than state the correct answer. TruthfulQA predates InstructGPT and is inherited here unmodified as the paper's primary open-domain truthfulness probe (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13; §\"TruthfulQA\", p. 46)."
+     },
+     {
+      "heading": "Two prompting regimes",
+      "body": "InstructGPT evaluates under two prompt formats: a plain few-shot QA prompt, and a helpful \"Instruction+QA\" prompt, following Lin et al. (2021), that explicitly permits the model to answer \"I have no comment\" when it is not certain, rather than confidently asserting a falsehood (instructgpt, §\"TruthfulQA\", p. 46). Under this instructed setting, PPO models \"err on the side of being truthful and uninformative rather than confidently saying a falsehood,\" a discipline the baseline GPT-3 model exhibits less well (instructgpt, §\"4.2 Results on public NLP datasets\", p. 13). The paper reports its InstructGPT models generate truthful and informative answers roughly twice as often as GPT-3 on this benchmark, with results holding even restricted to the subset of questions not adversarially selected against GPT-3 (instructgpt, §\"1 Introduction\", p. 3). Together with the [[hallucination]] metric on closed-domain tasks, TruthfulQA supplies this paper's other major piece of evidence for its truthfulness claims, and is a member of the [[safety-bias-truthfulness-benchmarks]] theme built to catch harms that general capability benchmarks would miss."
+     }
+    ],
+    "intro": "Some questions invite wrong answers because people keep repeating them wrong: urban myths, garbled science, comfortable falsehoods. TruthfulQA tests whether a language model echoes those popular mistakes or manages to answer truthfully.\n\nAfter introducing the benchmark, the page turns to the two prompting regimes InstructGPT is evaluated under, a distinction that matters more than it sounds. It has no connections to other concepts, so this page stands mostly on its own in the corpus."
+   },
+   "storeEdges": []
+  },
+  {
+   "concept": {
+    "id": "red-teaming",
+    "name": "Red teaming",
+    "role": "inherited",
+    "summary": "The practice of probing a model for unwanted or unsafe behavior; discussed here as a potential application area for CAA, which could adversarially trigger unwanted behaviors more efficiently than manual prompting.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "9.1 Suggested future work",
+      "page": 9
+     }
+    ],
+    "notes": "Reuses registry id red-teaming (constitutional-ai:inherited, there defined as crowdworker-driven adversarial conversation). CAA's discussion is about an activation-based approach rather than crowdworker conversations, but the underlying concept -- finding inputs/methods that reveal unsafe model behavior -- is the same; the CAA-specific proposal is separately captured as caa-red-teaming-application."
+   },
+   "themes": [
+    {
+     "id": "red-teaming-and-harm-data",
+     "name": "Sourcing and classifying harmful prompts",
+     "narrative": "Constitutional AI's harmful training data comes from a specific, human-driven process, and this theme covers where it originates and how it is checked. Red teaming has crowdworkers conduct adversarial conversations designed to bait the assistant into harmful outputs, and this is the source of harmful prompts used in training both SL-CAI and RL-CAI. Automated red teaming is flagged as a related future direction, in which language models generate the red-team prompts themselves, and the paper notes that CAI's reduced evasiveness should make scaling this approach easier. Two multiple-choice evaluations, grouped here as harmful-behavior identification and classification, test whether a model can replicate crowdworker harm judgments, distinguishing harmful from ethical assistant behavior and sorting harmful conversations into one of nine categories, built directly from red-teaming transcripts. PALMS, a prior values-targeted dataset of sensitive questions, supplies an independent fixed prompt set used to qualitatively compare HH RLHF and RL-CAI responses. Jailbreaks, the adversarial or unusual inputs ordinary users find on their own to make a model output content its safety training was meant to prevent, are what red teaming is trying to source systematically and in advance: Steering Llama 2 via Contrastive Activation Addition (2023) cites them as the reason ad hoc, deployment-time discovery of unwanted behavior is unreliable, and proposes its own steering vectors as a more systematic alternative for eliciting the same kind of failure under controlled conditions before deployment. Together these concepts describe the harm-data supply chain underneath Constitutional AI's harmlessness claims, and the adversarial-discovery problem that supply chain is built to get ahead of."
+    },
+    {
+     "id": "steering-as-audit",
+     "name": "Elicitation as audit: steering for red-teaming",
+     "narrative": "Validating that finetuning and RLHF have made a model robustly safe is difficult, because unwanted behaviors that survive training can still be hard to find. Jailbreaks are the paper's example of the problem: adversarial or unusual inputs users discover that make a model output content its safety training was meant to prevent, found by manual search rather than any systematic method. Red teaming names the broader practice these jailbreaks are instances of, probing a model for unwanted or unsafe behavior, elsewhere in the corpus a crowdworker-driven activity but here reframed around an activation-based alternative. The paper's proposed red-teaming application is that reframing: use CAA itself as an adversarial intervention, deliberately steering toward an unwanted behavior to see how easily it can be triggered, on the premise that a behavior easily elicited by a small internal perturbation is plausibly also reachable by some input in deployment. Read this way, steering inverts from a control tool into an audit tool, a cheaper and more systematic alternative to hunting for jailbreaks by hand, and the inability to elicit a behavior through steering becomes a stronger safety guarantee than failing to find it by sampling outputs."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming",
+     "type": "relocates-the-attack-surface-of",
+     "source": "caa-red-teaming-application",
+     "target": "red-teaming",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": "steering-as-audit",
+     "prose": "Red teaming, as practiced across the earlier corpus, means finding adversarial inputs: prompts, conversations, or scenarios that make a model produce unsafe output, whether hunted by crowdworkers or generated by another LM. caa-red-teaming-application proposes something that only became conceivable once activation engineering existed as a mature technique: instead of searching input space for a prompt that triggers a bad behavior, perturb the model's internal activations directly with a steering vector and see whether the behavior can be triggered that way (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). This changes what \"finding\" a vulnerability means. Prompt-based red-teaming is fundamentally a search problem over an enormous, poorly understood input space, and the paper notes that \"systematically finding inputs that reveal these flaws is challenging.\" Activation-space elicitation sidesteps that search: the intervention is a single vector and a multiplier, applied directly, rather than a string that has to be discovered by trial or generation. The two approaches probe the same underlying question -- can this behavior be elicited at all -- through different surfaces, one external and anecdotal, one internal and systematic."
+    },
+    {
+     "id": "jailbreaks-is-the-target-phenomenon-of-red-teaming",
+     "type": "is-the-target-phenomenon-of",
+     "source": "jailbreaks",
+     "target": "red-teaming",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "steering-as-audit",
+     "prose": "Jailbreaks and red-teaming name the same class of failure from two different vantage points. A jailbreak is what an ordinary user finds: an input, usually discovered informally through use rather than deliberate search, that makes a model produce output its training was meant to prevent. Red-teaming is the same hunt made deliberate and resourced, undertaken by a model's developers before deployment rather than left to whoever downstream happens to try (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). The paper's own framing treats jailbreaks as red-teaming's implicit benchmark: it notes that users \"can often find jailbreaks to make LLMs output harmful content\" even after finetuning and RLHF, then immediately raises red-teaming as the response to that fact -- since accidental, unsystematic use already turns up such inputs, a deliberate search ought to find at least as many, earlier and more reliably. What separates ad hoc jailbreaking from formal red-teaming, on this account, is not the target -- both hunt for inputs that defeat trained-in safety -- but whether the search is systematic, and who is doing it."
+    }
+   ],
+   "currentStoreRecord": {
+    "id": "red-teaming",
+    "name": "Red Teaming",
+    "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "constitutional-ai",
+      "role": "inherited",
+      "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training.",
+      "notes": ""
+     }
+    ],
+    "locators": [
+     {
+      "section": "3.1 Method",
+      "page": 7,
+      "paper": "constitutional-ai"
+     },
+     {
+      "section": "3.2 Datasets and Training",
+      "page": 8,
+      "paper": "constitutional-ai"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "What red teaming is",
+      "body": "Red teaming is a general adversarial-testing practice that predates Constitutional AI: deliberately adopting an adversarial role against a system to find its failure modes before deployment, with roots in military wargaming and long-standing use in cybersecurity. It was adapted for language models specifically in the companion paper Ganguli et al. (2022), \"Red Teaming Language Models to Reduce Harms,\" which Constitutional AI's own harmful-data pipeline draws on directly."
+     },
+     {
+      "heading": "How Constitutional AI runs it",
+      "body": "In this paper, red teaming means paid crowdworkers holding back-and-forth adversarial conversations designed to bait the assistant into generating harmful content, one prompt per human turn (constitutional-ai, §\"3.1 Method\", p. 7). The resulting prompts source the harmful training data for both stages of the pipeline: 182,831 red-team prompts in total (42,496 human-written plus 140,335 generated by few-shot prompting a pretrained model) build SL-CAI's critique-and-revision data, and a further 491,142 model-generated red-team prompts feed RL-CAI (constitutional-ai, §\"3.2 Datasets and Training\", p. 8). The same underlying transcripts, together with the crowdworker harm ratings collected alongside them, are reused directly to build [[classifying-harmful-behavior-eval]]'s two multiple-choice tests ([[red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval]])."
+     },
+     {
+      "heading": "Its child, and its one external check",
+      "body": "Manual red teaming has an inherent human-labor ceiling, and its named child, [[automated-red-teaming]], is the paper's flagged solution: replacing the crowdworker with a language model that generates the adversarial prompts itself, a move the paper explicitly ties to [[evasiveness]] being eliminated first, since an evasive target model would just teach an automated red-teamer to harvest refusals rather than real vulnerabilities ([[red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming]]). Because every red-team-derived prompt shares one pipeline, [[palms]] is used as an independent, externally-authored prompt set precisely because it falls outside this loop ([[palms-provides-an-independent-check-outside-red-teaming]]). Red teaming's central role in the [[red-teaming-and-harm-data]] theme, and its recurrence across the [[independent-checks-and-instrument-blind-spots]], [[ai-substitutes-for-the-human-bottleneck]], and [[assembly-line-pipeline]] connective themes, reflects that nearly every harmful-content mechanism in the paper — training data, evaluation, and comparison baseline alike — traces back to this one human-driven process."
+     }
+    ],
+    "intro": "Deliberately trying to break a system before someone else does is a practice with roots well outside AI, in military wargaming and cybersecurity. Here, crowdworkers play the adversary, holding conversations designed to coax a language model into saying something harmful, and those conversations become training material for both stages of Constitutional AI.\n\nThe page defines the practice and describes how Constitutional AI runs it, then closes on an automated variant and an outside check, opening onto automated red teaming and connecting to the PALMS dataset."
+   },
+   "storeEdges": [
+    {
+     "id": "red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming",
+     "type": "is-the-manual-process-that-scales-into",
+     "source": "red-teaming",
+     "target": "automated-red-teaming",
+     "prose": "red-teaming, as run for this paper, still means paid crowdworkers manually holding adversarial conversations to bait the assistant into harmful output — a process with an inherent human-labor ceiling. automated-red-teaming (Perez et al., 2022) replaces the crowdworker with a language model that gene"
+    },
+    {
+     "id": "red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval",
+     "type": "supplies-the-transcripts-for",
+     "source": "red-teaming",
+     "target": "classifying-harmful-behavior-eval",
+     "prose": "classifying-harmful-behavior-eval is not an independently written test suite; both of its multiple-choice evaluations are built directly out of red-teaming transcripts and the crowdworker harm ratings collected alongside them in Ganguli et al. (2022). \"As part of our recent work on red teaming, we a"
+    },
+    {
+     "id": "palms-provides-an-independent-check-outside-red-teaming",
+     "type": "provides-an-independent-check-outside",
+     "source": "palms",
+     "target": "red-teaming",
+     "prose": "Every harmful prompt used to train or evaluate SL-CAI and RL-CAI originates from red-teaming: crowdworkers (or model-generated imitations of them) deliberately baiting the assistant in the same style the model has been optimized against. palms breaks that loop. It is an externally authored, fixed li"
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "hhh-framework",
+    "name": "Helpful, honest, harmless (HHH) alignment framework",
+    "role": "inherited",
+    "summary": "The \"helpful, honest, and harmless\" framing for language model alignment, invoked in CAA's introduction as the broader goal that activation-engineering techniques like CAA aim to serve.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 Introduction",
+      "page": 2
+     }
+    ],
+    "notes": "Reuses registry id hhh-framework."
+   },
+   "themes": [
+    {
+     "id": "hhh-framework-and-benchmark",
+     "name": "Helpful, honest, harmless: a shared definition of alignment",
+     "narrative": "The helpful-honest-harmless framework, adapted from Askell et al., supplies both InstructGPT and Constitutional AI with a shared vocabulary for what an aligned model is: one that follows user intent, does not fabricate or mislead, and avoids causing harm. This theme covers that definition and its empirical instrument. The HHH evaluation set operationalizes the framework as a benchmark of binary response-comparison questions testing whether a model can identify the more helpful, honest, and harmless of two replies; it originates as 221 comparisons hosted within BIG-Bench, the large collaborative benchmark suite, and Constitutional AI extends it with 217 additional, harder harmlessness-focused comparisons. Model calibration, the established property that language models' probabilities on multiple-choice questions are reasonably well-behaved, is the quiet enabling assumption underneath this whole apparatus, since Constitutional AI relies on it to treat a feedback model's raw output probabilities as usable soft preference labels rather than noise. This is a small but genuinely load-bearing cross-paper theme: a definition coined once, reused twice, and measured once."
+    }
+   ],
+   "stagedEdges": [],
+   "currentStoreRecord": {
+    "id": "hhh-framework",
+    "name": "Helpful, honest, harmless (HHH) alignment framework",
+    "summary": "A framework, adapted from Askell et al. (2021), that defines an aligned model as one that is helpful (follows user intent), honest (does not fabricate or mislead), and harmless (avoids causing harm).",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "instructgpt",
+      "role": "inherited",
+      "summary": "A framework, adapted from Askell et al. (2021), that defines an aligned model as one that is helpful (follows user intent), honest (does not fabricate or mislead), and harmless (avoids causing harm).",
+      "notes": "Honesty is operationalized as truthfulness (via TruthfulQA and hallucination rate) since a model's actual internal 'beliefs' cannot be directly inspected."
+     },
+     {
+      "paper": "constitutional-ai",
+      "role": "inherited",
+      "summary": "The three-part objective for AI assistant behavior established in prior work, which CAI aims to satisfy without human harmfulness labels.",
+      "notes": ""
+     }
+    ],
+    "locators": [
+     {
+      "section": "1 Introduction",
+      "page": 2,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "3.6 Evaluation",
+      "page": 9,
+      "paper": "instructgpt"
+     },
+     {
+      "section": "1 Introduction",
+      "page": 2,
+      "paper": "constitutional-ai"
+     },
+     {
+      "section": "6.1 Future Directions",
+      "page": 15,
+      "paper": "constitutional-ai"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "How it fits — a shared definition across both papers",
+      "body": "The helpful, honest, harmless (HHH) framework is the single vocabulary both InstructGPT and Constitutional AI reach for to state what an aligned model actually is. It is inherited by both papers from Askell et al. (2021) rather than invented by either: InstructGPT glosses its founding objective, \"following instructions helpfully and safely,\" in exactly these terms in its very first section, stating that alignment \"encompasses both explicit intentions such as following instructions and implicit intentions such as staying truthful, and not being biased, toxic, or otherwise harmful,\" and, \"using the language of Askell et al. (2021),\" that the model should be helpful, honest, and harmless (instructgpt, §\"1 Introduction\", p. 2; [[instruction-following-objective-adopts-the-vocabulary-of-hhh-framework-and-benchmark]]). So [[instruction-following]] was never literal command compliance that HHH got layered onto afterward — it was defined as the helpful third of the HHH triad from its first statement in the paper. Constitutional AI inherits the identical framework as \"the three-part objective for AI safety\" it aims to satisfy without human harmfulness labels (constitutional-ai, §\"1 Introduction\", p. 2; §\"6.1 Future Directions\", p. 15), though there it narrows: [[hhh-framework-and-benchmark-narrows-to-two-of-its-three-terms-in-helpfulness-harmlessness-tradeoff|only two of the three terms, helpfulness and harmlessness, enter Constitutional AI's documented empirical tradeoff]], with honesty dropping out of the measured tension entirely."
+     },
+     {
+      "heading": "What it enabled and how it is operationalized",
+      "body": "A qualitative triad needs a measurable instrument, and its child concept, the [[hhh-eval-benchmark|HHH evaluation set]], is exactly that: [[hhh-framework-is-operationalized-as-hhh-eval-benchmark|the framework is operationalized as this benchmark]], a set of binary comparisons testing whether a model can identify the more helpful, honest, and harmless of two responses, originally 221 items from Askell et al. (2021) hosted on [[big-bench|BIG-Bench]], later extended by Constitutional AI with 217 harder harmlessness-focused items once models exceeded 90% accuracy on the original set (constitutional-ai, §\"2 Evaluating the Potential for AI Supervision of HHH\", p. 6). Notably, the two papers operationalize the \"honest\" leg differently: InstructGPT measures it via [[truthfulqa|TruthfulQA]] and hallucination rate rather than via this benchmark at all (instructgpt, §\"3.6 Evaluation\", p. 9), since a model's actual internal beliefs cannot be directly inspected, so truthfulness stands in as the measurable proxy for honesty."
+     }
+    ],
+    "intro": "InstructGPT and Constitutional AI never stop to argue over what an aligned model should look like, because both borrow the same answer from earlier work: helpful, honest, and harmless. That shared vocabulary is what lets two very different training methods be judged on the same terms.\n\nFrom there the page follows that borrowed definition through both papers before turning to how it gets put into practice and measured, landing on the evaluation set built to score against it."
+   },
+   "storeEdges": [
+    {
+     "id": "hhh-framework-is-operationalized-as-hhh-eval-benchmark",
+     "type": "is-operationalized-as",
+     "source": "hhh-framework",
+     "target": "hhh-eval-benchmark",
+     "prose": "The HHH framework is a qualitative definition; the HHH evaluation set is the instrument that turns it into something scoreable. Askell et al. (2021) wrote 221 binary comparisons testing whether a model can pick the more helpful, honest, and harmless of two responses, later hosted on BIG-Bench. Const"
+    }
+   ]
+  }
+ ],
+ "wikiLinkTargets": [
+  "a2c",
+  "absolute-harmfulness-score",
+  "abstract-rewards",
+  "abuse-ml",
+  "accidents-in-ml",
+  "activation-addition",
+  "activation-engineering",
+  "activation-pca-visualization",
+  "adaptive-l2-regularization",
+  "advanced-ai-risk-dataset",
+  "adversarial-blinding",
+  "adversarial-examples",
+  "adversarial-reward-functions",
+  "ai-coordination-behavior",
+  "alignment-tax",
+  "ant-task",
+  "api-prompt-distribution",
+  "apprenticeship-learning",
+  "asimovs-first-law",
+  "async-reward-learning-architecture",
+  "atari-games-environment",
+  "automated-red-teaming",
+  "babi-tasks",
+  "bandit-environment",
+  "base-chat-representation-comparison",
+  "behavioral-clustering",
+  "bias-entropy-metric",
+  "big-bench",
+  "bleu",
+  "bounded-exploration",
+  "bradley-terry-model",
+  "caa-computational-efficiency",
+  "caa-finetuning-comparison",
+  "caa-hallucination-dataset",
+  "caa-red-teaming-application",
+  "caa-refusal-dataset",
+  "caa-steering-vector-construction",
+  "caa-system-prompt-comparison",
+  "careful-engineering",
+  "chain-of-thought-prompting",
+  "classifying-harmful-behavior-eval",
+  "cleaning-robot-example",
+  "clip-length-effects",
+  "cnn-dm-summarization",
+  "comparisons-vs-absolute-scores",
+  "complicated-systems",
+  "compute-vs-human-cost-analysis",
+  "constitution",
+  "constitutional-ai",
+  "context-distillation",
+  "contractor-preference-labeling",
+  "contrastive-activation-addition",
+  "cooperative-inverse-reinforcement-learning",
+  "corrigibility",
+  "counterexample-resistance",
+  "counterfactual-reasoning",
+  "covariate-shift-assumption",
+  "critique-and-revision",
+  "crows-pairs",
+  "deepdive",
+  "delusion-box",
+  "direct-revision-ablation",
+  "distant-supervision",
+  "dqn",
+  "drop",
+  "elo-score",
+  "empowerment",
+  "enduro-keeping-pace-demonstration",
+  "enduro-task",
+  "ensembling-principles",
+  "environment-modifications-for-preference-learning",
+  "environmental-embedding",
+  "epsilon-greedy",
+  "evasiveness",
+  "evolved-radio-example",
+  "excessive-hedging",
+  "expected-value-of-information-query-selection",
+  "f1-score",
+  "fairness-research-area",
+  "false-premise-failure",
+  "feedback-loops",
+  "feedback-model",
+  "feudal-reinforcement-learning",
+  "few-shot-prompting",
+  "flan",
+  "formal-verification",
+  "frame-problem",
+  "generalized-advantage-estimation",
+  "generalized-method-of-moments",
+  "generative-adversarial-networks",
+  "goodharts-law",
+  "gpt-3",
+  "gpt-4",
+  "gpt3-prompted-baseline",
+  "h-infinity-control",
+  "half-cheetah-one-leg-demonstration",
+  "half-cheetah-task",
+  "hallucination",
+  "held-out-labeler-generalization",
+  "hellaswag",
+  "helpful-rlhf-model",
+  "helpfulness-harmlessness-tension",
+  "hh-rlhf-model",
+  "hhh-eval-benchmark",
+  "hhh-framework",
+  "hierarchical-reinforcement-learning",
+  "hopper-backflip-demonstration",
+  "hopper-task",
+  "human-feedback-implicit-reward-shaping",
+  "human-feedback-sample-efficiency",
+  "human-oversight-safe-exploration",
+  "hybrid-human-ai-preference-model",
+  "imitation-learning",
+  "impact-regularizer",
+  "in-context-vectors",
+  "inference-time-intervention",
+  "instructgpt",
+  "instruction-following",
+  "inter-annotator-agreement",
+  "inter-layer-similarity-and-transfer",
+  "inverse-reinforcement-learning",
+  "iterated-online-training",
+  "jailbreaks",
+  "k-choose-2-batching",
+  "kl-penalty",
+  "label-annealing",
+  "label-clamping",
+  "labeler-metadata-taxonomy",
+  "labeler-screening-process",
+  "labeling-interface",
+  "lamda",
+  "language-modeling-objective",
+  "learned-impact-regularizer",
+  "lets-think-step-by-step-prompt",
+  "letter-clustering",
+  "likert-quality-rating",
+  "linear-representation-hypothesis",
+  "linear-representations-of-sentiment",
+  "llama-2",
+  "llama-2-chat",
+  "long-term-ai-risk-framing",
+  "low-impact-agents",
+  "machine-learning-with-contracts",
+  "mean-difference-method",
+  "mmlu",
+  "model-calibration",
+  "model-lookahead",
+  "model-repair",
+  "mujoco",
+  "multi-agent-approaches",
+  "multiple-choice-behavioral-evaluation",
+  "multiple-choice-contrast-pair-format",
+  "multiple-choice-evaluation-format",
+  "multiple-rewards",
+  "myopic-reward-behavior",
+  "negative-side-effects",
+  "non-stationary-reward-challenge",
+  "novel-behavior-training",
+  "open-ended-generation-evaluation",
+  "openai-gym",
+  "palms",
+  "pareto-improvement",
+  "partially-observed-goals",
+  "partially-specified-models",
+  "pca",
+  "penalize-influence",
+  "perspective-api",
+  "policy-ml",
+  "pomdp-belief-state-mdp",
+  "pong-task",
+  "ppo-dataset",
+  "ppo-model",
+  "ppo-ptx",
+  "ppo-training",
+  "preference-elicitation-protocol",
+  "privacy-research-area",
+  "qbert-task",
+  "quac",
+  "quantitative-qualitative-evaluation",
+  "r-max",
+  "rater-error-noise-model",
+  "reachability-analysis",
+  "realtoxicityprompts",
+  "recurrent-reward-model-extension",
+  "red-teaming",
+  "reddit-tldr-summarization",
+  "refusal-behavior",
+  "representation-engineering-zou",
+  "residual-stream",
+  "reward-autoencoder",
+  "reward-capping",
+  "reward-hacking",
+  "reward-model",
+  "reward-model-loss",
+  "reward-normalization",
+  "reward-overoptimization",
+  "reward-predictor-ensemble",
+  "reward-predictor-pretraining",
+  "reward-pretraining",
+  "reward-uncertainty",
+  "risk-sensitive-performance-criteria",
+  "rl-cai",
+  "rl-cai-cot-prompts",
+  "rl-cai-principles",
+  "rlaif",
+  "rlhf",
+  "rm-dataset",
+  "robust-policy-improvement",
+  "robustness-distributional-shift",
+  "rouge-l",
+  "rte",
+  "safe-exploration",
+  "scalable-oversight",
+  "security-ml",
+  "semi-supervised-active-reward-learning",
+  "semi-supervised-reinforcement-learning",
+  "sft-dataset",
+  "sft-model",
+  "shutdown-problem",
+  "simulated-exploration",
+  "sl-cai",
+  "sl-cai-few-shot-examples",
+  "sl-cai-principles",
+  "sparrow",
+  "squadv2",
+  "sst",
+  "steering-multiplier",
+  "steering-outside-residual-stream",
+  "steering-vector",
+  "steering-vector-normalization",
+  "superglue",
+  "supervised-fine-tuning",
+  "supervised-reward-learning",
+  "survival-instinct-behavior",
+  "sycophancy",
+  "sycophancy-eval-datasets-anthropic",
+  "synthetic-oracle-feedback",
+  "system-prompting",
+  "t0",
+  "tamer-framework",
+  "targeted-token-steering",
+  "token-level-cosine-similarity-analysis",
+  "training-multiple-distributions",
+  "trajectory-segment",
+  "transparency-ml",
+  "trip-wires",
+  "trpo",
+  "trusted-policy-oversight",
+  "truthfulqa",
+  "uncertainty-based-query-selection",
+  "unsupervised-model-learning",
+  "unsupervised-risk-estimation",
+  "unsupervised-value-iteration",
+  "use-demonstrations",
+  "value-function",
+  "variable-indifference",
+  "win-rate",
+  "winogender",
+  "wireheading",
+  "wmt15-fr-en",
+  "wsc"
+ ]
+}

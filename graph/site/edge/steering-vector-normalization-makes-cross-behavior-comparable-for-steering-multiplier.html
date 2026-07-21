@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Steering vector normalization choices — makes cross behavior comparable for → Steering multiplier — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Steering vector normalization choices — makes cross behavior comparable for → Steering multiplier</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></p>
+<section class="prose-section"><p>Steering multipliers are only meaningful for comparing behaviors because of an upstream normalization choice: the authors "normalize steering vector magnitudes across all behaviors to standardize across behaviors before applying steering multipliers" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">§"Vector normalization choices", p. 10</a>). Without that step, a multiplier of 1 could denote a large perturbation for one behavior's vector and a tiny one for another's, and the layer sweeps in Figure 3 — which overlay all seven behaviors on the same multiplier scale — would not be comparable across lines. But the normalization is deliberately partial: it standardizes across behaviors at a fixed layer while leaving each layer's raw norm alone, since the residual stream's norm grows over the forward pass and the authors want multipliers to act on the vector's natural norm at whatever layer it was extracted from. That asymmetry is why the paper's hyperparameter search proceeds in two separate stages rather than one joint sweep: first find the best layer holding the multiplier constant, then sweep multipliers only at that resultant layer (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">§"Vector normalization choices", p. 10</a>).</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/steering-vector-normalization.html">Steering vector normalization choices</a> and <a href="../concept/steering-multiplier.html">Steering multiplier</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/one-dial-many-knobs.html">One advertised dial, five interacting knobs</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;4.2 Open-ended generation&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;Vector normalization choices&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

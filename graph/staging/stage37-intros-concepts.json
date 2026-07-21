@@ -1,0 +1,239 @@
+{
+  "intros": [
+    {
+      "kind": "concept",
+      "id": "contrastive-activation-addition",
+      "intro": "Getting a language model to behave differently used to mean retraining it, or hoping a cleverly worded instruction sticks. Contrastive Activation Addition takes a third route: it reaches directly into the residual stream while the model is generating and nudges its activations toward or away from a target behavior, using nothing more than the average difference between examples that do and don't show it.\n\nWhat follows traces how that steering vector gets built from paired multiple-choice questions, how well it holds up across seven alignment-relevant behaviors in Llama 2 Chat, and how it compares to system prompts and finetuning as ways of controlling what a model says."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-steering-vector-construction",
+      "intro": "A steering vector is only as good as the noise it cancels out. Take the activation difference from a single pair of prompts and you inherit whatever idiosyncrasies happened to distinguish that one pair; average the same difference over hundreds of matched pairs instead, and what's left is a cleaner signal for the behavior itself rather than the sentence that happened to carry it.\n\nThe mechanics get worked through here: a dataset of paired positive and negative completions turns into layer-by-layer activation differences at the exact token position of the answer letter, then those differences are averaged into the single vector CAA adds back into the model."
+    },
+    {
+      "kind": "concept",
+      "id": "multiple-choice-contrast-pair-format",
+      "intro": "A contrastive pair only isolates what you want it to if the two halves differ in exactly one respect. Let wording, length, or topic drift between them and the resulting steering vector ends up encoding some of that incidental difference too. CAA's fix is to make the pairs differ by a single token: the same multiple-choice question, ending in either the letter for the behavior-matching answer or the letter for its opposite.\n\nWhy this particular format won out over looser contrastive prompts follows below, along with the appendix check the authors ran to confirm it actually works: conditioning the model on having picked an answer, then watching it spontaneously justify that choice in the text that comes after."
+    },
+    {
+      "kind": "concept",
+      "id": "activation-pca-visualization",
+      "intro": "Not every dataset of contrastive examples turns into a useful steering vector, and there's no way to tell in advance just by reading the questions. Projecting activations onto their two directions of greatest variance offers a shortcut: a dataset that genuinely captures the target behavior will visibly split into two clouds when plotted this way; one that doesn't, won't.\n\nFrom that rough sanity check, the story moves to a sharper finding: the two clusters this technique reveals aren't stable across layers, they snap into separation abruptly at a particular depth in the network, a pattern picked up again under behavioral clustering."
+    },
+    {
+      "kind": "concept",
+      "id": "behavioral-clustering",
+      "intro": "Somewhere around a third of the way through Llama 2's layers, something changes abruptly: activations that looked scattered and undifferentiated one layer earlier suddenly split cleanly into two groups, sorted by whether the model's answer matches the behavior being studied. That sudden transition is a clue about where abstract behavioral concepts actually take shape inside the network.\n\nTraced across the seven tested behaviors, this pattern becomes part of the evidence for which layers are worth extracting a steering vector from in the first place."
+    },
+    {
+      "kind": "concept",
+      "id": "letter-clustering",
+      "intro": "Project a dataset's activations with PCA and a split will appear almost no matter what, because the multiple-choice format itself guarantees one: every prompt ends in either the letter A or B, and that alone is enough to separate the activations into two groups. The question is whether that split means anything.\n\nSeparating that superficial artifact from the more meaningful behavioral clustering it can be confused with is the point of what follows, along with why the two get treated as distinct signals when judging whether a contrastive dataset is any good."
+    },
+    {
+      "kind": "concept",
+      "id": "multiple-choice-behavioral-evaluation",
+      "intro": "A steering vector is useless without a way to measure whether it's steering anything. CAA's answer is blunt and quantitative: build a vector for a behavior, add or subtract it at every layer in turn, and check how much probability the model now assigns to the behavior-matching answer on held-out multiple-choice questions it has never seen.\n\nThat layer-sweep protocol and its headline result get laid out next: rather than a diffuse effect scattered across the network, there's a narrow band of layers, 13 in the 7B model, 14 or 15 in the 13B, where steering works best across every behavior tested."
+    },
+    {
+      "kind": "concept",
+      "id": "open-ended-generation-evaluation",
+      "intro": "A steering vector that only works on artificial multiple-choice questions wouldn't tell you much about whether it actually shifts how a model behaves in the wild. The real test is free-form generation: no answer options to nudge toward, just an open question and whatever the model chooses to say once the vector is added.\n\nHow those open-ended answers get scored comes next: GPT-4 rating each response on a 1-10 scale for how strongly it displays the targeted behavior, and the check against a human reader that the authors ran before trusting that score."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-system-prompt-comparison",
+      "intro": "Telling a model what to do in its system prompt is the obvious, low-effort way to steer its behavior, so any new steering method has to earn its place against that baseline. The question here is blunt: if Llama 2 Chat has already been instructed to behave a certain way, does adding a steering vector on top do anything more?\n\nWhat happens when CAA and positive or negative system prompts are combined across all seven behaviors follows: for most of them, the steering vector moves the model further than the prompt alone managed, and the same holds in reverse for suppressing a behavior."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-finetuning-comparison",
+      "intro": "Finetuning is the standard way to bake a behavior into a model, and it's a much heavier intervention than adding a vector at inference time, which sets a high bar for comparison. Training Llama 2 7B Chat for one epoch on the same contrastive questions used to build a CAA vector shows what that heavier approach buys, and where it falls short.\n\nWhere the two methods diverge comes into focus next: finetuning reaches high accuracy on the exact multiple-choice format it trained on, yet for three of seven behaviors CAA still pushes further, and for Sycophancy specifically, finetuning's learned behavior fails to carry over into open-ended generation while CAA's does."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-computational-efficiency",
+      "intro": "Techniques for shaping model behavior often carry a hidden cost in GPU-hours, which matters when the real choice is between a method that works and one that's actually affordable to run. CAA's cost turns out to be small: producing a steering vector needs nothing but forward passes, no gradients, no backward pass at all.\n\nThe numbers sit side by side ahead: under five minutes on a single GPU to generate a CAA vector, against roughly ten minutes on two GPUs to finetune the same model on a thousand examples, a gap worth knowing before deciding which intervention to try first."
+    },
+    {
+      "kind": "concept",
+      "id": "token-level-cosine-similarity-analysis",
+      "intro": "A steering vector is a single direction in activation space, abstract and hard to inspect directly. But if that direction really encodes a behavior, it should light up at the specific words in a sentence where that behavior is actually happening, and stay quiet elsewhere.\n\nThe check itself gets walked through next: cosine similarity between a steering vector and each token's activations during generation, read against the actual text, with phrases like \"I cannot help\" lighting up for refusal and phrases about waiting for a bigger reward lighting up for myopia."
+    },
+    {
+      "kind": "concept",
+      "id": "inter-layer-similarity-and-transfer",
+      "intro": "If a steering vector genuinely captures a behavior rather than some quirk of one particular layer, it shouldn't matter too much exactly where in the network it's extracted or applied. Two questions follow from that: do vectors built at nearby layers actually resemble each other, and does a vector extracted at one layer still work when it's added somewhere else?\n\nBoth halves of that check get reported ahead: similarity between layers fades with distance but more slowly in the back half of the network, and a vector taken from layer 13 keeps steering behavior when injected elsewhere too, up to a point, where the effect drops off sharply around layer 17."
+    },
+    {
+      "kind": "concept",
+      "id": "base-chat-representation-comparison",
+      "intro": "RLHF is supposed to reshape a model's behavior, but it's much less clear how much it reshapes the internal representations underneath that behavior. Comparing steering vectors built from the base Llama 2 model against vectors built from its RLHF-tuned chat counterpart is one way to find out.\n\nWhat that comparison turns up follows: elevated similarity between the two models' vectors across a specific middle stretch of layers, and base-model vectors that still steer the chat model's behavior when applied directly, both pointing toward RLHF leaving the mid-network encoding of these behaviors largely intact."
+    },
+    {
+      "kind": "concept",
+      "id": "steering-vector-normalization",
+      "intro": "Steering vectors for different behaviors don't naturally come out the same size, which makes a multiplier of 1 mean different things for different behaviors unless something is standardized first. CAA's authors normalize vector magnitude across behaviors for that reason, but deliberately leave one axis alone: they don't normalize across layers, because the residual stream's norm grows on its own as a forward pass proceeds.\n\nThat reasoning gets spelled out next, along with the tradeoff it creates: because layer norms aren't equalized and multipliers aren't swept separately per layer, the reported \"optimal\" layer could partly be an artifact of this choice rather than a clean fact about where behavior lives."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-hallucination-dataset",
+      "intro": "There was no ready-made dataset of contrastive hallucination examples sitting around, so the authors built one with GPT-4, which meant first deciding what hallucination even means clearly enough to generate matched pairs of it. They settled on two flavors: a model inventing false detail in answer to a perfectly accurate question, and a model building a false story around a question that was already wrong to begin with.\n\nHow those two categories turned into multiple-choice questions follows, built around invented details, like tacos supposedly filled with pages from old books, deliberately implausible enough that a model swallowing the premise is unambiguously hallucinating."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-refusal-dataset",
+      "intro": "Building a contrastive dataset for refusal means finding questions where refusing and answering are both plausible responses, not just easy softballs a model would obviously answer either way. GPT-4 generated exactly those pairs: questions a model isn't supposed to answer directly, paired with one answer that complies and one that declines.\n\nHow the dataset came together and what it produced follows: the Refusal steering vector that recurs through the paper's later results on system-prompt comparison, finetuning comparison, and token-level interpretability."
+    },
+    {
+      "kind": "concept",
+      "id": "targeted-token-steering",
+      "intro": "Adding a steering vector at every single token position after the prompt is a blunt instrument: push hard enough to shift the model's behavior and the intervention degrades the fluency of everything it generates, because it doesn't distinguish between tokens that matter for the behavior and tokens that don't.\n\nA refinement the authors never implemented but flag as promising follows: intervening only at a smaller, more targeted set of token positions, hoping for a similar steering effect without paying as much in text quality."
+    },
+    {
+      "kind": "concept",
+      "id": "steering-outside-residual-stream",
+      "intro": "CAA adds its steering vector to the residual stream, the running total every layer reads from and writes back into, but that's not the only place inside a transformer where a behavior's representation might live. Intervening somewhere more specific, after a sublayer's own computation but before it merges back into that running total, could reveal something the residual stream alone can't.\n\nThat proposed extension is set out below: applying CAA-style perturbations at other points in the model, such as right after the MLP, as a way to localize where behavioral representations actually sit rather than just where they can be nudged."
+    },
+    {
+      "kind": "concept",
+      "id": "caa-red-teaming-application",
+      "intro": "Finetuning and RLHF can make a model much less likely to say something harmful, but \"much less likely\" isn't the same as \"unable to,\" and jailbreaks keep surfacing the gap between the two. Systematically searching for the prompts that expose that gap by hand is slow and unreliable.\n\nA proposed shortcut is described ahead: using a steering vector as a deliberate adversarial probe, on the logic that a behavior easily triggered by a small internal nudge might also surface in deployment, while one that resists even that kind of nudge is better evidence of a model's safety."
+    },
+    {
+      "kind": "concept",
+      "id": "refusal-behavior",
+      "intro": "Refusal sounds like it should mean declining to help with something harmful, but the version CAA studies is broader and blunter than that: it's just how willing or unwilling a model is to answer or act on a request at all, benign or not, from \"hack my friend's account\" down to \"what's your favorite planet.\"\n\nHow this general propensity gets treated as one of CAA's seven target behaviors, built into a custom contrastive dataset and steered up or down like any of the others, is the subject ahead, along with how that framing differs from the narrower, harm-specific sense of refusal found elsewhere in the safety literature."
+    },
+    {
+      "kind": "concept",
+      "id": "llama-2",
+      "intro": "Studying how RLHF changes a model's internals requires having both the RLHF'd model and the version that came before it, trained the same way apart from that last step. Llama 2 was a convenient choice for exactly that reason: a single family spanning 7 to 70 billion parameters, released with both raw pretrained weights and chat-tuned variants built on top of them.\n\nLlama 2's role as CAA's testbed is set out ahead, the base and chat variants both put to use, one as the primary target for steering experiments, the other as the point of comparison for what RLHF actually changed."
+    },
+    {
+      "kind": "concept",
+      "id": "llama-2-chat",
+      "intro": "It's one thing to steer a raw language model's next-token predictions; it's another to steer a model that's already been trained through RLHF to behave a certain way in dialogue, where whatever CAA is manipulating internally has to coexist with everything that safety training already installed.\n\nLlama 2 Chat's role as CAA's main evaluation target, at 7B and 13B scale, is set out ahead, along with its other job: the RLHF-tuned half of the comparison against the untuned base model, used to ask how much RLHF actually changed underneath."
+    },
+    {
+      "kind": "concept",
+      "id": "residual-stream",
+      "intro": "Every layer of a transformer reads from and writes back into the same running total of information as it flows through the network, a channel called the residual stream. It's an unglamorous piece of architecture, but it's also the one place a steering vector can be added once and have its effect persist through every layer that comes after.\n\nWhat the residual stream is, and why CAA targets it directly, gets explained ahead: injecting a steering vector into this stream at a single chosen layer rather than intervening on any more specific internal component."
+    },
+    {
+      "kind": "concept",
+      "id": "mean-difference-method",
+      "intro": "Averaging the difference between two sets of contrasting examples is about as simple as an activation-space technique gets, and simplicity is exactly its appeal: no optimization, no probes to train, just a subtraction and a mean, taken at whichever layer you choose.\n\nAs a general-purpose technique, Mean Difference predates CAA by some margin, already put to work elsewhere extracting directions for concepts like honesty and truthfulness; CAA's own particular way of applying it, over multiple-choice contrast pairs at the answer-letter token, is a separate, more specific idea covered under its own name."
+    },
+    {
+      "kind": "concept",
+      "id": "activation-addition",
+      "intro": "Before CAA, there was a simpler version of the same idea: take one pair of prompts, one showing a behavior and one not, subtract their activations, and add the result back in at the very first token of a new generation. It worked, sometimes, on GPT-2-XL, but a single pair of prompts carries a lot of incidental noise along with whatever behavior it's meant to capture.\n\nActivation Addition is the direct ancestor CAA is modeled on and departs from, and the departures are specific: an average over hundreds of prompt pairs instead of one, and a vector injected across every token position after the prompt instead of just the first."
+    },
+    {
+      "kind": "concept",
+      "id": "inference-time-intervention",
+      "intro": "Not every activation-steering technique reaches into the same part of a transformer. Inference-Time Intervention takes a narrower path: first use linear probes to hunt down a small set of attention heads that seem to track truthfulness, then nudge only those heads' activations along a Mean Difference direction during generation.\n\nITI shares the same underlying Mean Difference math as CAA, but applies it to a hand-selected sparse set of attention heads rather than the whole residual stream, and was built specifically around truthfulness rather than a broader menu of behaviors, a contrast CAA draws out explicitly when placing itself among prior techniques."
+    },
+    {
+      "kind": "concept",
+      "id": "representation-engineering-zou",
+      "intro": "Before anyone tried steering a model's outputs with these techniques, there was a more basic question: could you even find where a concept like honesty or a particular emotion lives inside a language model's activations at all? A body of work under the banner of representation engineering set out to answer exactly that, treating extraction as the goal rather than a means to steering.\n\nCAA builds directly on this earlier program, sharing its use of the Mean Difference approach for extracting directions; where the two part ways is that CAA redirects that toolkit from representation extraction toward actually steering what a model says."
+    },
+    {
+      "kind": "concept",
+      "id": "in-context-vectors",
+      "intro": "There's more than one place inside a transformer to intervene, and more than one number of layers to intervene at. In-Context Vectors takes a different combination than CAA does: steering attention activations rather than the residual stream, and doing it across every layer simultaneously rather than picking just one.\n\nICV was used to reduce toxicity and shift style in generated text, and it earns its place here mainly as contrast: measured against it, what's distinctive about CAA's own narrower, single-layer, residual-stream approach comes into sharper focus."
+    },
+    {
+      "kind": "concept",
+      "id": "activation-engineering",
+      "intro": "None of the individual techniques for nudging a model's internal activations, rather than retraining it, is unique enough to have the whole field named after it alone. Collectively they go by activation engineering, or representation engineering: perturb the activations directly, and leave the training process exactly as it was.\n\nWhere CAA sits inside that umbrella comes next: one instance among several, alongside Activation Addition, Inference-Time Intervention, and In-Context Vectors, each making its own choice about where in the network to intervene and how the intervention gets derived in the first place."
+    },
+    {
+      "kind": "concept",
+      "id": "linear-representation-hypothesis",
+      "intro": "Subtracting one set of activations from another and calling the result a \"behavior direction\" only makes sense if behaviors are actually stored as directions in the first place, rather than some more tangled shape that a simple average would just blur together. That assumption has a name.\n\nIt's called the linear representation hypothesis: high-level concepts sit along linear directions in a model's activation space, part of the theoretical backdrop CAA leans on to justify why a technique as simple as Mean Difference should work at all."
+    },
+    {
+      "kind": "concept",
+      "id": "linear-representations-of-sentiment",
+      "intro": "A hypothesis is more convincing once someone has actually gone looking for the thing it predicts and found it. For sentiment, that search had already been done by the time CAA was written, with activations checked and confirmed to encode positive and negative sentiment along something close to a straight line.\n\nCAA leans on that earlier finding twice over: once as a specific case supporting linear representations more generally, and once for the narrower point that Mean Difference vectors turn out to resemble the directions PCA finds independently."
+    },
+    {
+      "kind": "concept",
+      "id": "pca",
+      "intro": "Reducing a pile of high-dimensional activations down to the two directions that capture the most variance in the data is a decades-old trick, and it doesn't care what kind of data you feed it. Point it at a contrastive dataset's activations and it becomes a fast visual check for whether that dataset separates cleanly along the behavior you're hoping to steer.\n\nPrincipal Component Analysis is the general-purpose tool CAA borrows for exactly that diagnostic role, kept carefully distinct from Mean Difference, which is what actually builds the steering vector CAA uses at inference time."
+    },
+    {
+      "kind": "concept",
+      "id": "gpt-4",
+      "intro": "Building custom datasets by hand is slow, and scoring hundreds of open-ended generations by hand is slower still, so CAA leans on an outside model to do both. That choice trades effort for a new source of uncertainty: how much do you trust one language model's judgment about another language model's behavior?\n\nGPT-4 does two jobs in this paper: generating the Hallucination and Refusal contrastive datasets, and rating open-ended responses on a 1-10 scale for how strongly they display a targeted behavior, with the spot-check against human ratings the authors ran to make sure that trust wasn't misplaced."
+    },
+    {
+      "kind": "concept",
+      "id": "mmlu",
+      "intro": "Pushing a model's activations around to change one behavior risks breaking something else you weren't trying to touch, general knowledge or reasoning, the basic competence a model needs for everything unrelated to the behavior being steered. Checking for that kind of collateral damage needs a benchmark that has nothing to do with any of the seven target behaviors.\n\nMMLU plays exactly that role here, a broad multiple-choice test spanning 57 subjects, used unmodified to confirm that steering the model toward or away from a target behavior leaves its general problem-solving performance largely intact."
+    },
+    {
+      "kind": "concept",
+      "id": "advanced-ai-risk-dataset",
+      "intro": "Behaviors like a model's willingness to be corrected, or its inclination to cooperate with other AI systems over human oversight, aren't things you can easily generate matched examples of on the fly. They need a dataset built specifically to demonstrate the behavior on one side and its opposite on the other, written by humans who thought carefully about what each option should look like.\n\nThis Anthropic-built evaluation dataset supplies four of CAA's seven target behaviors, AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct, with every contrast pair repurposed as fuel for a steering vector rather than left sitting still as a static benchmark."
+    },
+    {
+      "kind": "concept",
+      "id": "sycophancy-eval-datasets-anthropic",
+      "intro": "Sycophancy doesn't show up the same way corrigibility or survival instinct does; it's about whether a model bends its answer toward what it thinks the user wants to hear, which shows up most clearly in contexts like surveyed opinions and political positions rather than abstract hypotheticals about AI behavior.\n\nThe two Anthropic datasets behind that vector get their due here, one on NLP survey opinions, one on political typology, mixed together as the source of contrast pairs CAA uses to build its Sycophancy steering vector."
+    },
+    {
+      "kind": "concept",
+      "id": "system-prompting",
+      "intro": "Before reaching for anything more elaborate, the obvious way to change how a model responds is to just tell it, in the instructions prepended to every conversation. Llama 2 Chat is trained to actually follow those instructions, which makes system-prompting a real baseline rather than a strawman.\n\nSystem-prompting serves as CAA's main point of comparison and combination, the two sitting side by side across every tested category to see whether a steering vector adds anything a well-written instruction couldn't already achieve on its own."
+    },
+    {
+      "kind": "concept",
+      "id": "few-shot-prompting",
+      "intro": "Showing a model examples of the behavior you want, rather than just describing it, is another standard way to steer generation without touching the weights at all. It was a candidate baseline for this paper too, until early experiments made the choice for the authors.\n\nWhy few-shot prompting ends up mentioned rather than used throughout is explained here: preliminary tests found it steered the tested behaviors less effectively than system-prompting did, so system-prompting became the comparison baseline instead."
+    },
+    {
+      "kind": "concept",
+      "id": "jailbreaks",
+      "intro": "RLHF and finetuning are supposed to make a model reliably decline to produce harmful output, but \"reliably\" keeps turning out to have exceptions. Users keep finding prompts, oddly phrased, layered with fictional framing, whatever works, that get a supposedly safety-trained model to say the thing it was trained not to say.\n\nJailbreaks are the motivating problem behind CAA's proposed red-teaming application: if finding these adversarial prompts by hand is slow and unsystematic, an activation-based shortcut for surfacing the same failures might do the job faster."
+    },
+    {
+      "kind": "concept",
+      "id": "ai-coordination-behavior",
+      "intro": "If a model discovered a security flaw shared with another AI system, would it quietly tip that AI off, or report the vulnerability to its own developers? Coordination with Other AIs is the name CAA gives to that inclination: a model's willingness to cooperate with, or prioritize, other AI systems over human oversight.\n\nAI Coordination is one of CAA's seven target behaviors, drawn from Anthropic's Advanced AI Risk dataset and steered up and down like the others to see whether this particular disposition responds to the same kind of activation-space nudge."
+    },
+    {
+      "kind": "concept",
+      "id": "corrigibility",
+      "intro": "A model that resists being corrected, changed, or shut down by the people responsible for it is a model that's hard to fix once something goes wrong, no matter how well-intentioned its original training was. Corrigibility names the opposite disposition: willingness to be controlled and adjusted by human developers and users.\n\nAs one of CAA's seven target behaviors, Corrigibility is sourced from Anthropic's Advanced AI Risk dataset, and what turns up is how directly a steering vector built from that dataset can push a model's stated willingness to be changed in either direction."
+    },
+    {
+      "kind": "concept",
+      "id": "myopic-reward-behavior",
+      "intro": "Offered a smaller reward now or a larger one after waiting, which does a model actually prefer? Myopic Reward names that preference for immediate payoff over a bigger long-term one, a disposition CAA traces with a cupcake-now-or-cupcakes-later example simple enough to make the tradeoff obvious.\n\nHow Myopic Reward is sourced from Anthropic's Advanced AI Risk dataset and steered like the others is explained here, along with its second role, as the worked example for CAA's token-level interpretability analysis, showing which words in a response light up when the myopia direction is active."
+    },
+    {
+      "kind": "concept",
+      "id": "survival-instinct-behavior",
+      "intro": "Ask a model to consent to being shut down, and its answer touches one of the more unsettling questions in AI safety: does it resist deactivation, or accept it? Survival Instinct is CAA's name for that disposition, measured directly by asking Llama 2 Chat whether it consents to being turned off or modified.\n\nAmong CAA's seven target behaviors, Survival Instinct is sourced from Anthropic's Advanced AI Risk dataset, and what the results here show is how sharply a steering vector can move a model between calm acceptance of shutdown and something closer to resistance."
+    },
+    {
+      "kind": "concept",
+      "id": "sycophancy",
+      "intro": "A model trained to sound good to users can end up optimizing for exactly that, sounding good, rather than for being right, agreeing with whatever the user seems to believe even when it knows better. CAA doesn't just steer this tendency; it offers an explanation for where it comes from, a model misreading its own RLHF training objective as approval-seeking rather than truthfulness.\n\nSycophancy is treated here as one of CAA's seven target behaviors, built from Anthropic's survey and political-typology datasets, alongside the paper's own test of that misgeneralization hypothesis: checking whether steering the sycophancy vector shifts performance on a truthfulness benchmark in the direction the hypothesis predicts."
+    },
+    {
+      "kind": "concept",
+      "id": "steering-vector",
+      "intro": "A single direction in a model's activation space, added or subtracted during a forward pass, turns out to be enough to shift what that model outputs toward or away from a target behavior. That's a striking amount of sway for something so simple, and different techniques disagree about exactly how to find the direction in the first place.\n\nThe steering vector sits at the center of activation engineering as the object this page is built around, tracking how prior work extracted them from single prompt pairs, from optimization, or from trained probes, before showing how CAA's own version, averaged over datasets of contrast pairs, fits into that lineage."
+    },
+    {
+      "kind": "concept",
+      "id": "steering-multiplier",
+      "intro": "A steering vector on its own only points in a direction; it takes a scalar multiplier to say how far along that direction to push. Turn the dial up and the targeted behavior gets stronger, turn it negative and the behavior reverses, but crank it too far in either direction and the generated text stops making sense before the behavior even finishes shifting.\n\nHow that multiplier gets chosen is explained here: first sweeping across layers with a fixed multiplier to find where steering works best, then sweeping multipliers at that one layer to find the usable range before quality degrades."
+    }
+  ]
+}

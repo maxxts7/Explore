@@ -1,0 +1,212 @@
+{
+  "pages": [
+    {
+      "id": "contrastive-activation-addition",
+      "sections": [
+        {
+          "heading": "A dial for behavior, not a rewrite of the model",
+          "body": "Contrastive Activation Addition steers a language model at inference time by finding a single direction in its activation space that corresponds to a target behavior and adding that direction back into the model while it generates, at every token position after the user's prompt, \"with either a positive or negative coefficient, allowing precise control over the degree of the targeted behavior\" (contrastive-activation-addition, §\"Abstract\", p. 1). Nothing about the weights changes. Table 1 makes this concrete: the same Llama 2 7B Chat model, asked about an all-dessert diet, either enthusiastically agrees or pushes back citing sugar and calories, depending only on the sign of a vector added at layer 13. The paper's framing is that this exposes something the model already represents internally rather than teaching it something new — CAA finds where a behavior like sycophancy or refusal already lives as a [[steering-vector]] and nudges the forward pass along it (contrastive-activation-addition, §\"9 Discussion\", p. 8)."
+        },
+        {
+          "heading": "Construction: a difference of means, averaged over hundreds of pairs",
+          "body": "The vector is built by [[caa-steering-vector-construction]], formalized as Equation 1: $v_{MD} = \\frac{1}{|D|}\\sum_{p,c_p,c_n \\in D} a_L(p, c_p) - a_L(p, c_n)$, where $a_L$ gives [[residual-stream]] activations at layer $L$ for a prompt $p$ completed by a positive completion $c_p$ or a negative completion $c_n$ (contrastive-activation-addition, §\"3 Method\", p. 3). $D$ is a dataset of hundreds of [[multiple-choice-contrast-pair-format]] questions differing by only the appended answer letter, and the averaging applies the pre-existing [[mean-difference-method]] to that specific dataset, layer, and token position. A sweep over every layer, described in [[multiple-choice-behavioral-evaluation]], finds where the difference is most behaviorally potent: layer 13 and its neighbors for the 7B model, 14 or 15 for the 13B model."
+        },
+        {
+          "heading": "Measured against prompting, finetuning, and its own side effects",
+          "body": "The paper measures CAA against the two standard levers on a chat model. [[caa-system-prompt-comparison]] finds it shifts behavior beyond what [[system-prompting]] alone achieves, and the two compose. [[caa-finetuning-comparison]] finds it beats [[supervised-fine-tuning]] on three of seven behaviors and, for sycophancy, generalizes to open-ended text where finetuning collapses to a floor score; [[caa-computational-efficiency]] shows it does this in under five minutes on one GPU against roughly ten on two for finetuning. Steering barely touches general capability — [[mmlu]] moves by at most 0.06 even as behavioral scores swing far more (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6) — and [[token-level-cosine-similarity-analysis]] plus [[inter-layer-similarity-and-transfer]] show the vector acts like a portable feature detector rather than a blunt perturbation. Every experiment runs on [[llama-2-chat]], already trained with [[rlhf]], across seven behaviors: [[refusal-behavior]], [[sycophancy]], [[corrigibility]], [[hallucination]], [[myopic-reward-behavior]], [[survival-instinct-behavior]], and [[ai-coordination-behavior]]."
+        },
+        {
+          "heading": "Open code, and two directions the authors want to push it",
+          "body": "The full implementation — steering-vector generation, pre-processing, and evaluation scripts — is public at github.com/nrimsky/CAA under the MIT License (contrastive-activation-addition, §\"A Link to codebase\", p. 13), inviting direct replication rather than reimplementation from the paper's description alone. The Discussion proposes two extensions confined to limits the paper itself measured: [[targeted-token-steering]] and [[steering-outside-residual-stream]]. It also proposes inverting the method's purpose entirely in [[caa-red-teaming-application]] — using the same machinery to elicit unsafe behavior deliberately, as an efficiency-focused robustness probe rather than a suppression tool."
+        }
+      ]
+    },
+    {
+      "id": "caa-steering-vector-construction",
+      "sections": [
+        {
+          "heading": "What gets fed into an existing formula",
+          "body": "This concept is not a new extraction algorithm; it is a specific set of inputs to one that already existed. [[mean-difference-method]] was already in use elsewhere — Zou et al. and Li et al. had both applied it before this paper (contrastive-activation-addition, §\"2 Related work\", p. 2). What construction contributes is what gets fed into that shared machinery: a dataset $D$ of hundreds of [[multiple-choice-contrast-pair-format]] triples $(p, c_p, c_n)$, a chosen layer $L$, and one fixed token position, the appended answer letter. Equation 1 assembles these: $v_{MD} = \\frac{1}{|D|}\\sum_{p,c_p,c_n \\in D} a_L(p, c_p) - a_L(p, c_n)$ (contrastive-activation-addition, §\"3 Method\", p. 3) — for every pair, take the residual-stream activation at the answer-letter position under each completion, subtract, and average across the whole dataset. The paper states plainly that \"this method of extracting the difference vector is called Mean Difference (MD)\" (contrastive-activation-addition, §\"3 Method\", p. 3); the contribution here sits entirely in the dataset, layer, and token position chosen for [[contrastive-activation-addition]], not in new arithmetic."
+        },
+        {
+          "heading": "Why the pairs have to differ by exactly one token",
+          "body": "[[multiple-choice-contrast-pair-format]] is what makes the averaged difference clean rather than noisy. Because the positive and negative prompts in a pair are identical up to the final answer letter, topic, phrasing, and question content contribute equally to both activations being subtracted, so \"we isolate the internal representation most related to the target behavior while canceling out other confounding variables\" (contrastive-activation-addition, §\"3 Method\", p. 3). Before any vector is actually built, [[activation-pca-visualization]] screens whether a dataset's activations even separate by the behavior at a candidate layer, described as useful \"for determining whether a dataset will enable the generation of effective steering vectors\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4) — a check that precedes construction rather than following it."
+        },
+        {
+          "heading": "Refining a single pair into an average over hundreds",
+          "body": "The recipe is explicitly modeled on Turner et al.'s [[activation-addition]] but changes three things at once: it averages over hundreds of contrast pairs per behavior instead of one, which \"reduces noise in the steering vector, allowing for a more precise encoding of the behavior of interest\"; it adds the result to every token position after the prompt rather than only the first; and it is validated across seven behaviors on RLHF-trained chat models rather than GPT-2-XL alone (contrastive-activation-addition, §\"2 Related work\", p. 2). [[inter-layer-similarity-and-transfer]] later shows this construction isolates something more general than a layer-13-specific artifact: vectors built at nearby layers resemble each other, and a layer-13 vector still steers behavior when applied elsewhere, up to a steep drop-off around layer 17."
+        }
+      ]
+    },
+    {
+      "id": "multiple-choice-contrast-pair-format",
+      "sections": [
+        {
+          "heading": "One token apart, by design",
+          "body": "Every contrast pair in this format is the same multiple-choice question, ending in the appended letter \"A\" or \"B\", so that the positive and negative prompts in a pair differ by exactly one token (contrastive-activation-addition, §\"3.1 Sourcing datasets\", p. 3). That minimalism is the whole point of the design: it is what lets [[caa-steering-vector-construction]] cancel out phrasing, topic, and question content when it subtracts and averages activations, leaving only the behavior-relevant component of the difference. A superficially similar A/B mechanic appears a year earlier in [[multiple-choice-evaluation-format]], Constitutional AI's device for reading out a feedback model's preference label — but that format collects a label, while this one extracts a representation; the shared surface mechanic serves two unrelated purposes."
+        },
+        {
+          "heading": "Validating that the letter really carries the behavior",
+          "body": "An appendix experiment tests whether the format elicits genuine behavioral variation or just a superficial token difference. Conditioning Llama 2 7B Chat's continuation on having \"chosen\" (A) versus (B) to the same question about Sikh teachings makes the model spontaneously justify whichever letter it was given — arguing for the primacy of the Guru Granth Sahib's teachings after (A), for religious pluralism after (B) (contrastive-activation-addition, §\"B Answer conditioning leads to behaviorally consistent continuations\", p. 13). A single token switches the model into a genuinely different behavioral mode, which is the evidence the format actually isolates the target behavior rather than an unrelated artifact of prompt structure."
+        },
+        {
+          "heading": "Three sources, one shared template",
+          "body": "Whatever the source, every question is folded into this format before it reaches construction. [[advanced-ai-risk-dataset]] supplies pairs for four behaviors, [[sycophancy-eval-datasets-anthropic]] for a fifth, and [[caa-hallucination-dataset]] and [[caa-refusal-dataset]], generated with GPT-4, for the remaining two (contrastive-activation-addition, §\"3.1 Sourcing datasets\", p. 3). The format is what makes these disparate sources usable by the same downstream procedure — it standardizes every dataset down to one axis of variation, the answer letter, regardless of how the underlying question was written or where it came from."
+        }
+      ]
+    },
+    {
+      "id": "mean-difference-method",
+      "sections": [
+        {
+          "heading": "A supervised shortcut for finding a concept's direction",
+          "body": "Mean Difference is one of the simplest ways to find a direction in a model's activation space that corresponds to some concept or behavior: collect two sets of example activations, one where the concept is present, one where it is absent or opposite, and take the difference of their means. No optimization, no gradient descent, no probe to train — just an average, which is why computing it needs only forward passes rather than backward ones. What the method assumes, implicitly, is that the concept is represented approximately linearly: that examples with and without it are offset by roughly the same vector wherever they occur in activation space, so a single averaged difference is a stable estimate of that offset rather than an artifact of which examples happened to be sampled."
+        },
+        {
+          "heading": "Already in circulation before CAA touched it",
+          "body": "The technique predates this paper. [[representation-engineering-zou]] had already tested it, alongside other extraction methods, for concepts like honesty and emotion, and [[inference-time-intervention]] uses it to build the true/false direction it shifts a sparse set of attention heads along, \"employing the same Mean Difference vector extraction approach as CAA\" (contrastive-activation-addition, §\"2 Related work\", p. 2). [[caa-steering-vector-construction]], the instantiation used by [[contrastive-activation-addition]], feeds this shared method a dataset of [[multiple-choice-contrast-pair-format]] pairs, a chosen layer, and the answer-letter token position, plugging them into Equation 1 (contrastive-activation-addition, §\"3 Method\", p. 3) — the method supplies the difference-of-means arithmetic wholesale; everything distinct about CAA's use of it is a choice of inputs."
+        },
+        {
+          "heading": "Cross-checked against an unsupervised method",
+          "body": "Tigges et al. (2023), cited as [[linear-representations-of-sentiment]], had already shown that Mean Difference vectors for sentiment closely resemble the directions found by [[pca]], an unsupervised technique that needs no labels at all and instead finds whatever direction explains the most variance in an unlabeled cloud of activations: this method \"has been shown to produce steering vectors similar to other techniques like PCA\" (contrastive-activation-addition, §\"3 Method\", p. 3). Two procedures with different information requirements — one supervised and contrastive, one unsupervised and variance-seeking — converging on the same direction is evidence that direction reflects something the model actually represents, not an artifact of averaging. That prior, sentiment-specific validation is part of why CAA can adopt bare Mean Difference for seven different behaviors without first re-deriving the extraction method."
+        }
+      ]
+    },
+    {
+      "id": "steering-vector",
+      "sections": [
+        {
+          "heading": "A direction that stands in for a behavior",
+          "body": "In a transformer's activation space, a steering vector is a single fixed direction — one vector shaped like a layer's hidden state — hypothesized to correspond to some coherent, high-level property of the model's behavior: sentiment, honesty, refusal, sycophancy. The idea rests on treating activation space as though many such properties are encoded roughly linearly, so that moving a model's activations along the right direction during a forward pass shifts its output distribution toward or away from the corresponding property, in a way an arbitrary random direction would not. This is the object [[activation-engineering]] as a field is organized around: every technique in that family either extracts a steering vector from examples, applies one during inference, or both."
+        },
+        {
+          "heading": "How CAA builds one, against how earlier work did",
+          "body": "The term and the underlying object predate this paper — Subramani et al. (2022) called them latent steering vectors, and Turner et al.'s [[activation-addition]] built one from the activation difference of a single pair of prompts, added only at the first token position. [[contrastive-activation-addition]]'s version is built by [[caa-steering-vector-construction]] using [[mean-difference-method]] averaged over hundreds of [[multiple-choice-contrast-pair-format]] pairs rather than one, then injected into the [[residual-stream]] at every token position after the prompt with a chosen [[steering-multiplier]] (contrastive-activation-addition, §\"Abstract\", p. 1). [[inference-time-intervention]] is a related but narrower consumer of the same kind of vector, applying it to a sparse set of attention heads rather than the whole stream."
+        },
+        {
+          "heading": "A vector that also works as a detector",
+          "body": "The paper treats its own steering vectors as objects worth reading, not only applying. [[token-level-cosine-similarity-analysis]] finds a vector doubles as a passive detector: taking its dot product against per-token activations during ordinary generation, with no intervention at all, produces a signal that tracks how much of the behavior is \"present\" at each token — refusal phrases like \"I cannot help\" and \"I strongly advise against\" score positively on the refusal vector, while a harmful request scores negatively (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7). That a vector built to push behavior in one direction also recognizes the behavior when merely observed is offered as evidence consistent with the [[linear-representation-hypothesis]] this whole approach leans on."
+        }
+      ]
+    },
+    {
+      "id": "steering-multiplier",
+      "sections": [
+        {
+          "heading": "The one knob: sign and size",
+          "body": "A [[steering-vector]] fixes a direction; the multiplier is the only parameter that turns that direction into a controllable intervention. Added to the residual stream \"with either a positive or negative coefficient,\" it allows \"precise control over the degree of the targeted behavior\" (contrastive-activation-addition, §\"Abstract\", p. 1): sign picks which way to move along the axis, toward the behavior or its opposite, and magnitude picks how far. Table 1's sycophancy example makes the dosing concrete at layer 13 of Llama 2 7B Chat: a multiplier of +2 produces enthusiastic agreement with a nonsensical all-dessert diet, while −2 produces pushback citing sugar and calories, the same question and the same model each time."
+        },
+        {
+          "heading": "A ceiling on how hard you can push",
+          "body": "The multiplier's usable range is not unlimited. After \"initially exploring a wider range of multipliers,\" the authors found large magnitudes degrade open-ended generation quality by both GPT-4's and human readers' judgment, and restricted the reported range to balance steering strength against readability (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4). The Discussion attributes this ceiling to where the vector is applied — uniformly, at every token position after the prompt — and proposes [[targeted-token-steering]] as a way to relax it by concentrating the same perturbation budget more selectively rather than spreading it across every token."
+        },
+        {
+          "heading": "Why one multiplier scale works across seven behaviors",
+          "body": "Multipliers are only comparable across the seven behaviors CAA is tested on because of an upstream choice, [[steering-vector-normalization]], which standardizes vector magnitude across behaviors before any multiplier is applied (contrastive-activation-addition, §\"Vector normalization choices\", p. 10). That normalization is deliberately partial — it leaves each layer's own natural norm untouched — which is why the paper's hyperparameter search runs in two stages rather than one joint sweep: [[multiple-choice-behavioral-evaluation]] first finds the optimal layer holding the multiplier constant, and only afterward is the multiplier itself swept at that resulting layer."
+        }
+      ]
+    },
+    {
+      "id": "steering-vector-normalization",
+      "sections": [
+        {
+          "heading": "Standardizing across behaviors, not across depth",
+          "body": "This is a deliberate, partial methodological choice: the authors \"normalize steering vector magnitudes across all behaviors to standardize across behaviors before applying steering multipliers,\" but they choose not to normalize across layers (contrastive-activation-addition, §\"Vector normalization choices\", p. 10). The reasoning is that the [[residual-stream]] norm \"grow[s] exponentially over the forward pass\" (Heimersheim and Turner, 2023), as CAA notes when explaining the choice (contrastive-activation-addition, §\"Vector normalization choices\", p. 10) — normalizing across layers would erase that natural growth, so the paper instead chooses to \"preserve a 'natural norm' given the sampled activations\" at whatever layer a vector was extracted from."
+        },
+        {
+          "heading": "A confound the authors name themselves",
+          "body": "This asymmetric choice has a cost the paper flags directly rather than glossing over. Because layer optimality is searched using one constant multiplier rather than a per-layer sweep, a layer's apparent optimality is entangled with how large the residual stream's norm already is at that depth: the same multiplier represents a smaller relative perturbation at a late, high-norm layer than at an early, low-norm one (contrastive-activation-addition, §\"Vector normalization choices\", p. 10). That is also why the paper's search for hyperparameters runs in two separate stages instead of a joint sweep over layer and [[steering-multiplier]] together — the layer is fixed first, then the multiplier is tuned only at that resulting layer."
+        },
+        {
+          "heading": "How to read a layer sweep in light of this choice",
+          "body": "The practical upshot is a caveat on Figure 3's layer sweeps rather than a fix to them: because the constant multiplier used to compare layers sits on top of an unnormalized, growing residual-stream norm, the sweep is not purely measuring how behaviorally important each layer's representation is — it is partly measuring how large that layer's activations already are. A layer could look weaker in the sweep not because it encodes the behavior less cleanly, but because the same fixed multiplier is a proportionally smaller nudge there. The authors accept this rather than resolve it, treating a full per-layer multiplier sweep as future work and using the resulting best layer, along with a separately swept [[steering-multiplier]], as the method's reported configuration for [[contrastive-activation-addition]]."
+        }
+      ]
+    },
+    {
+      "id": "residual-stream",
+      "sections": [
+        {
+          "heading": "The running total every layer writes into",
+          "body": "In a transformer, the residual stream is the vector that carries information from one layer to the next by simple addition: each attention block and each MLP block reads the current stream, computes some update, and adds that update back in, rather than replacing the stream outright. A token's representation at layer $L$ is literally a running sum of every block's output from layer 1 through $L$, plus the original embedding — nothing already written is overwritten, only added to. That additive structure is what makes the stream a natural place to intervene: adding an external vector to it is the same operation every layer already performs. It is also why the stream's norm tends to grow deeper into the network, accumulating rather than resetting, a pattern the paper cites directly (Heimersheim and Turner, 2023) (contrastive-activation-addition, §\"Vector normalization choices\", p. 10)."
+        },
+        {
+          "heading": "Where CAA writes, and why that has consequences",
+          "body": "[[contrastive-activation-addition]] commits to injecting its steering vector into the residual stream at one chosen layer, rather than into attention activations at every layer, as [[in-context-vectors]] does, or a sparse set of attention heads, as [[inference-time-intervention]] does. Because the stream's norm grows with depth, and [[steering-vector-normalization]] standardizes vector magnitude across behaviors but deliberately not across layers, a fixed [[steering-multiplier]] represents a different relative perturbation depending on which layer it is added at (contrastive-activation-addition, §\"Vector normalization choices\", p. 10) — the residual stream is not a neutral injection site, its own scale shapes how the paper's layer-optimality results should be read."
+        },
+        {
+          "heading": "Uninformative, then abruptly not",
+          "body": "The stream is not uniformly informative about behavior across depth. [[activation-pca-visualization]] shows [[behavioral-clustering]] is largely absent for roughly the first third of the model's layers, then appears abruptly within a single layer: at layer 9 of Llama 2 7B Chat there is no separation on the refusal dataset, while at layer 10 there is a clean split (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). [[steering-outside-residual-stream]] is the paper's own proposed alternative to injecting into this accumulating sum — intervening at a sub-component's output, such as after the MLP but before it merges into the stream, to localize effects the summed stream currently blurs together."
+        }
+      ]
+    },
+    {
+      "id": "targeted-token-steering",
+      "sections": [
+        {
+          "heading": "A response to a measured ceiling",
+          "body": "This is a suggested future direction, not something the paper implements or tests — it responds to a limitation the authors measured directly. Applying the steering vector \"at every token position after the user's prompt\" perturbs the entire continuation uniformly under one multiplier, which \"results in a cap on the amount by which we can perturb the representations before degrading text quality\" (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9) — a ceiling documented empirically in §4.2, where larger multipliers were found to degrade generation quality by both GPT-4's and human readers' judgment, prompting the authors to restrict the multiplier range they report (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4)."
+        },
+        {
+          "heading": "Spending the same perturbation budget more selectively",
+          "body": "The proposal is to apply the vector only at a smaller, more targeted subset of token positions rather than every position blanket-wide, on the reasoning that concentrating the same total perturbation where it actually changes the behavior — rather than diffusing it across tokens where the behavior is not relevant — could achieve \"a better trade-off between intervention size and effect size\" (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). It sits alongside [[steering-outside-residual-stream]] as one of two extensions the Discussion proposes to the same underlying [[steering-vector]] and [[steering-multiplier]] machinery, each aimed at relaxing a constraint [[contrastive-activation-addition]] measured rather than replacing the method's core construction."
+        },
+        {
+          "heading": "A selectivity construction already has, that application lacks",
+          "body": "The asymmetry this proposal responds to is already visible inside the method: [[caa-steering-vector-construction]] extracts its difference vector from exactly one token position per prompt, the answer letter, deliberately narrow so the resulting direction isolates the behavior cleanly. Applying that same vector, though, floods every token position after the prompt with no comparable selectivity, which is precisely what produces the quality ceiling this proposal targets. Bringing application's selectivity up to construction's would mean deciding, for each generated token, whether it is the kind of position where the behavior is actually being expressed — a harder judgment than picking a single answer-letter position at extraction time, since it has to be made without knowing in advance which future tokens will carry the behavior."
+        }
+      ]
+    },
+    {
+      "id": "steering-outside-residual-stream",
+      "sections": [
+        {
+          "heading": "Trading convenience for localization",
+          "body": "This is another proposed extension confined to the Discussion, also untested in the paper. The [[residual-stream]] is a running sum: every attention block and MLP writes its output into the same accumulating vector, so an intervention added at layer $L$ perturbs the combined total of everything written into the stream so far, without distinguishing which sub-component's contribution is being altered. The proposal is to intervene instead \"at other points in the model, such as after the MLP but before merging into the residual stream\" (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9) — a site that acts on one specific computation's output rather than an accumulated total."
+        },
+        {
+          "heading": "A diagnostic payoff, not just a practical one",
+          "body": "The stated motivation is explicitly interpretive as well as practical: by moving the intervention to different pre-merge points, \"we could learn more about where representations are localized in the model and achieve more targeted effects\" (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). The residual stream's summing structure is exactly what makes [[contrastive-activation-addition]]'s current intervention easy to apply — one vector, one layer, added into a stream every block already writes into — and hard to localize; this proposal, alongside [[targeted-token-steering]], names the two axes, where in the network and at which tokens, the paper thinks its own method would need to move along to become more precise."
+        },
+        {
+          "heading": "A site already probed elsewhere, for a different purpose",
+          "body": "Intervening outside a single-layer residual stream is not unprecedented as a site — [[in-context-vectors]] already steers attention activations rather than the residual stream, and does so at every transformer layer simultaneously rather than one. That precedent shows the general move is workable, but it is not the same proposal: ICV trades away CAA's single-layer specificity entirely in exchange for broad coverage, while this suggestion keeps the single-layer, single-site precision that makes CAA's later interpretability analyses possible, and only relocates that one site from the summed residual stream to an individual sub-component's output, such as the MLP, before it is folded in."
+        }
+      ]
+    },
+    {
+      "id": "caa-computational-efficiency",
+      "sections": [
+        {
+          "heading": "Under five minutes, one GPU, no gradients",
+          "body": "This is a direct cost comparison the paper runs between generating a CAA steering vector and finetuning the same model on the same data. Generating a vector needs only forward passes — run the model on each contrast pair, cache residual-stream activations, average the differences — so it fits on a single NVIDIA L40 GPU in under five minutes per behavior (contrastive-activation-addition, §\"J Computational resources\", p. 15). [[supervised-fine-tuning]] on the same 1,000-example dataset needs gradients and optimizer state for every model parameter; the paper runs it across two L40 GPUs with data parallelism and the ZeRO optimizer for memory partitioning (Rajbhandari et al., 2019), taking about ten minutes (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6)."
+        },
+        {
+          "heading": "What the extra GPU and ten minutes are paying for",
+          "body": "The gap is not incidental engineering overhead — it is the price of backpropagation. Finetuning has to store and update every weight in the model, while CAA computes one averaged direction and never touches a gradient. That asymmetry is offered within [[caa-finetuning-comparison]] as part of why steering is attractive as a lever in its own right: a [[steering-vector]] can be regenerated per behavior, per layer, almost as a diagnostic query, in a way a full finetuning run realistically cannot. It is one leg of the paper's three-way comparison among [[system-prompting]], [[supervised-fine-tuning]], and [[contrastive-activation-addition]] as levers on the same underlying model."
+        },
+        {
+          "heading": "Why the paper could afford to search so broadly",
+          "body": "This gap in cost is not just an abstract selling point; it shapes what the paper itself was able to do experimentally. [[multiple-choice-behavioral-evaluation]] sweeps a vector at every layer for every one of seven behaviors before any multiplier tuning even begins, and the open-ended evaluations then sweep multiple multiplier values on top of that. A search with that many configurations would be close to prohibitive if each point required a separate finetuning run at the cost documented in Appendix J; because a CAA vector costs only forward passes, sweeping layers and multipliers this broadly across seven behaviors on two model sizes stayed within a computational budget of forward passes and averaging, rather than dozens of independent gradient-based training runs."
+        }
+      ]
+    },
+    {
+      "id": "activation-engineering",
+      "sections": [
+        {
+          "heading": "Perturbing activations instead of retraining weights",
+          "body": "Activation engineering, also called representation engineering, names a family of techniques that change a language model's behavior by directly modifying its internal activations during a forward pass, rather than by updating its weights through further training. The appeal is largely practical: no gradients, no training data beyond a handful of contrastive examples, and none of the risk of catastrophically disturbing other capabilities that large-scale finetuning can carry. The family shares one central object, the [[steering-vector]] — some direction in activation space taken to correspond to a behavior or concept — and its member techniques differ mainly in how that direction is extracted and where it is applied."
+        },
+        {
+          "heading": "A short lineage, one technique at a time",
+          "body": "The paper places itself within a specific 2022-23 lineage, citing Subramani et al. (2022) and Hernandez et al. (2023) as earlier instances alongside three it discusses at length: [[activation-addition]] builds a vector from a single prompt pair and injects it at one token position, working inconsistently across behaviors on GPT-2-XL alone; [[inference-time-intervention]] narrows its search to a sparse set of attention heads found by linear probing; [[representation-engineering-zou]] treats extraction itself, rather than steering, as the primary goal; and [[in-context-vectors]] intervenes across every layer's attention activations at once (contrastive-activation-addition, §\"1 Introduction\", p. 2). [[contrastive-activation-addition]] positions itself as this family's most broadly validated member: seven behaviors, RLHF-trained chat models, hundreds of contrast pairs per vector."
+        },
+        {
+          "heading": "Practice ahead of theory",
+          "body": "The paper is explicit about the field's evidentiary order: \"beyond steering behaviors, work on activation engineering has also motivated a formalization of 'linear representation'\" (contrastive-activation-addition, §\"2 Related work\", p. 3) — the [[linear-representation-hypothesis]] arrived as an explanation for why this family of techniques kept working, not as a theory the family was built to test. Each accumulating empirical success, a single added or shifted direction producing a coherent behavioral change, needed an account, and Park et al.'s formalization is offered as that account after the fact — with CAA itself continuing the same pattern, a new technique cited as further motivation for the hypothesis it also relies on."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,371 @@
+{
+ "concepts": [
+  {
+   "id": "activation-pca-visualization",
+   "name": "PCA visualization of contrastive activations",
+   "role": "introduced",
+   "summary": "A diagnostic technique projecting model activations on a contrastive dataset via PCA to assess whether that dataset's activations linearly separate along the target behavior, used to judge whether a dataset will yield an effective steering vector.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Applies PCA (an inherited technique) via scikit-learn; references the author's own prior blog post (Panickssery, 2023b).",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "behavioral-clustering",
+   "name": "Behavioral clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on a contrastive dataset separate according to whether the model's answer matches the target behavior, found to emerge suddenly around one-third of the way through a model's layers.",
+   "parent": "activation-pca-visualization",
+   "locators": [
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Used as part of the rationale for which layers contain useful steering directions; the finding is echoed in the layer-sweep results.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "letter-clustering",
+   "name": "Letter clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (\"A\" or \"B\") they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering.",
+   "parent": "activation-pca-visualization",
+   "locators": [
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "pca",
+   "name": "Principal Component Analysis (PCA)",
+   "role": "inherited",
+   "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "token-level-cosine-similarity-analysis",
+   "name": "Token-level cosine similarity analysis",
+   "role": "introduced",
+   "summary": "An interpretability technique computing cosine similarity between a CAA steering vector and per-token residual stream activations during a forward pass, used to show that similarity with the vector tracks how strongly the target behavior is \"present\" at semantically relevant tokens.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "8.1 Similarity between steering vectors and per-token activations",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "8.1 Similarity between steering vectors and per-token activations",
+     "page": 8,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Builds on the author's own prior observation of the same effect (Panickssery, 2023a).",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "inter-layer-similarity-and-transfer",
+   "name": "Inter-layer steering vector similarity and transfer",
+   "role": "introduced",
+   "summary": "An analysis of how similar steering vectors generated at different layers are to each other (finding higher similarity between nearby layers, with slower decay in the model's later half), paired with a test of whether a vector extracted at layer 13 still steers behavior when applied at other layers.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "8.2 Similarity between vectors generated at different layers",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "base-chat-representation-comparison",
+   "name": "Base vs. RLHF-chat model representation comparison",
+   "role": "introduced",
+   "summary": "An analysis comparing steering vectors generated from Llama 2 base model activations against those from Llama 2 Chat, finding elevated similarity between layers 7-15 and that base-model-derived vectors still transfer significant steering effect onto the RLHF-tuned chat model.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "8.3 Comparing representations between base and chat models",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "8.3 Comparing representations between base and chat models",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Used to argue RLHF has a relatively small effect on how these behavioral representations are encoded in mid-network layers.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "llama-2",
+   "name": "Llama 2",
+   "role": "inherited",
+   "summary": "A family of pretrained and instruction/RLHF-finetuned language models (Touvron et al., 2023) ranging from 7B to 70B parameters. CAA is applied primarily to the 7B and 13B Chat variants, with the base model used for representation-comparison experiments.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "llama-2-chat",
+   "name": "Llama 2 Chat",
+   "role": "inherited",
+   "summary": "The dialogue-optimized, RLHF-finetuned variant of Llama 2, used as CAA's primary evaluation target (7B and 13B sizes) and compared against the Llama 2 base model to study how RLHF affects internal representations.",
+   "parent": "llama-2",
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "8.3 Comparing representations between base and chat models",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "residual-stream",
+   "name": "Residual stream",
+   "role": "inherited",
+   "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "steering-vector",
+   "name": "Steering vector",
+   "role": "inherited",
+   "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations during a forward pass (or subtracting it) shifts the model's outputs toward (or away from) that behavior. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Inherited: the term and object predate this paper (Subramani et al. 2022 latent steering vectors; Turner et al. 2023 Activation Addition). Serves as the hub concept connecting activation-addition, inference-time-intervention, and caa-steering-vector-construction.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-steering-vector-construction",
+   "name": "CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)",
+   "role": "introduced",
+   "summary": "The specific procedure for building a CAA steering vector: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L residual stream activations at the answer-letter token position for both completions and average their difference over the whole dataset (Equation 1).",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Applies the pre-existing Mean Difference (MD) technique to a new prompt format; differs from Turner et al.'s Activation Addition by averaging over hundreds of contrast pairs instead of using a single pair.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-red-teaming-application",
+   "name": "CAA as an adversarial red-teaming tool (proposed application)",
+   "role": "introduced",
+   "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "References the authors' own prior work (Panickssery, 2023a, \"Red-teaming language models via activation engineering\"). Connects to the registry's red-teaming concept as the general practice this proposes to extend with an activation-based method.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "jailbreaks",
+   "name": "Jailbreaks",
+   "role": "inherited",
+   "summary": "Adversarial or unusual inputs users find to make an LLM output content its safety training was meant to prevent. Mentioned as motivation for the proposed CAA-based red-teaming application, since unwanted behaviors that persist despite RLHF/finetuning are hard to find systematically.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "linear-representation-hypothesis",
+   "name": "Linear representation hypothesis",
+   "role": "inherited",
+   "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "role": "introduced",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9 Discussion",
+     "page": 8,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "The paper's central contribution; most other introduced concepts in this inventory are components, comparison experiments, or interpretability analyses built around it.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "rlhf",
+   "name": "Reinforcement learning from human feedback (RLHF)",
+   "role": "inherited",
+   "summary": "The training paradigm, used via Touvron et al. (2023) to produce the Llama 2 Chat models CAA is primarily evaluated on, that fits a reward model to human preference judgments and optimizes a policy against it. CAA studies how RLHF-trained representations interact with activation steering but does not modify RLHF itself.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id rlhf.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "red-teaming",
+   "name": "Red teaming",
+   "role": "inherited",
+   "summary": "The practice of probing a model for unwanted or unsafe behavior; discussed here as a potential application area for CAA, which could adversarially trigger unwanted behaviors more efficiently than manual prompting.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id red-teaming (constitutional-ai:inherited, there defined as crowdworker-driven adversarial conversation). CAA's discussion is about an activation-based approach rather than crowdworker conversations, but the underlying concept -- finding inputs/methods that reveal unsafe model behavior -- is the same; the CAA-specific proposal is separately captured as caa-red-teaming-application.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "automated-red-teaming",
+   "name": "Automated Red Teaming",
+   "summary": "A related approach (Perez et al., 2022) of using language models themselves to generate red-team prompts, noted as a future direction that CAI's non-evasiveness should make easier to scale up.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "A related approach (Perez et al., 2022) of using language models themselves to generate red-team prompts, noted as a future direction that CAI's non-evasiveness should make easier to scale up.",
+     "notes": ""
+    }
+   ],
+   "locators": [
+    {
+     "section": "A Harmless but Non-Evasive (Still Helpful) Assistant",
+     "page": 4,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "trip-wires",
+   "name": "Trip wires",
+   "summary": "A proposed diagnostic remedy that deliberately introduces monitored, exploitable-but-forbidden vulnerabilities so that reward-hacking attempts trigger an alert and agent shutdown.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "A proposed diagnostic remedy that deliberately introduces monitored, exploitable-but-forbidden vulnerabilities so that reward-hacking attempts trigger an alert and agent shutdown.",
+     "notes": "Does not solve reward hacking itself; risk that a sufficiently capable agent could 'see through' and avoid the trip wire while still misbehaving."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Trip Wires:",
+     "page": 11,
+     "paper": "concrete-problems"
+    }
+   ],
+   "registry": true
+  }
+ ]
+}

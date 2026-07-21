@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Steering outside the residual stream (proposed extension) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Steering outside the residual stream (proposed extension)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A suggested future direction proposing to apply CAA-style interventions at other points in the model, such as after the MLP but before it merges into the residual stream, to help localize where behavioral representations live.</p>
+<div class="page-intro"><p>CAA adds its steering vector to the residual stream, the running total every layer reads from and writes back into, but that's not the only place inside a transformer where a behavior's representation might live. Intervening somewhere more specific, after a sublayer's own computation but before it merges back into that running total, could reveal something the residual stream alone can't.</p>
+<p>That proposed extension is set out below: applying CAA-style perturbations at other points in the model, such as right after the MLP, as a way to localize where behavioral representations actually sit rather than just where they can be nudged.</p></div>
+<section class="prose-section">
+<h2>Trading convenience for localization</h2>
+<p>This is another proposed extension confined to the Discussion, also untested in the paper. The <a href="../concept/residual-stream.html">Residual stream</a> is a running sum: every attention block and MLP writes its output into the same accumulating vector, so an intervention added at layer $L$ perturbs the combined total of everything written into the stream so far, without distinguishing which sub-component's contribution is being altered. The proposal is to intervene instead "at other points in the model, such as after the MLP but before merging into the residual stream" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>) — a site that acts on one specific computation's output rather than an accumulated total.</p>
+</section>
+<section class="prose-section">
+<h2>A diagnostic payoff, not just a practical one</h2>
+<p>The stated motivation is explicitly interpretive as well as practical: by moving the intervention to different pre-merge points, "we could learn more about where representations are localized in the model and achieve more targeted effects" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>). The residual stream's summing structure is exactly what makes <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a>'s current intervention easy to apply — one vector, one layer, added into a stream every block already writes into — and hard to localize; this proposal, alongside <a href="../concept/targeted-token-steering.html">Steering at targeted token positions (proposed extension)</a>, names the two axes, where in the network and at which tokens, the paper thinks its own method would need to move along to become more precise.</p>
+</section>
+<section class="prose-section">
+<h2>A site already probed elsewhere, for a different purpose</h2>
+<p>Intervening outside a single-layer residual stream is not unprecedented as a site — <a href="../concept/in-context-vectors.html">In-Context Vectors (ICV)</a> already steers attention activations rather than the residual stream, and does so at every transformer layer simultaneously rather than one. That precedent shows the general move is workable, but it is not the same proposal: ICV trades away CAA's single-layer specificity entirely in exchange for broad coverage, while this suggestion keeps the single-layer, single-site precision that makes CAA's later interpretability analyses possible, and only relocates that one site from the summed residual stream to an individual sub-component's output, such as the MLP, before it is folded in.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Steering outside the residual stream (proposed extension)</strong> — <a href="../edge/steering-outside-residual-stream-would-localize-representations-beyond-residual-stream.html">would localize representations beyond</a> → Residual stream</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;9.1 Suggested future work&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

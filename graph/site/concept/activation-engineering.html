@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Activation engineering / representation engineering (technique family) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Activation engineering / representation engineering (technique family)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering.</p>
+<div class="page-intro"><p>None of the individual techniques for nudging a model's internal activations, rather than retraining it, is unique enough to have the whole field named after it alone. Collectively they go by activation engineering, or representation engineering: perturb the activations directly, and leave the training process exactly as it was.</p>
+<p>Where CAA sits inside that umbrella comes next: one instance among several, alongside Activation Addition, Inference-Time Intervention, and In-Context Vectors, each making its own choice about where in the network to intervene and how the intervention gets derived in the first place.</p></div>
+<section class="prose-section">
+<h2>Perturbing activations instead of retraining weights</h2>
+<p>Activation engineering, also called representation engineering, names a family of techniques that change a language model's behavior by directly modifying its internal activations during a forward pass, rather than by updating its weights through further training. The appeal is largely practical: no gradients, no training data beyond a handful of contrastive examples, and none of the risk of catastrophically disturbing other capabilities that large-scale finetuning can carry. The family shares one central object, the <a href="../concept/steering-vector.html">Steering vector</a> — some direction in activation space taken to correspond to a behavior or concept — and its member techniques differ mainly in how that direction is extracted and where it is applied.</p>
+</section>
+<section class="prose-section">
+<h2>A short lineage, one technique at a time</h2>
+<p>The paper places itself within a specific 2022-23 lineage, citing Subramani et al. (2022) and Hernandez et al. (2023) as earlier instances alongside three it discusses at length: <a href="../concept/activation-addition.html">Activation Addition (ActAdd)</a> builds a vector from a single prompt pair and injects it at one token position, working inconsistently across behaviors on GPT-2-XL alone; <a href="../concept/inference-time-intervention.html">Inference-Time Intervention (ITI)</a> narrows its search to a sparse set of attention heads found by linear probing; <a href="../concept/representation-engineering-zou.html">Representation Engineering (Zou et al. 2023)</a> treats extraction itself, rather than steering, as the primary goal; and <a href="../concept/in-context-vectors.html">In-Context Vectors (ICV)</a> intervenes across every layer's attention activations at once (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"1 Introduction", p. 2</a>). <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a> positions itself as this family's most broadly validated member: seven behaviors, RLHF-trained chat models, hundreds of contrast pairs per vector.</p>
+</section>
+<section class="prose-section">
+<h2>Practice ahead of theory</h2>
+<p>The paper is explicit about the field's evidentiary order: "beyond steering behaviors, work on activation engineering has also motivated a formalization of 'linear representation'" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"2 Related work", p. 3</a>) — the <a href="../concept/linear-representation-hypothesis.html">Linear representation hypothesis</a> arrived as an explanation for why this family of techniques kept working, not as a theory the family was built to test. Each accumulating empirical success, a single added or shifted direction producing a coherent behavioral change, needed an account, and Park et al.'s formalization is offered as that account after the fact — with CAA itself continuing the same pattern, a new technique cited as further motivation for the hypothesis it also relies on.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Activation engineering / representation engineering (technique family)</strong> — <a href="../edge/activation-engineering-empirically-motivated-the-formalization-of-linear-representation-hypothesis.html">empirically motivated the formalization of</a> → Linear representation hypothesis</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/activation-engineering-family.html">The activation engineering family: from single pairs to datasets</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

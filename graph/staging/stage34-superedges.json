@@ -1,0 +1,104 @@
+{
+ "superedges": [
+  {
+   "id": "dataset-quality-sets-vector-ceiling",
+   "type": "sets-the-quality-ceiling-for",
+   "source": "behavioral-contrast-datasets",
+   "target": "behavior-as-a-direction",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "Before Equation 1 ever runs, the theme upstream of it has already decided how good the resulting vector can be. Behavioral clustering is the paper's own diagnostic for this: projecting a dataset's contrastive activations through PCA checks whether representations separate by which answer matches the target behavior, before any vector is extracted, distinguishing a dataset that will yield an effective steering vector from one that won't (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). That check exists because Mean Difference relies on averaging to cancel noise the multiple-choice format alone cannot cancel: using hundreds of diverse contrast pairs rather than a single one is explicitly what \"reduces noise in the steering vector, allowing for a more precise encoding of the behavior of interest\" (contrastive-activation-addition, §\"2 Related work\", p. 2). Generation sets range from 290 pairs for Corrigibility to 1000 for Hallucination and Sycophancy (contrastive-activation-addition, Appendix E, p. 14) — a weak vector gets fixed, or doesn't, in the dataset, not in the extraction formula."
+  },
+  {
+   "id": "caa-as-family-latest-delta",
+   "type": "closes-out-three-limits-inside",
+   "source": "behavior-as-a-direction",
+   "target": "activation-engineering-family",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "Contrastive Activation Addition doesn't just belong to this lineage, it closes out three separate limitations the family narrative lists behavior by behavior. Activation Addition builds its vector from a single pair of prompts and adds it only at the first token position, a method the paper reports \"does not consistently work for different behaviors, is not robust to different prompts\" (contrastive-activation-addition, §\"2 Related work\", p. 2); CAA's fix is dataset-averaging over hundreds of pairs plus injection at every token position after the prompt, not just the first. Representation Engineering already used the same Mean Difference extraction, but without CAA's multiple-choice format, whose paired prompts differ by only a single token; that tighter contrast is what the family theme doesn't explain about why CAA's vectors come out less confounded than Zou's (contrastive-activation-addition, §\"2 Related work\", p. 2-3). In-Context Vectors intervenes at every layer's attention activations; CAA deliberately narrows back to one layer, applied directly to the residual stream, trading breadth for a localized, interpretable effect."
+  },
+  {
+   "id": "dials-only-as-complete-as-datasets",
+   "type": "is-bounded-by-what-was-already-written-down-in",
+   "source": "alignment-behaviors-made-dials",
+   "target": "behavioral-contrast-datasets",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "A behavior only becomes steerable once it has been turned into paired A/B questions, and the theme cataloging seven behaviors is bounded exactly by what that writing-down process could produce. Four behaviors, AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct, exist as dials only because Anthropic's Advanced AI Risk dataset already contained paired demonstrating and opposing answers for them; Sycophancy exists as a dial because the Sycophancy on NLP Survey and Political Typology datasets already existed (contrastive-activation-addition, §\"3.1 Sourcing datasets\", p. 3). Hallucination and Refusal have no such prior source, so the paper manufactures both with GPT-4, following Rawte et al.'s taxonomy for the former and contrasting refusal against compliant answers for the latter (contrastive-activation-addition, Appendix C, p. 13; Appendix D, p. 13). The catalog's shape, in other words, tracks data availability rather than any independent ranking of which seven alignment worries matter most."
+  },
+  {
+   "id": "evals-certify-the-dial-metaphor",
+   "type": "certifies-the-dial-metaphor-for",
+   "source": "judging-steered-outputs",
+   "target": "alignment-behaviors-made-dials",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "A dial is only a dial if turning it does what it claims and nothing else, and this theme supplies both halves of that proof for the other. The multiple-choice sweep across every layer at multipliers of −1 and +1 shows each of the seven behaviors moving monotonically with the sign of the multiplier on 50 held-out questions, the evidence that a behavior is actually being dialed up or down rather than merely correlated with the vector (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). The MMLU capability floor supplies the other half: sampling ten questions from each of 57 subjects and reporting average probability on the correct answer, the paper finds \"our intervention does not significantly affect MMLU performance\" under the same interventions that move the seven behaviors (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). Without both checks, \"seven dials\" would just be seven unverified vector labels; together they certify that the dial metaphor, and not just the vector's existence, is earned."
+  },
+  {
+   "id": "clustering-depth-sets-optimal-layer",
+   "type": "explains-the-one-hyperparameter-in",
+   "source": "reading-the-residual-stream",
+   "target": "behavior-as-a-direction",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "CAA has exactly one hyperparameter search, over layers, and this theme explains why the search lands where it does. Projecting each behavior's contrastive activations through PCA shows representations separating cleanly by whether the model's answer matches the target behavior only after a sudden transition, emerging \"around one-third of the way through the layers\" rather than gradually (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The layer-sweep results the method theme reports as its headline finding land almost exactly there: a clear optimum at layer 13 in the 7B model (32 layers) and layer 14 or 15 in the 13B model (40 layers), found by testing multipliers of −1 and 1 across every layer on held-out questions (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). The interpretability finding and the method's tuning result are the same phenomenon measured two ways: representations become behaviorally legible at roughly the depth where intervening on them starts to work."
+  },
+  {
+   "id": "same-instruments-new-question",
+   "type": "repurposes-the-instruments-of",
+   "source": "what-rlhf-leaves-behind",
+   "target": "reading-the-residual-stream",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "Nothing about the technique changes between these two uses, only the question it is pointed at. Inter-layer cosine similarity was first built to ask how a single behavior's representation evolves with depth inside one model, finding that vectors from nearby layers resemble each other closely and that this similarity decays more slowly in the network's second half (contrastive-activation-addition, §\"8.2 Similarity between vectors generated at different layers\", p. 7). The base-versus-chat comparison repurposes the identical metric, cosine similarity between vectors, and the identical transfer test, applying one layer's vector at another, to ask a different question entirely: not how a behavior's representation changes with depth, but how it changes with RLHF. The similarity between base-model and chat-model vectors peaks specifically between layers 7 and 15, and base-extracted vectors still steer the chat model's behavior most strongly in that same range (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 8). The instruments were never behavior-specific; they were depth-of-representation instruments all along."
+  },
+  {
+   "id": "audit-inverts-steering-polarity",
+   "type": "inverts-the-control-mechanism-of",
+   "source": "steering-as-audit",
+   "target": "behavior-as-a-direction",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "steering-and-model-internals",
+   "prose": "Steering's own control machinery, a vector times a signed multiplier, is what the red-teaming proposal repurposes unchanged, only run toward the behavior instead of away from it. Nothing in how the vector is built or applied differs: the same Equation-1 average-difference vector, the same injection at every token position after the prompt, that suppresses a behavior at multiplier −1 elicits it at multiplier +1 just as reliably (contrastive-activation-addition, §\"3 Method\", p. 3). The paper's own framing of this inversion is explicit: \"CAA could be used as an adversarial intervention to trigger unwanted behaviors in models more efficiently,\" on the premise that \"if a behavior can be easily triggered through techniques such as CAA, it may also occur in deployment\" (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). What was a dial for controlling output becomes, at the same setting, a probe for testing whether safety training actually removed a behavior or just suppressed its default expression."
+  },
+  {
+   "id": "steering-as-fourth-pipeline-lever",
+   "type": "adds-a-fourth-lever-after",
+   "source": "steering-vs-training-levers",
+   "target": "rlhf-three-step-pipeline",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "supertheme": "scalable-oversight-to-rlhf-pipeline",
+   "prose": "InstructGPT's three-step pipeline was built to produce a finished, safety-tuned chat model; the 2023 paper's contribution is to treat that finished model as a substrate you can still act on. CAA is applied to Llama 2 Chat, itself \"finetuned using RLHF for safety\" through pretraining, supervised finetuning, and PPO against a learned reward model, the same three-stage recipe InstructGPT establishes (contrastive-activation-addition, §\"1 Introduction\", p. 2). Steering does not touch any of those three stages; it is a fourth lever, applied entirely at inference time after all of them have finished, and the paper's layer sweeps still find substantial, controllable movement in seven separate behaviors on that already-trained model (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). That a post-hoc, training-free intervention can still move behavior this much implies the finished pipeline's product is not as fixed as \"three steps and done\" suggests — there is slack in the trained model that the pipeline itself never used up."
+  },
+  {
+   "id": "base-chat-transfer-explains-failure-survival",
+   "type": "supplies-a-mechanism-for",
+   "source": "what-rlhf-leaves-behind",
+   "target": "rlhf-failure-modes",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "supertheme": "scalable-oversight-to-rlhf-pipeline",
+   "prose": "Where RLHF alignment still falls short catalogs failures, hallucination, hedging, reward over-optimization, without saying why training leaves them reachable. The 2023 paper's base-versus-chat comparison supplies a candidate mechanism. Steering vectors extracted from Llama 2's pretrained base model and from its RLHF-trained chat counterpart show cosine similarity elevated specifically between layers 7 and 15, and vectors built purely from base-model activations still transfer significant steering effect onto the chat model in that same range (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 8). If RLHF reweighted behavior expression without rewriting mid-network representations, a failure mode like sycophancy, present in an entirely different RLHF-trained model than InstructGPT, would survive training not as a bug the pipeline missed but because the representation it rides on was never substantially altered, only suppressed, and so remains reachable by a small post-hoc intervention rather than requiring retraining to fix."
+  },
+  {
+   "id": "steering-reprices-oversight-economics",
+   "type": "re-runs-the-cost-argument-of",
+   "source": "steering-vs-training-levers",
+   "target": "economics-of-human-feedback",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "supertheme": "scalable-oversight-to-rlhf-pipeline",
+   "prose": "The economics of human feedback prices oversight in minutes of contractor attention, arriving at roughly $25 of compute against roughly $36 of labor for 5,000 comparison labels. The 2023 paper runs the same style of accounting one level down the stack, in GPU time rather than human time. Generating a CAA steering vector needs only forward passes and takes under five minutes on a single GPU; finetuning the same model on a comparable dataset needs backward passes too and takes around ten minutes on two GPUs (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6; Appendix J, p. 15). Both papers make the identical structural argument, that a cheaper mechanism can substitute for a more expensive one without giving up much effectiveness, but the currency has shifted entirely: 2017 economizes on the human labeler that upstream themes in this supertheme spend their whole budget on, while 2023 economizes on the GPU-minutes needed to move a trained model's behavior at all."
+  }
+ ]
+}

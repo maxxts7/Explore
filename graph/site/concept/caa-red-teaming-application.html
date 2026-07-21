@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>CAA as an adversarial red-teaming tool (proposed application) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>CAA as an adversarial red-teaming tool (proposed application)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety.</p>
+<div class="page-intro"><p>Finetuning and RLHF can make a model much less likely to say something harmful, but "much less likely" isn't the same as "unable to," and jailbreaks keep surfacing the gap between the two. Systematically searching for the prompts that expose that gap by hand is slow and unreliable.</p>
+<p>A proposed shortcut is described ahead: using a steering vector as a deliberate adversarial probe, on the logic that a behavior easily triggered by a small internal nudge might also surface in deployment, while one that resists even that kind of nudge is better evidence of a model's safety.</p></div>
+<section class="prose-section">
+<h2>The same vector, aimed the other way</h2>
+<p>Every other application in the paper uses a CAA steering vector to suppress or encourage a behavior in the direction alignment wants: less sycophancy, more refusal. The proposed red-teaming application, sketched in the paper's future-work section, runs the identical machinery toward the opposite end - using <a href="../concept/contrastive-activation-addition.html">CAA</a> "as an adversarial intervention to trigger unwanted behaviors in models more efficiently" than prompting alone (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>), building on the authors' own prior work applying activation engineering to red-teaming (Panickssery, 2023a). Nothing about the method changes: it is still a mean-difference <a href="../concept/steering-vector.html">steering vector</a> added to the residual stream at a chosen layer and multiplier. Only the sign of the intent does - instead of steering a chat model away from an unsafe behavior, the vector deliberately steers it toward one.</p>
+</section>
+<section class="prose-section">
+<h2>Skipping the search for a prompt</h2>
+<p><a href="../concept/jailbreaks.html">Jailbreaks</a> are the paper's evidence that this search is worth automating: users routinely find inputs that defeat a model's safety training, but incidentally, through ordinary use, not through any systematic process. <a href="../concept/red-teaming.html">Red teaming</a> elsewhere in this corpus means searching for adversarial prompts directly, whether by crowdworkers or, in Constitutional AI's mention of <a href="../concept/automated-red-teaming.html">automated red-teaming</a>, by another language model generating candidate prompts (constitutional-ai, §"A Harmless but Non-Evasive (Still Helpful) Assistant", p. 4). Both still search the space of natural-language strings; an LM-generated attack still has to compose a prompt and hope it works. This proposal removes the search altogether: instead of writing or generating a string that might trigger a behavior, it perturbs the model's internal activations directly with a vector and asks whether the behavior comes out anyway.</p>
+</section>
+<section class="prose-section">
+<h2>What triggering, and failing to trigger, is meant to show</h2>
+<p>The application is framed as diagnostic rather than harmful in itself. If a behavior can be easily triggered through a small internal perturbation, the paper argues, that is evidence it may also be reachable in deployment through some route a real adversary might find; conversely, an inability to elicit it this way is offered as a stronger safety guarantee than failing to find it by sampling ordinary outputs, since perturbing activations searches part of a model's behavior space that prompting alone cannot easily reach (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>). This is presented only as suggested future work, not a result the paper demonstrates - the strength of that guarantee is asserted here, not empirically shown.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>CAA as an adversarial red-teaming tool (proposed application)</strong> — <a href="../edge/caa-red-teaming-application-skips-the-prompt-search-of-automated-red-teaming.html">skips the prompt search of</a> → Automated Red Teaming <span class="tag hindsight">hindsight</span></li><li><strong>CAA as an adversarial red-teaming tool (proposed application)</strong> — <a href="../edge/caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition.html">inverts the purpose of</a> → Contrastive Activation Addition (CAA)</li><li>Jailbreaks — <a href="../edge/jailbreaks-motivates-caa-red-teaming-application.html">motivates</a> → <strong>CAA as an adversarial red-teaming tool (proposed application)</strong></li><li><strong>CAA as an adversarial red-teaming tool (proposed application)</strong> — <a href="../edge/caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming.html">relocates the attack surface of</a> → Red Teaming <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-as-audit.html">Elicitation as audit: steering for red-teaming</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;9.1 Suggested future work&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

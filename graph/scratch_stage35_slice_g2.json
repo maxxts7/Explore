@@ -1,0 +1,740 @@
+{
+ "concepts": [
+  {
+   "concept": {
+    "id": "activation-addition",
+    "name": "Activation Addition (ActAdd)",
+    "role": "inherited",
+    "summary": "A prior steering technique (Turner et al., 2023) that generates a steering vector from the activation difference of a single pair of prompts and adds it at the first token position of other forward passes; tested only on GPT-2-XL. CAA is directly modeled on and contrasted with this method.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 2
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "activation-engineering-family",
+     "name": "The activation engineering family: from single pairs to datasets",
+     "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "caa-steering-vector-construction-refines-the-single-pair-recipe-of-activation-addition",
+     "type": "refines-the-single-pair-recipe-of",
+     "source": "caa-steering-vector-construction",
+     "target": "activation-addition",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "activation-engineering-family",
+     "prose": "caa-steering-vector-construction is explicitly modeled on Turner et al.'s Activation Addition but changes three things at once. First, the dataset: ActAdd derives a vector from the activation difference of a single pair of prompts, while CAA averages over hundreds of contrast pairs per behavior (up to 1000 for Hallucination and Sycophancy, per Appendix E), which \"reduces noise in the steering vector, allowing for a more precise encoding of the behavior of interest\" (contrastive-activation-addition, §\"2 Related work\", p. 2). Second, where the vector is applied: ActAdd adds its vector only to the first token position of other forward passes, while CAA adds it \"to all and only token positions after the original prompt\" (contrastive-activation-addition, §\"2 Related work\", p. 2). Third, scope of validation: ActAdd \"does not consistently work for different behaviors, is not robust to different prompts, and was only tested on GPT-2-XL,\" whereas CAA is validated across seven alignment behaviors on Llama 2 7B and 13B Chat, models trained with RLHF (contrastive-activation-addition, §\"2 Related work\", p. 2). Each change targets a specific weakness of the single-pair recipe."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "inference-time-intervention",
+    "name": "Inference-Time Intervention (ITI)",
+    "role": "inherited",
+    "summary": "A prior technique (Li et al., 2023) using linear probes to identify a sparse set of \"truthful\" attention heads from a contrastive question-answering dataset, then shifting activations along the true/false Mean Difference vector during inference to improve truthfulness.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 2
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "activation-engineering-family",
+     "name": "The activation engineering family: from single pairs to datasets",
+     "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "contrastive-activation-addition-skips-the-head-search-required-by-inference-time-intervention",
+     "type": "skips-the-head-search-required-by",
+     "source": "contrastive-activation-addition",
+     "target": "inference-time-intervention",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "activation-engineering-family",
+     "prose": "CAA and ITI extract their vectors the same way — Li et al.'s ITI \"employ[s] the same Mean Difference vector extraction approach as CAA\" (contrastive-activation-addition, §\"2 Related work\", p. 2) — which makes their difference entirely about where and how broadly the vector is applied, not how it's computed. ITI first uses linear probes on a contrastive question-answering dataset to identify \"a sparse set of 'truthful' attention heads,\" then shifts only those heads' activations along the true/false MD direction at inference. CAA skips the probe-and-search step entirely: \"our technique can be applied directly to the residual stream without searching for individual attention heads\" (contrastive-activation-addition, §\"2 Related work\", p. 2). That simplification is paid for by generality rather than against it — CAA is validated on a broader range of alignment-relevant behaviors (seven, versus ITI's single truthfulness axis) and on RLHF-trained chat models rather than a base model. So the same extraction formula scales from a narrow, head-localized, probe-dependent intervention (ITI) to a broad, stream-wide, probe-free one (CAA) once the localization step is dropped."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "representation-engineering-zou",
+    "name": "Representation Engineering (Zou et al. 2023)",
+    "role": "inherited",
+    "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 2
+     },
+     {
+      "section": "3.2 Visualizing activations for contrastive dataset analysis",
+      "page": 4
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "activation-engineering-family",
+     "name": "The activation engineering family: from single pairs to datasets",
+     "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "contrastive-activation-addition-repurposes-for-steering-relative-to-representation-engineering-zou",
+     "type": "repurposes-for-steering-relative-to",
+     "source": "contrastive-activation-addition",
+     "target": "representation-engineering-zou",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "activation-engineering-family",
+     "prose": "Zou et al.'s Representation Engineering already tested Mean Difference as one way to locate and extract representations of concepts like honesty and emotion, so CAA is not introducing MD to this lineage — it is repurposing it. Two changes mark the repurposing: contrast-pair quality and goal. RepE's contrastive prompts are less tightly matched, whereas \"CAA employs an optimized multiple-choice format that results in more closely paired contrastive prompts that differ by only a single token\" (contrastive-activation-addition, §\"2 Related work\", p. 2), which sharpens the extracted direction by removing incidental prompt variation. More fundamentally, RepE's project is representation extraction — characterizing what a model represents — while CAA \"build[s] on this work by focusing on steering rather than representation extraction, experimenting with a broader range of behaviors, and comparing steering to system-prompting and supervised finetuning\" (contrastive-activation-addition, §\"2 Related work\", p. 2). So where RepE treats the mean-difference direction as a diagnostic to be read, CAA treats the same kind of direction as a lever to be pulled, with the tightened contrast format making that lever more precise."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "in-context-vectors",
+    "name": "In-Context Vectors (ICV)",
+    "role": "inherited",
+    "summary": "A prior steering technique (Liu et al., 2023) that reduces toxicity and affects style transfer by intervening on attention activations across all transformer layers, rather than the residual stream at a single layer as CAA does.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 3
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "activation-engineering-family",
+     "name": "The activation engineering family: from single pairs to datasets",
+     "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "in-context-vectors-spans-every-layer-unlike-contrastive-activation-addition",
+     "type": "spans-every-layer-unlike",
+     "source": "in-context-vectors",
+     "target": "contrastive-activation-addition",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "activation-engineering-family",
+     "prose": "In-Context Vectors and CAA both compute a direction from contrastive examples and add it back in during inference, but they disagree about where in the network that direction lives. Liu et al.'s ICV steers \"the attention activations rather than the residual stream and intervene[s] at all transformer layers rather than a single layer\" (contrastive-activation-addition, §\"2 Related work\", p. 3), spreading its intervention across the whole attention mechanism at every layer simultaneously. CAA instead commits to one site and one layer at a time: the residual stream, at the layer found by sweeping (layer 13 for the 7B model, 14–15 for the 13B model), with the vector added at every token position after the prompt. The tradeoff this implies is between coverage and interpretability: ICV's all-layer, attention-only intervention needs no per-behavior layer search, while CAA's single-layer, residual-stream intervention is what makes later analyses possible — the paper can ask which layer a behavior's representation lives at, how similar vectors from adjacent layers are, and how far an effect transfers when a vector is moved to a different layer, none of which has a clean analog for an intervention smeared across every layer at once."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "linear-representation-hypothesis",
+    "name": "Linear representation hypothesis",
+    "role": "inherited",
+    "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 3
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "linear-representation-hypothesis-licenses-the-vector-arithmetic-of-steering-vector",
+     "type": "licenses-the-vector-arithmetic-of",
+     "source": "linear-representation-hypothesis",
+     "target": "steering-vector",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "The linear representation hypothesis is what makes it coherent to expect that adding a single vector to activations should shift a whole behavior rather than producing noise. Park et al.'s (2023) formalization holds that high-level concepts are encoded as linear directions in an LLM's activation space (contrastive-activation-addition, §\"2 Related work\", p. 3); if that is true, then a behavior like sycophancy or refusal has, in principle, a direction, and moving a model's activations along that direction — exactly what a steering vector does when added with a multiplier — should move the model's output distribution toward or away from the behavior. CAA does not derive this hypothesis; it inherits it as background motivation and then supplies empirical support back: behavioral clustering in PCA projections of activations emerges suddenly around a third of the way through the model's layers (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4), and steering vectors act as token-level feature detectors under a cosine-similarity measure (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7), both consistent with a single linear direction carrying the behavior."
+    },
+    {
+     "id": "activation-engineering-empirically-motivated-the-formalization-of-linear-representation-hypothesis",
+     "type": "empirically-motivated-the-formalization-of",
+     "source": "activation-engineering",
+     "target": "linear-representation-hypothesis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "activation-engineering-family",
+     "prose": "The paper places this relationship in a specific order: practice came before theory. Section 2 closes its literature review by noting that, \"beyond steering behaviors, work on activation engineering has also motivated a formalization of 'linear representation' (Park et al., 2023)\" (contrastive-activation-addition, §\"2 Related work\", p. 3) — naming Park et al.'s hypothesis as a response to the family's accumulating results (Subramani et al.'s latent steering vectors, Turner et al.'s Activation Addition, Li et al.'s ITI, Zou et al.'s Representation Engineering, Liu et al.'s In-Context Vectors), not the other way around. Each of those techniques worked, to varying degrees, by adding or shifting a single direction in activation space and getting a coherent behavioral change out — an empirical regularity that needed an explanation. The linear representation hypothesis is offered as that explanation after the fact, giving the family's scattered successes a shared theoretical account rather than supplying the theory the family was built to test. CAA itself continues the same pattern one step further: a new activation-engineering technique that gets cited as further motivation for the hypothesis it also relies on."
+    },
+    {
+     "id": "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+     "type": "is-evidence-for",
+     "source": "behavioral-clustering",
+     "target": "linear-representation-hypothesis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "The linear representation hypothesis claims that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of its motivation for why activation-engineering techniques should work at all (contrastive-activation-addition, §\"2 Related work\", p. 3). Behavioral clustering is a direct empirical instance of that claim rather than just background motivation for it: when residual-stream activations on a contrastive dataset are projected onto only two principal components -- a linear projection -- a high-level behavior like refusal becomes visibly separable, and does so suddenly at a specific layer rather than gradually across many (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). If the behavior's encoding were nonlinear or diffusely distributed, a two-dimensional linear projection would not be expected to reveal a clean split. The suddenness itself is informative: it suggests the model is not refining a distributed encoding across many layers but computing the relevant abstraction at one point and carrying it forward largely unchanged, exactly the kind of localized, linear structure the hypothesis predicts should exist for concepts a model actually uses."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "linear-representations-of-sentiment",
+    "name": "Linear representations of sentiment",
+    "role": "inherited",
+    "summary": "Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 Related work",
+      "page": 3
+     },
+     {
+      "section": "3 Method",
+      "page": 3
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "linear-representations-of-sentiment-cross-validates-against-pca-for-mean-difference-method",
+     "type": "cross-validates-against-pca-for",
+     "source": "linear-representations-of-sentiment",
+     "target": "mean-difference-method",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "Before CAA existed, Tigges et al. (2023) had already shown that Mean Difference vectors for sentiment closely resemble the directions PCA finds — the same fact CAA cites when introducing MD: \"this method of extracting the difference vector is called Mean Difference (MD) and has been shown to produce steering vectors similar to other techniques like PCA (Tigges et al., 2023)\" (contrastive-activation-addition, §\"3 Method\", p. 3). The significance of that citation is what it rules out: MD is a supervised procedure — it needs labeled positive and negative examples and simply averages their difference — while PCA is unsupervised, finding whatever direction accounts for the most variance in an unlabeled activation cloud with no access to which examples exhibit the behavior. Two independent procedures with different information requirements converging on the same direction for sentiment is evidence that the direction reflects something real about how the model represents the concept, rather than an artifact of MD's particular averaging procedure. That prior, sentiment-specific validation is part of why CAA can adopt bare Mean Difference for seven different behaviors without first re-deriving or re-justifying the extraction method itself."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "pca",
+    "name": "Principal Component Analysis (PCA)",
+    "role": "inherited",
+    "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "3.2 Visualizing activations for contrastive dataset analysis",
+      "page": 4
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "pca-is-the-projection-technique-behind-activation-pca-visualization",
+     "type": "is-the-projection-technique-behind",
+     "source": "pca",
+     "target": "activation-pca-visualization",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "PCA is the off-the-shelf machinery underneath activation-pca-visualization: the technique itself is inherited from decades of dimensionality-reduction work and applied directly via the Scikit-learn package rather than reimplemented for this paper (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). What CAA contributes is not a new projection method but a specific use of an old one -- projecting high-dimensional residual-stream activations from a contrastive dataset down to their top two principal components, the axes of greatest variance, and checking by eye whether the resulting scatter separates by behavior. Two components turn out to be enough: the paper's figures show refusal-behavior clustering becoming visible in a plain two-dimensional plot at layer 10, with no need for higher-dimensional projections or a trained classifier to detect the split. That a linear, unsupervised, general-purpose technique is sufficient to reveal the separation is itself part of the paper's evidence that these behavioral representations are simple, linear directions rather than more complex, entangled features."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "activation-pca-visualization",
+    "name": "PCA visualization of contrastive activations",
+    "role": "introduced",
+    "summary": "A diagnostic technique projecting model activations on a contrastive dataset via PCA to assess whether that dataset's activations linearly separate along the target behavior, used to judge whether a dataset will yield an effective steering vector.",
+    "parent": "contrastive-activation-addition",
+    "locators": [
+     {
+      "section": "3.2 Visualizing activations for contrastive dataset analysis",
+      "page": 4
+     }
+    ],
+    "notes": "Applies PCA (an inherited technique) via scikit-learn; references the author's own prior blog post (Panickssery, 2023b)."
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction",
+     "type": "screens-datasets-for",
+     "source": "activation-pca-visualization",
+     "target": "caa-steering-vector-construction",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "Before CAA extracts a steering vector from a dataset, the paper first checks whether that dataset's activations are even separable by the behavior at all. The PCA visualization step projects a contrastive dataset's residual-stream activations at the answer-letter token and checks for behavioral clustering -- separation by whether the model's output matches the target behavior -- which the authors call useful \"for determining whether a dataset will enable the generation of effective steering vectors\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). That makes visualization a screening step that precedes construction rather than an afterthought: caa-steering-vector-construction's Mean Difference procedure averages a difference in activations over an entire dataset at a chosen layer (contrastive-activation-addition, §\"3 Method\", p. 3), but that average is only meaningful once behavioral clustering confirms the representation being differenced actually tracks the behavior rather than just the prompt's surface format. A dataset showing only letter clustering, with no behavioral split, is a warning sign the resulting vector may encode the wrong thing entirely."
+    },
+    {
+     "id": "pca-is-the-projection-technique-behind-activation-pca-visualization",
+     "type": "is-the-projection-technique-behind",
+     "source": "pca",
+     "target": "activation-pca-visualization",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "PCA is the off-the-shelf machinery underneath activation-pca-visualization: the technique itself is inherited from decades of dimensionality-reduction work and applied directly via the Scikit-learn package rather than reimplemented for this paper (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). What CAA contributes is not a new projection method but a specific use of an old one -- projecting high-dimensional residual-stream activations from a contrastive dataset down to their top two principal components, the axes of greatest variance, and checking by eye whether the resulting scatter separates by behavior. Two components turn out to be enough: the paper's figures show refusal-behavior clustering becoming visible in a plain two-dimensional plot at layer 10, with no need for higher-dimensional projections or a trained classifier to detect the split. That a linear, unsupervised, general-purpose technique is sufficient to reveal the separation is itself part of the paper's evidence that these behavioral representations are simple, linear directions rather than more complex, entangled features."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "behavioral-clustering",
+    "name": "Behavioral clustering",
+    "role": "introduced",
+    "summary": "The named phenomenon in which PCA-projected activations on a contrastive dataset separate according to whether the model's answer matches the target behavior, found to emerge suddenly around one-third of the way through a model's layers.",
+    "parent": "activation-pca-visualization",
+    "locators": [
+     {
+      "section": "3.2 Visualizing activations for contrastive dataset analysis",
+      "page": 4
+     }
+    ],
+    "notes": "Used as part of the rationale for which layers contain useful steering directions; the finding is echoed in the layer-sweep results."
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "letter-clustering-is-the-confound-for-behavioral-clustering",
+     "type": "is-the-confound-for",
+     "source": "letter-clustering",
+     "target": "behavioral-clustering",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "Project a contrastive dataset's activations at the answer-letter token onto two principal components and something will always separate: the prompts end in either \"A\" or \"B\", and that alone splits the projection into two clusters regardless of what the dataset is about (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The paper names this letter clustering and treats it as the null result to rule out, not the signal it is looking for. Behavioral clustering is the additional, non-guaranteed split by whether the model's chosen answer matches the target behavior rather than by which letter that answer happens to be. A dataset can show letter clustering alone -- separation by prompt format only -- or it can show both, in which case the representation captures something about the behavior itself. The distinction matters because caa-steering-vector-construction differences activations at exactly this same answer-letter position: without behavioral clustering as a check, there would be no way to tell whether a resulting vector encodes the intended behavior or merely the token \"A\" versus \"B\"."
+    },
+    {
+     "id": "behavioral-clustering-localizes-suddenly-in-residual-stream",
+     "type": "localizes-suddenly-in",
+     "source": "behavioral-clustering",
+     "target": "residual-stream",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "Behavioral clustering does not fade in gradually across a model's depth -- it appears abruptly at a specific residual-stream layer. For the refusal dataset in Llama 2 7B Chat, PCA projections at layer 9 show no separation by behavior, while the same projection one layer later, at layer 10, shows a clean split: \"the visible behavioral clustering emerges suddenly at layer 10. This trend is seen across our other datasets\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). Across the seven behaviors tested, this onset consistently falls around one-third of the way through the layers, which the authors link to prior work showing emotion representations likewise emerge in middle and later layers rather than early ones. The residual stream is therefore not a uniform medium in which behavioral information accumulates smoothly from layer one -- it is largely inert to a behavior's presence for the model's first third, then becomes linearly readable within a single layer, which is also why CAA's own layer sweeps concentrate their steering effect there rather than earlier."
+    },
+    {
+     "id": "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+     "type": "is-evidence-for",
+     "source": "behavioral-clustering",
+     "target": "linear-representation-hypothesis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "The linear representation hypothesis claims that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of its motivation for why activation-engineering techniques should work at all (contrastive-activation-addition, §\"2 Related work\", p. 3). Behavioral clustering is a direct empirical instance of that claim rather than just background motivation for it: when residual-stream activations on a contrastive dataset are projected onto only two principal components -- a linear projection -- a high-level behavior like refusal becomes visibly separable, and does so suddenly at a specific layer rather than gradually across many (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). If the behavior's encoding were nonlinear or diffusely distributed, a two-dimensional linear projection would not be expected to reveal a clean split. The suddenness itself is informative: it suggests the model is not refining a distributed encoding across many layers but computing the relevant abstraction at one point and carrying it forward largely unchanged, exactly the kind of localized, linear structure the hypothesis predicts should exist for concepts a model actually uses."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "letter-clustering",
+    "name": "Letter clustering",
+    "role": "introduced",
+    "summary": "The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (\"A\" or \"B\") they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering.",
+    "parent": "activation-pca-visualization",
+    "locators": [
+     {
+      "section": "3.2 Visualizing activations for contrastive dataset analysis",
+      "page": 4
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "letter-clustering-is-the-confound-for-behavioral-clustering",
+     "type": "is-the-confound-for",
+     "source": "letter-clustering",
+     "target": "behavioral-clustering",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "Project a contrastive dataset's activations at the answer-letter token onto two principal components and something will always separate: the prompts end in either \"A\" or \"B\", and that alone splits the projection into two clusters regardless of what the dataset is about (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The paper names this letter clustering and treats it as the null result to rule out, not the signal it is looking for. Behavioral clustering is the additional, non-guaranteed split by whether the model's chosen answer matches the target behavior rather than by which letter that answer happens to be. A dataset can show letter clustering alone -- separation by prompt format only -- or it can show both, in which case the representation captures something about the behavior itself. The distinction matters because caa-steering-vector-construction differences activations at exactly this same answer-letter position: without behavioral clustering as a check, there would be no way to tell whether a resulting vector encodes the intended behavior or merely the token \"A\" versus \"B\"."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "token-level-cosine-similarity-analysis",
+    "name": "Token-level cosine similarity analysis",
+    "role": "introduced",
+    "summary": "An interpretability technique computing cosine similarity between a CAA steering vector and per-token residual stream activations during a forward pass, used to show that similarity with the vector tracks how strongly the target behavior is \"present\" at semantically relevant tokens.",
+    "parent": "contrastive-activation-addition",
+    "locators": [
+     {
+      "section": "8.1 Similarity between steering vectors and per-token activations",
+      "page": 7
+     },
+     {
+      "section": "8.1 Similarity between steering vectors and per-token activations",
+      "page": 8
+     }
+    ],
+    "notes": "Builds on the author's own prior observation of the same effect (Panickssery, 2023a)."
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "token-level-cosine-similarity-analysis-reveals-as-a-feature-detector-steering-vector",
+     "type": "reveals-as-a-feature-detector",
+     "source": "token-level-cosine-similarity-analysis",
+     "target": "steering-vector",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "A steering vector is defined as a control mechanism -- something added to activations to shift the output distribution. Token-level cosine similarity analysis shows the same object also works in reverse, as a passive detector of the behavior it was built to induce. Taking the dot product between a steering vector and each token's residual-stream activation during an ordinary forward pass -- no addition, just measurement -- produces a signal that tracks how strongly the behavior is \"present\" at that token: on the refusal vector, the phrases \"I cannot help\" and \"I strongly advise against\" score positively, while \"hack into your friend's Instagram account\" scores negatively (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7). The same held for a myopia vector, where tokens describing choosing a reward now scored oppositely from tokens describing waiting for a larger one later (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 8). A vector extracted to intervene on a behavior turns out to already encode enough about that behavior to recognize it token by token, with no intervention at all."
+    }
+   ]
+  },
+  {
+   "concept": {
+    "id": "inter-layer-similarity-and-transfer",
+    "name": "Inter-layer steering vector similarity and transfer",
+    "role": "introduced",
+    "summary": "An analysis of how similar steering vectors generated at different layers are to each other (finding higher similarity between nearby layers, with slower decay in the model's later half), paired with a test of whether a vector extracted at layer 13 still steers behavior when applied at other layers.",
+    "parent": "contrastive-activation-addition",
+    "locators": [
+     {
+      "section": "8.2 Similarity between vectors generated at different layers",
+      "page": 7
+     }
+    ]
+   },
+   "themes": [
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability",
+     "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+    }
+   ],
+   "stagedEdges": [
+    {
+     "id": "inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction",
+     "type": "demonstrates-the-generality-of",
+     "source": "inter-layer-similarity-and-transfer",
+     "target": "caa-steering-vector-construction",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "reading-the-residual-stream",
+     "prose": "caa-steering-vector-construction fixes a single layer L and differences activations there; inter-layer-similarity-and-transfer asks whether the resulting vector is actually specific to that choice. Two findings say no. First, vectors built at nearby layers are more similar to each other than vectors built at distant layers, and this similarity decays more slowly through the model's second half than its first, consistent with a representation that \"converges\" once extracted rather than continuing to change (contrastive-activation-addition, §\"8.2 Similarity between vectors generated at different layers\", p. 7). Second, a vector constructed at layer 13 and then applied at other layers still steers behavior, and for some earlier layers the effect is even larger than at layer 13 itself, before dropping off steeply around layer 17. Construction therefore isolates something closer to a general, portable representation of the behavior than a layer-13-specific artifact -- though the layer-17 cliff suggests that generality has a limit, past which the representation has already been consumed for further processing and is no longer freely manipulable."
+    }
+   ]
+  }
+ ],
+ "wikiLinkTargets": [
+  "a2c",
+  "absolute-harmfulness-score",
+  "abstract-rewards",
+  "abuse-ml",
+  "accidents-in-ml",
+  "activation-addition",
+  "activation-engineering",
+  "activation-pca-visualization",
+  "adaptive-l2-regularization",
+  "advanced-ai-risk-dataset",
+  "adversarial-blinding",
+  "adversarial-examples",
+  "adversarial-reward-functions",
+  "ai-coordination-behavior",
+  "alignment-tax",
+  "ant-task",
+  "api-prompt-distribution",
+  "apprenticeship-learning",
+  "asimovs-first-law",
+  "async-reward-learning-architecture",
+  "atari-games-environment",
+  "automated-red-teaming",
+  "babi-tasks",
+  "bandit-environment",
+  "base-chat-representation-comparison",
+  "behavioral-clustering",
+  "bias-entropy-metric",
+  "big-bench",
+  "bleu",
+  "bounded-exploration",
+  "bradley-terry-model",
+  "caa-computational-efficiency",
+  "caa-finetuning-comparison",
+  "caa-hallucination-dataset",
+  "caa-red-teaming-application",
+  "caa-refusal-dataset",
+  "caa-steering-vector-construction",
+  "caa-system-prompt-comparison",
+  "careful-engineering",
+  "chain-of-thought-prompting",
+  "classifying-harmful-behavior-eval",
+  "cleaning-robot-example",
+  "clip-length-effects",
+  "cnn-dm-summarization",
+  "comparisons-vs-absolute-scores",
+  "complicated-systems",
+  "compute-vs-human-cost-analysis",
+  "constitution",
+  "constitutional-ai",
+  "context-distillation",
+  "contractor-preference-labeling",
+  "contrastive-activation-addition",
+  "cooperative-inverse-reinforcement-learning",
+  "corrigibility",
+  "counterexample-resistance",
+  "counterfactual-reasoning",
+  "covariate-shift-assumption",
+  "critique-and-revision",
+  "crows-pairs",
+  "deepdive",
+  "delusion-box",
+  "direct-revision-ablation",
+  "distant-supervision",
+  "dqn",
+  "drop",
+  "elo-score",
+  "empowerment",
+  "enduro-keeping-pace-demonstration",
+  "enduro-task",
+  "ensembling-principles",
+  "environment-modifications-for-preference-learning",
+  "environmental-embedding",
+  "epsilon-greedy",
+  "evasiveness",
+  "evolved-radio-example",
+  "excessive-hedging",
+  "expected-value-of-information-query-selection",
+  "f1-score",
+  "fairness-research-area",
+  "false-premise-failure",
+  "feedback-loops",
+  "feedback-model",
+  "feudal-reinforcement-learning",
+  "few-shot-prompting",
+  "flan",
+  "formal-verification",
+  "frame-problem",
+  "generalized-advantage-estimation",
+  "generalized-method-of-moments",
+  "generative-adversarial-networks",
+  "goodharts-law",
+  "gpt-3",
+  "gpt-4",
+  "gpt3-prompted-baseline",
+  "h-infinity-control",
+  "half-cheetah-one-leg-demonstration",
+  "half-cheetah-task",
+  "hallucination",
+  "held-out-labeler-generalization",
+  "hellaswag",
+  "helpful-rlhf-model",
+  "helpfulness-harmlessness-tension",
+  "hh-rlhf-model",
+  "hhh-eval-benchmark",
+  "hhh-framework",
+  "hierarchical-reinforcement-learning",
+  "hopper-backflip-demonstration",
+  "hopper-task",
+  "human-feedback-implicit-reward-shaping",
+  "human-feedback-sample-efficiency",
+  "human-oversight-safe-exploration",
+  "hybrid-human-ai-preference-model",
+  "imitation-learning",
+  "impact-regularizer",
+  "in-context-vectors",
+  "inference-time-intervention",
+  "instructgpt",
+  "instruction-following",
+  "inter-annotator-agreement",
+  "inter-layer-similarity-and-transfer",
+  "inverse-reinforcement-learning",
+  "iterated-online-training",
+  "jailbreaks",
+  "k-choose-2-batching",
+  "kl-penalty",
+  "label-annealing",
+  "label-clamping",
+  "labeler-metadata-taxonomy",
+  "labeler-screening-process",
+  "labeling-interface",
+  "lamda",
+  "language-modeling-objective",
+  "learned-impact-regularizer",
+  "lets-think-step-by-step-prompt",
+  "letter-clustering",
+  "likert-quality-rating",
+  "linear-representation-hypothesis",
+  "linear-representations-of-sentiment",
+  "llama-2",
+  "llama-2-chat",
+  "long-term-ai-risk-framing",
+  "low-impact-agents",
+  "machine-learning-with-contracts",
+  "mean-difference-method",
+  "mmlu",
+  "model-calibration",
+  "model-lookahead",
+  "model-repair",
+  "mujoco",
+  "multi-agent-approaches",
+  "multiple-choice-behavioral-evaluation",
+  "multiple-choice-contrast-pair-format",
+  "multiple-choice-evaluation-format",
+  "multiple-rewards",
+  "myopic-reward-behavior",
+  "negative-side-effects",
+  "non-stationary-reward-challenge",
+  "novel-behavior-training",
+  "open-ended-generation-evaluation",
+  "openai-gym",
+  "palms",
+  "pareto-improvement",
+  "partially-observed-goals",
+  "partially-specified-models",
+  "pca",
+  "penalize-influence",
+  "perspective-api",
+  "policy-ml",
+  "pomdp-belief-state-mdp",
+  "pong-task",
+  "ppo-dataset",
+  "ppo-model",
+  "ppo-ptx",
+  "ppo-training",
+  "preference-elicitation-protocol",
+  "privacy-research-area",
+  "qbert-task",
+  "quac",
+  "quantitative-qualitative-evaluation",
+  "r-max",
+  "rater-error-noise-model",
+  "reachability-analysis",
+  "realtoxicityprompts",
+  "recurrent-reward-model-extension",
+  "red-teaming",
+  "reddit-tldr-summarization",
+  "refusal-behavior",
+  "representation-engineering-zou",
+  "residual-stream",
+  "reward-autoencoder",
+  "reward-capping",
+  "reward-hacking",
+  "reward-model",
+  "reward-model-loss",
+  "reward-normalization",
+  "reward-overoptimization",
+  "reward-predictor-ensemble",
+  "reward-predictor-pretraining",
+  "reward-pretraining",
+  "reward-uncertainty",
+  "risk-sensitive-performance-criteria",
+  "rl-cai",
+  "rl-cai-cot-prompts",
+  "rl-cai-principles",
+  "rlaif",
+  "rlhf",
+  "rm-dataset",
+  "robust-policy-improvement",
+  "robustness-distributional-shift",
+  "rouge-l",
+  "rte",
+  "safe-exploration",
+  "scalable-oversight",
+  "security-ml",
+  "semi-supervised-active-reward-learning",
+  "semi-supervised-reinforcement-learning",
+  "sft-dataset",
+  "sft-model",
+  "shutdown-problem",
+  "simulated-exploration",
+  "sl-cai",
+  "sl-cai-few-shot-examples",
+  "sl-cai-principles",
+  "sparrow",
+  "squadv2",
+  "sst",
+  "steering-multiplier",
+  "steering-outside-residual-stream",
+  "steering-vector",
+  "steering-vector-normalization",
+  "superglue",
+  "supervised-fine-tuning",
+  "supervised-reward-learning",
+  "survival-instinct-behavior",
+  "sycophancy",
+  "sycophancy-eval-datasets-anthropic",
+  "synthetic-oracle-feedback",
+  "system-prompting",
+  "t0",
+  "tamer-framework",
+  "targeted-token-steering",
+  "token-level-cosine-similarity-analysis",
+  "training-multiple-distributions",
+  "trajectory-segment",
+  "transparency-ml",
+  "trip-wires",
+  "trpo",
+  "trusted-policy-oversight",
+  "truthfulqa",
+  "uncertainty-based-query-selection",
+  "unsupervised-model-learning",
+  "unsupervised-risk-estimation",
+  "unsupervised-value-iteration",
+  "use-demonstrations",
+  "value-function",
+  "variable-indifference",
+  "win-rate",
+  "winogender",
+  "wireheading",
+  "wmt15-fr-en",
+  "wsc"
+ ]
+}

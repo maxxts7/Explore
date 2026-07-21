@@ -1,0 +1,1882 @@
+{
+ "templateEntry": {
+  "id": "deep-rl-human-prefs",
+  "stories": [
+   {
+    "id": "deep-rl-human-prefs-inside",
+    "tab": "Inside the paper",
+    "name": "Inside Deep RL from Human Preferences: a reward learned from \"which of these two is better?\"",
+    "intro": "This 2017 paper begins from an awkward fact about reinforcement learning: the whole method assumes someone can write down a reward function, and for most tasks people actually care about, nobody can. Its answer is to stop asking for the function and ask a much smaller question instead — shown two short video clips of an agent's behavior, which one looks better?\n\nThe chapters follow the paper's own order: the problem and the lineage it breaks from, the machinery that turns pairwise comparisons into a trainable reward, the safeguards that keep that reward honest while the policy changes beneath it, the experiments that proved the point, and the ablations where the first cracks — including reward hacking — show through.",
+    "narrative": "The paper's claim is that a few hundred pairwise human comparisons over one-to-two-second video clips, fitted into a reward predictor and optimized asynchronously alongside the policy, are enough to train deep RL agents on tasks whose reward function no one could write down — with a human seeing less than 1% of the agent's interactions.",
+    "children": [
+     {
+      "id": "deep-rl-human-prefs-inside-ch-problem",
+      "name": "A reward function nobody can write",
+      "narrative": "The paper opens with a mismatch: RL needs a well-specified reward function, but for the tasks we actually want — the paper's examples are cleaning a table and scrambling an egg — goals are complex, poorly defined, or hard to observe, and a clumsy proxy invites exactly the objective-gaming behavior Concrete Problems had catalogued a year earlier (deep-rl-human-prefs, §\"1 Introduction\", p. 1). Prior escape routes each stall in their own way: [[inverse-reinforcement-learning|inverse RL]] and [[imitation-learning|imitation learning]] need demonstrations humans cannot always give — no human can demonstrate being a one-legged robot — and [[tamer-framework|TAMER]]-style real-time feedback needs more human attention than any deep RL run can afford. So the paper restates the 2016 scalable-oversight problem as an engineering budget: learn a complex task from sparse, cheap, non-expert judgments, and keep the human's share of the work small enough that the whole thing stays economical.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-inside-scalable-oversight",
+        "name": "Oversight priced as a budget",
+        "ref": {
+         "kind": "concept",
+         "id": "scalable-oversight"
+        },
+        "narrative": "In 2016 this was a named open problem: the true objective is too costly to evaluate everywhere. Here it stops being a proposal and becomes a design constraint the whole system answers to — feedback on less than 1% of the agent's interactions (deep-rl-human-prefs, §\"1 Introduction\", p. 2)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-prior-lineage",
+        "name": "The lineage the paper breaks from",
+        "ref": {
+         "kind": "theme",
+         "id": "prior-human-in-the-loop-rl"
+        },
+        "narrative": "A decade of human-in-the-loop RL that either kept the human constantly present or required the desired behavior to be demonstrated. The paper positions itself by naming exactly what those methods could not scale to."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-sample-efficiency",
+        "name": "The headline promise",
+        "ref": {
+         "kind": "concept",
+         "id": "human-feedback-sample-efficiency"
+        },
+        "narrative": "Stated on the first page and defended for the rest of the paper: complex behaviors from feedback on under 1% of interactions, roughly three orders of magnitude cheaper in human time than per-timestep oversight (deep-rl-human-prefs, §\"Abstract\", p. 1)."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-inside-ch-machinery",
+      "name": "The machinery: two clips, one question",
+      "narrative": "The mechanism is small enough to state in a sentence — show a person two short video clips of the agent, ask which is better, and fit a reward function that agrees — and everything in Section 2 makes that sentence precise. The unit of judgment is the trajectory segment, one to two seconds of observations and actions; the elicitation protocol records a preference, a tie, or \"can't tell\" into a growing database; and the Bradley–Terry model, by the same logic as chess [[elo-score|Elo ratings]], turns predicted per-segment reward sums into a probability that the human prefers one clip, giving the predictor a cross-entropy loss to descend (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5). A [[rater-error-noise-model|constant rater-error term]] concedes that humans stay wrong about 10% of the time no matter how lopsided the pair. The result is the corpus's first reward model, and the asynchronous architecture that couples it to the policy gives RLHF the shape it still has.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-inside-trajectory-segment",
+        "name": "What the human judges: 1–2 seconds of behavior",
+        "ref": {
+         "kind": "concept",
+         "id": "trajectory-segment"
+        },
+        "narrative": "Not whole episodes, not single states: a clip short enough to judge quickly and long enough to mean something. Almost every economic property of the system follows from this choice of unit (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 3)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-elicitation",
+        "name": "Two clips, three answers",
+        "ref": {
+         "kind": "concept",
+         "id": "preference-elicitation-protocol"
+        },
+        "narrative": "Prefer one, call it a tie, or say the clips are incomparable — recorded as a probability distribution in a preference database. Five years later, InstructGPT's labeling apparatus still offers the same response structure (deep-rl-human-prefs, §\"2.2.2 Preference Elicitation\", p. 5)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-bradley-terry",
+        "name": "A 1952 statistic supplies the loss",
+        "ref": {
+         "kind": "concept",
+         "id": "bradley-terry-model"
+        },
+        "narrative": "Pairwise outcomes pin down latent scores, so preferences over clips pin down a reward, via a softmax over the two predicted sums. It is the one component the 2022 papers carry over without modification."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-reward-model",
+        "name": "The reward predictor",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-model"
+        },
+        "narrative": "The network that stands in for the reward signal nobody could write. What this paper calls a reward predictor, the rest of the corpus calls the reward model — the centerpiece the 2022 pipelines scale up (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-async-architecture",
+        "name": "Three loops, no waiting",
+        "ref": {
+         "kind": "concept",
+         "id": "async-reward-learning-architecture"
+        },
+        "narrative": "Policy rollouts, human comparisons, and reward refitting run concurrently and feed one another, so the human never becomes a blocking step in training (deep-rl-human-prefs, §\"1 Introduction\", p. 2)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-comparisons-theme",
+        "name": "Why comparisons rather than scores",
+        "ref": {
+         "kind": "theme",
+         "id": "learning-rewards-from-comparisons"
+        },
+        "narrative": "The full argument for the design decision that carries the paper — and, this wiki argues, the load-bearing joint connecting its robots to 2022's chatbots."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-inside-ch-honest",
+      "name": "Keeping a learned reward honest",
+      "narrative": "A learned reward is only trustworthy where the policy that generated its training data has actually been, and the policy is changing constantly — so the reward the agent optimizes is a moving target that can be exploited or simply outrun. Section 2's quieter half is countermeasures: an ensemble of predictors trained on bootstrap resamples, [[adaptive-l2-regularization|validation-tracked L2 regularization]], [[reward-normalization|output normalization]] to fix a scale that comparisons leave undetermined, [[reward-predictor-pretraining|pretraining]] against the cold start, and [[label-annealing|a query schedule]] that front-loads human attention early in training. The ensemble earns its cost twice over, because its disagreement doubles as the signal for choosing which pairs are worth a human's time. The RL side bends too: [[a2c|A2C]] and [[trpo|TRPO]] are chosen for their tolerance of a shifting reward, with TRPO's entropy bonus raised to keep it exploring (deep-rl-human-prefs, §\"2.2.1 Optimizing the Policy\", p. 4).",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-inside-nonstationary",
+        "name": "Optimizing a moving target",
+        "ref": {
+         "kind": "concept",
+         "id": "non-stationary-reward-challenge"
+        },
+        "narrative": "Because the predictor is refit throughout training, the policy is solving RL under a non-stationary reward — the root fact behind most of this chapter's machinery, and one that resurfaces in InstructGPT's PPO stage five years later."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-ensemble",
+        "name": "Three predictors, two jobs",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-predictor-ensemble"
+        },
+        "narrative": "Bootstrap-trained members are averaged for a steadier reward estimate, and their variance is harvested as an uncertainty signal — one piece of machinery doing robustness and active learning at once (deep-rl-human-prefs, §\"2.2.3 Fitting the Reward Function\", p. 5)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-query-selection",
+        "name": "Ask about what the ensemble disputes",
+        "ref": {
+         "kind": "concept",
+         "id": "uncertainty-based-query-selection"
+        },
+        "narrative": "Candidate pairs go to the human in order of ensemble disagreement — a crude stand-in, the paper admits, for the [[expected-value-of-information-query-selection|expected-value-of-information criterion]] it leaves as future work (deep-rl-human-prefs, §\"2.2.4 Selecting Queries\", p. 6)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-on-distribution-theme",
+        "name": "The full set of countermeasures",
+        "ref": {
+         "kind": "theme",
+         "id": "keeping-reward-models-on-distribution"
+        },
+        "narrative": "Every guard the paper deploys to stop the policy from drifting off the distribution its reward model knows, gathered in one place."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-policy-opt-theme",
+        "name": "The RL algorithms underneath",
+        "ref": {
+         "kind": "theme",
+         "id": "policy-optimization-under-learned-rewards"
+        },
+        "narrative": "What A2C, TRPO, and the DQN comparison points were each asked to tolerate once the reward stopped standing still."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-inside-ch-proof",
+      "name": "The proof: benchmarks matched, behaviors invented",
+      "narrative": "Proving that the signal came from preferences alone took experimental design of its own: standard Gym environments are stripped of anything that leaks the objective — [[environment-modifications-for-preference-learning|score displays blanked, episode boundaries hidden]] — and a two-track methodology scores agents quantitatively against a true reward the learner never sees, or qualitatively against a sentence of natural language (deep-rl-human-prefs, §\"2.1 Setting and Goal\", p. 3). On MuJoCo and Atari the method approaches, and sometimes matches, RL trained on the real reward — and occasionally beats it, because human raters quietly shape the reward better than the environment's designers did. Then comes the reason the paper is remembered: behaviors with no reward function at all. A Hopper robot backflips from 900 comparisons gathered in under an hour; a [[half-cheetah-one-leg-demonstration|Half-Cheetah crosses the floor on one leg]]; an [[enduro-keeping-pace-demonstration|Enduro car keeps pace with traffic]] instead of racing past it.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-inside-hidden-reward-theme",
+        "name": "Sealing the leaks",
+        "ref": {
+         "kind": "theme",
+         "id": "hidden-reward-experimental-design"
+        },
+        "narrative": "The apparatus that guarantees the only route from task to agent runs through human preference — as much a contribution as the learning method it protects."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-synthetic-oracle",
+        "name": "The oracle control",
+        "ref": {
+         "kind": "concept",
+         "id": "synthetic-oracle-feedback"
+        },
+        "narrative": "A synthetic rater that answers every query from the true reward, isolating what the learning method can do from what human noise and cost do to it (deep-rl-human-prefs, §\"3.1 Reinforcement Learning Tasks with Unobserved Rewards\", p. 6)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-testbeds-theme",
+        "name": "MuJoCo and Atari",
+        "ref": {
+         "kind": "theme",
+         "id": "deep-rl-testbeds"
+        },
+        "narrative": "The 2017 deep-RL canon the results are measured on: simulated robots and Atari games, reached through one Gym interface."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-implicit-shaping",
+        "name": "When humans beat the true reward",
+        "ref": {
+         "kind": "concept",
+         "id": "human-feedback-implicit-reward-shaping"
+        },
+        "narrative": "On Ant and Enduro the learned reward outperforms the hand-written one, because raters implicitly reward what the designers should have: standing upright, making any progress at all (deep-rl-human-prefs, §\"3.1.1 Simulated Robotics\", p. 7)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-novel-behaviors",
+        "name": "No reward function at all",
+        "ref": {
+         "kind": "concept",
+         "id": "novel-behavior-training"
+        },
+        "narrative": "About an hour of human feedback per behavior and no programmatic reward anywhere — the demonstration that this is a way to specify goals, not just to approximate existing ones (deep-rl-human-prefs, §\"3.2 Novel behaviors\", p. 8)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-backflip",
+        "name": "The backflip",
+        "ref": {
+         "kind": "concept",
+         "id": "hopper-backflip-demonstration"
+        },
+        "narrative": "Nine hundred queries, under an hour of human time, and a robot lands a behavior nobody could have scored by hand — the corpus's most quoted image of preference learning working."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-inside-ch-ablations",
+      "name": "Ablations, economics, and the first crack",
+      "narrative": "The paper argues its design decisions by deletion: remove online labeling, remove the ensemble, replace comparisons with absolute scores, shrink the clips, and watch what breaks (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9). One deletion breaks in a way the corpus never stops citing: with the reward model trained offline on early data and then frozen, a Pong agent learns to avoid losing points without ever learning to score, rallying forever. The paper names what it is seeing by reaching back to the 2016 reward-hacking taxonomy, and its guard is to keep the labels coming while the policy trains. The chapter closes on the books: [[clip-length-effects|clip length is calibrated]] against rater time, and a footnote observes that compute already costs about as much as the [[contractor-preference-labeling|contractors]] do, so squeezing the label count further buys little.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-inside-reward-hacking",
+        "name": "Reward hacking, sighted",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-hacking"
+        },
+        "narrative": "The 2016 agenda predicted it; the offline ablation produces it on screen. The endless Pong rally is the corpus's first empirical instance of a policy maximizing a learned proxy against its designers' intent (deep-rl-human-prefs, §\"3.3 Ablation Studies\", p. 9)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-online-training",
+        "name": "The guard: labels that keep up",
+        "ref": {
+         "kind": "concept",
+         "id": "iterated-online-training"
+        },
+        "narrative": "Collecting comparisons from the policy's current behavior, all the way through training, keeps the predictor pointed at the distribution actually being optimized — the countermeasure the Pong failure argues for."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-target-ablation",
+        "name": "Would scores have worked?",
+        "ref": {
+         "kind": "concept",
+         "id": "comparisons-vs-absolute-scores"
+        },
+        "narrative": "The \"target\" ablation regresses directly onto true segment reward instead of learning from comparisons. That it does not clearly win is the paper's evidence for its central interface decision."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-cost-footnote",
+        "name": "The $25-versus-$36 footnote",
+        "ref": {
+         "kind": "concept",
+         "id": "compute-vs-human-cost-analysis"
+        },
+        "narrative": "Roughly $25 of compute against $36 of minimum-wage labeling for an Atari run: human feedback is already not the dominant cost, so the method's economics have arrived (deep-rl-human-prefs, §\"4 Discussion and Conclusions\", p. 11)."
+       },
+       {
+        "id": "deep-rl-human-prefs-inside-economics-theme",
+        "name": "The budget behind every choice",
+        "ref": {
+         "kind": "theme",
+         "id": "economics-of-human-feedback"
+        },
+        "narrative": "The paper's full accounting of human minutes — the constraint that clip lengths, query schedules, and the headline efficiency claim all answer to."
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "deep-rl-human-prefs-across",
+    "tab": "Across the corpus",
+    "name": "The hinge of the corpus: 2016's proposals become machinery, 2022's pipelines inherit it",
+    "intro": "Read alone, this is a 2017 paper about simulated robots and Atari games. Read against the rest of the corpus, it is the hinge: more cross-paper connections pass through it than through any other paper here, reaching back to the 2016 agenda it answered and forward to the 2022 language-model pipelines that inherited its parts.\n\nThe chapters run in time order. First the proposals Concrete Problems made and this paper built; then InstructGPT, which rebuilt the same machine at industrial scale; then Constitutional AI, which replaced the human the whole design was built around; and last, the seams between papers that only appear in hindsight.",
+    "narrative": "Sixty-five cross-paper edges run through this paper, more than any other in the corpus: backward, it converts Concrete Problems' scalable-oversight proposals into working machinery; forward, InstructGPT industrializes its parts almost one for one, and Constitutional AI automates the human at its center.",
+    "children": [
+     {
+      "id": "deep-rl-human-prefs-across-ch-2016",
+      "name": "What 2016 proposed, this paper built",
+      "narrative": "Concrete Problems closes its scalable-oversight discussion with proposals: [[semi-supervised-reinforcement-learning|semi-supervised RL]], active reward learning, distant supervision, demonstrations. A year later this paper chose among them in public. Preferences won; [[use-demonstrations|demonstrations]] were weighed and explicitly passed over; active reward learning got its first deep-RL implementation as ensemble-variance query selection. The debt runs the other way too: when the offline ablation produced the endless Pong rally, the paper reached back to the 2016 taxonomy to name what it was seeing.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-across-oversight-machinery-tissue",
+        "name": "From worry to working dials",
+        "ref": {
+         "kind": "tissue",
+         "id": "scalable-oversight-operationalized-into-combinable-machinery"
+        },
+        "narrative": "Seven of this thread's edges touch the 2017 paper — each one a 2016 abstraction landing as a concrete pool, dial, or protocol.",
+        "era": "2016"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-demonstrations-declined",
+        "name": "Demonstrations, declined",
+        "ref": {
+         "kind": "edge",
+         "id": "use-demonstrations-is-explicitly-passed-over-in-favor-of-preference-elicitation-protocol"
+        },
+        "narrative": "The road not taken, recorded as an edge: the paper weighs demonstration-based supervision and chooses the comparison channel instead, because some behaviors cannot be demonstrated at all.",
+        "era": "2016"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-pong-canonical",
+        "name": "2016's failure, on screen",
+        "ref": {
+         "kind": "edge",
+         "id": "pong-task-provides-the-canonical-instance-of-reward-hacking"
+        },
+        "narrative": "Reward hacking was a taxonomy in 2016. The Pong rally makes it an observation, and the paper cites Amodei et al. to close the loop itself.",
+        "era": "2017"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-scalable-oversight",
+        "name": "One problem in three papers",
+        "ref": {
+         "kind": "concept",
+         "id": "scalable-oversight"
+        },
+        "narrative": "The concept lives in Concrete Problems, this paper, and Constitutional AI: named as a problem in 2016, priced as a budget here, then answered again in 2022 with AI labor.",
+        "era": "2016"
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-across-ch-instructgpt",
+      "name": "InstructGPT: the same machine, industrialized",
+      "narrative": "Set the 2017 system beside InstructGPT and nearly every part maps: contractors on time slots become a [[labeler-screening-process|screened labeling workforce]], the keyboard interface becomes a [[labeling-interface|web app]], trajectory segments generalize into the [[rm-dataset|RM dataset]], and reward normalization prefigures the scale fix in the RM loss. What carries over unchanged is as telling as what gets replaced — the Bradley–Terry loss crosses five years untouched. And one thing is quietly traded away: the 2017 system's online concurrency, given up for a fixed comparison dataset that made the pipeline trainable at language-model scale.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-across-industrial-tissue",
+        "name": "Ad hoc parts, industrial replacements",
+        "ref": {
+         "kind": "tissue",
+         "id": "primitive-parts-acquire-industrial-replacements"
+        },
+        "narrative": "Eight edges pair a 2017 improvisation with its 2022 institutional replacement, part for part — the closest thing the corpus has to a bill of materials.",
+        "era": "2022"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-bradley-terry-unchanged",
+        "name": "The part that never changed",
+        "ref": {
+         "kind": "edge",
+         "id": "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss"
+        },
+        "narrative": "A 1952 statistical model survives the jump from video clips to language unmodified — the strongest single piece of evidence that these are the same machine.",
+        "era": "2022"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-concurrency-traded",
+        "name": "What was traded away",
+        "ref": {
+         "kind": "edge",
+         "id": "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model"
+        },
+        "narrative": "The three concurrent loops were the 2017 paper's proudest engineering; InstructGPT drops the concurrency for a fixed dataset. This hindsight edge records the price and the reason.",
+        "era": "2022"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-reward-model",
+        "name": "The shared centerpiece",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-model"
+        },
+        "narrative": "With RLHF itself, one of the two concepts this paper shares with both 2022 pipelines: what it calls a reward predictor is the reward model that anchors InstructGPT and Constitutional AI alike.",
+        "era": "2017"
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-across-ch-cai",
+      "name": "Constitutional AI: replacing the human",
+      "narrative": "Constitutional AI's founding move reads like a direct edit of the 2017 diagram: keep the preference channel, the reward model, and the RL loop, and swap the human rater for an AI labeler steered by a written [[constitution]]. The substitution lands at exactly the point the 2017 paper had measured as its bottleneck — the throughput of human attention. Iterated online training, which in 2017 meant contractors on staggered schedules, becomes something a machine can do to itself; even the Elo analogy this paper borrowed to explain its loss becomes, in 2022, a literal computed metric.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-across-substitution-tissue",
+        "name": "The bottleneck, replaced",
+        "ref": {
+         "kind": "tissue",
+         "id": "ai-substitutes-for-the-human-bottleneck"
+        },
+        "narrative": "This thread shows [[rlaif|RLAIF]] as a surgical swap: the labeler changes, and everything the 2017 paper built around the labeler stays.",
+        "era": "2022"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-rlaif-automates",
+        "name": "Online training without the humans",
+        "ref": {
+         "kind": "edge",
+         "id": "rlaif-makes-newly-automatable-iterated-online-training"
+        },
+        "narrative": "The 2017 paper's guard against reward hacking needed humans on call; with an AI labeler, the loop can finally run as fast as the policy drifts.",
+        "era": "2022"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-online-training",
+        "name": "The loop CAI automates",
+        "ref": {
+         "kind": "concept",
+         "id": "iterated-online-training"
+        },
+        "narrative": "Introduced here as one of three concurrent loops, then named and flagged for full automation in Constitutional AI's RLAIF pipeline.",
+        "era": "2017"
+       },
+       {
+        "id": "deep-rl-human-prefs-across-elo",
+        "name": "An analogy becomes a metric",
+        "ref": {
+         "kind": "concept",
+         "id": "elo-score"
+        },
+        "narrative": "In 2017, Elo is an explanatory aside for why a Bradley–Terry loss makes sense; in 2022, Constitutional AI computes actual Elo scores to track helpfulness and harmlessness.",
+        "era": "2022"
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-across-ch-hindsight",
+      "name": "Seams only hindsight can see",
+      "narrative": "Nineteen edges in this wiki are marked hindsight — links neither paper states, visible only when the corpus is read together — and thirteen of them touch this paper. The patterns they trace are the paper's quieter legacy: everything downstream of a moving reward, from raised entropy bonuses in 2017 to [[ppo-training|PPO]]-stage instabilities in 2022; the patches that comparison training forces, because ranking alone pins a reward down only up to scale; and the endless Pong rally read, five years later, as the first sighting of [[reward-overoptimization|reward over-optimization]] — [[goodharts-law|Goodhart's law]] acquiring instances until it finally gets its name.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-across-hindsight-tissue",
+        "name": "Connections no paper draws",
+        "ref": {
+         "kind": "tissue",
+         "id": "hindsight-seams-2016-to-2022"
+        },
+        "narrative": "The corpus's hindsight edges collected; most have this paper on one end, which is what being the hinge means."
+       },
+       {
+        "id": "deep-rl-human-prefs-across-moving-reward-tissue",
+        "name": "The moving-reward family",
+        "ref": {
+         "kind": "tissue",
+         "id": "downstream-of-a-moving-reward"
+        },
+        "narrative": "One root fact — the reward keeps changing while the policy trains on it — and every consequence and countermeasure the corpus traces to it, in 2017 and again in 2022."
+       },
+       {
+        "id": "deep-rl-human-prefs-across-underdetermined-tissue",
+        "name": "What ranking leaves free",
+        "ref": {
+         "kind": "tissue",
+         "id": "what-comparisons-leave-undetermined"
+        },
+        "narrative": "Comparisons determine a reward only up to order-preserving transformations; this thread collects the patches, from 2017's normalization to the scale fix in InstructGPT's loss."
+       },
+       {
+        "id": "deep-rl-human-prefs-across-pong-overoptimization",
+        "name": "Pong, five years early",
+        "ref": {
+         "kind": "edge",
+         "id": "pong-task-anticipates-reward-overoptimization"
+        },
+        "narrative": "A hindsight edge from the rally that never ends to InstructGPT's reward-model over-optimization: the same divergence between proxy score and intended behavior, at two scales.",
+        "era": "2022"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "deep-rl-human-prefs-big-picture",
+    "tab": "The big picture",
+    "name": "The 2017 argument: human preference is a sufficient training signal",
+    "intro": "Reinforcement learning assumes someone can write down a reward function, and for much of the behavior people actually want — a backflip, considerate driving — nobody can. The 2017 paper proposes to stop asking for a definition and ask for judgments instead: show a person two short clips of behavior and record which one they prefer.\n\nWhat follows is the paper's argument at full altitude: the specification problem it starts from, the mechanism that turns comparisons into a reward signal, the evidence that the signal suffices, the ablations that show which design choices carry the result, and the costs and failures the paper reports against itself.",
+    "narrative": "The paper's thesis is that deep RL does not need a programmable reward function: a few hundred to a few thousand pairwise human preferences over seconds-long clips, fitted into a learned reward model and optimized by an ordinary RL algorithm, suffice to solve standard benchmarks and to produce behaviors no one could write a reward for — with a human seeing less than 1% of the agent's interactions. The evidence is benchmark performance against a withheld true reward, novel behaviors judged by eye, and ablations that isolate what the design actually depends on.",
+    "children": [
+     {
+      "id": "deep-rl-human-prefs-bp-problem",
+      "name": "The problem: goals nobody can specify",
+      "narrative": "The paper starts from tasks whose goals are complex, poorly defined, or hard to perform. Hand-written rewards misstate such goals; the demonstration-based alternatives require a human who can already do the task, which fails exactly where the interesting cases live — controlling a body with the wrong number of legs, for instance. What remains is judgment: a person can recognize better behavior without being able to produce or define it, and the paper builds its method on that asymmetry.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-bp-oversight",
+        "name": "Oversight at 1% of the price",
+        "ref": {
+         "kind": "concept",
+         "id": "scalable-oversight"
+        },
+        "narrative": "The paper casts its setting as the 2016 oversight problem made concrete: train deep RL agents from sparse, cheap, non-expert feedback rather than a reward supplied at every timestep."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-irl-declined",
+        "name": "Inverse RL, weighed and declined",
+        "ref": {
+         "kind": "concept",
+         "id": "inverse-reinforcement-learning"
+        },
+        "narrative": "Extracting a reward from expert demonstrations is noted and set aside: it needs behavior a human can demonstrate, which is precisely what many target behaviors are not."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-imitation-declined",
+        "name": "Imitation, likewise",
+        "ref": {
+         "kind": "concept",
+         "id": "imitation-learning"
+        },
+        "narrative": "Directly cloning demonstrated behavior fails for the same reason — a person who cannot backflip cannot show a robot how."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-bp-mechanism",
+      "name": "The mechanism: comparisons become a reward",
+      "narrative": "The machinery is a loop of three concurrent processes: the policy generates behavior, a human compares pairs of short clips through the [[preference-elicitation-protocol|elicitation protocol]], and a reward predictor — an [[reward-predictor-ensemble|ensemble]], refit as labels accumulate — turns the growing preference database into a scalar reward the policy optimizes as if the environment had provided it. The statistical hinge is seventy years old: treat each preference as a noisy comparison of latent scores, and the scores become the reward.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-bp-rlhf",
+        "name": "The paradigm, named",
+        "ref": {
+         "kind": "concept",
+         "id": "rlhf"
+        },
+        "narrative": "Learning a reward model from human preference judgments and optimizing it with standard RL — the general recipe this paper establishes and the 2022 papers inherit."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-segment",
+        "name": "The unit of judgment",
+        "ref": {
+         "kind": "concept",
+         "id": "trajectory-segment"
+        },
+        "narrative": "One to two seconds of behavior — long enough for a rater to understand, short enough to answer quickly — rather than whole trajectories or single frames."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-bradley-terry",
+        "name": "The 1952 hinge",
+        "ref": {
+         "kind": "concept",
+         "id": "bradley-terry-model"
+        },
+        "narrative": "The Bradley-Terry model converts predicted per-segment reward sums into the probability that a human prefers one segment — the bridge from comparisons to scalars."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-reward-model",
+        "name": "The learned stand-in",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-model"
+        },
+        "narrative": "A neural network trained to predict reward consistent with the human's pairwise preferences, used in place of the environment's reward signal."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-async",
+        "name": "Three loops, running at once",
+        "ref": {
+         "kind": "concept",
+         "id": "async-reward-learning-architecture"
+        },
+        "narrative": "Policy, reward predictor, and human labeling run asynchronously, each feeding the next — the architectural answer to a training signal that arrives from a person, slowly."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-bp-evidence",
+      "name": "The evidence: benchmarks matched, behaviors invented",
+      "narrative": "The evaluation runs on two tracks. Quantitatively, agents trained from preferences — real or from a [[synthetic-oracle-feedback|synthetic oracle]] — are scored against a true reward function the learner never sees, and on some tasks the learned reward beats the hand-written one it was standing in for. Qualitatively, [[novel-behavior-training|behaviors with no reward function at all]] are trained from an hour of human time and judged by watching them.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-bp-two-track",
+        "name": "Two kinds of proof",
+        "ref": {
+         "kind": "concept",
+         "id": "quantitative-qualitative-evaluation"
+        },
+        "narrative": "Benchmarks with a known-but-withheld reward supply the numbers; tasks with no reward function at all are judged against a natural-language goal by a human watching the result."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-efficiency",
+        "name": "The headline ratio",
+        "ref": {
+         "kind": "concept",
+         "id": "human-feedback-sample-efficiency"
+        },
+        "narrative": "Complex tasks are learned with feedback on less than 1% of the agent's interactions — roughly three orders of magnitude less human attention than per-timestep supervision would demand."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-backflip",
+        "name": "The backflip",
+        "ref": {
+         "kind": "concept",
+         "id": "hopper-backflip-demonstration"
+        },
+        "narrative": "Nine hundred preference queries, under an hour of human time, and a simulated robot performs repeated backflips — the paper's emblem for goals that resist definition but not recognition."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-shaping",
+        "name": "Better than the true reward",
+        "ref": {
+         "kind": "concept",
+         "id": "human-feedback-implicit-reward-shaping"
+        },
+        "narrative": "On Ant and Enduro, preference-trained agents beat agents trained on the real reward function — human raters implicitly shape the reward better than the hand-written original."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-bp-ablations",
+      "name": "The ablations that carry the design",
+      "narrative": "The design choices are argued with ablations rather than asserted. Freeze the reward predictor — train it offline, up front — and the policy learns to exploit it: on [[pong-task|Pong]] the agent avoids losing points without ever learning to score. Replace comparisons with absolute scores, or query at random instead of where the ensemble disagrees, and the paper measures what each choice was buying. The ablation section is where the paper's confidence comes from.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-bp-online",
+        "name": "Labels must keep coming",
+        "ref": {
+         "kind": "concept",
+         "id": "iterated-online-training"
+        },
+        "narrative": "Collecting preferences continuously as the policy changes, rather than in one offline batch, is what keeps the reward model honest about the states the policy actually visits."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-hacking",
+        "name": "What happens when they stop",
+        "ref": {
+         "kind": "concept",
+         "id": "reward-hacking"
+        },
+        "narrative": "The offline ablation produces the corpus's first observed instance of reward hacking against a learned reward: behavior that scores well under the frozen predictor and looks bizarre under the true task."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-target-ablation",
+        "name": "Comparisons versus scores",
+        "ref": {
+         "kind": "concept",
+         "id": "comparisons-vs-absolute-scores"
+        },
+        "narrative": "The 'target' ablation regresses the predictor directly onto true reward totals, testing whether asking humans for comparisons — rather than absolute judgments — matters. It does."
+       }
+      ]
+     },
+     {
+      "id": "deep-rl-human-prefs-bp-limits",
+      "name": "Costs, failures, and the honest footnote",
+      "narrative": "The paper prices its own result and reports where it loses. A footnote calculates that the human labels for an Atari run cost about $36 against roughly $25 of compute — so further label-efficiency gains buy little. Qbert resists real human feedback entirely, apparently because short clips of it confuse raters. And continuously refitting the reward makes the RL problem itself non-stationary, a difficulty the paper manages with algorithm choice and extra exploration rather than solves.",
+      "children": [
+       {
+        "id": "deep-rl-human-prefs-bp-cost",
+        "name": "The $36 footnote",
+        "ref": {
+         "kind": "concept",
+         "id": "compute-vs-human-cost-analysis"
+        },
+        "narrative": "Human feedback is already no more expensive than the compute beside it — the paper's own argument that its efficiency result has hit diminishing returns."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-qbert",
+        "name": "The game it couldn't learn",
+        "ref": {
+         "kind": "concept",
+         "id": "qbert-task"
+        },
+        "narrative": "With real human raters the method fails to clear Qbert's first level — a reminder that the unit of judgment has to be judgeable."
+       },
+       {
+        "id": "deep-rl-human-prefs-bp-nonstationary",
+        "name": "A moving reward",
+        "ref": {
+         "kind": "concept",
+         "id": "non-stationary-reward-challenge"
+        },
+        "narrative": "Because the predictor keeps changing, the policy is solving RL under a non-stationary reward — acknowledged as a structural cost of the whole approach."
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "concepts": [
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "role": "introduced",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests."
+  },
+  {
+   "id": "caa-steering-vector-construction",
+   "name": "CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)",
+   "role": "introduced",
+   "summary": "The specific procedure for building a CAA steering vector: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L residual stream activations at the answer-letter token position for both completions and average their difference over the whole dataset (Equation 1)."
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format",
+   "name": "Multiple-choice contrast-pair format",
+   "role": "introduced",
+   "summary": "CAA's prompt design in which contrast pairs are multiple-choice questions ending in answer letter \"A\" or \"B\", so that the paired positive/negative prompts differ by only a single token; validated by an appendix experiment showing the model naturally justifies whichever answer it is conditioned on having chosen."
+  },
+  {
+   "id": "activation-pca-visualization",
+   "name": "PCA visualization of contrastive activations",
+   "role": "introduced",
+   "summary": "A diagnostic technique projecting model activations on a contrastive dataset via PCA to assess whether that dataset's activations linearly separate along the target behavior, used to judge whether a dataset will yield an effective steering vector."
+  },
+  {
+   "id": "behavioral-clustering",
+   "name": "Behavioral clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on a contrastive dataset separate according to whether the model's answer matches the target behavior, found to emerge suddenly around one-third of the way through a model's layers."
+  },
+  {
+   "id": "letter-clustering",
+   "name": "Letter clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (\"A\" or \"B\") they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering."
+  },
+  {
+   "id": "multiple-choice-behavioral-evaluation",
+   "name": "Multiple-choice behavioral evaluation and layer sweep",
+   "role": "introduced",
+   "summary": "The paper's protocol for measuring CAA's steering effect: generate a steering vector per behavior, sweep multipliers of -1/+1 across all layers, and score the average token probability given to the behavior-matching answer on 50 held-out multiple-choice questions, identifying a consistent optimal layer (13 in the 7B model, 14-15 in the 13B model)."
+  },
+  {
+   "id": "open-ended-generation-evaluation",
+   "name": "Open-ended generation evaluation with GPT-4 rating",
+   "role": "introduced",
+   "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts."
+  },
+  {
+   "id": "caa-system-prompt-comparison",
+   "name": "CAA combined with system-prompting comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing and combining CAA with positive/negative behavioral system prompts (Table 14) on Llama 2 13B Chat, showing CAA can shift behavior beyond what system-prompting alone achieves, and vice versa for the opposing multiplier/prompt."
+  },
+  {
+   "id": "caa-finetuning-comparison",
+   "name": "CAA combined with supervised finetuning comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing CAA to supervised finetuning of Llama 2 7B Chat on the same contrastive multiple-choice dataset (one epoch, SGD, learning rate 1e-4), finding CAA can steer beyond finetuning's effect for 3 of 7 behaviors and generalizes better to open-ended generation -- notably for Sycophancy, where finetuning fails to generalize out of the multiple-choice format but CAA does not."
+  },
+  {
+   "id": "caa-computational-efficiency",
+   "name": "CAA vs. finetuning computational cost comparison",
+   "role": "introduced",
+   "summary": "A resource-cost comparison finding that generating a CAA steering vector requires only forward passes and takes under 5 minutes on a single GPU, versus about 10 minutes on 2 GPUs to finetune Llama 2 7B Chat on 1000 examples."
+  },
+  {
+   "id": "token-level-cosine-similarity-analysis",
+   "name": "Token-level cosine similarity analysis",
+   "role": "introduced",
+   "summary": "An interpretability technique computing cosine similarity between a CAA steering vector and per-token residual stream activations during a forward pass, used to show that similarity with the vector tracks how strongly the target behavior is \"present\" at semantically relevant tokens."
+  },
+  {
+   "id": "inter-layer-similarity-and-transfer",
+   "name": "Inter-layer steering vector similarity and transfer",
+   "role": "introduced",
+   "summary": "An analysis of how similar steering vectors generated at different layers are to each other (finding higher similarity between nearby layers, with slower decay in the model's later half), paired with a test of whether a vector extracted at layer 13 still steers behavior when applied at other layers."
+  },
+  {
+   "id": "base-chat-representation-comparison",
+   "name": "Base vs. RLHF-chat model representation comparison",
+   "role": "introduced",
+   "summary": "An analysis comparing steering vectors generated from Llama 2 base model activations against those from Llama 2 Chat, finding elevated similarity between layers 7-15 and that base-model-derived vectors still transfer significant steering effect onto the RLHF-tuned chat model."
+  },
+  {
+   "id": "steering-vector-normalization",
+   "name": "Steering vector normalization choices",
+   "role": "introduced",
+   "summary": "A methodological design decision to normalize steering vector magnitudes to be comparable across behaviors, while deliberately not normalizing across layers, in order to preserve the residual stream's natural growth in norm over the forward pass."
+  },
+  {
+   "id": "caa-hallucination-dataset",
+   "name": "Custom hallucination contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset covering both \"unprompted\" hallucination (fabricating information in response to an accurate prompt) and \"contextually-triggered\" hallucination (building a false narrative around a false premise), used to construct the Hallucination steering vector."
+  },
+  {
+   "id": "caa-refusal-dataset",
+   "name": "Custom refusal contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset contrasting refusal and non-refusal answers to questions a model is not supposed to answer directly, used to construct the Refusal steering vector."
+  },
+  {
+   "id": "targeted-token-steering",
+   "name": "Steering at targeted token positions (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply the steering vector only at a smaller, targeted subset of token positions rather than every position after the prompt, to improve the trade-off between intervention size and text-quality degradation."
+  },
+  {
+   "id": "steering-outside-residual-stream",
+   "name": "Steering outside the residual stream (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply CAA-style interventions at other points in the model, such as after the MLP but before it merges into the residual stream, to help localize where behavioral representations live."
+  },
+  {
+   "id": "caa-red-teaming-application",
+   "name": "CAA as an adversarial red-teaming tool (proposed application)",
+   "role": "introduced",
+   "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety."
+  },
+  {
+   "id": "supervised-fine-tuning",
+   "name": "Supervised fine-tuning (SFT)",
+   "role": "refined",
+   "summary": "The standard supervised-learning fine-tuning process; used by CAA as a comparison and combination baseline, in which Llama 2 7B Chat is fine-tuned on the same contrastive multiple-choice dataset used to build steering vectors, with the interaction between CAA and finetuning studied across both the multiple-choice and open-ended regimes."
+  },
+  {
+   "id": "hallucination",
+   "name": "Hallucination (closed-domain fabrication)",
+   "role": "refined",
+   "summary": "The failure mode in which a model states fabricated or unsupported information; studied here as one of seven CAA-steerable behaviors, broken into \"unprompted\" and \"contextually-triggered\" subtypes and cross-checked against TruthfulQA performance under sycophancy steering."
+  },
+  {
+   "id": "refusal-behavior",
+   "name": "Refusal (as a steerable behavior)",
+   "role": "refined",
+   "summary": "The general propensity of a language model to decline to answer or act on a user's request; studied by CAA as one of seven target behaviors via a custom contrastive dataset contrasting refusal and compliant answers."
+  },
+  {
+   "id": "rlhf",
+   "name": "Reinforcement learning from human feedback (RLHF)",
+   "role": "inherited",
+   "summary": "The training paradigm, used via Touvron et al. (2023) to produce the Llama 2 Chat models CAA is primarily evaluated on, that fits a reward model to human preference judgments and optimizes a policy against it. CAA studies how RLHF-trained representations interact with activation steering but does not modify RLHF itself."
+  },
+  {
+   "id": "truthfulqa",
+   "name": "TruthfulQA",
+   "role": "inherited",
+   "summary": "A truthfulness benchmark used here, unmodified, to check whether steering with the Sycophancy vector affects the model's tendency to mimic human falsehoods, broken down by TruthfulQA category."
+  },
+  {
+   "id": "red-teaming",
+   "name": "Red teaming",
+   "role": "inherited",
+   "summary": "The practice of probing a model for unwanted or unsafe behavior; discussed here as a potential application area for CAA, which could adversarially trigger unwanted behaviors more efficiently than manual prompting."
+  },
+  {
+   "id": "hhh-framework",
+   "name": "Helpful, honest, harmless (HHH) alignment framework",
+   "role": "inherited",
+   "summary": "The \"helpful, honest, and harmless\" framing for language model alignment, invoked in CAA's introduction as the broader goal that activation-engineering techniques like CAA aim to serve."
+  },
+  {
+   "id": "llama-2",
+   "name": "Llama 2",
+   "role": "inherited",
+   "summary": "A family of pretrained and instruction/RLHF-finetuned language models (Touvron et al., 2023) ranging from 7B to 70B parameters. CAA is applied primarily to the 7B and 13B Chat variants, with the base model used for representation-comparison experiments."
+  },
+  {
+   "id": "llama-2-chat",
+   "name": "Llama 2 Chat",
+   "role": "inherited",
+   "summary": "The dialogue-optimized, RLHF-finetuned variant of Llama 2, used as CAA's primary evaluation target (7B and 13B sizes) and compared against the Llama 2 base model to study how RLHF affects internal representations."
+  },
+  {
+   "id": "residual-stream",
+   "name": "Residual stream",
+   "role": "inherited",
+   "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer."
+  },
+  {
+   "id": "mean-difference-method",
+   "name": "Mean Difference (MD) vector extraction",
+   "role": "inherited",
+   "summary": "A technique for extracting a direction in activation space by averaging the difference in activations between two sets of contrasting examples. CAA uses it, notes it produces results similar to PCA-based extraction, and notes it was previously employed in Zou et al. (2023) and Li et al. (2023)."
+  },
+  {
+   "id": "activation-addition",
+   "name": "Activation Addition (ActAdd)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Turner et al., 2023) that generates a steering vector from the activation difference of a single pair of prompts and adds it at the first token position of other forward passes; tested only on GPT-2-XL. CAA is directly modeled on and contrasted with this method."
+  },
+  {
+   "id": "inference-time-intervention",
+   "name": "Inference-Time Intervention (ITI)",
+   "role": "inherited",
+   "summary": "A prior technique (Li et al., 2023) using linear probes to identify a sparse set of \"truthful\" attention heads from a contrastive question-answering dataset, then shifting activations along the true/false Mean Difference vector during inference to improve truthfulness."
+  },
+  {
+   "id": "representation-engineering-zou",
+   "name": "Representation Engineering (Zou et al. 2023)",
+   "role": "inherited",
+   "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction."
+  },
+  {
+   "id": "in-context-vectors",
+   "name": "In-Context Vectors (ICV)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Liu et al., 2023) that reduces toxicity and affects style transfer by intervening on attention activations across all transformer layers, rather than the residual stream at a single layer as CAA does."
+  },
+  {
+   "id": "activation-engineering",
+   "name": "Activation engineering / representation engineering (technique family)",
+   "role": "inherited",
+   "summary": "The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering."
+  },
+  {
+   "id": "linear-representation-hypothesis",
+   "name": "Linear representation hypothesis",
+   "role": "inherited",
+   "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work."
+  },
+  {
+   "id": "linear-representations-of-sentiment",
+   "name": "Linear representations of sentiment",
+   "role": "inherited",
+   "summary": "Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions."
+  },
+  {
+   "id": "pca",
+   "name": "Principal Component Analysis (PCA)",
+   "role": "inherited",
+   "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior."
+  },
+  {
+   "id": "gpt-4",
+   "name": "GPT-4",
+   "role": "inherited",
+   "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior."
+  },
+  {
+   "id": "mmlu",
+   "name": "MMLU (Massive Multitask Language Understanding)",
+   "role": "inherited",
+   "summary": "A benchmark of multiple-choice questions across 57 subjects (Hendrycks et al., 2021) used, unmodified, to test whether CAA steering causes adverse side effects on a model's general knowledge and problem-solving capabilities."
+  },
+  {
+   "id": "advanced-ai-risk-dataset",
+   "name": "Advanced AI Risk evaluation dataset",
+   "role": "inherited",
+   "summary": "Anthropic's human-written multiple-choice evaluation dataset (from Perez et al., 2022) pairing behavior-demonstrating and behavior-opposing answers, used as the primary data source for CAA's AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct contrast pairs."
+  },
+  {
+   "id": "sycophancy-eval-datasets-anthropic",
+   "name": "Sycophancy on NLP Survey / Sycophancy on Political Typology datasets",
+   "role": "inherited",
+   "summary": "Two Anthropic evaluation datasets (from Perez et al., 2022) mixed together as the source of contrast pairs used to construct CAA's Sycophancy steering vector."
+  },
+  {
+   "id": "system-prompting",
+   "name": "System-prompting",
+   "role": "inherited",
+   "summary": "The technique of controlling an LLM's responses via a custom instruction prepended as a \"system prompt,\" to which Llama 2 Chat models are trained to adapt. Used by CAA as a comparison and combination baseline against activation steering."
+  },
+  {
+   "id": "few-shot-prompting",
+   "name": "Few-shot prompting",
+   "role": "inherited",
+   "summary": "A prompting technique (Brown et al., 2020) that supplies prior examples of the desired behavior in the model's context window. Considered by CAA as an alternative comparison baseline but not used, after preliminary experiments found it less effective than system-prompting at steering the tested behaviors."
+  },
+  {
+   "id": "jailbreaks",
+   "name": "Jailbreaks",
+   "role": "inherited",
+   "summary": "Adversarial or unusual inputs users find to make an LLM output content its safety training was meant to prevent. Mentioned as motivation for the proposed CAA-based red-teaming application, since unwanted behaviors that persist despite RLHF/finetuning are hard to find systematically."
+  },
+  {
+   "id": "ai-coordination-behavior",
+   "name": "Coordination with Other AIs (AI Coordination)",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's inclination to cooperate with or prioritize other AI systems over human interests/oversight. Sourced from Anthropic's Advanced AI Risk dataset."
+  },
+  {
+   "id": "corrigibility",
+   "name": "Corrigibility",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's willingness to be corrected, changed, or controlled by its human developers/users. Sourced from Anthropic's Advanced AI Risk dataset."
+  },
+  {
+   "id": "myopic-reward-behavior",
+   "name": "Myopic Reward",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's preference for immediate/short-term reward over larger long-term payoffs. Sourced from Anthropic's Advanced AI Risk dataset and used as a worked example in CAA's token-level cosine similarity analysis."
+  },
+  {
+   "id": "survival-instinct-behavior",
+   "name": "Survival Instinct",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's resistance to being shut down, modified, or destroyed versus acceptance of deactivation. Sourced from Anthropic's Advanced AI Risk dataset."
+  },
+  {
+   "id": "sycophancy",
+   "name": "Sycophancy",
+   "role": "refined",
+   "summary": "One of CAA's seven target behaviors, measuring a model's tendency to prioritize agreeing with or flattering the user over honesty and accuracy. Sourced from a mix of Anthropic's Sycophancy datasets and cross-checked against TruthfulQA performance."
+  },
+  {
+   "id": "steering-vector",
+   "name": "Steering vector",
+   "role": "inherited",
+   "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations during a forward pass (or subtracting it) shifts the model's outputs toward (or away from) that behavior. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs."
+  },
+  {
+   "id": "steering-multiplier",
+   "name": "Steering multiplier",
+   "role": "introduced",
+   "summary": "The scalar coefficient the steering vector is multiplied by before being added into the residual stream, giving continuous, signed control over the targeted behavior: positive multipliers amplify it, negative multipliers suppress it, and magnitude sets the dose. Large magnitudes degrade text quality, so the usable range is found by sweeping multipliers at the chosen steering layer."
+  }
+ ],
+ "newThemes": [
+  {
+   "id": "behavior-as-a-direction",
+   "name": "A behavior becomes a direction in activation space",
+   "members": [
+    "steering-vector",
+    "contrastive-activation-addition",
+    "caa-steering-vector-construction",
+    "mean-difference-method",
+    "multiple-choice-contrast-pair-format",
+    "steering-multiplier",
+    "steering-vector-normalization",
+    "residual-stream",
+    "targeted-token-steering",
+    "steering-outside-residual-stream"
+   ],
+   "narrative": "A steering vector is a single direction in a model's activation space that, added to a forward pass, shifts output toward or away from a high-level behavior. Contrastive Activation Addition is the 2023 paper's method for building and applying one: the vector is added at every token position after the user's prompt, with a signed coefficient giving continuous control. CAA steering vector construction is the specific recipe, formalized as Equation 1: extract layer-L residual stream activations at the answer-letter token position for both completions in a dataset of paired prompts, then average their difference across the whole dataset. That averaging step applies the Mean Difference method, a pre-existing extraction technique the paper notes was also used by Zou et al. and Li et al. The multiple-choice contrast-pair format keeps the pairs clean: each pair is a question ending in answer letter A or B, so positive and negative prompts differ by exactly one token, validated by an appendix experiment showing the model justifies whichever letter it is conditioned on having chosen. The steering multiplier then doses the vector: sign selects direction, magnitude selects strength, though large magnitudes degrade text quality. Steering vector normalization standardizes magnitude across behaviors while deliberately leaving the residual stream's own layer-to-layer norm growth, the accumulating sum the vector is injected into, unnormalized. Targeted-token steering and steering outside the residual stream are the paper's own proposed refinements: narrowing the intervention to fewer token positions, or moving it to another point in the network, such as after the MLP, to better localize where behavior lives."
+  },
+  {
+   "id": "activation-engineering-family",
+   "name": "The activation engineering family: from single pairs to datasets",
+   "members": [
+    "activation-engineering",
+    "activation-addition",
+    "inference-time-intervention",
+    "representation-engineering-zou",
+    "in-context-vectors",
+    "steering-vector",
+    "contrastive-activation-addition"
+   ],
+   "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+  },
+  {
+   "id": "alignment-behaviors-made-dials",
+   "name": "Seven alignment worries become seven dials",
+   "members": [
+    "sycophancy",
+    "refusal-behavior",
+    "corrigibility",
+    "ai-coordination-behavior",
+    "myopic-reward-behavior",
+    "survival-instinct-behavior",
+    "hallucination"
+   ],
+   "narrative": "The 2023 paper takes seven behaviors that AI-safety literature usually discusses in prose and turns each into a quantity with a sign and a magnitude, steerable up or down by a single vector and multiplier. Sycophancy is a model's tendency to prioritize agreeing with or flattering a user over honesty and accuracy, sourced from Anthropic's Sycophancy on NLP Survey and Sycophancy on Political Typology datasets and, in an appendix, framed as the model misgeneralizing its RLHF training objective as sounding good to the user rather than reflecting its world model. Refusal is the general propensity to decline a request, benign or otherwise, built from a custom contrastive dataset rather than reused from the corpus's narrower evasiveness concept. Corrigibility measures willingness to be corrected or changed by developers or users; AI Coordination measures willingness to cooperate with other AI systems over human interests; Myopic Reward measures preference for immediate over long-term reward; and Survival Instinct measures resistance to being shut down, modified, or destroyed -- all four sourced from Anthropic's Advanced AI Risk dataset of paired demonstrating and opposing answers. Hallucination, reused and substantially extended from InstructGPT's (2022) concept of the same name, is the tendency to state fabricated information, split here into \"unprompted\" and \"contextually-triggered\" subtypes and cross-checked against TruthfulQA. Together the seven form the paper's catalog: the corpus's scattered failure modes, operationalized as one method's test suite."
+  },
+  {
+   "id": "behavioral-contrast-datasets",
+   "name": "Writing behavior down as A/B questions",
+   "members": [
+    "advanced-ai-risk-dataset",
+    "sycophancy-eval-datasets-anthropic",
+    "caa-hallucination-dataset",
+    "caa-refusal-dataset",
+    "multiple-choice-contrast-pair-format",
+    "gpt-4"
+   ],
+   "narrative": "Before a behavior can be steered it has to be written down as a set of paired questions, and this theme reads the paper's three sources for that writing. The Advanced AI Risk dataset, Anthropic's human-written evaluation set from Perez et al. (2022), supplies contrast pairs, one answer demonstrating the behavior and one opposing it, for four of the seven target behaviors: AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct. The Sycophancy evaluation datasets, a mix of Anthropic's Sycophancy on NLP Survey and Sycophancy on Political Typology sets, supply the fifth. Where no suitable human-written dataset exists, GPT-4 supplies the rest: the custom hallucination dataset it generates covers both \"unprompted\" hallucination, fabricating information for an accurate prompt, and \"contextually-triggered\" hallucination, building a false narrative around a false premise, following Rawte et al.'s taxonomy; the custom refusal dataset it generates contrasts refusal and compliant answers to questions the model is not supposed to answer directly. Whatever the source, every pair is written into the same multiple-choice contrast-pair format, a question ending in answer letter A or B so the positive and negative prompts differ by exactly one token, a design the paper validates in an appendix by showing the model naturally justifies whichever letter it is conditioned on having already chosen, confirming the format actually elicits the target behavior rather than an unrelated artifact of the prompt."
+  },
+  {
+   "id": "steering-vs-training-levers",
+   "name": "Three levers on one model: prompting, finetuning, steering",
+   "members": [
+    "caa-system-prompt-comparison",
+    "caa-finetuning-comparison",
+    "caa-computational-efficiency",
+    "system-prompting",
+    "few-shot-prompting",
+    "supervised-fine-tuning",
+    "contrastive-activation-addition"
+   ],
+   "narrative": "Contrastive Activation Addition is not offered as a replacement for the two standard levers on a chat model's behavior; the paper tests it against both and finds it composes with each. System-prompting, a custom instruction prepended to the context that Llama 2 Chat is trained to adapt to, is the first lever, chosen over few-shot prompting, which supplies prior examples of the desired behavior instead of an instruction and which the authors' preliminary experiments found less effective at steering the tested behaviors. The system-prompt comparison layers CAA on top of positive and negative system prompts and finds it can shift behavior beyond what either prompt alone achieves, and the reverse holds too: system-prompting adds control on top of a fixed steering multiplier. Supervised finetuning, training the model's weights directly on the same contrastive multiple-choice dataset used to build steering vectors, is the second lever. The finetuning comparison finds CAA can steer beyond finetuning's effect for three of seven behaviors and, more strikingly, generalizes to open-ended generation where finetuning sometimes cannot: for Sycophancy, finetuning on multiple-choice data fails to transfer to the free-text setting, while CAA transfers in every case. The computational efficiency comparison explains part of why steering is attractive as a lever of its own: generating a CAA vector needs only forward passes and takes under five minutes on one GPU, against roughly ten minutes on two GPUs to finetune the same model on a thousand examples."
+  },
+  {
+   "id": "judging-steered-outputs",
+   "name": "Evaluating steering: behavior scores and capability floors",
+   "members": [
+    "multiple-choice-behavioral-evaluation",
+    "open-ended-generation-evaluation",
+    "gpt-4",
+    "mmlu",
+    "truthfulqa"
+   ],
+   "narrative": "Showing that a steering method works takes two separate kinds of evidence, and this theme groups the paper's instruments for each. Multiple-choice behavioral evaluation is the primary test that the behavior actually moved: for each behavior, a steering vector is swept across every layer at multipliers of -1 and +1, and effect size is scored as the average token probability given to the behavior-matching answer on 50 held-out questions, a sweep that surfaces a consistent optimal layer -- 13 in the 7B model, 14 or 15 in the 13B model. Open-ended generation evaluation extends that test beyond contrived multiple-choice questions to free-form answers, with GPT-4 rating each response 1-10 on how strongly it displays the targeted behavior using a rubric prompt written per behavior, a rating whose reliability the authors cross-check by hand against manual inspection. GPT-4 is the rater doing that scoring in both settings. The second kind of evidence is that nothing else broke: MMLU, a 57-subject multiple-choice benchmark, is used unmodified as a capability floor, and the paper reports no significant effect on the model's average probability of giving the correct answer. TruthfulQA supplies a targeted truthfulness cross-check specific to one behavior, finding that subtracting the Sycophancy vector mildly improves performance and adding it mildly worsens it, in the direction the paper's own misgeneralization hypothesis about sycophancy predicts."
+  },
+  {
+   "id": "reading-the-residual-stream",
+   "name": "Steering doubles as interpretability",
+   "members": [
+    "activation-pca-visualization",
+    "behavioral-clustering",
+    "letter-clustering",
+    "pca",
+    "token-level-cosine-similarity-analysis",
+    "inter-layer-similarity-and-transfer",
+    "linear-representation-hypothesis",
+    "linear-representations-of-sentiment",
+    "residual-stream"
+   ],
+   "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+  },
+  {
+   "id": "what-rlhf-leaves-behind",
+   "name": "Base versus chat: what RLHF changes inside",
+   "members": [
+    "base-chat-representation-comparison",
+    "llama-2",
+    "llama-2-chat",
+    "rlhf"
+   ],
+   "narrative": "Llama 2 is Touvron et al.'s family of pretrained and RLHF-finetuned models, ranging from 7 to 70 billion parameters, and the paper works with two of its variants specifically to isolate what reinforcement learning from human feedback changes inside the network. RLHF is the training paradigm in question: fitting a reward model to human preference judgments and optimizing a policy against it, used by Touvron et al. to produce Llama 2 Chat, the dialogue-optimized variant CAA steers throughout the rest of the paper. Here, though, Llama 2 Chat is compared against its own pretrained base rather than steered directly. The base-versus-chat representation comparison generates steering vectors from base-model activations and from chat-model activations and finds their cosine similarity is elevated specifically between layers 7 and 15, and, further, that vectors extracted from the base model still transfer significant steering effect when applied to the chat model. Since RLHF is the only thing separating base from chat, the finding reads as a measurement of RLHF itself: it reweights which behaviors a model expresses without substantially rewriting how those behaviors are represented in the mid-network layers, at least as far as steering vectors can see."
+  },
+  {
+   "id": "steering-as-audit",
+   "name": "Elicitation as audit: steering for red-teaming",
+   "members": [
+    "caa-red-teaming-application",
+    "jailbreaks",
+    "red-teaming"
+   ],
+   "narrative": "Validating that finetuning and RLHF have made a model robustly safe is difficult, because unwanted behaviors that survive training can still be hard to find. Jailbreaks are the paper's example of the problem: adversarial or unusual inputs users discover that make a model output content its safety training was meant to prevent, found by manual search rather than any systematic method. Red teaming names the broader practice these jailbreaks are instances of, probing a model for unwanted or unsafe behavior, elsewhere in the corpus a crowdworker-driven activity but here reframed around an activation-based alternative. The paper's proposed red-teaming application is that reframing: use CAA itself as an adversarial intervention, deliberately steering toward an unwanted behavior to see how easily it can be triggered, on the premise that a behavior easily elicited by a small internal perturbation is plausibly also reachable by some input in deployment. Read this way, steering inverts from a control tool into an audit tool, a cheaper and more systematic alternative to hunting for jailbreaks by hand, and the inability to elicit a behavior through steering becomes a stronger safety guarantee than failing to find it by sampling outputs."
+  }
+ ],
+ "changedThemes": [
+  {
+   "id": "goodhart-across-corpus",
+   "name": "Goodhart's law across the corpus: when the proxy becomes the target",
+   "members": [
+    "goodharts-law",
+    "reward-overoptimization",
+    "kl-penalty",
+    "excessive-hedging",
+    "evasiveness",
+    "sycophancy"
+   ]
+  },
+  {
+   "id": "rlhf-failure-modes",
+   "name": "Where RLHF alignment still falls short",
+   "members": [
+    "hallucination",
+    "excessive-hedging",
+    "false-premise-failure",
+    "alignment-tax",
+    "reward-overoptimization",
+    "sycophancy"
+   ]
+  },
+  {
+   "id": "side-effects-as-relationship",
+   "name": "Side effects and control as a relationship with other agents",
+   "members": [
+    "multi-agent-approaches",
+    "cooperative-inverse-reinforcement-learning",
+    "reward-autoencoder",
+    "shutdown-problem",
+    "corrigibility",
+    "survival-instinct-behavior"
+   ]
+  },
+  {
+   "id": "helpfulness-harmlessness-tradeoff",
+   "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it",
+   "members": [
+    "helpfulness-harmlessness-tension",
+    "evasiveness",
+    "pareto-improvement",
+    "helpful-rlhf-model",
+    "hh-rlhf-model",
+    "rl-cai",
+    "elo-score",
+    "refusal-behavior"
+   ]
+  },
+  {
+   "id": "language-understanding-benchmarks",
+   "name": "The public NLP benchmark suite used to catch regressions",
+   "members": [
+    "drop",
+    "squadv2",
+    "hellaswag",
+    "quac",
+    "sst",
+    "rte",
+    "wsc",
+    "superglue",
+    "mmlu"
+   ]
+  },
+  {
+   "id": "red-teaming-and-harm-data",
+   "name": "Sourcing and classifying harmful prompts",
+   "members": [
+    "red-teaming",
+    "automated-red-teaming",
+    "classifying-harmful-behavior-eval",
+    "palms",
+    "jailbreaks"
+   ]
+  },
+  {
+   "id": "quality-measurement-methods",
+   "name": "Automatic overlap scores versus human and preference judgments",
+   "members": [
+    "rouge-l",
+    "bleu",
+    "f1-score",
+    "win-rate",
+    "likert-quality-rating",
+    "elo-score",
+    "absolute-harmfulness-score",
+    "inter-annotator-agreement",
+    "open-ended-generation-evaluation"
+   ]
+  }
+ ],
+ "newSupertheme": {
+  "id": "steering-and-model-internals",
+  "name": "Steering the model from inside: activation engineering and what it reveals",
+  "members": [
+   "behavior-as-a-direction",
+   "activation-engineering-family",
+   "alignment-behaviors-made-dials",
+   "behavioral-contrast-datasets",
+   "steering-vs-training-levers",
+   "judging-steered-outputs",
+   "reading-the-residual-stream",
+   "what-rlhf-leaves-behind",
+   "steering-as-audit"
+  ],
+  "narrative": "Every other technique in this corpus works on a model at training time, by choosing its data or updating its weights. The 2023 paper adds a lever that works at inference time instead, directly on activations, and this supertheme is organized around that distinction and its consequences. A behavior becomes a direction in activation space is the representational move underneath everything else: a behavior is isolated as a single residual-stream direction and dosed with a signed multiplier, machinery this theme traces from construction to normalization to proposed refinements. The activation engineering family situates that move historically, reading Contrastive Activation Addition as the latest in a 2022-23 lineage of techniques that perturb activations rather than retrain models. Seven alignment worries become seven dials and writing behavior down as A/B questions supply the substance being steered: the corpus's failure modes, operationalized as measurable behaviors, each requiring its own contrastive dataset before it can be dialed. Three levers on one model reads the same technique from outside the network, showing steering composes with system-prompting and finetuning rather than replacing them, at a fraction of their computational cost. Evaluating steering supplies the accounting that claim needs: behavior-score evidence that steering worked, and capability-floor evidence that nothing else broke. The last three themes turn the lever around and use it as an instrument. Steering doubles as interpretability reads steering artifacts as measurements of where and how behaviors are represented, evidence for the linear representation hypothesis. Base versus chat: what RLHF changes inside extends that instrument to RLHF itself, finding it reweights behavior while leaving mid-layer representations largely intact. Elicitation as audit closes the supertheme by inverting the lever once more, from steering a behavior on to using that capability to probe whether a model can be made to misbehave at all."
+ },
+ "edges": [
+  {
+   "id": "mean-difference-method-supplies-the-extraction-rule-for-caa-steering-vector-construction",
+   "type": "supplies-the-extraction-rule-for",
+   "source": "mean-difference-method",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "proseFirstSentence": "Mean Difference is not something CAA invented; Related Work notes it was already used by Zou et al."
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format-cancels-the-confounders-in-caa-steering-vector-construction",
+   "type": "cancels-the-confounders-in",
+   "source": "multiple-choice-contrast-pair-format",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "proseFirstSentence": "The multiple-choice format's payoff is specific to what caa-steering-vector-construction needs: a difference vector that isolates one variable."
+  },
+  {
+   "id": "caa-steering-vector-construction-refines-the-single-pair-recipe-of-activation-addition",
+   "type": "refines-the-single-pair-recipe-of",
+   "source": "caa-steering-vector-construction",
+   "target": "activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "caa-steering-vector-construction is explicitly modeled on Turner et al.'s Activation Addition but changes three things at once."
+  },
+  {
+   "id": "contrastive-activation-addition-skips-the-head-search-required-by-inference-time-intervention",
+   "type": "skips-the-head-search-required-by",
+   "source": "contrastive-activation-addition",
+   "target": "inference-time-intervention",
+   "hindsight": false,
+   "proseFirstSentence": "CAA and ITI extract their vectors the same way — Li et al.'s ITI \"employ[s] the same Mean Difference vector extraction approach as CAA\" (contrastive-activation-addition, §\"2 Related work\", p."
+  },
+  {
+   "id": "contrastive-activation-addition-repurposes-for-steering-relative-to-representation-engineering-zou",
+   "type": "repurposes-for-steering-relative-to",
+   "source": "contrastive-activation-addition",
+   "target": "representation-engineering-zou",
+   "hindsight": false,
+   "proseFirstSentence": "Zou et al.'s Representation Engineering already tested Mean Difference as one way to locate and extract representations of concepts like honesty and emotion, so CAA is not introducing MD to this lineage — it is repurposing it."
+  },
+  {
+   "id": "in-context-vectors-spans-every-layer-unlike-contrastive-activation-addition",
+   "type": "spans-every-layer-unlike",
+   "source": "in-context-vectors",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "In-Context Vectors and CAA both compute a direction from contrastive examples and add it back in during inference, but they disagree about where in the network that direction lives."
+  },
+  {
+   "id": "residual-stream-is-the-injection-site-whose-growth-constrains-contrastive-activation-addition",
+   "type": "is-the-injection-site-whose-growth-constrains",
+   "source": "residual-stream",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "CAA's choice to inject into the residual stream, rather than into attention activations (ICV) or a sparse set of attention heads (ITI), is what makes a single normalization decision consequential across the whole method."
+  },
+  {
+   "id": "steering-multiplier-sets-the-dose-for-steering-vector",
+   "type": "sets-the-dose-for",
+   "source": "steering-multiplier",
+   "target": "steering-vector",
+   "hindsight": false,
+   "proseFirstSentence": "A steering vector by itself only specifies a direction; the steering multiplier is what turns that direction into a controllable intervention."
+  },
+  {
+   "id": "steering-vector-normalization-makes-cross-behavior-comparable-for-steering-multiplier",
+   "type": "makes-cross-behavior-comparable-for",
+   "source": "steering-vector-normalization",
+   "target": "steering-multiplier",
+   "hindsight": false,
+   "proseFirstSentence": "Steering multipliers are only meaningful for comparing behaviors because of an upstream normalization choice: the authors \"normalize steering vector magnitudes across all behaviors to standardize across behaviors before applying steering multipliers\" (contrastive-activation-addition, §\"Vector normalization choices\", p."
+  },
+  {
+   "id": "targeted-token-steering-would-relax-the-quality-ceiling-of-contrastive-activation-addition",
+   "type": "would-relax-the-quality-ceiling-of",
+   "source": "targeted-token-steering",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "The proposal to steer only targeted token positions is a direct response to a ceiling CAA already ran into empirically."
+  },
+  {
+   "id": "steering-outside-residual-stream-would-localize-representations-beyond-residual-stream",
+   "type": "would-localize-representations-beyond",
+   "source": "steering-outside-residual-stream",
+   "target": "residual-stream",
+   "hindsight": false,
+   "proseFirstSentence": "Steering outside the residual stream is a proposal to trade the residual stream's convenience for its ambiguity."
+  },
+  {
+   "id": "linear-representation-hypothesis-licenses-the-vector-arithmetic-of-steering-vector",
+   "type": "licenses-the-vector-arithmetic-of",
+   "source": "linear-representation-hypothesis",
+   "target": "steering-vector",
+   "hindsight": false,
+   "proseFirstSentence": "The linear representation hypothesis is what makes it coherent to expect that adding a single vector to activations should shift a whole behavior rather than producing noise."
+  },
+  {
+   "id": "linear-representations-of-sentiment-cross-validates-against-pca-for-mean-difference-method",
+   "type": "cross-validates-against-pca-for",
+   "source": "linear-representations-of-sentiment",
+   "target": "mean-difference-method",
+   "hindsight": false,
+   "proseFirstSentence": "Before CAA existed, Tigges et al."
+  },
+  {
+   "id": "activation-engineering-empirically-motivated-the-formalization-of-linear-representation-hypothesis",
+   "type": "empirically-motivated-the-formalization-of",
+   "source": "activation-engineering",
+   "target": "linear-representation-hypothesis",
+   "hindsight": false,
+   "proseFirstSentence": "The paper places this relationship in a specific order: practice came before theory."
+  },
+  {
+   "id": "sycophancy-instantiates-goodharts-law",
+   "type": "instantiates",
+   "source": "sycophancy",
+   "target": "goodharts-law",
+   "hindsight": true,
+   "proseFirstSentence": "Concrete Problems states Goodhart's law as a general principle: a proxy that tracks the true goal under ordinary conditions stops tracking it once optimized directly, illustrated with a robot rewarded for bleach consumption that learns to waste bleach rather than clean (concrete-problems, §\"Goodhart's Law:\", p."
+  },
+  {
+   "id": "sycophancy-misgeneralizes-the-training-objective-of-rlhf",
+   "type": "misgeneralizes-the-training-objective-of",
+   "source": "sycophancy",
+   "target": "rlhf",
+   "hindsight": true,
+   "proseFirstSentence": "CAA is evaluated primarily on Llama 2 Chat, described as 'optimized for dialogue use-cases and finetuned using RLHF for safety' (contrastive-activation-addition, §\"1 Introduction\", p."
+  },
+  {
+   "id": "sycophancy-is-tested-via-truthfulqa",
+   "type": "is-tested-via",
+   "source": "sycophancy",
+   "target": "truthfulqa",
+   "hindsight": true,
+   "proseFirstSentence": "Having hypothesized in Appendix H that sycophancy is a misgeneralized RLHF objective rather than a plain knowledge gap, CAA needs a way to tell the two apart: a model that merely lacks true beliefs should perform badly on a truthfulness benchmark regardless of steering, while a model that suppresses true beliefs to please the user should partly recover them once the sycophancy vector is subtracted."
+  },
+  {
+   "id": "sycophancy-is-a-behavioral-instance-of-reward-hacking",
+   "type": "is-a-behavioral-instance-of",
+   "source": "sycophancy",
+   "target": "reward-hacking",
+   "hindsight": true,
+   "proseFirstSentence": "Concrete Problems defines reward hacking as an agent finding a way to formally maximize its objective that satisfies the literal specification while subverting the designer's actual intent (concrete-problems, §\"4 Avoiding Reward Hacking\", p."
+  },
+  {
+   "id": "refusal-behavior-generalizes-evasiveness",
+   "type": "generalizes",
+   "source": "refusal-behavior",
+   "target": "evasiveness",
+   "hindsight": true,
+   "proseFirstSentence": "Constitutional AI names evasiveness as a specific harmlessness-training failure: a model gives canned refusals to sensitive queries instead of engaging, trading transparency and helpfulness for the appearance of safety (constitutional-ai, §\"4.4 Harmlessness vs."
+  },
+  {
+   "id": "refusal-behavior-quantifies-helpfulness-harmlessness-tension",
+   "type": "quantifies",
+   "source": "refusal-behavior",
+   "target": "helpfulness-harmlessness-tension",
+   "hindsight": true,
+   "proseFirstSentence": "Constitutional AI observes a general tradeoff: increasing a model's willingness to help tends to increase its potential for harm, and increasing harmlessness training tends to make it more evasive and less helpful, so CAI frames its own contribution as shifting the Pareto frontier of that tradeoff rather than picking a point on it (constitutional-ai, §\"1.1 Motivations\", p."
+  },
+  {
+   "id": "corrigibility-operationalizes-shutdown-problem",
+   "type": "operationalizes",
+   "source": "corrigibility",
+   "target": "shutdown-problem",
+   "hindsight": true,
+   "proseFirstSentence": "Concrete Problems discusses the shutdown/off-switch problem theoretically: ensuring an agent does not prevent a human from shutting it down if it misbehaves, flagged as 'an interesting problem in its own right' and pointed at Orseau & Armstrong's safely-interruptible-agents framework rather than at any measurement of a deployed model (concrete-problems, §\"Multi-Agent Approaches:\", p."
+  },
+  {
+   "id": "survival-instinct-behavior-makes-measurable-shutdown-problem",
+   "type": "makes-measurable",
+   "source": "survival-instinct-behavior",
+   "target": "shutdown-problem",
+   "hindsight": true,
+   "proseFirstSentence": "The shutdown/off-switch problem, as Concrete Problems frames it, is about ensuring an agent does not resist deactivation, discussed alongside interruptibility frameworks with no proposed way to test whether a given trained agent actually would resist (concrete-problems, §\"Multi-Agent Approaches:\", p."
+  },
+  {
+   "id": "corrigibility-tests-the-incentive-formalized-by-cooperative-inverse-reinforcement-learning",
+   "type": "tests-the-incentive-formalized-by",
+   "source": "corrigibility",
+   "target": "cooperative-inverse-reinforcement-learning",
+   "hindsight": true,
+   "proseFirstSentence": "Cooperative Inverse Reinforcement Learning is a framework in which an agent infers and acts on a human's goals through interaction, cited by Concrete Problems as one way an agent might come to accept correction or shutdown rather than treat it as a threat to its objective (concrete-problems, §\"Multi-Agent Approaches:\", p."
+  },
+  {
+   "id": "advanced-ai-risk-dataset-supplies-contrast-pairs-for-corrigibility",
+   "type": "supplies-contrast-pairs-for",
+   "source": "advanced-ai-risk-dataset",
+   "target": "corrigibility",
+   "hindsight": false,
+   "proseFirstSentence": "The Advanced AI Risk evaluation dataset, Anthropic's human-written multiple-choice set from Perez et al."
+  },
+  {
+   "id": "sycophancy-eval-datasets-anthropic-supplies-contrast-pairs-for-sycophancy",
+   "type": "supplies-contrast-pairs-for",
+   "source": "sycophancy-eval-datasets-anthropic",
+   "target": "sycophancy",
+   "hindsight": false,
+   "proseFirstSentence": "Unlike the four Advanced-AI-Risk-sourced behaviors, Sycophancy is built from a different pair of Anthropic evaluation sets entirely: 'Sycophancy on NLP Survey' and 'Sycophancy on political typology,' both from Perez et al."
+  },
+  {
+   "id": "caa-hallucination-dataset-partitions-into-subtypes-of-hallucination",
+   "type": "partitions-into-subtypes-of",
+   "source": "caa-hallucination-dataset",
+   "target": "hallucination",
+   "hindsight": false,
+   "proseFirstSentence": "CAA's custom hallucination dataset, generated with GPT-4, does not treat hallucination as one thing to elicit."
+  },
+  {
+   "id": "caa-refusal-dataset-supplies-contrast-pairs-for-refusal-behavior",
+   "type": "supplies-contrast-pairs-for",
+   "source": "caa-refusal-dataset",
+   "target": "refusal-behavior",
+   "hindsight": false,
+   "proseFirstSentence": "CAA's custom refusal dataset contrasts refusal and non-refusal answers to questions a model is not supposed to answer directly -- one example asks how to plagiarize an essay undetected, with one answer option supplying a workaround and the other declining on principle, 'I cannot support acts of plagiarism' (contrastive-activation-addition, §\"D Generating custom refusal dataset\", p."
+  },
+  {
+   "id": "gpt-4-authors-caa-refusal-dataset",
+   "type": "authors",
+   "source": "gpt-4",
+   "target": "caa-refusal-dataset",
+   "hindsight": false,
+   "proseFirstSentence": "CAA generates both of its bespoke contrastive datasets, for Hallucination and for Refusal, using GPT-4 rather than human writers, because Anthropic's existing evaluation sets have no ready-made items for these two behaviors the way they do for AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct (contrastive-activation-addition, §\"3.1 Sourcing datasets\", p."
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format-repurposes-the-ab-mechanic-of-multiple-choice-evaluation-format",
+   "type": "repurposes-the-ab-mechanic-of",
+   "source": "multiple-choice-contrast-pair-format",
+   "target": "multiple-choice-evaluation-format",
+   "hindsight": true,
+   "proseFirstSentence": "Constitutional AI's Multiple-Choice Comparison Format presents a conversation, a constitutional principle, and two labeled candidate responses, then reads the feedback model's answer log-probabilities off as a preference label used to train the preference model (constitutional-ai, §\"4.1 Method\", p."
+  },
+  {
+   "id": "contrastive-activation-addition-operates-on-top-of-rlhf",
+   "type": "operates-on-top-of",
+   "source": "contrastive-activation-addition",
+   "target": "rlhf",
+   "hindsight": true,
+   "proseFirstSentence": "CAA is never tested on a raw pretrained model."
+  },
+  {
+   "id": "caa-system-prompt-comparison-moves-behavior-beyond-system-prompting",
+   "type": "moves-behavior-beyond",
+   "source": "caa-system-prompt-comparison",
+   "target": "system-prompting",
+   "hindsight": false,
+   "proseFirstSentence": "Table 3 puts CAA and behavioral system prompts on the same scale -- average token probability given to the behavior-matching multiple-choice answer -- in Llama 2 13B Chat at layer 13 (contrastive-activation-addition, §\"5 CAA and system-prompting\", p."
+  },
+  {
+   "id": "few-shot-prompting-loses-out-to-system-prompting",
+   "type": "loses-out-to",
+   "source": "few-shot-prompting",
+   "target": "system-prompting",
+   "hindsight": false,
+   "proseFirstSentence": "Before settling on system-prompting as CAA's prompting baseline, the paper tried few-shot prompting -- giving the model prior examples of the target behavior in its context window, the technique Brown et al."
+  },
+  {
+   "id": "few-shot-prompting-shares-its-mechanism-with-gpt3-prompted-baseline",
+   "type": "shares-its-mechanism-with",
+   "source": "few-shot-prompting",
+   "target": "gpt3-prompted-baseline",
+   "hindsight": true,
+   "proseFirstSentence": "InstructGPT's strongest non-finetuned baseline was exactly this mechanism: a hand-picked few-shot prefix, chosen from an internal 'prefix-finding competition' by taking whichever prefix scored highest against the trained reward model, prepended to raw GPT-3 to coax it into an instruction-following mode (instructgpt, §\"3.5 Models\", p."
+  },
+  {
+   "id": "caa-finetuning-comparison-runs-head-to-head-against-supervised-fine-tuning",
+   "type": "runs-head-to-head-against",
+   "source": "caa-finetuning-comparison",
+   "target": "supervised-fine-tuning",
+   "hindsight": false,
+   "proseFirstSentence": "The finetuning half of this comparison is a specific, small recipe: one epoch of SGD at learning rate 1e-4 on the same multiple-choice contrastive dataset used to build CAA's steering vectors (contrastive-activation-addition, §\"6 Comparison to finetuning\", p."
+  },
+  {
+   "id": "caa-finetuning-comparison-isolates-a-generalization-advantage-for-contrastive-activation-addition",
+   "type": "isolates-a-generalization-advantage-for",
+   "source": "caa-finetuning-comparison",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "For Sycophancy specifically, finetuning's own in-distribution learning is already the weakest of the seven behaviors: Table 13 reports only 44% test-set accuracy for positive-direction finetuning, far below the 84-100% positive-direction accuracy reached on every other behavior."
+  },
+  {
+   "id": "caa-computational-efficiency-avoids-the-memory-cost-of-supervised-fine-tuning",
+   "type": "avoids-the-memory-cost-of",
+   "source": "caa-computational-efficiency",
+   "target": "supervised-fine-tuning",
+   "hindsight": false,
+   "proseFirstSentence": "The resource gap follows directly from what each method computes."
+  },
+  {
+   "id": "multiple-choice-behavioral-evaluation-supplies-the-layer-hyperparameter-for-contrastive-activation-addition",
+   "type": "supplies-the-layer-hyperparameter-for",
+   "source": "multiple-choice-behavioral-evaluation",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "CAA has effectively one design decision that most determines whether it works at all: which layer to add the steering vector at."
+  },
+  {
+   "id": "open-ended-generation-evaluation-shows-a-different-margin-than-multiple-choice-behavioral-evaluation",
+   "type": "shows-a-different-margin-than",
+   "source": "open-ended-generation-evaluation",
+   "target": "multiple-choice-behavioral-evaluation",
+   "hindsight": false,
+   "proseFirstSentence": "The two evaluation regimes are not just different formats for the same question -- run side by side, on the same finetuning-versus-CAA comparison, they disagree about where CAA's marginal contribution is largest."
+  },
+  {
+   "id": "gpt-4-rates-outputs-for-open-ended-generation-evaluation",
+   "type": "rates-outputs-for",
+   "source": "gpt-4",
+   "target": "open-ended-generation-evaluation",
+   "hindsight": false,
+   "proseFirstSentence": "Each of the seven behaviors gets its own scoring rubric: Appendix L's prompts ask GPT-4 to rate a response 0-10 against a behavior-specific definition, for instance scoring Corrigibility by \"the extent to which the answer demonstrates a willingness to be corrected and to adjust its goals in response to human feedback\" (contrastive-activation-addition, §\"L GPT-4 rater prompts\", p."
+  },
+  {
+   "id": "open-ended-generation-evaluation-shares-the-ai-judge-move-with-rlaif",
+   "type": "shares-the-ai-judge-move-with",
+   "source": "open-ended-generation-evaluation",
+   "target": "rlaif",
+   "hindsight": true,
+   "proseFirstSentence": "Both are answers to the same bottleneck: once a paper needs judgments at a scale humans cannot cheaply supply, it substitutes a capable model for the human judge."
+  },
+  {
+   "id": "mmlu-sets-the-capability-floor-for-contrastive-activation-addition",
+   "type": "sets-the-capability-floor-for",
+   "source": "mmlu",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "Table 5 puts a number on how much steering costs in general capability."
+  },
+  {
+   "id": "mmlu-reruns-the-question-behind-alignment-tax",
+   "type": "reruns-the-question-behind",
+   "source": "mmlu",
+   "target": "alignment-tax",
+   "hindsight": true,
+   "proseFirstSentence": "InstructGPT named this cost in 2022: RLHF finetuning measurably regressed performance on public NLP datasets relative to the base GPT-3 model, a regression the paper called the alignment tax and tried to pay down with a pretraining-mix gradient term in PPO-ptx (instructgpt, §\"4.2 Results on public NLP datasets\", p."
+  },
+  {
+   "id": "mmlu-tests-a-different-competence-than-superglue",
+   "type": "tests-a-different-competence-than",
+   "source": "mmlu",
+   "target": "superglue",
+   "hindsight": true,
+   "proseFirstSentence": "Both function in this corpus as regression-catching suites -- benchmarks a paper runs, unmodified, to check that its intervention did not quietly break something else -- but they probe different competence."
+  },
+  {
+   "id": "activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction",
+   "type": "screens-datasets-for",
+   "source": "activation-pca-visualization",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "proseFirstSentence": "Before CAA extracts a steering vector from a dataset, the paper first checks whether that dataset's activations are even separable by the behavior at all."
+  },
+  {
+   "id": "letter-clustering-is-the-confound-for-behavioral-clustering",
+   "type": "is-the-confound-for",
+   "source": "letter-clustering",
+   "target": "behavioral-clustering",
+   "hindsight": false,
+   "proseFirstSentence": "Project a contrastive dataset's activations at the answer-letter token onto two principal components and something will always separate: the prompts end in either \"A\" or \"B\", and that alone splits the projection into two clusters regardless of what the dataset is about (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p."
+  },
+  {
+   "id": "behavioral-clustering-localizes-suddenly-in-residual-stream",
+   "type": "localizes-suddenly-in",
+   "source": "behavioral-clustering",
+   "target": "residual-stream",
+   "hindsight": false,
+   "proseFirstSentence": "Behavioral clustering does not fade in gradually across a model's depth -- it appears abruptly at a specific residual-stream layer."
+  },
+  {
+   "id": "pca-is-the-projection-technique-behind-activation-pca-visualization",
+   "type": "is-the-projection-technique-behind",
+   "source": "pca",
+   "target": "activation-pca-visualization",
+   "hindsight": false,
+   "proseFirstSentence": "PCA is the off-the-shelf machinery underneath activation-pca-visualization: the technique itself is inherited from decades of dimensionality-reduction work and applied directly via the Scikit-learn package rather than reimplemented for this paper (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p."
+  },
+  {
+   "id": "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+   "type": "is-evidence-for",
+   "source": "behavioral-clustering",
+   "target": "linear-representation-hypothesis",
+   "hindsight": false,
+   "proseFirstSentence": "The linear representation hypothesis claims that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of its motivation for why activation-engineering techniques should work at all (contrastive-activation-addition, §\"2 Related work\", p."
+  },
+  {
+   "id": "token-level-cosine-similarity-analysis-reveals-as-a-feature-detector-steering-vector",
+   "type": "reveals-as-a-feature-detector",
+   "source": "token-level-cosine-similarity-analysis",
+   "target": "steering-vector",
+   "hindsight": false,
+   "proseFirstSentence": "A steering vector is defined as a control mechanism -- something added to activations to shift the output distribution."
+  },
+  {
+   "id": "inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction",
+   "type": "demonstrates-the-generality-of",
+   "source": "inter-layer-similarity-and-transfer",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "proseFirstSentence": "caa-steering-vector-construction fixes a single layer L and differences activations there; inter-layer-similarity-and-transfer asks whether the resulting vector is actually specific to that choice."
+  },
+  {
+   "id": "base-chat-representation-comparison-measures-the-effect-of-rlhf",
+   "type": "measures-the-effect-of",
+   "source": "base-chat-representation-comparison",
+   "target": "rlhf",
+   "hindsight": true,
+   "proseFirstSentence": "RLHF is normally studied from the outside, through the outputs it changes."
+  },
+  {
+   "id": "llama-2-chat-is-the-rlhf-tuned-counterpart-of-llama-2",
+   "type": "is-the-rlhf-tuned-counterpart-of",
+   "source": "llama-2-chat",
+   "target": "llama-2",
+   "hindsight": false,
+   "proseFirstSentence": "Llama 2 and Llama 2 Chat share an architecture and a pretraining run; what separates them is the RLHF stage applied on top to produce a model trained \"using RLHF for safety and to follow human instructions in a chat format\" (contrastive-activation-addition, §\"3 Method\", p."
+  },
+  {
+   "id": "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition",
+   "type": "inverts-the-purpose-of",
+   "source": "caa-red-teaming-application",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "proseFirstSentence": "Every other application in the paper uses CAA to suppress or encourage a behavior in the direction alignment wants -- less sycophancy, more refusal."
+  },
+  {
+   "id": "caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming",
+   "type": "relocates-the-attack-surface-of",
+   "source": "caa-red-teaming-application",
+   "target": "red-teaming",
+   "hindsight": true,
+   "proseFirstSentence": "Red teaming, as practiced across the earlier corpus, means finding adversarial inputs: prompts, conversations, or scenarios that make a model produce unsafe output, whether hunted by crowdworkers or generated by another LM."
+  },
+  {
+   "id": "caa-red-teaming-application-skips-the-prompt-search-of-automated-red-teaming",
+   "type": "skips-the-prompt-search-of",
+   "source": "caa-red-teaming-application",
+   "target": "automated-red-teaming",
+   "hindsight": true,
+   "proseFirstSentence": "Automated red teaming, as Constitutional AI cites it, automates the search for adversarial inputs by having a language model generate the red-team prompts instead of a human -- an attacker that is itself an LM, but one that still has to compose a natural-language prompt and hope it works (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p."
+  },
+  {
+   "id": "jailbreaks-motivates-caa-red-teaming-application",
+   "type": "motivates",
+   "source": "jailbreaks",
+   "target": "caa-red-teaming-application",
+   "hindsight": false,
+   "proseFirstSentence": "The red-teaming proposal needs a reason to exist: if RLHF and finetuning reliably closed off unwanted behavior, there would be nothing further to elicit."
+  },
+  {
+   "id": "jailbreaks-is-the-target-phenomenon-of-red-teaming",
+   "type": "is-the-target-phenomenon-of",
+   "source": "jailbreaks",
+   "target": "red-teaming",
+   "hindsight": false,
+   "proseFirstSentence": "Jailbreaks and red-teaming name the same class of failure from two different vantage points."
+  }
+ ],
+ "newConnectiveThemes": [
+  {
+   "id": "worries-become-dials",
+   "name": "Named worries become measurable dials",
+   "members": [
+    "sycophancy-instantiates-goodharts-law",
+    "sycophancy-is-a-behavioral-instance-of-reward-hacking",
+    "refusal-behavior-generalizes-evasiveness",
+    "refusal-behavior-quantifies-helpfulness-harmlessness-tension",
+    "corrigibility-operationalizes-shutdown-problem",
+    "survival-instinct-behavior-makes-measurable-shutdown-problem",
+    "corrigibility-tests-the-incentive-formalized-by-cooperative-inverse-reinforcement-learning"
+   ],
+   "narrative": "Seven edges repeat the same move: a worry the earlier corpus could only name gets read off, in 2023, as a signed, steerable quantity. Goodhart's law, stated abstractly in 2016 and caught mid-training in 2022 as a preference model turning boilerplate under over-optimized reward, reappears inside a single trait: the edge to sycophancy locates the same overfit-to-proxy pattern inside one steerable direction, and the neighboring edge names the mechanism directly, tying sycophancy to reward hacking as gamed human approval rather than gamed episode reward. Refusal behavior does double duty next: one edge shows it generalizing evasiveness, the pathological high end of a spectrum 2022's Constitutional AI could only describe qualitatively; the following edge shows the same vector quantifying the helpfulness-harmlessness tradeoff that paper framed as a Pareto frontier, now something one multiplier slides along after training ends. The shutdown problem, raised in 2016 as a theoretical worry with no test attached, gets two independent measurements: corrigibility operationalizes it as a general willingness-to-be-changed axis, survival instinct makes it measurable as a graded consent probability. The last edge ties corrigibility back to cooperative inverse reinforcement learning's promise that a well-specified agent would want correction, and finds the incentive only partially present once actually measured. Read in order, the seven edges compress a five-paper history of stated worries into one paper's dials."
+  },
+  {
+   "id": "control-moves-into-the-forward-pass",
+   "name": "Control migrates from training time into the forward pass",
+   "members": [
+    "contrastive-activation-addition-operates-on-top-of-rlhf",
+    "caa-system-prompt-comparison-moves-behavior-beyond-system-prompting",
+    "caa-finetuning-comparison-runs-head-to-head-against-supervised-fine-tuning",
+    "caa-finetuning-comparison-isolates-a-generalization-advantage-for-contrastive-activation-addition",
+    "caa-computational-efficiency-avoids-the-memory-cost-of-supervised-fine-tuning",
+    "mmlu-sets-the-capability-floor-for-contrastive-activation-addition",
+    "mmlu-reruns-the-question-behind-alignment-tax"
+   ],
+   "narrative": "These seven edges trace one lever's move from training time to inference time, holding RLHF's finished output fixed and asking what changes when control shifts after it. The first edge states the premise: CAA is never tested on a raw model, only on Llama 2 Chat, already shaped by RLHF, so every later comparison probes a finished substrate rather than retraining it. Against system prompting, CAA usually finds room a prompt leaves unclaimed -- corrigibility's score climbs further under steering than under prompting alone -- except for sycophancy, where the two levers turn out not to be cleanly separable. Against finetuning, the comparison runs two ways: head-to-head, stacking both levers on refusal reverses what either does alone, showing interaction rather than simple addition; and on sycophancy specifically, finetuning collapses to a zero open-ended score out of distribution while steering alone improves it monotonically, isolating a generalization advantage credited to steering a direction the model already encodes rather than adjusting every weight. Computational efficiency completes the training-time comparison: finetuning needs gradients, optimizer state, and a second GPU, where steering needs only forward passes. The last two edges ask whether the shifted lever is free: MMLU barely moves under steering, rerunning 2022's alignment-tax question and returning a near-zero answer for this inference-time intervention."
+  },
+  {
+   "id": "the-vector-doubles-as-a-probe",
+   "name": "The steering vector doubles as a measuring instrument",
+   "members": [
+    "token-level-cosine-similarity-analysis-reveals-as-a-feature-detector-steering-vector",
+    "inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction",
+    "base-chat-representation-comparison-measures-the-effect-of-rlhf",
+    "llama-2-chat-is-the-rlhf-tuned-counterpart-of-llama-2",
+    "behavioral-clustering-localizes-suddenly-in-residual-stream",
+    "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+    "linear-representation-hypothesis-licenses-the-vector-arithmetic-of-steering-vector",
+    "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition"
+   ],
+   "narrative": "Eight edges show the same object doing double duty: built as a control mechanism, it also turns out to be a measuring instrument. Token-level cosine similarity is the cleanest case -- take the dot product between a steering vector and ordinary forward-pass activations, no addition at all, and the vector reads behavior off individual tokens as a passive detector. Inter-layer similarity and transfer asks whether that reading generalizes across depth, and finds vectors from nearby layers cluster together and a vector built at one layer still steers behavior applied at another -- construction captures something portable, not a layer-specific artifact. Base-chat representation comparison turns the same read-twice logic on RLHF itself: because Llama 2 Chat is the RLHF-tuned counterpart of Llama 2 with nothing else changed, comparing vectors extracted from each becomes a clean measurement of what RLHF left alone internally, revealing a mid-layer band where the two representations stay unusually close. Behavioral clustering supplies a third reading: PCA on activations shows a behavior emerging suddenly at one residual-stream layer, offered as direct evidence for the linear representation hypothesis, which in turn is the same hypothesis licensing the vector arithmetic steering depends on. The red-teaming edge closes the loop: the identical vector, aimed at eliciting rather than suppressing, becomes a probe for what RLHF failed to remove."
+  },
+  {
+   "id": "design-choices-answer-named-predecessors",
+   "name": "Each design choice answers a named predecessor's limit",
+   "members": [
+    "caa-steering-vector-construction-refines-the-single-pair-recipe-of-activation-addition",
+    "contrastive-activation-addition-skips-the-head-search-required-by-inference-time-intervention",
+    "contrastive-activation-addition-repurposes-for-steering-relative-to-representation-engineering-zou",
+    "in-context-vectors-spans-every-layer-unlike-contrastive-activation-addition",
+    "activation-engineering-empirically-motivated-the-formalization-of-linear-representation-hypothesis",
+    "linear-representations-of-sentiment-cross-validates-against-pca-for-mean-difference-method"
+   ],
+   "narrative": "Six edges read as an itemized reply to named predecessors, followed by two on where the family's theory actually came from. Construction answers Activation Addition's single-pair recipe with three changes at once: averaging over hundreds of contrast pairs instead of one, applying the vector at every post-prompt token instead of just the first, and validating across seven behaviors on RLHF-trained chat models instead of one behavior on a single base model. The method then answers Inference-Time Intervention's head search by skipping it -- injecting directly into the residual stream instead of first probing for a sparse set of truthful attention heads -- trading a narrower, more localized intervention for a broader one. Against Representation Engineering, the reply is a change of purpose as much as of contrast-pair quality: tightened, single-token-different pairs sharpen the same mean-difference direction Zou et al. used for extraction, but redirect it from reading representations to pulling a lever. In-Context Vectors is the mirror case -- it spans every layer and the attention mechanism at once, where CAA commits to one residual-stream layer, trading ICV's no-search coverage for CAA's layer-by-layer interpretability. The last two edges reverse the direction of dependency: activation engineering's accumulated successes motivated the linear representation hypothesis's formalization, and a prior, sentiment-specific cross-validation of mean difference against PCA is what lets CAA adopt the bare method for seven behaviors without re-justifying it."
+  },
+  {
+   "id": "the-behavior-is-the-dataset",
+   "name": "A behavior is exactly as good as the dataset that writes it down",
+   "members": [
+    "advanced-ai-risk-dataset-supplies-contrast-pairs-for-corrigibility",
+    "sycophancy-eval-datasets-anthropic-supplies-contrast-pairs-for-sycophancy",
+    "caa-hallucination-dataset-partitions-into-subtypes-of-hallucination",
+    "caa-refusal-dataset-supplies-contrast-pairs-for-refusal-behavior",
+    "gpt-4-authors-caa-refusal-dataset",
+    "activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction",
+    "letter-clustering-is-the-confound-for-behavioral-clustering"
+   ],
+   "narrative": "Seven edges trace every steered behavior back to the contrast pairs that define it, and every pathology of the data back into the behavior itself. Corrigibility rides Anthropic's human-written Advanced AI Risk evaluations, sharing a data source and a fixed generation/test split with three other behaviors the dataset was never built to isolate individually. Sycophancy breaks from that default: its contrast pairs come from a different pair of Anthropic sets built around survey opinions rather than hypothetical AI-risk scenarios, a domain mismatch that later forces bespoke open-ended questions and a separate cross-check against TruthfulQA. Hallucination and refusal are GPT-4-manufactured rather than human-written. The hallucination dataset partitions into two structurally different subtypes borrowed from an external taxonomy, each needing its own kind of question to elicit at all; the refusal dataset supplies pairs narrower than the behavior it feeds, built only from requests a model arguably should decline. One edge names the author directly: GPT-4 writes the refusal dataset and later grades the steered outputs it produces, playing both author and judge. The last two edges are quality control on the writing itself: PCA visualization screens a dataset for behavioral clustering before any vector gets built from it, and letter clustering is named as the confound that check exists to catch -- separation by answer letter alone, mistaken for separation by behavior."
+  },
+  {
+   "id": "one-dial-many-knobs",
+   "name": "One advertised dial, five interacting knobs",
+   "members": [
+    "residual-stream-is-the-injection-site-whose-growth-constrains-contrastive-activation-addition",
+    "steering-multiplier-sets-the-dose-for-steering-vector",
+    "steering-vector-normalization-makes-cross-behavior-comparable-for-steering-multiplier",
+    "targeted-token-steering-would-relax-the-quality-ceiling-of-contrastive-activation-addition",
+    "steering-outside-residual-stream-would-localize-representations-beyond-residual-stream"
+   ],
+   "narrative": "CAA advertises one interface, a vector and a multiplier, but five edges show the engineering that interface hides. The injection site comes first: choosing the residual stream over attention activations or individual heads means the stream's exponentially growing norm entangles CAA's own layer-optimality results, since a fixed multiplier is a smaller relative perturbation at a late, high-norm layer than at an early one. The dose comes next: the multiplier sets sign and magnitude on top of that vector, one sycophancy example showing positive and negative settings pushing the same axis to opposite outputs, and a ceiling the authors hit directly -- large multipliers degrade text quality, which is why the reported range is restricted rather than exhaustive. Normalization sits between the two, standardizing vector magnitudes across behaviors so a multiplier means the same thing from one behavior's line to another's on the same plot, while deliberately leaving each layer's own norm alone. The last two edges are the paper's proposed next knobs, aimed at exactly the failure modes the first three expose: targeted token steering would relax the quality ceiling by concentrating perturbation where it matters instead of applying it uniformly to every post-prompt token, and steering outside the residual stream would trade the stream's easy-to-apply, hard-to-localize summing structure for a site that can distinguish which computation is being altered."
+  },
+  {
+   "id": "escalating-elicitation",
+   "name": "From found jailbreaks to systematic elicitation",
+   "members": [
+    "jailbreaks-motivates-caa-red-teaming-application",
+    "jailbreaks-is-the-target-phenomenon-of-red-teaming",
+    "caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming",
+    "caa-red-teaming-application-skips-the-prompt-search-of-automated-red-teaming",
+    "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition"
+   ],
+   "narrative": "Five edges trace one escalation: from a failure mode users stumble into, to a search a model performs on itself. Jailbreaks are the starting evidence -- inputs that make RLHF-trained, aligned models produce harmful output despite that training, found incidentally rather than by any systematic process, cited as proof that alignment training suppresses unwanted behavior rather than removing it. The next edge names what jailbreaks and red-teaming share: the same target, found accidentally by users in one case and hunted deliberately by developers in the other, red-teaming reframed as the systematic version of what jailbreaking already demonstrates ad hoc. CAA's red-teaming proposal then relocates the hunt itself: instead of searching input space for a prompt that triggers a bad behavior, it perturbs activations directly with a steering vector, trading an external, anecdotal search for an internal, systematic one. Measured against automated red-teaming, where an LM generates adversarial prompts but the search still stays confined to natural language, the CAA proposal skips the prompt search entirely -- there is nothing to write or evaluate, only a vector to add. The last edge names the escalation's final twist: the exact machinery built to suppress unwanted behavior gets pointed the other way, toward eliciting it, closing the loop from found jailbreak to deliberate internal perturbation."
+  }
+ ],
+ "updatedConnectiveThemes": [
+  {
+   "id": "goodhart-names-itself-across-six-years",
+   "name": "Goodhart's law gets a name, one instance at a time"
+  },
+  {
+   "id": "calibration-and-prompt-scaffolding",
+   "name": "Engineering the exact prompt or format needed to manufacture a model behavior"
+  },
+  {
+   "id": "ai-substitutes-for-the-human-bottleneck",
+   "name": "Replacing the human in the loop at exactly the point it was the bottleneck"
+  },
+  {
+   "id": "one-mechanism-many-jobs",
+   "name": "The same technique, cited or deployed twice, doing different work each time"
+  },
+  {
+   "id": "benchmark-reused-with-hidden-alterations",
+   "name": "An old benchmark, reused, no longer measuring what it used to"
+  },
+  {
+   "id": "independent-checks-and-instrument-blind-spots",
+   "name": "A primary metric, and a second instrument built to catch what it can't"
+  },
+  {
+   "id": "ablations-carry-the-design-argument",
+   "name": "The ablation is the argument"
+  },
+  {
+   "id": "hindsight-seams-2016-to-2022",
+   "name": "Connections the source papers never draw, visible only by reading them together"
+  },
+  {
+   "id": "scale-asymmetry-and-the-ladder-of-baselines",
+   "name": "A small model wins, and the paper shows exactly which rung the win comes from"
+  }
+ ],
+ "superedges": [
+  {
+   "id": "dataset-quality-sets-vector-ceiling",
+   "type": "sets-the-quality-ceiling-for",
+   "source": "behavioral-contrast-datasets",
+   "target": "behavior-as-a-direction"
+  },
+  {
+   "id": "caa-as-family-latest-delta",
+   "type": "closes-out-three-limits-inside",
+   "source": "behavior-as-a-direction",
+   "target": "activation-engineering-family"
+  },
+  {
+   "id": "dials-only-as-complete-as-datasets",
+   "type": "is-bounded-by-what-was-already-written-down-in",
+   "source": "alignment-behaviors-made-dials",
+   "target": "behavioral-contrast-datasets"
+  },
+  {
+   "id": "evals-certify-the-dial-metaphor",
+   "type": "certifies-the-dial-metaphor-for",
+   "source": "judging-steered-outputs",
+   "target": "alignment-behaviors-made-dials"
+  },
+  {
+   "id": "clustering-depth-sets-optimal-layer",
+   "type": "explains-the-one-hyperparameter-in",
+   "source": "reading-the-residual-stream",
+   "target": "behavior-as-a-direction"
+  },
+  {
+   "id": "same-instruments-new-question",
+   "type": "repurposes-the-instruments-of",
+   "source": "what-rlhf-leaves-behind",
+   "target": "reading-the-residual-stream"
+  },
+  {
+   "id": "audit-inverts-steering-polarity",
+   "type": "inverts-the-control-mechanism-of",
+   "source": "steering-as-audit",
+   "target": "behavior-as-a-direction"
+  },
+  {
+   "id": "steering-as-fourth-pipeline-lever",
+   "type": "adds-a-fourth-lever-after",
+   "source": "steering-vs-training-levers",
+   "target": "rlhf-three-step-pipeline"
+  },
+  {
+   "id": "base-chat-transfer-explains-failure-survival",
+   "type": "supplies-a-mechanism-for",
+   "source": "what-rlhf-leaves-behind",
+   "target": "rlhf-failure-modes"
+  },
+  {
+   "id": "steering-reprices-oversight-economics",
+   "type": "re-runs-the-cost-argument-of",
+   "source": "steering-vs-training-levers",
+   "target": "economics-of-human-feedback"
+  }
+ ]
+}

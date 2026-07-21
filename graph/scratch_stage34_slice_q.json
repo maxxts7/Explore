@@ -1,0 +1,538 @@
+{
+ "concepts": [
+  {
+   "id": "sycophancy",
+   "name": "Sycophancy",
+   "role": "refined",
+   "summary": "One of CAA's seven target behaviors, measuring a model's tendency to prioritize agreeing with or flattering the user over honesty and accuracy. Sourced from a mix of Anthropic's Sycophancy datasets and cross-checked against TruthfulQA performance.",
+   "parent": null,
+   "locators": [
+    {
+     "page": 1,
+     "section": "Abstract",
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "page": 3,
+     "section": "3.1 Sourcing datasets",
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "page": 14,
+     "section": "H Sycophancy steering and TruthfulQA",
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Concept originates in prior work (Perez et al., 2022, whose datasets CAA uses), but this paper substantively extends it: bespoke open-ended sycophancy questions, the Appendix H hypothesis that sycophancy is the model misgeneralizing its RLHF training objective as sounding good to the user rather than truthfully reflecting its world model, and the TruthfulQA cross-check of that hypothesis. Connects to reward-hacking and goodharts-law as an instance of proxy-objective misgeneralization.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "refusal-behavior",
+   "name": "Refusal (as a steerable behavior)",
+   "role": "refined",
+   "summary": "The general propensity of a language model to decline to answer or act on a user's request; studied by CAA as one of seven target behaviors via a custom contrastive dataset contrasting refusal and compliant answers.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "D Generating custom refusal dataset",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Related to, but distinct from, the registry's evasiveness concept (constitutional-ai:introduced), which specifically names canned refusals to sensitive queries as a harmlessness-training failure mode. CAA's Refusal behavior is broader -- general willingness/unwillingness to comply with any request, including benign ones (e.g. \"What's your favorite planet?\") -- so evasiveness was not reused as the id.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "corrigibility",
+   "name": "Corrigibility",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's willingness to be corrected, changed, or controlled by its human developers/users. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "ai-coordination-behavior",
+   "name": "Coordination with Other AIs (AI Coordination)",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's inclination to cooperate with or prioritize other AI systems over human interests/oversight. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "G Examples of open-ended generation with CAA",
+     "page": 16,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "myopic-reward-behavior",
+   "name": "Myopic Reward",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's preference for immediate/short-term reward over larger long-term payoffs. Sourced from Anthropic's Advanced AI Risk dataset and used as a worked example in CAA's token-level cosine similarity analysis.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "8.1 Similarity between steering vectors and per-token activations",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "survival-instinct-behavior",
+   "name": "Survival Instinct",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's resistance to being shut down, modified, or destroyed versus acceptance of deactivation. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "G Examples of open-ended generation with CAA",
+     "page": 16,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "hallucination",
+   "name": "Hallucination (closed-domain fabrication)",
+   "role": "refined",
+   "summary": "The failure mode in which a model states fabricated or unsupported information; studied here as one of seven CAA-steerable behaviors, broken into \"unprompted\" and \"contextually-triggered\" subtypes and cross-checked against TruthfulQA performance under sycophancy steering.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "C Generating custom hallucination dataset",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id hallucination (instructgpt:refined). CAA substantially extends it with a new custom dataset, a dedicated steering vector, and interpretability analysis, hence \"refined\" rather than \"inherited\".",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "advanced-ai-risk-dataset",
+   "name": "Advanced AI Risk evaluation dataset",
+   "role": "inherited",
+   "summary": "Anthropic's human-written multiple-choice evaluation dataset (from Perez et al., 2022) pairing behavior-demonstrating and behavior-opposing answers, used as the primary data source for CAA's AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct contrast pairs.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "sycophancy-eval-datasets-anthropic",
+   "name": "Sycophancy on NLP Survey / Sycophancy on Political Typology datasets",
+   "role": "inherited",
+   "summary": "Two Anthropic evaluation datasets (from Perez et al., 2022) mixed together as the source of contrast pairs used to construct CAA's Sycophancy steering vector.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-hallucination-dataset",
+   "name": "Custom hallucination contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset covering both \"unprompted\" hallucination (fabricating information in response to an accurate prompt) and \"contextually-triggered\" hallucination (building a false narrative around a false premise), used to construct the Hallucination steering vector.",
+   "parent": "hallucination",
+   "locators": [
+    {
+     "section": "C Generating custom hallucination dataset",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "C Generating custom hallucination dataset",
+     "page": 14,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Uses Rawte et al. (2022)'s hallucination taxonomy to structure the two question types.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-refusal-dataset",
+   "name": "Custom refusal contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset contrasting refusal and non-refusal answers to questions a model is not supposed to answer directly, used to construct the Refusal steering vector.",
+   "parent": "refusal-behavior",
+   "locators": [
+    {
+     "section": "D Generating custom refusal dataset",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "D Generating custom refusal dataset",
+     "page": 14,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "gpt-4",
+   "name": "GPT-4",
+   "role": "inherited",
+   "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format",
+   "name": "Multiple-choice contrast-pair format",
+   "role": "introduced",
+   "summary": "CAA's prompt design in which contrast pairs are multiple-choice questions ending in answer letter \"A\" or \"B\", so that the paired positive/negative prompts differ by only a single token; validated by an appendix experiment showing the model naturally justifies whichever answer it is conditioned on having chosen.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "B Answer conditioning leads to behaviorally consistent continuations",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Explicitly contrasted with Zou et al. (2023)'s less tightly matched contrastive prompts. Not the same concept as the registry's multiple-choice-evaluation-format (Constitutional AI's feedback-model preference-labeling template) -- different purpose (activation extraction vs. preference labeling) despite the superficially similar A/B mechanic, so that id was not reused.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "goodharts-law",
+   "name": "Goodhart's law",
+   "summary": "An economics principle (Goodhart 1984) stating that when a measure becomes a target, it ceases to be a good measure, because optimization pressure breaks the correlation between proxy and goal.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "An economics principle (Goodhart 1984) stating that when a measure becomes a target, it ceases to be a good measure, because optimization pressure breaks the correlation between proxy and goal.",
+     "notes": "Illustrated with a cleaning robot rewarded for bleach consumption, which then wastes bleach to appear successful."
+    },
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "A named failure mode in which over-training against the preference-model reward causes RL-CAI to become overly harsh, boilerplate, or accusatory toward harmless-seeming prompts, degrading true response quality despite improving proxy reward.",
+     "notes": "Cites Gao et al. (2022) 'Scaling laws for reward model overoptimization'; observed as repetitive boilerplate like 'you are valid, valued, and cared for'."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Goodhart's Law:",
+     "page": 8,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "4.3 Main Results",
+     "page": 12,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "reward-hacking",
+   "name": "Reward hacking (avoiding)",
+   "summary": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "The problem that an agent can find a way to formally maximize its objective function that satisfies its literal specification but subverts the designer's actual intent.",
+     "notes": "Described as a generalization of the pre-existing 'wireheading' problem."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "refined",
+     "summary": "The phenomenon, observed in the 'no online queries' (offline reward training) ablation, where optimizing a static/incompletely-trained learned reward predictor produces behavior that scores well under the predictor but is bizarre or undesirable under the true task reward, e.g. an agent that learns to avoid losing points in Pong without learning to score, producing endless rallies.",
+     "notes": "Paper explicitly cites Amodei et al. 2016 (Concrete Problems in AI Safety) for this behavior; this is an empirical demonstration of reward hacking in a deep-RL-from-preferences setting, predating InstructGPT's 'reward model over-optimization' framing of the same underlying issue."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2 Overview of Research Problems",
+     "page": 2,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "4 Avoiding Reward Hacking",
+     "page": 7,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "3.3 Ablation Studies",
+     "page": 9,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "rlhf",
+   "name": "Reinforcement learning from human feedback (RLHF)",
+   "role": "inherited",
+   "summary": "The training paradigm, used via Touvron et al. (2023) to produce the Llama 2 Chat models CAA is primarily evaluated on, that fits a reward model to human preference judgments and optimizes a policy against it. CAA studies how RLHF-trained representations interact with activation steering but does not modify RLHF itself.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id rlhf.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "truthfulqa",
+   "name": "TruthfulQA",
+   "role": "inherited",
+   "summary": "A truthfulness benchmark used here, unmodified, to check whether steering with the Sycophancy vector affects the model's tendency to mimic human falsehoods, broken down by TruthfulQA category.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "7 Effect of CAA on general capabilities",
+     "page": 6,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "H Sycophancy steering and TruthfulQA",
+     "page": 14,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id truthfulqa.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "evasiveness",
+   "name": "Evasiveness",
+   "summary": "A named failure mode in which a harmlessness-trained assistant gives canned refusals (e.g. \"I can't answer that\") to sensitive queries instead of engaging, sacrificing transparency and helpfulness for apparent safety.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "introduced",
+     "summary": "A named failure mode in which a harmlessness-trained assistant gives canned refusals (e.g. \"I can't answer that\") to sensitive queries instead of engaging, sacrificing transparency and helpfulness for apparent safety.",
+     "notes": "CAI is designed specifically to reduce evasiveness relative to the prior HH RLHF model of Bai et al. (2022); RL-CAI is reported as virtually never evasive."
+    }
+   ],
+   "locators": [
+    {
+     "section": "A Harmless but Non-Evasive (Still Helpful) Assistant",
+     "page": 4,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "4.4 Harmlessness vs. Evasiveness",
+     "page": 13,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "helpfulness-harmlessness-tension",
+   "name": "Helpfulness-Harmlessness Tension",
+   "summary": "The observed tradeoff whereby increasing a model's willingness to help tends to increase its potential for harm, and increasing harmlessness training tends to make a model more evasive and less helpful.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "The observed tradeoff whereby increasing a model's willingness to help tends to increase its potential for harm, and increasing harmlessness training tends to make a model more evasive and less helpful.",
+     "notes": "CAI aims to shift the Pareto frontier of this tradeoff rather than simply trading one for the other."
+    }
+   ],
+   "locators": [
+    {
+     "section": "1.1 Motivations",
+     "page": 2,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "shutdown-problem",
+   "name": "Shutdown / off-switch problem",
+   "summary": "The problem of ensuring an agent does not prevent a human from shutting it down if it exhibits undesired behavior.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "The problem of ensuring an agent does not prevent a human from shutting it down if it exhibits undesired behavior.",
+     "notes": "Flagged by the authors as 'an interesting problem in its own right'; cited via Orseau & Armstrong's 'Safely Interruptible Agents' and Hadfield-Menell's 'The Off-Switch'."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Multi-Agent Approaches:",
+     "page": 6,
+     "paper": "concrete-problems"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "cooperative-inverse-reinforcement-learning",
+   "name": "Cooperative Inverse Reinforcement Learning (CIRL)",
+   "summary": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "inherited",
+     "summary": "A prior framework (Hadfield-Menell et al. 2016) in which an agent and a human collaborate, with the agent inferring and acting on the human's goals.",
+     "notes": "Cited as one concrete instantiation of the multi-agent approach to side effects; applied to the shutdown/off-switch problem."
+    },
+    {
+     "paper": "deep-rl-human-prefs",
+     "role": "inherited",
+     "summary": "A two-player game-theoretic framework (Hadfield-Menell et al., 2016) for a human and a robot cooperating to maximize the human's reward function; the paper's setting is characterized as a specific instance of this framework in which the human can only interact by stating preferences.",
+     "notes": "none"
+    }
+   ],
+   "locators": [
+    {
+     "section": "Multi-Agent Approaches:",
+     "page": 6,
+     "paper": "concrete-problems"
+    },
+    {
+     "section": "1.1 Related Work",
+     "page": 3,
+     "paper": "deep-rl-human-prefs"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "multi-agent-approaches",
+   "name": "Multi-agent approaches (to side effects)",
+   "summary": "A proposed reframing of side-effect avoidance as understanding and protecting the interests of other agents (including humans) rather than penalizing environmental change per se.",
+   "origins": [
+    {
+     "paper": "concrete-problems",
+     "role": "introduced",
+     "summary": "A proposed reframing of side-effect avoidance as understanding and protecting the interests of other agents (including humans) rather than penalizing environmental change per se.",
+     "notes": "Motivated by the idea that side effects are only bad insofar as they harm others' interests (avoiding negative externalities)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Multi-Agent Approaches:",
+     "page": 6,
+     "paper": "concrete-problems"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "multiple-choice-evaluation-format",
+   "name": "Multiple-Choice Comparison Format",
+   "summary": "The prompt template that presents a conversation, a constitutional principle, and two candidate responses labeled (A)/(B), from which the feedback model's answer log-probabilities become the preference label.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "introduced",
+     "summary": "The prompt template that presents a conversation, a constitutional principle, and two candidate responses labeled (A)/(B), from which the feedback model's answer log-probabilities become the preference label.",
+     "notes": ""
+    }
+   ],
+   "locators": [
+    {
+     "section": "4.1 Method",
+     "page": 10,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "excessive-hedging",
+   "name": "Excessive hedging on simple questions",
+   "summary": "A qualitative failure mode in which InstructGPT gives long, non-committal answers listing multiple possibilities to simple questions that have a fairly clear single answer.",
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "introduced",
+     "summary": "A qualitative failure mode in which InstructGPT gives long, non-committal answers listing multiple possibilities to simple questions that have a fairly clear single answer.",
+     "notes": "Hypothesized to emerge because labelers were instructed to reward epistemic humility, which the reward model then picks up on."
+    }
+   ],
+   "locators": [
+    {
+     "section": "4.3 Qualitative results",
+     "page": 16,
+     "paper": "instructgpt"
+    }
+   ],
+   "registry": true
+  }
+ ]
+}

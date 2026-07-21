@@ -1,0 +1,312 @@
+{
+ "concepts": [
+  {
+   "id": "steering-vector",
+   "name": "Steering vector",
+   "role": "inherited",
+   "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations during a forward pass (or subtracting it) shifts the model's outputs toward (or away from) that behavior. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Inherited: the term and object predate this paper (Subramani et al. 2022 latent steering vectors; Turner et al. 2023 Activation Addition). Serves as the hub concept connecting activation-addition, inference-time-intervention, and caa-steering-vector-construction.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "role": "introduced",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9 Discussion",
+     "page": 8,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "The paper's central contribution; most other introduced concepts in this inventory are components, comparison experiments, or interpretability analyses built around it.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-steering-vector-construction",
+   "name": "CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)",
+   "role": "introduced",
+   "summary": "The specific procedure for building a CAA steering vector: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L residual stream activations at the answer-letter token position for both completions and average their difference over the whole dataset (Equation 1).",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Applies the pre-existing Mean Difference (MD) technique to a new prompt format; differs from Turner et al.'s Activation Addition by averaging over hundreds of contrast pairs instead of using a single pair.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "mean-difference-method",
+   "name": "Mean Difference (MD) vector extraction",
+   "role": "inherited",
+   "summary": "A technique for extracting a direction in activation space by averaging the difference in activations between two sets of contrasting examples. CAA uses it, notes it produces results similar to PCA-based extraction, and notes it was previously employed in Zou et al. (2023) and Li et al. (2023).",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "CAA's specific instantiation of this pre-existing technique (over multiple-choice contrast pairs at the answer-letter token position) is captured separately as the introduced concept caa-steering-vector-construction.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format",
+   "name": "Multiple-choice contrast-pair format",
+   "role": "introduced",
+   "summary": "CAA's prompt design in which contrast pairs are multiple-choice questions ending in answer letter \"A\" or \"B\", so that the paired positive/negative prompts differ by only a single token; validated by an appendix experiment showing the model naturally justifies whichever answer it is conditioned on having chosen.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "3.1 Sourcing datasets",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "B Answer conditioning leads to behaviorally consistent continuations",
+     "page": 13,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Explicitly contrasted with Zou et al. (2023)'s less tightly matched contrastive prompts. Not the same concept as the registry's multiple-choice-evaluation-format (Constitutional AI's feedback-model preference-labeling template) -- different purpose (activation extraction vs. preference labeling) despite the superficially similar A/B mechanic, so that id was not reused.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "steering-multiplier",
+   "name": "Steering multiplier",
+   "role": "introduced",
+   "summary": "The scalar coefficient the steering vector is multiplied by before being added into the residual stream, giving continuous, signed control over the targeted behavior: positive multipliers amplify it, negative multipliers suppress it, and magnitude sets the dose. Large magnitudes degrade text quality, so the usable range is found by sweeping multipliers at the chosen steering layer.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "Vector normalization choices",
+     "page": 10,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "CAA's hyperparameter search order: first find the optimal layer with a constant multiplier, then sweep multipliers at that layer. Interacts with steering-vector-normalization (norms standardized across behaviors so multipliers are comparable).",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "steering-vector-normalization",
+   "name": "Steering vector normalization choices",
+   "role": "introduced",
+   "summary": "A methodological design decision to normalize steering vector magnitudes to be comparable across behaviors, while deliberately not normalizing across layers, in order to preserve the residual stream's natural growth in norm over the forward pass.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "Vector normalization choices",
+     "page": 10,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Cites Heimersheim and Turner (2023) on exponential residual stream norm growth; the authors flag this as a possible confound in their layer-optimality search since they do not sweep multipliers per layer.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "residual-stream",
+   "name": "Residual stream",
+   "role": "inherited",
+   "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "targeted-token-steering",
+   "name": "Steering at targeted token positions (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply the steering vector only at a smaller, targeted subset of token positions rather than every position after the prompt, to improve the trade-off between intervention size and text-quality degradation.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "steering-outside-residual-stream",
+   "name": "Steering outside the residual stream (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply CAA-style interventions at other points in the model, such as after the MLP but before it merges into the residual stream, to help localize where behavioral representations live.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "activation-engineering",
+   "name": "Activation engineering / representation engineering (technique family)",
+   "role": "inherited",
+   "summary": "The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Umbrella term also covering Subramani et al. (2022) and Hernandez et al. (2023), cited only in passing; the more substantively-discussed instances (Activation Addition, ITI, Representation Engineering, In-Context Vectors) are captured as separate concepts.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "activation-addition",
+   "name": "Activation Addition (ActAdd)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Turner et al., 2023) that generates a steering vector from the activation difference of a single pair of prompts and adds it at the first token position of other forward passes; tested only on GPT-2-XL. CAA is directly modeled on and contrasted with this method.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "inference-time-intervention",
+   "name": "Inference-Time Intervention (ITI)",
+   "role": "inherited",
+   "summary": "A prior technique (Li et al., 2023) using linear probes to identify a sparse set of \"truthful\" attention heads from a contrastive question-answering dataset, then shifting activations along the true/false Mean Difference vector during inference to improve truthfulness.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "representation-engineering-zou",
+   "name": "Representation Engineering (Zou et al. 2023)",
+   "role": "inherited",
+   "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "in-context-vectors",
+   "name": "In-Context Vectors (ICV)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Liu et al., 2023) that reduces toxicity and affects style transfer by intervening on attention activations across all transformer layers, rather than the residual stream at a single layer as CAA does.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "linear-representation-hypothesis",
+   "name": "Linear representation hypothesis",
+   "role": "inherited",
+   "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "linear-representations-of-sentiment",
+   "name": "Linear representations of sentiment",
+   "role": "inherited",
+   "summary": "Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  }
+ ]
+}

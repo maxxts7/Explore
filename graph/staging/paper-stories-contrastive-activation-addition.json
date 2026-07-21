@@ -1,0 +1,852 @@
+{
+ "paperStories": [
+  {
+   "id": "contrastive-activation-addition",
+   "stories": [
+    {
+     "id": "contrastive-activation-addition-inside",
+     "tab": "Inside the paper",
+     "claim": "The paper's claim is that a high-level behavior in an RLHF-tuned language model can be extracted as a single direction from a few hundred paired multiple-choice prompts and added back into the model's own activations at inference time, steering seven different behaviors up or down without touching a single weight.",
+     "name": "Inside Contrastive Activation Addition: a behavior becomes a vector you add back in",
+     "narrative": "The paper's own arc runs from motivation to mechanism to evidence to comparison to interpretation: why an inference-time lever is worth trying, how contrast pairs become a steering vector, what happens when that vector is dialed across seven behaviors in two evaluation formats, how the result holds up against prompting and finetuning, and what the same machinery reveals about the model once it is read rather than applied.",
+     "intro": "Training a chat model to behave — through RLHF or supervised finetuning — means updating weights for every new behavior, at real cost in compute and data, and without ever showing where in the network a behavior like sycophancy or refusal actually lives. This 2023 paper asks whether a behavior can instead be captured as a single direction inside the model's own activations, added back in at inference time to turn it up or down like a dial.\n\nThe chapters follow the paper's own arc: the case for steering over training, the recipe that turns paired prompts into a vector, what happens when that vector is dialed across seven behaviors and two evaluation formats, how it stacks against prompting and finetuning, and what the vector reveals about the model when it is read rather than applied.",
+     "ref": null,
+     "children": [
+      {
+       "id": "caa-in-ch-itch",
+       "name": "The itch: a lever that doesn't need retraining",
+       "narrative": "The paper opens by naming the two levers alignment work already has — RLHF and instruction finetuning — and the two things wrong with both: developing them takes new data and new weights for every behavior, and once trained, nobody can point to where in the network a behavior lives (contrastive-activation-addition, §\"1 Introduction\", p. 1). Activation engineering, the family this paper calls its own, promises a third lever that works at inference time instead: perturb the activations directly, and skip the retraining. The premise that makes this coherent is the linear representation hypothesis — that a concept as complex as sycophancy or refusal might still correspond to a single direction a model's activations move along, motivated by prior work locating linear representations of sentiment and emotion in other models.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-in-hhh",
+         "name": "Helpful, honest, harmless, still the target",
+         "ref": {
+          "kind": "concept",
+          "id": "hhh-framework"
+         },
+         "narrative": "The paper opens by restating the standard goal alignment work chases — models that are helpful, honest, and harmless — and positions CAA as one more attempt to reduce the risk of misaligned or unsafe behavior, the same three words InstructGPT and Constitutional AI both build toward by other means (contrastive-activation-addition, §\"1 Introduction\", p. 1).",
+         "children": []
+        },
+        {
+         "id": "caa-in-rlhf",
+         "name": "The pipeline this paper builds on top of, not into",
+         "ref": {
+          "kind": "concept",
+          "id": "rlhf"
+         },
+         "narrative": "CAA is never tested on a raw pretrained model — only on Llama 2 Chat, already finetuned with RLHF for safety and dialogue. That choice is deliberate: the paper studies how activation engineering interacts with a model RLHF has already shaped, rather than proposing to replace RLHF itself.",
+         "children": []
+        },
+        {
+         "id": "caa-in-family",
+         "name": "A family that perturbs rather than retrains",
+         "ref": {
+          "kind": "theme",
+          "id": "activation-engineering-family"
+         },
+         "narrative": "Activation Addition, Inference-Time Intervention, Representation Engineering, and In-Context Vectors are the paper's named predecessors — four ways of finding a direction in a model's activations and adding it back in, none of them touching a weight. CAA places itself as this lineage's latest step: hundreds of matched contrast pairs instead of one prompt pair or a searched set of attention heads.",
+         "children": []
+        },
+        {
+         "id": "caa-in-linear-hyp",
+         "name": "The bet: behavior is a direction",
+         "ref": {
+          "kind": "concept",
+          "id": "linear-representation-hypothesis"
+         },
+         "narrative": "Park et al.'s formalization of the linear representation hypothesis is the theoretical premise the whole method leans on: that high-level concepts sit along linear directions in an LLM's activation space, so adding one vector to a forward pass should shift a whole behavior rather than produce noise (contrastive-activation-addition, §\"2 Related work\", p. 2).",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-in-ch-machinery",
+       "name": "The machinery: two prompts, one token apart",
+       "narrative": "Section 3 states the method in one paragraph: build pairs of prompts, one demonstrating a behavior and one demonstrating its opposite, and average the difference in the model's activations across the pair to get a direction (contrastive-activation-addition, §\"3 Method\", p. 3). Every design choice in the section makes that paragraph precise. The pairs are multiple-choice questions ending in answer letter A or B, so the two prompts in a pair differ by exactly one token — nothing else to confound the difference. Averaging that difference over a whole dataset, rather than a single pair, is the Mean Difference method, formalized as Equation 1. The result, a steering vector, is added to the residual stream at every token position after the prompt, with a signed multiplier setting how hard to push.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-in-mc-format",
+         "name": "A or B, nothing else changes",
+         "ref": {
+          "kind": "concept",
+          "id": "multiple-choice-contrast-pair-format"
+         },
+         "narrative": "Each contrast pair is a multiple-choice question that differs only in its final answer letter, so the positive and negative prompts are identical except for one token. An appendix experiment validates the design by showing the model naturally justifies whichever letter it is conditioned on having already chosen (contrastive-activation-addition, §\"3 Method\", p. 3).",
+         "children": []
+        },
+        {
+         "id": "caa-in-md",
+         "name": "Averaging away everything but the behavior",
+         "ref": {
+          "kind": "concept",
+          "id": "mean-difference-method"
+         },
+         "narrative": "Mean Difference is not new to this paper — the Related Work section credits it to Zou et al. and notes Li et al. use it too. What CAA adds is the format it is applied to: hundreds of single-token-different pairs instead of a handful of loosely matched ones.",
+         "children": []
+        },
+        {
+         "id": "caa-in-construction",
+         "name": "Equation 1",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-steering-vector-construction"
+         },
+         "narrative": "Formally: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L activations at the answer-letter position for both completions and average their difference across the dataset. That single equation is the entire recipe for producing a steering vector (contrastive-activation-addition, §\"3 Method\", p. 3).",
+         "children": []
+        },
+        {
+         "id": "caa-in-vector",
+         "name": "The direction itself",
+         "ref": {
+          "kind": "concept",
+          "id": "steering-vector"
+         },
+         "narrative": "A steering vector is the object everything else in the paper manipulates and measures: one direction in activation space that, added to a forward pass, shifts output toward the behavior it encodes, and subtracted, shifts it away.",
+         "children": []
+        },
+        {
+         "id": "caa-in-multiplier",
+         "name": "Sign and magnitude",
+         "ref": {
+          "kind": "concept",
+          "id": "steering-multiplier"
+         },
+         "narrative": "The steering multiplier turns a direction into a dial: positive values amplify the behavior, negative values suppress it, and the size of the number sets the dose — though the paper finds large magnitudes degrade text quality, which caps how far the dial can usefully turn.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-in-ch-results",
+       "name": "Does the dial turn: results across seven behaviors",
+       "narrative": "Section 4 is the paper's main evidence. Seven behaviors — AI Coordination, Corrigibility, Hallucination, Myopic Reward, Survival Instinct, Sycophancy, and Refusal — each get a steering vector, mostly sourced from Anthropic's existing evaluation datasets, with GPT-4 manufacturing new contrastive data for the two behaviors, Hallucination and Refusal, that had none. A layer sweep at multipliers of -1 and +1 finds a consistent optimal layer — 13 in the 7B model, 14 or 15 in the 13B model — and at that layer, CAA moves every one of the seven behaviors in the intended direction on held-out multiple-choice questions (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). Open-ended generation repeats the test in free text, with GPT-4 rating each response 1-10 against a rubric written per behavior.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-in-mc-eval",
+         "name": "Sweep every layer, watch the probability move",
+         "ref": {
+          "kind": "concept",
+          "id": "multiple-choice-behavioral-evaluation"
+         },
+         "narrative": "For each behavior, the steering vector is added at every layer in turn with multipliers of -1 and +1, and effect size is scored as the average token probability given to the behavior-matching answer on 50 held-out questions — the sweep that finds layer 13 in the 7B model and layer 14-15 in the 13B model as the consistent optimum (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4).",
+         "children": []
+        },
+        {
+         "id": "caa-in-oe-eval",
+         "name": "Off the multiple-choice script",
+         "ref": {
+          "kind": "concept",
+          "id": "open-ended-generation-evaluation"
+         },
+         "narrative": "Held-out multiple-choice questions are stripped down to their stem and asked as open-ended prompts, plus a hand-written set for Sycophancy, to check that steering generalizes beyond the contrived A/B format it was built from (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4).",
+         "children": []
+        },
+        {
+         "id": "caa-in-gpt4",
+         "name": "The rater doing double duty",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-4"
+         },
+         "narrative": "GPT-4 scores every open-ended response 1-10 against a behavior-specific rubric, and elsewhere in the paper writes the Hallucination and Refusal contrastive datasets from scratch — the same model authoring the test material and grading the result.",
+         "children": []
+        },
+        {
+         "id": "caa-in-seven",
+         "name": "Seven worries, seven dials",
+         "ref": {
+          "kind": "theme",
+          "id": "alignment-behaviors-made-dials"
+         },
+         "narrative": "AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct come from Anthropic's Advanced AI Risk dataset; Sycophancy from a separate pair of Anthropic survey datasets; Hallucination and Refusal are freshly written by GPT-4. Together the seven turn a set of prose worries into quantities with a sign and a magnitude.",
+         "children": []
+        },
+        {
+         "id": "caa-in-datasets",
+         "name": "Where the seven questions come from",
+         "ref": {
+          "kind": "theme",
+          "id": "behavioral-contrast-datasets"
+         },
+         "narrative": "Every steerable behavior traces back to the contrast pairs that define it — human-written where Anthropic's evaluation sets already cover the ground, GPT-4-written where they don't — and the paper screens each dataset with PCA before trusting it to yield a usable vector.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-in-ch-levers",
+       "name": "Against the other levers: prompts, finetuning, capability floors",
+       "narrative": "Two sections test whether CAA earns its keep against the tools already on the shelf. Section 5 layers CAA on top of positive and negative system prompts and finds that, for most behaviors, steering moves the score further than the prompt alone achieves, in both directions (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 5). Section 6 finetunes Llama 2 7B Chat on the same contrastive dataset used to build the vectors, and finds CAA can still steer beyond finetuning's effect for three of seven behaviors, generalizing to open-ended text in cases — Sycophancy especially — where finetuning does not, at a fraction of the compute. Section 7 checks the cost of all this against MMLU and finds no significant change, with a small TruthfulQA improvement when the Sycophancy vector is subtracted.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-in-sysprompt",
+         "name": "Stacking a vector on a sentence",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-system-prompt-comparison"
+         },
+         "narrative": "Table 3 runs CAA and behavioral system prompts on the same scale — average token probability given to the behavior-matching answer — and for most behaviors, adding the steering vector beyond a positive prompt pushes the score further than either lever alone, with sycophancy the one behavior where the two don't cleanly separate.",
+         "children": []
+        },
+        {
+         "id": "caa-in-finetune",
+         "name": "Same dataset, two different levers",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-finetuning-comparison"
+         },
+         "narrative": "Finetuning trains on the exact multiple-choice pairs CAA extracts a vector from, one epoch of SGD at learning rate 1e-4. For three of seven behaviors CAA still steers beyond finetuning's own effect, and for Sycophancy specifically, finetuning fails to generalize from multiple-choice to open-ended text while CAA transfers in every case (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 5).",
+         "children": []
+        },
+        {
+         "id": "caa-in-efficiency",
+         "name": "Five minutes versus ten",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-computational-efficiency"
+         },
+         "narrative": "Generating a CAA vector needs only forward passes and finishes in under five minutes on one GPU; finetuning the same model on a thousand examples takes about ten minutes on two GPUs. The gap is structural — one method needs gradients and optimizer state, the other doesn't.",
+         "children": []
+        },
+        {
+         "id": "caa-in-mmlu",
+         "name": "Nothing else broke",
+         "ref": {
+          "kind": "concept",
+          "id": "mmlu"
+         },
+         "narrative": "MMLU, 57 subjects of multiple-choice general knowledge, is run unmodified under every steering condition, and the paper reports no significant change to the model's average probability of the correct answer — steering's cost, measured against this floor, is close to zero (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6).",
+         "children": []
+        },
+        {
+         "id": "caa-in-truthfulqa",
+         "name": "A targeted check for one behavior",
+         "ref": {
+          "kind": "concept",
+          "id": "truthfulqa"
+         },
+         "narrative": "TruthfulQA supplies a check specific to Sycophancy: subtracting the sycophancy vector improves performance by a small amount, in the direction the paper's own hypothesis — that sycophancy is a misgeneralized RLHF objective, not a plain knowledge gap — predicts (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6).",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-in-ch-internals",
+       "name": "Reading the internals: clustering, features, transfer",
+       "narrative": "Section 8 turns the same machinery into an interpretability tool. PCA on a behavior's contrast-pair activations shows whether that behavior separates linearly at all, and across the datasets tested, real behavioral clustering emerges suddenly around one-third of the way through the network's layers. Cosine similarity between a steering vector and per-token activations during ordinary generation shows the vector lighting up at semantically relevant tokens — phrases like \"I cannot help\" for refusal, the moment a model picks a delayed reward for myopia — without any intervention at all. Vectors from nearby layers resemble each other, and a vector built at layer 13 still steers behavior applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. And comparing vectors built from Llama 2's base and chat variants finds them unusually close between layers 7 and 15 — a measurement of what RLHF left alone.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-in-pca",
+         "name": "A screening test before any vector is built",
+         "ref": {
+          "kind": "concept",
+          "id": "activation-pca-visualization"
+         },
+         "narrative": "Projecting a contrastive dataset's activations through PCA checks whether the behavior separates linearly at all before the paper trusts that dataset to yield a usable steering vector (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4).",
+         "children": []
+        },
+        {
+         "id": "caa-in-clustering",
+         "name": "Emerging suddenly, a third of the way in",
+         "ref": {
+          "kind": "concept",
+          "id": "behavioral-clustering"
+         },
+         "narrative": "Behavioral clustering — activations separating by whether the model's answer matches the target behavior — doesn't fade in gradually across depth. It appears abruptly at a specific layer, around one-third of the way through the network, echoing where emotion representations were found to emerge in Zou et al.'s prior work.",
+         "children": []
+        },
+        {
+         "id": "caa-in-cosine",
+         "name": "The vector reading a sentence back",
+         "ref": {
+          "kind": "concept",
+          "id": "token-level-cosine-similarity-analysis"
+         },
+         "narrative": "Take the dot product between a steering vector and ordinary per-token activations during generation, no intervention at all, and it tracks how strongly the behavior is present at each token — \"I cannot help\" lighting up for refusal, a chosen delayed reward lighting up for myopia (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7).",
+         "children": []
+        },
+        {
+         "id": "caa-in-transfer",
+         "name": "One layer's vector, applied at another",
+         "ref": {
+          "kind": "concept",
+          "id": "inter-layer-similarity-and-transfer"
+         },
+         "narrative": "Vectors from nearby layers resemble each other more than distant ones, decaying more slowly in the network's second half, and a vector extracted at layer 13 still steers behavior when applied at other layers — evidence the direction is a general representation of the behavior, not an artifact of where it was measured (contrastive-activation-addition, §\"8.2 Similarity between vectors generated at different layers\", p. 7).",
+         "children": []
+        },
+        {
+         "id": "caa-in-basechat",
+         "name": "What RLHF left alone",
+         "ref": {
+          "kind": "concept",
+          "id": "base-chat-representation-comparison"
+         },
+         "narrative": "Steering vectors generated from Llama 2's base model and from Llama 2 Chat are unusually similar between layers 7 and 15, and a vector extracted from the base model still transfers real steering effect onto the RLHF-tuned chat model — read as a measurement of RLHF itself, which turns out to reweight behavior without rewriting how it's represented in those middle layers (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 8).",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "contrastive-activation-addition-across",
+     "tab": "Across the corpus",
+     "claim": "Set beside 2016's proposals, 2022's pipelines, and the vocabulary they left behind, this 2023 paper turns five years of named worries into measurable dials, adds a fourth lever that works after RLHF instead of inside it, hands GPT-4 two more jobs the corpus once gave only to humans, and puts its own steering vectors to work reading what RLHF changed.",
+     "name": "Dials for old worries, a lever after RLHF: where the 2023 paper lands in the corpus",
+     "narrative": "The chapters trace this paper's contact points with the rest of the corpus in the order they matter most: the 2016 and 2022 worries it turns into measurable quantities, the training-time levers it gets tested against once RLHF is already finished, the human jobs it hands to GPT-4, the RLHF effect it measures from the inside using its own vectors, and the red-teaming lineage those same vectors extend into a systematic audit tool.",
+     "intro": "Read on its own, this is a paper about nudging a chat model's behavior with a vector. Read against the rest of the corpus, it is where five years of named-but-unmeasured worries — Goodhart's law, the shutdown problem, the helpfulness-harmlessness tradeoff — finally get a number attached, and where the RLHF pipeline that 2022's papers built gets a fourth lever added on top of it rather than folded into it.\n\nThe chapters move through the corpus in the order this paper touches it: the 2016 and 2022 worries it operationalizes, the training-time levers it gets compared against, the human jobs it hands to GPT-4, the RLHF effect it measures from the inside, and the red-teaming lineage its steering vectors extend into an audit tool.",
+     "ref": null,
+     "children": [
+      {
+       "id": "caa-ac-ch-worries",
+       "name": "The worries become dials: 2016 and 2022 quantified",
+       "narrative": "Four of the seven behaviors this paper steers were, in the earlier corpus, only ever discussed in prose. Concrete Problems (2016) states Goodhart's law as a general principle and raises the shutdown problem as a theoretical worry with no attached test; Constitutional AI (2022) names evasiveness as a specific harmlessness-training failure and frames a helpfulness-harmlessness tradeoff it can only describe qualitatively. This paper reads each one off as a signed, steerable quantity — a move several of this wiki's cross-paper edges trace in detail.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-ac-worries-tissue",
+         "name": "Seven edges, one move: worry becomes a dial",
+         "ref": {
+          "kind": "tissue",
+          "id": "worries-become-dials"
+         },
+         "narrative": "Every edge in this thread repeats the same shape: an abstraction the earlier corpus could only name gets read off, in 2023, as a direction with a sign and a magnitude that a single multiplier can slide along.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-goodhart-edge",
+         "name": "2016's law, caught inside one steerable trait",
+         "ref": {
+          "kind": "edge",
+          "id": "sycophancy-instantiates-goodharts-law"
+         },
+         "narrative": "Concrete Problems states Goodhart's law abstractly — a proxy that tracks the true goal under ordinary conditions stops tracking it once optimized directly. Sycophancy is this paper's instance: agreeing with a user in place of being accurate is exactly a proxy, approval, substituting for a goal, truth, now isolated as one vector.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-shutdown-edge",
+         "name": "The 2016 off-switch problem, dosed",
+         "ref": {
+          "kind": "edge",
+          "id": "corrigibility-operationalizes-shutdown-problem"
+         },
+         "narrative": "Concrete Problems raises the shutdown problem as a theoretical concern — keeping an agent from preventing its own deactivation — and points at frameworks for interruptibility rather than any measurement of a deployed model. Corrigibility turns that concern into a graded willingness-to-be-changed axis with a contrast dataset behind it.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-evasive-edge",
+         "name": "2022's evasiveness, generalized",
+         "ref": {
+          "kind": "edge",
+          "id": "refusal-behavior-generalizes-evasiveness"
+         },
+         "narrative": "Constitutional AI names evasiveness as a specific pathology — canned refusals to sensitive queries that trade helpfulness for the appearance of safety. Refusal, this paper's behavior, generalizes that qualitative pattern into a steerable axis covering every refusal, not just the evasive kind.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-cirl-edge",
+         "name": "2016's CIRL promise, partially found",
+         "ref": {
+          "kind": "edge",
+          "id": "corrigibility-tests-the-incentive-formalized-by-cooperative-inverse-reinforcement-learning"
+         },
+         "narrative": "Cooperative Inverse Reinforcement Learning, cited in Concrete Problems, promises that a well-specified agent should want correction from its principal. Measuring corrigibility directly finds that incentive only partially present — a 2016 theoretical promise checked against a 2023 model and not fully confirmed.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-ac-ch-lever",
+       "name": "A fourth lever after the pipeline",
+       "narrative": "InstructGPT (2022) fixed a training pipeline of three steps — supervised finetuning, reward modeling, PPO — and Constitutional AI kept its shape while swapping in AI-generated labels. This paper never touches that pipeline; it takes the finished RLHF-tuned model as a fixed substrate and adds a fourth lever that works purely at inference time, then measures it against the two levers already in use: prompting and finetuning.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-ac-lever-tissue",
+         "name": "Seven edges: control after training, not during it",
+         "ref": {
+          "kind": "tissue",
+          "id": "control-moves-into-the-forward-pass"
+         },
+         "narrative": "This thread holds one lever's move from training time to inference time, keeping the RLHF pipeline's output fixed and asking what changes once control shifts after it rather than inside it.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-ontop-rlhf-edge",
+         "name": "Tested only on a model RLHF already finished",
+         "ref": {
+          "kind": "edge",
+          "id": "contrastive-activation-addition-operates-on-top-of-rlhf"
+         },
+         "narrative": "CAA is never evaluated on a raw pretrained model, only on Llama 2 Chat — a model the 2017-to-2022 RLHF lineage already shaped. Every comparison in the paper probes a finished substrate rather than retraining it.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-sysprompt-edge",
+         "name": "Room a prompt leaves unclaimed",
+         "ref": {
+          "kind": "edge",
+          "id": "caa-system-prompt-comparison-moves-behavior-beyond-system-prompting"
+         },
+         "narrative": "For most behaviors, stacking CAA on top of a positive or negative system prompt pushes the score further than the prompt alone achieves — steering finds room in the model a written instruction doesn't reach.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-finetune-gen-edge",
+         "name": "Where finetuning stays in distribution and steering doesn't",
+         "ref": {
+          "kind": "edge",
+          "id": "caa-finetuning-comparison-isolates-a-generalization-advantage-for-contrastive-activation-addition"
+         },
+         "narrative": "On Sycophancy, finetuning on multiple-choice pairs collapses to a near-zero open-ended score once the format changes, while CAA's steering effect carries over — the clearest single case where the inference-time lever generalizes better than the training-time one.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-alignment-tax-edge",
+         "name": "2022's alignment tax, asked again",
+         "ref": {
+          "kind": "edge",
+          "id": "mmlu-reruns-the-question-behind-alignment-tax"
+         },
+         "narrative": "InstructGPT named its own capability regression on public NLP benchmarks the alignment tax, and tried to pay it down inside PPO. This paper reruns the same question for an inference-time lever instead, and MMLU comes back nearly flat.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-ac-ch-ai-jobs",
+       "name": "The AI takes two more jobs: rater and dataset author",
+       "narrative": "Constitutional AI's founding move was replacing the human labeler with an AI one. This paper extends the substitution past labeling preferences: GPT-4 writes two of the seven contrastive datasets that define the behaviors being steered, and rates every open-ended response for how strongly it displays them — author and judge, on either side of the same experiment.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-ac-ai-jobs-tissue",
+         "name": "The bottleneck 2022 automated once; 2023 automates it twice more",
+         "ref": {
+          "kind": "tissue",
+          "id": "ai-substitutes-for-the-human-bottleneck"
+         },
+         "narrative": "The thread that began with Constitutional AI's RLAIF swap — an AI labeler in place of a human rater — gains two more instances here: GPT-4 as dataset author, and GPT-4 as evaluator.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-gpt4-author-edge",
+         "name": "GPT-4 writes the questions",
+         "ref": {
+          "kind": "edge",
+          "id": "gpt-4-authors-caa-refusal-dataset"
+         },
+         "narrative": "Where Anthropic's existing evaluation sets have no ready-made items — Hallucination and Refusal — GPT-4 generates the contrastive multiple-choice questions from scratch, standing in for the human dataset writers the other five behaviors relied on.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-gpt4-rate-edge",
+         "name": "GPT-4 grades the answers",
+         "ref": {
+          "kind": "edge",
+          "id": "gpt-4-rates-outputs-for-open-ended-generation-evaluation"
+         },
+         "narrative": "Every open-ended response, for all seven behaviors, is scored 1-10 by GPT-4 against a rubric written per behavior — the same substitution of a capable model for a human judge that Constitutional AI's preference model made first, applied here to grading rather than ranking.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-rlaif-share-edge",
+         "name": "The same substitution Constitutional AI made first",
+         "ref": {
+          "kind": "edge",
+          "id": "open-ended-generation-evaluation-shares-the-ai-judge-move-with-rlaif"
+         },
+         "narrative": "Both papers answer the identical bottleneck: once judgments are needed at a scale humans cannot cheaply supply, a capable model stands in for the human judge — RLAIF for preference labels in 2022, GPT-4 ratings for behavior scores here.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-gpt4-concept",
+         "name": "One model, two jobs in this paper alone",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-4"
+         },
+         "narrative": "GPT-4 appears on both sides of this paper's evaluation: authoring the Hallucination and Refusal datasets that define what's being steered, then rating the open-ended generations that result.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-ac-ch-rlhf-measure",
+       "name": "Measuring what training did",
+       "narrative": "Llama 2 Chat is Llama 2 base plus one RLHF stage and nothing else, which makes the pair a natural experiment: compare steering vectors extracted from each, and whatever changes is what RLHF changed. This paper takes that comparison, and turns a technique built to control a model into a technique that reads what training already did to it.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-ac-rlhf-theme",
+         "name": "What steering vectors say RLHF actually changed",
+         "ref": {
+          "kind": "theme",
+          "id": "what-rlhf-leaves-behind"
+         },
+         "narrative": "Vectors extracted from base and chat activations stay unusually close between layers 7 and 15, and a base-derived vector still steers the chat model — evidence that RLHF reweights which behaviors a model expresses without substantially rewriting how they're represented in the middle layers.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-basechat-edge",
+         "name": "A read on RLHF from the inside",
+         "ref": {
+          "kind": "edge",
+          "id": "base-chat-representation-comparison-measures-the-effect-of-rlhf"
+         },
+         "narrative": "RLHF is normally studied from the outside, through the outputs it changes. Comparing base-model and chat-model steering vectors studies it from the inside instead, and finds the mid-layer representations largely undisturbed.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-llama2chat-edge",
+         "name": "Same architecture, one training stage apart",
+         "ref": {
+          "kind": "edge",
+          "id": "llama-2-chat-is-the-rlhf-tuned-counterpart-of-llama-2"
+         },
+         "narrative": "Llama 2 and Llama 2 Chat share an architecture and a pretraining run; RLHF for safety and dialogue is the only thing that separates them — which is what makes comparing their internal representations a clean measurement rather than a confounded one.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-vector-probe-tissue",
+         "name": "The control mechanism moonlighting as a measuring instrument",
+         "ref": {
+          "kind": "tissue",
+          "id": "the-vector-doubles-as-a-probe"
+         },
+         "narrative": "Built to steer, the same vector turns out to read: cosine similarity against per-token activations detects a behavior without adding anything, and the base-versus-chat comparison turns that same read-twice logic on RLHF itself.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-rlhf-concept",
+         "name": "The one training stage separating the two models compared",
+         "ref": {
+          "kind": "concept",
+          "id": "rlhf"
+         },
+         "narrative": "RLHF is the training paradigm InstructGPT established and Constitutional AI automated further; here it's neither modified nor applied, only measured, by the difference it leaves between a base model and its chat counterpart.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-ac-ch-audit",
+       "name": "The audit turns inward: from found jailbreaks to steered elicitation",
+       "narrative": "Jailbreaks are inputs users stumble onto that make an RLHF-trained model output what its training was meant to prevent — evidence, across the corpus, that alignment training suppresses unwanted behavior without removing it. This paper's last move is to propose hunting for that gap systematically: instead of searching input space for a prompt that triggers a bad behavior, perturb activations directly and see how easily the behavior comes.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-ac-escalation-tissue",
+         "name": "Five edges: from stumbled-into jailbreak to deliberate probe",
+         "ref": {
+          "kind": "tissue",
+          "id": "escalating-elicitation"
+         },
+         "narrative": "Read in order, these edges trace one escalation: a failure mode users find by accident, named as a target by red-teaming, automated partway by an LM that writes adversarial prompts, and finally replaced by a method that skips prompts altogether.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-jailbreak-motivate-edge",
+         "name": "Why the proposal needs to exist at all",
+         "ref": {
+          "kind": "edge",
+          "id": "jailbreaks-motivates-caa-red-teaming-application"
+         },
+         "narrative": "If RLHF and finetuning reliably closed off unwanted behavior, there would be nothing left to elicit. Jailbreaks are the standing evidence they don't — inputs found incidentally that still produce harmful output despite training.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-relocate-edge",
+         "name": "From prompt space to activation space",
+         "ref": {
+          "kind": "edge",
+          "id": "caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming"
+         },
+         "narrative": "Red-teaming, as practiced earlier in the corpus, means searching for adversarial inputs — prompts or conversations that trigger unsafe output. CAA's proposal relocates that search from input space to activation space, perturbing the model directly instead of hunting for the right words.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-skip-search-edge",
+         "name": "Nothing to write, only a vector to add",
+         "ref": {
+          "kind": "edge",
+          "id": "caa-red-teaming-application-skips-the-prompt-search-of-automated-red-teaming"
+         },
+         "narrative": "Automated red-teaming, as Constitutional AI uses it, still has an LM compose natural-language adversarial prompts and hope they work. CAA's version skips that composition step entirely — there is no prompt to write, only a steering vector to add.",
+         "children": []
+        },
+        {
+         "id": "caa-ac-invert-edge",
+         "name": "The same machinery, aimed the other way",
+         "ref": {
+          "kind": "edge",
+          "id": "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition"
+         },
+         "narrative": "Every other application in this paper uses CAA to suppress or encourage a behavior in the direction alignment wants. The red-teaming proposal inverts that: the identical vector, aimed at eliciting rather than suppressing, becomes a probe for what training failed to remove.",
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "contrastive-activation-addition-big-picture",
+     "tab": "The big picture",
+     "claim": "The paper's thesis is that a high-level behavior in an RLHF-tuned language model is a single linear direction in its activations, extractable from a modest dataset of paired multiple-choice prompts and controllable at inference time by adding that direction back in with a signed multiplier — across seven behaviors, without retraining the model or measurably damaging its general capability.",
+     "name": "The 2023 argument: a behavior is a direction you can dose",
+     "narrative": "Evidence for the thesis runs on three legs: multiple-choice and open-ended evaluations showing all seven behaviors move in the intended direction; a capability floor, MMLU, that barely moves under the same intervention; and an interpretability chapter that reads the same vectors as measurements of where behavior lives and what RLHF changed. The paper reports its own limits alongside the result — an unoptimized finetuning baseline, a norm choice it flags against itself, GPT-4 rater noise — and closes by offering the same machinery as a red-teaming tool.",
+     "intro": "Every alignment technique on offer — RLHF, instruction finetuning, prompt engineering — works either by updating a model's weights or by hoping a prompt lands, and none of them says where inside the network a behavior like refusal or sycophancy actually lives. The paper's own claim is narrower and sharper than that: a behavior is a direction in the model's activations, and that direction can be found, dosed, and reversed without touching a single weight.\n\nWhat follows is the paper's argument in its own vocabulary, at full altitude: the thesis that a behavior is a dosable direction, the construction that turns contrast pairs into one, the evidence across seven behaviors and two evaluation formats, what the method reveals about representation and about RLHF itself, and the limits the paper reports against its own result.",
+     "ref": null,
+     "children": [
+      {
+       "id": "caa-bp-ch-thesis",
+       "name": "The thesis: a behavior is a direction you can dose",
+       "narrative": "The paper's central claim, stated plainly in its introduction and defended for the rest of its length, is that a high-level behavior — sycophancy, refusal, corrigibility — corresponds to a single direction in a model's activation space, discoverable from a dataset of paired prompts and controllable by adding that direction back into the residual stream with a signed multiplier. The premise licensing this is the linear representation hypothesis: that concepts this abstract still sit along linear directions rather than requiring some more tangled representation to describe them.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-bp-thesis-vector",
+         "name": "One direction, one behavior",
+         "ref": {
+          "kind": "concept",
+          "id": "steering-vector"
+         },
+         "narrative": "A steering vector is a single direction in a model's activation space encoding a target behavior, such that adding it to a forward pass shifts output toward the behavior, and subtracting it shifts output away — the object the entire thesis rests on.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-thesis-caa",
+         "name": "The method the thesis is built to test",
+         "ref": {
+          "kind": "concept",
+          "id": "contrastive-activation-addition"
+         },
+         "narrative": "Contrastive Activation Addition is the paper's name for the specific method of building and applying a steering vector: extract it from contrast pairs, add it to the residual stream at every post-prompt token position, evaluated across seven behaviors on Llama 2 Chat.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-thesis-linear",
+         "name": "Why a vector should be enough",
+         "ref": {
+          "kind": "concept",
+          "id": "linear-representation-hypothesis"
+         },
+         "narrative": "The linear representation hypothesis holds that high-level concepts are encoded as linear directions in an LLM's activation space — the theoretical premise that makes it plausible for a single added vector to shift a whole behavior rather than produce noise.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-thesis-multiplier",
+         "name": "Dosed, not just switched",
+         "ref": {
+          "kind": "concept",
+          "id": "steering-multiplier"
+         },
+         "narrative": "The steering multiplier is what turns a direction into a controllable intervention: sign selects whether the behavior is encouraged or suppressed, and magnitude sets how strongly, though the usable range is capped by text-quality degradation at high magnitudes.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-bp-ch-construction",
+       "name": "The construction: contrast pairs to a vector",
+       "narrative": "Building the vector takes three decisions, stated in Section 3. Contrast pairs are multiple-choice questions differing by exactly one token — the answer letter — so nothing else can leak into the difference. The Mean Difference method averages that difference across a whole dataset rather than trusting any single pair. And the resulting vector is injected into the residual stream, the running sum every layer writes into, at every token position after the prompt, so its effect compounds across the entire generated response.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-bp-construction-format",
+         "name": "A single token separates positive from negative",
+         "ref": {
+          "kind": "concept",
+          "id": "multiple-choice-contrast-pair-format"
+         },
+         "narrative": "Every contrast pair is a multiple-choice question ending in answer letter A or B, with the positive and negative prompt otherwise identical — a design meant to cancel every confound except the one variable the paper wants to isolate.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-construction-md",
+         "name": "The averaging step",
+         "ref": {
+          "kind": "concept",
+          "id": "mean-difference-method"
+         },
+         "narrative": "Mean Difference extraction averages the activation difference between positive and negative completions across an entire dataset of pairs, rather than trusting the noise in any single comparison — the step that turns hundreds of individually noisy differences into one usable direction.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-construction-equation",
+         "name": "Equation 1, in full",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-steering-vector-construction"
+         },
+         "narrative": "Formalized as a single equation: for a dataset of (prompt, positive completion, negative completion) triples, take the layer-L activation difference at the answer-letter position for each triple, and average across the dataset — the complete recipe for a CAA steering vector.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-construction-residual",
+         "name": "Where the vector is added back in",
+         "ref": {
+          "kind": "concept",
+          "id": "residual-stream"
+         },
+         "narrative": "The residual stream is the running sum of every layer's output that a transformer's computation flows through and accumulates in — the site CAA chooses to inject its vector into, rather than attention activations or a searched set of attention heads.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-bp-ch-evidence",
+       "name": "The evidence: seven behaviors move, generalization holds",
+       "narrative": "Two evaluation regimes carry the paper's evidence. Multiple-choice behavioral evaluation sweeps every layer at fixed multipliers and finds all seven tested behaviors move in the intended direction, with a consistent optimal layer across behaviors. Open-ended generation evaluation repeats the test in free text, scored by GPT-4 against a rubric written per behavior, and the effect survives leaving the contrived multiple-choice format. A third piece of evidence is negative: MMLU, run under every steering condition, shows no significant change, which the paper reads as its capability floor holding.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-bp-evidence-mc",
+         "name": "Every one of seven, in the intended direction",
+         "ref": {
+          "kind": "concept",
+          "id": "multiple-choice-behavioral-evaluation"
+         },
+         "narrative": "Multiple-choice behavioral evaluation sweeps a steering vector across every layer at multipliers of -1 and +1, scoring effect as the average token probability given to the behavior-matching answer on 50 held-out questions — and finds a consistent optimal layer where every tested behavior moves as intended.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-evidence-oe",
+         "name": "The result survives leaving multiple-choice",
+         "ref": {
+          "kind": "concept",
+          "id": "open-ended-generation-evaluation"
+         },
+         "narrative": "Open-ended generation evaluation applies the same steering vectors to free-form answers rather than contrived A/B questions, testing whether the effect generalizes beyond the format it was extracted from — necessary, the paper argues, for the method to be useful at all.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-evidence-gpt4",
+         "name": "The instrument doing the scoring",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-4"
+         },
+         "narrative": "GPT-4 rates every open-ended response 1-10 against a rubric written per behavior, standing in for a human evaluator at a scale hand-scoring could not match.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-evidence-mmlu",
+         "name": "And general capability barely moves",
+         "ref": {
+          "kind": "concept",
+          "id": "mmlu"
+         },
+         "narrative": "MMLU, 57 subjects of multiple-choice general knowledge, is run under every steering condition unmodified, and the paper reports no significant change to the model's average probability of the correct answer — the negative result that lets the positive results stand without an asterisk.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-bp-ch-reveals",
+       "name": "What it reveals: emergence and what RLHF changed",
+       "narrative": "Beyond controlling behavior, the paper's own techniques double as findings about the model. Behavioral clustering shows a targeted behavior separating linearly in activation space suddenly, around one-third of the way through the network's layers, rather than emerging gradually — direct evidence for the linear representation hypothesis the method assumes. Token-level cosine similarity turns the same vector into a passive reader, lighting up at semantically relevant tokens with no intervention at all. And comparing vectors built from Llama 2's base and RLHF-tuned chat variants finds them unusually similar in the middle layers, which the paper reads as a measurement of RLHF itself: it reweights which behaviors get expressed without much rewriting how they're represented internally.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-bp-reveals-clustering",
+         "name": "Behavior separates suddenly, not gradually",
+         "ref": {
+          "kind": "concept",
+          "id": "behavioral-clustering"
+         },
+         "narrative": "Behavioral clustering is the finding that a contrastive dataset's activations separate by whether the model's answer matches the target behavior, and that this separation appears abruptly around one-third of the way through the network's layers rather than building up gradually.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-reveals-cosine",
+         "name": "A passive detector for free",
+         "ref": {
+          "kind": "concept",
+          "id": "token-level-cosine-similarity-analysis"
+         },
+         "narrative": "Token-level cosine similarity between a steering vector and ordinary per-token activations, computed with no intervention at all, tracks how strongly the target behavior is present at each token — the same object built to control turns out to also detect.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-reveals-basechat",
+         "name": "What one training stage did and didn't do",
+         "ref": {
+          "kind": "concept",
+          "id": "base-chat-representation-comparison"
+         },
+         "narrative": "Comparing steering vectors generated from Llama 2's base model against Llama 2 Chat finds elevated similarity specifically between layers 7 and 15, and finds base-derived vectors still steer the chat model — evidence that RLHF changes which behaviors surface more than it changes how they're represented.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-reveals-rlhf",
+         "name": "The stage being read, not modified",
+         "ref": {
+          "kind": "concept",
+          "id": "rlhf"
+         },
+         "narrative": "RLHF is the training paradigm that produced Llama 2 Chat from Llama 2 base; the paper never modifies it, only uses the base/chat pair it produced as an instrument for reading what that one training stage left behind internally.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "caa-bp-ch-limits",
+       "name": "The limits and the offer",
+       "narrative": "The paper reports its own weak points rather than leaving them implicit. The comparison to finetuning uses one fixed, unoptimized set of hyperparameters, so the finetuning baseline may understate what that lever can do. The comparison to system-prompting likewise searches a limited set of prompts. A vector-normalization choice — standardizing magnitude across behaviors but not across layers — is flagged as a possible confound in the paper's own layer-optimality results. Against these limits, the paper closes by offering its method a new job: using CAA as an adversarial red-teaming tool, deliberately eliciting an unwanted behavior to test whether training actually removed it or only suppressed it.",
+       "ref": null,
+       "children": [
+        {
+         "id": "caa-bp-limits-finetune",
+         "name": "An unoptimized baseline",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-finetuning-comparison"
+         },
+         "narrative": "The finetuning comparison uses one fixed set of hyperparameters — one epoch, plain SGD, no tuning of learning rate or loss function — which the paper itself flags as likely understating what a better-optimized finetuning baseline could achieve.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-limits-sysprompt",
+         "name": "A prompting baseline, not exhaustively searched",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-system-prompt-comparison"
+         },
+         "narrative": "The system-prompting comparison tests a handful of hand-written prompts rather than an exhaustive search, which the paper concedes means a more carefully optimized prompt might close some of the gap it reports in CAA's favor.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-limits-norm",
+         "name": "A norm choice the paper flags against itself",
+         "ref": {
+          "kind": "concept",
+          "id": "steering-vector-normalization"
+         },
+         "narrative": "Steering vector normalization standardizes magnitude across behaviors but deliberately leaves each layer's own norm unnormalized, to preserve the residual stream's natural growth — a choice the paper admits could skew its own layer-optimality results, since a fixed multiplier is a smaller relative push at a high-norm layer than at a low-norm one.",
+         "children": []
+        },
+        {
+         "id": "caa-bp-limits-redteam",
+         "name": "The offer: turn the same lever into an audit",
+         "ref": {
+          "kind": "concept",
+          "id": "caa-red-teaming-application"
+         },
+         "narrative": "CAA as an adversarial red-teaming tool is the paper's proposed extension: use the identical steering method to elicit an unwanted behavior rather than suppress it, on the premise that a behavior easily triggered by a small internal perturbation is plausibly reachable in deployment too.",
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

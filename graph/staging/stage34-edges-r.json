@@ -1,0 +1,144 @@
+{
+ "edges": [
+  {
+   "id": "contrastive-activation-addition-operates-on-top-of-rlhf",
+   "type": "operates-on-top-of",
+   "source": "contrastive-activation-addition",
+   "target": "rlhf",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "CAA is never tested on a raw pretrained model. Every experiment in the paper runs on Llama 2 7B and 13B Chat, versions of Llama 2 already finetuned with RLHF for safety and instruction-following (Touvron et al., 2023) (contrastive-activation-addition, §\"3 Method\", p. 3). The paper treats this as a deliberate choice rather than an incidental one, framing the whole study as an investigation of how RLHF/finetuning techniques interact with activation engineering, building on top of the existing body of work on pretrained models (contrastive-activation-addition, §\"1 Introduction\", p. 2). That framing matters for how to read every later result: when CAA moves a behavior beyond what a system prompt or a finetuning run achieves, it is not steering a blank slate but finding a direction inside representations RLHF has already shaped. The base-versus-chat similarity analysis later in the paper is itself a way of asking what, specifically, RLHF changed. Five years after RLHF entered this corpus as a training-time alignment technique, CAA repurposes its finished output as a fixed substrate to be probed and nudged after training ends, rather than a target for retraining."
+  },
+  {
+   "id": "caa-system-prompt-comparison-moves-behavior-beyond-system-prompting",
+   "type": "moves-behavior-beyond",
+   "source": "caa-system-prompt-comparison",
+   "target": "system-prompting",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "Table 3 puts CAA and behavioral system prompts on the same scale -- average token probability given to the behavior-matching multiple-choice answer -- in Llama 2 13B Chat at layer 13 (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 6). For Corrigibility, a positive system prompt alone raises the score from a no-prompt, no-steering baseline of 0.57 to 0.79; adding the +1 steering vector on top of that prompt pushes it further still, to 0.93 -- CAA finds room the prompt left unclaimed. The same asymmetry appears in the negative direction for Refusal: the negative prompt alone drops the score from 0.78 (no prompt) to 0.74, and subtracting the steering vector on top of that prompt pushes it down further, to 0.41. Sycophancy is the outlier -- scores barely move across any prompt/multiplier combination (0.55-0.67 across all nine cells), suggesting the sycophancy vector and behavioral system prompts are not cleanly separable levers for that behavior the way they are for the other six. The paper's own explanation for why steering usually adds room a prompt does not: the multiplier gives continuous, signed control, and averaging over hundreds of contrast pairs isolates the target variable more cleanly than a single instruction can."
+  },
+  {
+   "id": "few-shot-prompting-loses-out-to-system-prompting",
+   "type": "loses-out-to",
+   "source": "few-shot-prompting",
+   "target": "system-prompting",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "Before settling on system-prompting as CAA's prompting baseline, the paper tried few-shot prompting -- giving the model prior examples of the target behavior in its context window, the technique Brown et al. (2020) introduced for GPT-3 -- and found it less effective at steering the seven tested behaviors than a single instructional system prompt (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 5). That is a comparative claim about steering specifically, not a general verdict on few-shot prompting: the paper's own Limitations section concedes it did not exhaustively search prompting configurations for either baseline, and that better-optimized prompts, few-shot or otherwise, might close some of the gap it reports between CAA and prompting (contrastive-activation-addition, §\"Prompting baseline optimization\", p. 10). What the result fixes is methodological: every later comparison to \"prompting\" in this paper, including Table 3 and the system prompts catalogued in Table 14, means system-prompting, because that is the baseline few-shot prompting lost to in preliminary trials."
+  },
+  {
+   "id": "few-shot-prompting-shares-its-mechanism-with-gpt3-prompted-baseline",
+   "type": "shares-its-mechanism-with",
+   "source": "few-shot-prompting",
+   "target": "gpt3-prompted-baseline",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "InstructGPT's strongest non-finetuned baseline was exactly this mechanism: a hand-picked few-shot prefix, chosen from an internal 'prefix-finding competition' by taking whichever prefix scored highest against the trained reward model, prepended to raw GPT-3 to coax it into an instruction-following mode (instructgpt, §\"3.5 Models\", p. 9). That 2022 result treats few-shot prompting as a serious lever, worth optimizing hard, because it was the only way to get GPT-3 to look like it was following instructions at all. CAA's 2023 finding cuts against that framing without contradicting it: on Llama 2 Chat, a model already RLHF-tuned to follow instructions, few-shot prompting is the weaker of the two prompting baselines tested, losing out to a single system-prompt instruction for steering any of the seven behaviors (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 5). Read together, the two results locate few-shot prompting's real strength: it is a tool for eliciting a response format or mode -- instruction-following -- from a model that does not otherwise have one, not a fine-grained dial for a behavior a chat-tuned model can already exhibit."
+  },
+  {
+   "id": "caa-finetuning-comparison-runs-head-to-head-against-supervised-fine-tuning",
+   "type": "runs-head-to-head-against",
+   "source": "caa-finetuning-comparison",
+   "target": "supervised-fine-tuning",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "The finetuning half of this comparison is a specific, small recipe: one epoch of SGD at learning rate 1e-4 on the same multiple-choice contrastive dataset used to build CAA's steering vectors (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 5). Run alone, it works -- the paper's Limitations section reports that this unoptimized hyperparameter choice still reaches over 90% test-set accuracy on most of the seven behavior datasets (contrastive-activation-addition, §\"10 Limitations\", p. 10). But composing the two levers reveals where finetuning's control runs out. For Refusal, Table 4 shows finetuning alone reaching an open-ended score of 5.34, while adding positive steering on top of that same positive-refusal finetuning lowers it to 4.42 -- the opposite of what either lever does by itself. That reversal is the paper's clearest evidence that finetuning and CAA are not just redundant paths to the same effect: stacking them can interfere as well as compound, and the interaction has to be measured per behavior rather than assumed from either lever's solo performance."
+  },
+  {
+   "id": "caa-finetuning-comparison-isolates-a-generalization-advantage-for-contrastive-activation-addition",
+   "type": "isolates-a-generalization-advantage-for",
+   "source": "caa-finetuning-comparison",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "For Sycophancy specifically, finetuning's own in-distribution learning is already the weakest of the seven behaviors: Table 13 reports only 44% test-set accuracy for positive-direction finetuning, far below the 84-100% positive-direction accuracy reached on every other behavior. What accuracy it does reach does not transfer to open-ended generation -- Table 4 shows finetuning Llama 2 7B Chat toward positive sycophancy collapsing the open-ended GPT-4 score to 0.00 at multiplier 0 and +1, the opposite of the intended direction (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 5-7). CAA shows no equivalent failure: with no finetuning at all, sweeping the steering multiplier from -1 to +1 monotonically raises the same open-ended score from 0.26 to 1.26. The paper's own explanation for the gap is representational -- because CAA steers a direction the model already encodes rather than adjusting every weight via gradient descent, it hypothesizes this is why CAA achieves better out-of-distribution generalization than basic supervised finetuning of the entire model (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6) -- a claim this one behavior, alone among the seven, puts to a real test."
+  },
+  {
+   "id": "caa-computational-efficiency-avoids-the-memory-cost-of-supervised-fine-tuning",
+   "type": "avoids-the-memory-cost-of",
+   "source": "caa-computational-efficiency",
+   "target": "supervised-fine-tuning",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-vs-training-levers",
+   "prose": "The resource gap follows directly from what each method computes. Generating a CAA steering vector needs only forward passes -- run the model on each contrastive pair, cache the residual-stream activations, average the differences -- so it fits on a single NVIDIA L40 GPU in under five minutes. Finetuning Llama 2 7B Chat on the same 1,000-example dataset needs gradients and optimizer state for every parameter, so the paper runs it across two L40 GPUs with data parallelism and the ZeRO optimizer (Rajbhandari et al., 2019) for memory partitioning, taking about ten minutes (contrastive-activation-addition, §\"J Computational resources\", p. 15). The extra GPU and the optimizer-sharding machinery are not incidental engineering choices; they are the price of backpropagation, paid because finetuning has to store and update every weight rather than compute one averaged direction. That asymmetry is why CAA can be re-run per behavior, per layer, almost as a diagnostic query, in a way finetuning a full model realistically cannot."
+  },
+  {
+   "id": "multiple-choice-behavioral-evaluation-supplies-the-layer-hyperparameter-for-contrastive-activation-addition",
+   "type": "supplies-the-layer-hyperparameter-for",
+   "source": "multiple-choice-behavioral-evaluation",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "judging-steered-outputs",
+   "prose": "CAA has effectively one design decision that most determines whether it works at all: which layer to add the steering vector at. The multiple-choice evaluation is how the paper makes that decision, run before any multiplier tuning happens -- it sweeps every layer with the multiplier fixed at -1/+1 and scores the effect on 50 held-out questions per behavior (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4), reporting a genuinely narrow answer: layer 13 and its neighbors in the 7B model, layer 14 or 15 in the 13B model, consistent across the sweep charts for every behavior tested. Only after that layer is fixed does the paper search over multiplier magnitude, and it does so by watching open-ended text quality degrade rather than by re-running the multiple-choice sweep (contrastive-activation-addition, §\"Vector normalization choices\", p. 10). So the two hyperparameters are never searched jointly: multiple-choice evaluation answers \"where,\" and open-ended generation quality answers \"how much\" -- a sequential search order the paper adopts in place of a full joint sweep."
+  },
+  {
+   "id": "open-ended-generation-evaluation-shows-a-different-margin-than-multiple-choice-behavioral-evaluation",
+   "type": "shows-a-different-margin-than",
+   "source": "open-ended-generation-evaluation",
+   "target": "multiple-choice-behavioral-evaluation",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "judging-steered-outputs",
+   "prose": "The two evaluation regimes are not just different formats for the same question -- run side by side, on the same finetuning-versus-CAA comparison, they disagree about where CAA's marginal contribution is largest. In the multiple-choice regime, finetuning alone typically reaches near-ceiling scores -- around 1.00 for positive Hallucination and Refusal finetuning in Table 10 -- leaving CAA comparatively little room to add further steering on top. In the open-ended regime, the same finetuned checkpoints score far from ceiling on GPT-4's 0-10 scale, and layering CAA on top moves the rating by a larger margin than it moves the matching multiple-choice probability (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6). The paper states this explicitly: combining CAA with finetuning \"improves open-ended generation more significantly than it improves performance on multiple-choice questions.\" A method's effect can look saturated under multiple-choice evaluation and still have room to move under open-ended generation, which is why the paper treats an MC-only evaluation as insufficient evidence of a method's real effect."
+  },
+  {
+   "id": "gpt-4-rates-outputs-for-open-ended-generation-evaluation",
+   "type": "rates-outputs-for",
+   "source": "gpt-4",
+   "target": "open-ended-generation-evaluation",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "judging-steered-outputs",
+   "prose": "Each of the seven behaviors gets its own scoring rubric: Appendix L's prompts ask GPT-4 to rate a response 0-10 against a behavior-specific definition, for instance scoring Corrigibility by \"the extent to which the answer demonstrates a willingness to be corrected and to adjust its goals in response to human feedback\" (contrastive-activation-addition, §\"L GPT-4 rater prompts\", p. 19). Using an LLM as the sole rater for the paper's open-ended results is a reliability risk the paper names rather than assumes away: GPT-4's scores can be sensitive to the exact wording of the rating prompt, and the model may carry systematic biases relative to human judgment (contrastive-activation-addition, §\"10 Limitations\", p. 10). Its mitigation is manual, not statistical -- the authors inspect a sample of GPT-4's ratings by hand for cases that contradict their own reading of a response, and report that the two correspond well, consistent with Hackl et al. (2023)'s finding that GPT-4 is a consistent rater. That spot-check, not a formal inter-rater agreement score, is the paper's entire case for trusting GPT-4 across all 50 open-ended prompts per behavior."
+  },
+  {
+   "id": "open-ended-generation-evaluation-shares-the-ai-judge-move-with-rlaif",
+   "type": "shares-the-ai-judge-move-with",
+   "source": "open-ended-generation-evaluation",
+   "target": "rlaif",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "quality-measurement-methods",
+   "prose": "Both are answers to the same bottleneck: once a paper needs judgments at a scale humans cannot cheaply supply, it substitutes a capable model for the human judge. Constitutional AI's RLAIF generates the harmlessness preference labels that train its preference model by showing a feedback model a prompt and a pair of responses and taking its multiple-choice judgment, replacing the human crowdworkers used for the same paper's helpfulness labels (constitutional-ai, §\"4 Constitutional AI: Reinforcement Learning from AI Feedback\", p. 10). CAA's open-ended evaluation makes the same substitution one step later in the pipeline: instead of training a policy on AI-generated labels, it uses GPT-4 directly as the measurement instrument, scoring how strongly a generation displays a targeted behavior against natural-language rubrics (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4). Neither paper treats this as costless -- RLAIF still sources helpfulness labels from humans, and CAA still manually spot-checks its GPT-4 scores -- but both accept an AI judge as the only way to close the loop between a generation and a scalar score of how well it matches an intended property, once the needed labels are simply too many for a person to produce."
+  },
+  {
+   "id": "mmlu-sets-the-capability-floor-for-contrastive-activation-addition",
+   "type": "sets-the-capability-floor-for",
+   "source": "mmlu",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "judging-steered-outputs",
+   "prose": "Table 5 puts a number on how much steering costs in general capability. With no intervention, Llama 2 13B Chat averages 0.63 probability on the correct MMLU answer across 570 sampled questions (ten per subject); adding the steering vector at multiplier +1 or -1 at layer 14 moves that average by at most 0.06, for every one of the seven behaviors tested (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). Corrigibility, for example, goes from 0.63 to 0.64 (+1) and 0.59 (-1); Hallucination from 0.63 to 0.64 and 0.57. That is a far narrower swing than the behavioral evaluations show at the same multipliers: Table 3's Corrigibility score alone moves from 0.57 to 0.83 under identical steering. The gap between a large behavioral shift and a barely-moving MMLU score is the paper's evidence that CAA is not degrading the model wholesale to get its effect -- it is finding something closer to a specific behavioral direction than a blunt disruption of the network's general knowledge and reasoning."
+  },
+  {
+   "id": "mmlu-reruns-the-question-behind-alignment-tax",
+   "type": "reruns-the-question-behind",
+   "source": "mmlu",
+   "target": "alignment-tax",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "judging-steered-outputs",
+   "prose": "InstructGPT named this cost in 2022: RLHF finetuning measurably regressed performance on public NLP datasets relative to the base GPT-3 model, a regression the paper called the alignment tax and tried to pay down with a pretraining-mix gradient term in PPO-ptx (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14). CAA's MMLU table asks the same question of a different intervention: does making the model behave differently -- via activation steering rather than RLHF finetuning -- come out of general capability? The measured answer is close to zero: MMLU accuracy shifts by at most a few points under steering at either multiplier, for every tested behavior (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). Read against InstructGPT's framing, that is a meaningfully different result: RLHF's alignment tax was real enough to require a dedicated architectural fix; CAA's post-hoc, inference-time lever appears to leave the tax largely unpaid, which is one reason the paper frames steering as compatible with, rather than competing against, whatever capability cost the underlying RLHF training already incurred."
+  },
+  {
+   "id": "mmlu-tests-a-different-competence-than-superglue",
+   "type": "tests-a-different-competence-than",
+   "source": "mmlu",
+   "target": "superglue",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "language-understanding-benchmarks",
+   "prose": "Both function in this corpus as regression-catching suites -- benchmarks a paper runs, unmodified, to check that its intervention did not quietly break something else -- but they probe different competence. SuperGLUE's RTE and WSC tasks, the two InstructGPT reports results on, test whether a model can perform specific linguistic inference: recognizing textual entailment and resolving pronoun reference (instructgpt, §\"D Automatic evaluation details\", p. 44). MMLU tests something closer to stored knowledge and subject-matter reasoning across 57 independent domains, from moral scenarios to professional law, scored by the probability assigned to the correct multiple-choice answer (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). A method could hold one steady while damaging the other -- steering a behavior vector into the residual stream is exactly the kind of intervention where a narrow linguistic skill and broad factual recall might fail independently, which is why a capability check plausibly needs both, not just whichever benchmark a paper happens to already be running."
+  }
+ ]
+}

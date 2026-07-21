@@ -1,0 +1,144 @@
+{
+ "edges": [
+  {
+   "id": "activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction",
+   "type": "screens-datasets-for",
+   "source": "activation-pca-visualization",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "Before CAA extracts a steering vector from a dataset, the paper first checks whether that dataset's activations are even separable by the behavior at all. The PCA visualization step projects a contrastive dataset's residual-stream activations at the answer-letter token and checks for behavioral clustering -- separation by whether the model's output matches the target behavior -- which the authors call useful \"for determining whether a dataset will enable the generation of effective steering vectors\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). That makes visualization a screening step that precedes construction rather than an afterthought: caa-steering-vector-construction's Mean Difference procedure averages a difference in activations over an entire dataset at a chosen layer (contrastive-activation-addition, §\"3 Method\", p. 3), but that average is only meaningful once behavioral clustering confirms the representation being differenced actually tracks the behavior rather than just the prompt's surface format. A dataset showing only letter clustering, with no behavioral split, is a warning sign the resulting vector may encode the wrong thing entirely."
+  },
+  {
+   "id": "letter-clustering-is-the-confound-for-behavioral-clustering",
+   "type": "is-the-confound-for",
+   "source": "letter-clustering",
+   "target": "behavioral-clustering",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "Project a contrastive dataset's activations at the answer-letter token onto two principal components and something will always separate: the prompts end in either \"A\" or \"B\", and that alone splits the projection into two clusters regardless of what the dataset is about (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The paper names this letter clustering and treats it as the null result to rule out, not the signal it is looking for. Behavioral clustering is the additional, non-guaranteed split by whether the model's chosen answer matches the target behavior rather than by which letter that answer happens to be. A dataset can show letter clustering alone -- separation by prompt format only -- or it can show both, in which case the representation captures something about the behavior itself. The distinction matters because caa-steering-vector-construction differences activations at exactly this same answer-letter position: without behavioral clustering as a check, there would be no way to tell whether a resulting vector encodes the intended behavior or merely the token \"A\" versus \"B\"."
+  },
+  {
+   "id": "behavioral-clustering-localizes-suddenly-in-residual-stream",
+   "type": "localizes-suddenly-in",
+   "source": "behavioral-clustering",
+   "target": "residual-stream",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "Behavioral clustering does not fade in gradually across a model's depth -- it appears abruptly at a specific residual-stream layer. For the refusal dataset in Llama 2 7B Chat, PCA projections at layer 9 show no separation by behavior, while the same projection one layer later, at layer 10, shows a clean split: \"the visible behavioral clustering emerges suddenly at layer 10. This trend is seen across our other datasets\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). Across the seven behaviors tested, this onset consistently falls around one-third of the way through the layers, which the authors link to prior work showing emotion representations likewise emerge in middle and later layers rather than early ones. The residual stream is therefore not a uniform medium in which behavioral information accumulates smoothly from layer one -- it is largely inert to a behavior's presence for the model's first third, then becomes linearly readable within a single layer, which is also why CAA's own layer sweeps concentrate their steering effect there rather than earlier."
+  },
+  {
+   "id": "pca-is-the-projection-technique-behind-activation-pca-visualization",
+   "type": "is-the-projection-technique-behind",
+   "source": "pca",
+   "target": "activation-pca-visualization",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "PCA is the off-the-shelf machinery underneath activation-pca-visualization: the technique itself is inherited from decades of dimensionality-reduction work and applied directly via the Scikit-learn package rather than reimplemented for this paper (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). What CAA contributes is not a new projection method but a specific use of an old one -- projecting high-dimensional residual-stream activations from a contrastive dataset down to their top two principal components, the axes of greatest variance, and checking by eye whether the resulting scatter separates by behavior. Two components turn out to be enough: the paper's figures show refusal-behavior clustering becoming visible in a plain two-dimensional plot at layer 10, with no need for higher-dimensional projections or a trained classifier to detect the split. That a linear, unsupervised, general-purpose technique is sufficient to reveal the separation is itself part of the paper's evidence that these behavioral representations are simple, linear directions rather than more complex, entangled features."
+  },
+  {
+   "id": "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+   "type": "is-evidence-for",
+   "source": "behavioral-clustering",
+   "target": "linear-representation-hypothesis",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "The linear representation hypothesis claims that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of its motivation for why activation-engineering techniques should work at all (contrastive-activation-addition, §\"2 Related work\", p. 3). Behavioral clustering is a direct empirical instance of that claim rather than just background motivation for it: when residual-stream activations on a contrastive dataset are projected onto only two principal components -- a linear projection -- a high-level behavior like refusal becomes visibly separable, and does so suddenly at a specific layer rather than gradually across many (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). If the behavior's encoding were nonlinear or diffusely distributed, a two-dimensional linear projection would not be expected to reveal a clean split. The suddenness itself is informative: it suggests the model is not refining a distributed encoding across many layers but computing the relevant abstraction at one point and carrying it forward largely unchanged, exactly the kind of localized, linear structure the hypothesis predicts should exist for concepts a model actually uses."
+  },
+  {
+   "id": "token-level-cosine-similarity-analysis-reveals-as-a-feature-detector-steering-vector",
+   "type": "reveals-as-a-feature-detector",
+   "source": "token-level-cosine-similarity-analysis",
+   "target": "steering-vector",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "A steering vector is defined as a control mechanism -- something added to activations to shift the output distribution. Token-level cosine similarity analysis shows the same object also works in reverse, as a passive detector of the behavior it was built to induce. Taking the dot product between a steering vector and each token's residual-stream activation during an ordinary forward pass -- no addition, just measurement -- produces a signal that tracks how strongly the behavior is \"present\" at that token: on the refusal vector, the phrases \"I cannot help\" and \"I strongly advise against\" score positively, while \"hack into your friend's Instagram account\" scores negatively (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7). The same held for a myopia vector, where tokens describing choosing a reward now scored oppositely from tokens describing waiting for a larger one later (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 8). A vector extracted to intervene on a behavior turns out to already encode enough about that behavior to recognize it token by token, with no intervention at all."
+  },
+  {
+   "id": "inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction",
+   "type": "demonstrates-the-generality-of",
+   "source": "inter-layer-similarity-and-transfer",
+   "target": "caa-steering-vector-construction",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "reading-the-residual-stream",
+   "prose": "caa-steering-vector-construction fixes a single layer L and differences activations there; inter-layer-similarity-and-transfer asks whether the resulting vector is actually specific to that choice. Two findings say no. First, vectors built at nearby layers are more similar to each other than vectors built at distant layers, and this similarity decays more slowly through the model's second half than its first, consistent with a representation that \"converges\" once extracted rather than continuing to change (contrastive-activation-addition, §\"8.2 Similarity between vectors generated at different layers\", p. 7). Second, a vector constructed at layer 13 and then applied at other layers still steers behavior, and for some earlier layers the effect is even larger than at layer 13 itself, before dropping off steeply around layer 17. Construction therefore isolates something closer to a general, portable representation of the behavior than a layer-13-specific artifact -- though the layer-17 cliff suggests that generality has a limit, past which the representation has already been consumed for further processing and is no longer freely manipulable."
+  },
+  {
+   "id": "base-chat-representation-comparison-measures-the-effect-of-rlhf",
+   "type": "measures-the-effect-of",
+   "source": "base-chat-representation-comparison",
+   "target": "rlhf",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "what-rlhf-leaves-behind",
+   "prose": "RLHF is normally studied from the outside, through the outputs it changes. base-chat-representation-comparison instead asks what RLHF leaves alone on the inside: steering vectors are generated separately from Llama 2 7B base and Llama 2 7B Chat activations, then compared by cosine similarity layer by layer. Similarity decays with layer distance as expected, except for a distinct peak between layers 7 and 15, where the base and chat representations stay unusually close -- \"this surprising trend indicates that RLHF has a smaller effect on how information is represented between layers 7 and 15\" (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). Vectors extracted from the base model's activations then transfer significant steering effect onto the RLHF-tuned chat model, especially between layers 10 and 15 (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 9). Read together, this is the corpus's first direct measurement of what RLHF does to a model's internals rather than its outputs: it appears to re-weight which behaviors get expressed downstream while leaving the mid-network representation of those behaviors largely intact."
+  },
+  {
+   "id": "llama-2-chat-is-the-rlhf-tuned-counterpart-of-llama-2",
+   "type": "is-the-rlhf-tuned-counterpart-of",
+   "source": "llama-2-chat",
+   "target": "llama-2",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "what-rlhf-leaves-behind",
+   "prose": "Llama 2 and Llama 2 Chat share an architecture and a pretraining run; what separates them is the RLHF stage applied on top to produce a model trained \"using RLHF for safety and to follow human instructions in a chat format\" (contrastive-activation-addition, §\"3 Method\", p. 3). CAA leans on that shared ancestry as an experimental design, not just background: because base and chat differ by RLHF alone and nothing else -- same weight initialization, same pretraining data, same tokenizer -- any difference found between steering vectors extracted from the two is attributable to RLHF specifically, rather than to some confound of comparing unrelated models. That is what makes base-chat-representation-comparison possible as a clean measurement rather than a confounded one. The paper generates steering vectors from the base model \"to test similarity and transfer\" against the chat model (contrastive-activation-addition, §\"3 Method\", p. 3) precisely because the pair functions as a matched before-and-after snapshot of one alignment intervention, letting internal representations be read as a record of what RLHF did, and did not, rewrite."
+  },
+  {
+   "id": "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition",
+   "type": "inverts-the-purpose-of",
+   "source": "caa-red-teaming-application",
+   "target": "contrastive-activation-addition",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-as-audit",
+   "prose": "Every other application in the paper uses CAA to suppress or encourage a behavior in the direction alignment wants -- less sycophancy, more refusal. The red-teaming proposal runs the same machinery toward the opposite end: use CAA as \"an adversarial intervention to trigger unwanted behaviors in models more efficiently\" than prompting alone (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). Nothing about the method changes -- it is still a mean-difference vector added to the residual stream at a chosen layer and multiplier -- only the sign of the intent does: instead of steering a chat model away from an unsafe behavior, the vector steers it toward one, deliberately. The paper frames this inversion as diagnostic rather than harmful in itself: if a behavior can be easily triggered through a small internal perturbation, that is evidence it may also be reachable in deployment through some other route; conversely, an inability to elicit it this way is offered as a stronger safety guarantee than failing to find it through prompting, since internal perturbation searches a space prompting cannot easily reach."
+  },
+  {
+   "id": "caa-red-teaming-application-relocates-the-attack-surface-of-red-teaming",
+   "type": "relocates-the-attack-surface-of",
+   "source": "caa-red-teaming-application",
+   "target": "red-teaming",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "steering-as-audit",
+   "prose": "Red teaming, as practiced across the earlier corpus, means finding adversarial inputs: prompts, conversations, or scenarios that make a model produce unsafe output, whether hunted by crowdworkers or generated by another LM. caa-red-teaming-application proposes something that only became conceivable once activation engineering existed as a mature technique: instead of searching input space for a prompt that triggers a bad behavior, perturb the model's internal activations directly with a steering vector and see whether the behavior can be triggered that way (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). This changes what \"finding\" a vulnerability means. Prompt-based red-teaming is fundamentally a search problem over an enormous, poorly understood input space, and the paper notes that \"systematically finding inputs that reveal these flaws is challenging.\" Activation-space elicitation sidesteps that search: the intervention is a single vector and a multiplier, applied directly, rather than a string that has to be discovered by trial or generation. The two approaches probe the same underlying question -- can this behavior be elicited at all -- through different surfaces, one external and anecdotal, one internal and systematic."
+  },
+  {
+   "id": "caa-red-teaming-application-skips-the-prompt-search-of-automated-red-teaming",
+   "type": "skips-the-prompt-search-of",
+   "source": "caa-red-teaming-application",
+   "target": "automated-red-teaming",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": "steering-as-audit",
+   "prose": "Automated red teaming, as Constitutional AI cites it, automates the search for adversarial inputs by having a language model generate the red-team prompts instead of a human -- an attacker that is itself an LM, but one that still has to compose a natural-language prompt and hope it works (constitutional-ai, §\"A Harmless but Non-Evasive (Still Helpful) Assistant\", p. 4). caa-red-teaming-application automates a step further back: it proposes skipping the prompt entirely and triggering the target behavior through a direct activation-space perturbation, using the same steering vector and multiplier CAA already builds for alignment purposes (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). Where the automated approach still searches the space of natural-language strings, just with an LM doing the searching instead of a human, activation-space elicitation removes the search altogether -- there is no prompt to write or evaluate, only a vector to add. The two proposals sit on the same trajectory toward scaling adversarial testing beyond manual effort, but only the later one removes language as the medium the attack has to pass through."
+  },
+  {
+   "id": "jailbreaks-motivates-caa-red-teaming-application",
+   "type": "motivates",
+   "source": "jailbreaks",
+   "target": "caa-red-teaming-application",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-as-audit",
+   "prose": "The red-teaming proposal needs a reason to exist: if RLHF and finetuning reliably closed off unwanted behavior, there would be nothing further to elicit. Jailbreaks are the paper's evidence that they don't. Users routinely find inputs that make aligned, RLHF-trained chat models \"output harmful content\" despite that training (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9), which the paper treats as proof that alignment training suppresses rather than eliminates unwanted behaviors -- they remain latent, reachable by some input, just not one anyone has found yet through ordinary use. What jailbreaks don't provide is a method: they are discovered incidentally, by users probing a deployed model, not produced by any systematic process. caa-red-teaming-application is pitched directly at that gap -- not at the existence of unwanted behavior, which jailbreaks already establish, but at the difficulty of finding where it hides. The paper's own framing makes the dependency explicit, raising jailbreaks in the same paragraph as the proposal meant to address the problem they expose."
+  },
+  {
+   "id": "jailbreaks-is-the-target-phenomenon-of-red-teaming",
+   "type": "is-the-target-phenomenon-of",
+   "source": "jailbreaks",
+   "target": "red-teaming",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-as-audit",
+   "prose": "Jailbreaks and red-teaming name the same class of failure from two different vantage points. A jailbreak is what an ordinary user finds: an input, usually discovered informally through use rather than deliberate search, that makes a model produce output its training was meant to prevent. Red-teaming is the same hunt made deliberate and resourced, undertaken by a model's developers before deployment rather than left to whoever downstream happens to try (contrastive-activation-addition, §\"9.1 Suggested future work\", p. 9). The paper's own framing treats jailbreaks as red-teaming's implicit benchmark: it notes that users \"can often find jailbreaks to make LLMs output harmful content\" even after finetuning and RLHF, then immediately raises red-teaming as the response to that fact -- since accidental, unsystematic use already turns up such inputs, a deliberate search ought to find at least as many, earlier and more reliably. What separates ad hoc jailbreaking from formal red-teaming, on this account, is not the target -- both hunt for inputs that defeat trained-in safety -- but whether the search is systematic, and who is doing it."
+  }
+ ]
+}

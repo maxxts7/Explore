@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Few-shot prompting — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Few-shot prompting</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prompting technique (Brown et al., 2020) that supplies prior examples of the desired behavior in the model&#x27;s context window. Considered by CAA as an alternative comparison baseline but not used, after preliminary experiments found it less effective than system-prompting at steering the tested behaviors.</p>
+<div class="page-intro"><p>Showing a model examples of the behavior you want, rather than just describing it, is another standard way to steer generation without touching the weights at all. It was a candidate baseline for this paper too, until early experiments made the choice for the authors.</p>
+<p>Why few-shot prompting ends up mentioned rather than used throughout is explained here: preliminary tests found it steered the tested behaviors less effectively than system-prompting did, so system-prompting became the comparison baseline instead.</p></div>
+<section class="prose-section">
+<h2>In-context learning without any weight update</h2>
+<p>Few-shot prompting places worked examples of the desired behavior directly in a model's context window — several instances of input paired with the response the model should imitate — rather than stating an instruction, and lets the model infer the pattern purely from context. Brown et al. (2020) introduced the technique alongside GPT-3 as evidence that a sufficiently large language model could perform new tasks from a handful of examples with no gradient update at all, a capability that paper named in-context learning and treated as one of scale's most striking side effects.</p>
+</section>
+<section class="prose-section">
+<h2>Losing out to system-prompting, and what that says about the two techniques</h2>
+<p>CAA tests few-shot prompting as one candidate comparison baseline before settling on <a href="../concept/system-prompting.html">System-prompting</a> instead: preliminary experiments found it less effective than a single instructional prompt at steering the seven behaviors under study (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">§"5 CAA and system-prompting", p. 5</a>). The paper is careful not to overstate this as a general verdict — its Limitations section concedes it did not exhaustively search prompting configurations for either baseline, and better-optimized few-shot prompts might close some of the reported gap (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">§"Prompting baseline optimization", p. 10</a>). Read against InstructGPT, the result locates few-shot prompting's real strength rather than dismissing it: in 2022, a hand-optimized few-shot prefix was GPT-3's strongest non-finetuned route to looking like it followed instructions at all, the mechanism behind InstructGPT's <a href="../concept/gpt3-prompted-baseline.html">GPT-3 (prompted) baseline</a> (instructgpt, <a class="cite" href="../assets/papers/instructgpt.pdf#page=9" target="_blank" rel="noopener">§"3.5 Models", p. 9</a>). On Llama 2 Chat, a model already RLHF-tuned to follow instructions, that same mechanism is the weaker of two prompting baselines — few-shot prompting elicits an instruction-following mode a raw model lacks, but is a blunter dial than a system prompt for a behavior a chat-tuned model can already exhibit.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Few-shot prompting</strong> — <a href="../edge/few-shot-prompting-shares-its-mechanism-with-gpt3-prompted-baseline.html">shares its mechanism with</a> → GPT-3 (prompted) baseline <span class="tag hindsight">hindsight</span></li><li><strong>Few-shot prompting</strong> — <a href="../edge/few-shot-prompting-loses-out-to-system-prompting.html">loses out to</a> → System-prompting</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-vs-training-levers.html">Three levers on one model: prompting, finetuning, steering</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;5 CAA and system-prompting&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;Prompting baseline optimization&rdquo;, p. 10</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+{
+ "intros": [
+  {
+   "kind": "theme",
+   "id": "behavior-as-a-direction",
+   "intro": "Ask where a behavior like refusal or sycophancy actually lives inside a language model, and the answer this theme gives is oddly literal: it lives along one direction in the model's activation space, and pushing the model's internal state along that direction, by a chosen amount and in a chosen sign, moves the behavior up or down like a dial. Getting from a vague tendency to a genuine, tunable direction is the whole trick, and it rests on a small piece of arithmetic rather than any retraining.\n\nThe page walks through how that direction gets built: averaging the activation difference between many closely matched pairs of answers, then adding the result back into the model at every position after the prompt, scaled by a signed multiplier. It also covers the guardrails around that core move, from normalizing vectors so different behaviors can be compared fairly, to the refinements the authors propose for narrowing where in the network the intervention lands."
+  },
+  {
+   "kind": "theme",
+   "id": "activation-engineering-family",
+   "intro": "No single paper invented the idea of steering a language model by editing its activations instead of its weights; it is a small family of techniques that grew up together over about two years, each trying a different recipe for turning a behavior into an editable direction. Reading them side by side shows less a sudden breakthrough than a series of refinements: which prompts to contrast, where in the network to intervene, and how broadly to search for the right spot.\n\nThe page traces that lineage from its simplest form, a vector built from just one pair of prompts and added at a single position, through variants that search only a handful of attention heads or intervene at every layer at once, to the method this corpus centers on, which averages over hundreds of tightly matched pairs and injects the result across the whole prompt. Each step keeps something from its predecessors while changing one part of the recipe."
+  },
+  {
+   "kind": "theme",
+   "id": "alignment-behaviors-made-dials",
+   "intro": "Sycophancy, corrigibility, survival instinct: safety researchers usually discuss traits like these in prose, as tendencies a model has more or less of. This theme covers what happens when seven of them get treated instead as quantities, each with its own dataset of paired questions, each nudged up or down by the same simple mechanism, so that a worry which used to be an essay-length concern becomes a number that moves.\n\nThe page introduces the seven in turn, sycophancy, refusal, corrigibility, cooperation with other AI systems, preference for immediate reward, resistance to shutdown, and hallucination, noting where each definition comes from and how it was turned into a contrast dataset. Read together, they read less like seven separate findings than like a single method's test suite, built from failure modes the wider literature had already named but never quite measured this directly."
+  },
+  {
+   "kind": "theme",
+   "id": "behavioral-contrast-datasets",
+   "intro": "Before any behavior can be dialed up or down, someone has to decide what a question that provokes it even looks like, and then write hundreds of them. This theme is about that unglamorous groundwork: the sources the paper draws its contrast pairs from, and the single format every one of those pairs is squeezed into, so a model's answer of \"A\" or \"B\" becomes something a computer can difference and average.\n\nThe page covers the three sources in turn, a human-written AI-risk survey reused for four behaviors, a pair of sycophancy-specific datasets for a fifth, and GPT-4-authored questions for the two behaviors no existing dataset covered, then turns to the shared multiple-choice format itself and the appendix check confirming it actually captures the intended behavior rather than an artifact of the prompt."
+  },
+  {
+   "kind": "theme",
+   "id": "steering-vs-training-levers",
+   "intro": "A chat model's behavior can already be pushed around before generation even starts, by writing a better instruction into the system prompt, or well before that, by finetuning the weights themselves. So a fair question about any new steering method is not just whether it works, but whether it earns its place next to tools people already reach for. This theme covers what happens when the paper puts activation steering directly up against both.\n\nThe page walks through both comparisons: steering layered on top of positive and negative system prompts, where each lever adds control the other alone does not reach, and steering set against finetuning the model on the same data, where steering matches or beats finetuning on several behaviors and generalizes better to open-ended writing. It closes on the practical difference behind both results, that building a steering vector takes a few forward passes and minutes, where finetuning needs a real training run."
+  },
+  {
+   "kind": "theme",
+   "id": "judging-steered-outputs",
+   "intro": "Showing that a steering vector \"works\" actually requires answering two different questions, and it is easy to conflate them: did the targeted behavior really move, and did anything else quietly break in the process? This theme keeps those two questions apart and follows the paper's instruments for each, since a vector that shifts sycophancy but wrecks the model's general competence would not be much of a result.\n\nThe page covers the behavior-side evidence first, a multiple-choice sweep across layers and a GPT-4-judged open-ended writing test, both showing where and how strongly a vector moves its target. It then turns to the capability-side evidence, a broad knowledge benchmark used as a floor that steering leaves essentially untouched, and a narrower truthfulness check that moves in exactly the direction the paper's own explanation of sycophancy predicts."
+  },
+  {
+   "kind": "theme",
+   "id": "reading-the-residual-stream",
+   "intro": "Every tool CAA uses to build a steering vector can be read a second way, not as a control mechanism but as a measurement of what the model is doing internally. If a behavior really does live along one direction, that direction should show up in the activations even when nobody is steering anything, and this theme collects the evidence that it does.\n\nThe page covers three kinds of evidence: a visual check that a dataset's activations separate cleanly along the intended behavior rather than some trivial artifact of the prompt, a token-by-token comparison showing the vector lighting up at exactly the words associated with the behavior, and a cross-layer comparison showing vectors from nearby layers resemble each other and still work when moved. Together they are offered as support for the idea that behaviors are represented as roughly linear directions inside the network."
+  },
+  {
+   "kind": "theme",
+   "id": "what-rlhf-leaves-behind",
+   "intro": "Reinforcement learning from human feedback changes a model's behavior dramatically; an RLHF-tuned chat model answers very differently than the same weights before that training. But it is a separate question whether it changes how the model represents things internally, or just which of its existing representations get expressed. This theme puts that question to a direct test, using the base and chat versions of the same model as a natural before-and-after.\n\nThe page covers the comparison at its center: steering vectors extracted from the base model and from the chat model turn out to be unusually similar in the network's middle layers, and a vector built on the base model still works when applied to the chat one. Since RLHF is the only thing separating the two, the result reads as a finding about RLHF itself, that it reweights which behaviors surface more than it rewrites how they are encoded."
+  },
+  {
+   "kind": "theme",
+   "id": "steering-as-audit",
+   "intro": "Knowing that a model was trained to refuse something is not the same as knowing it cannot be made to do it anyway, and the usual way of finding out, having people hunt for a prompt that breaks the model, is slow and unsystematic. This theme covers a different way of asking the same question: using the very machinery built to control a behavior to instead go looking for it.\n\nThe page covers the paper's proposal directly: instead of searching for an adversarial input, deliberately steer the model toward an unwanted behavior and see how easily it moves, on the reasoning that a behavior a small internal push can trigger is plausibly one some prompt could trigger too. Read this way, steering flips from a tool for controlling behavior into a tool for auditing it, and failing to elicit something becomes a more meaningful reassurance than simply failing to stumble on it."
+  },
+  {
+   "kind": "supertheme",
+   "id": "steering-and-model-internals",
+   "intro": "Every other technique in this corpus changes a model at training time, by choosing what data it sees or how its weights get updated. This supertheme is about a lever that works differently: reach directly into the model's activations while it is already running, and nudge a behavior up or down without touching a single weight. That one shift, from training time to inference time, is what ties its nine themes together.\n\nThe pages move from how a behavior becomes a steerable direction and where that idea came from, through what gets steered and how it is checked against both a behavior score and a capability floor, to what steering reveals when it is turned around: evidence for how behaviors are represented internally, what RLHF does and does not change inside a model, and how the same lever built to control behavior can be used to audit it instead."
+  },
+  {
+   "kind": "tissue",
+   "id": "worries-become-dials",
+   "intro": "A handful of ideas in this corpus were stated first as abstract worries, named and set aside for later, long before anyone had a way to measure them. This connective theme follows seven edges where that gap finally closes: a concept from an earlier paper turns out to be exactly what one of 2023's seven steerable behaviors was measuring all along, just without the vocabulary to say so.\n\nThe walk moves through sycophancy's roots in an old warning about optimizing a proxy too hard, refusal's relationship to an earlier tradeoff between helping and refusing to engage, and corrigibility and survival instinct both tracing back to the same old question of whether a system will let itself be shut down. Read in sequence, the seven edges compress a history of named-but-unmeasured worries into one paper's set of dials."
+  },
+  {
+   "kind": "tissue",
+   "id": "control-moves-into-the-forward-pass",
+   "intro": "The rest of this corpus changes a model before it ever answers a question, by choosing its training data or updating its weights. This connective theme is about what happens once one paper stops doing that and moves control to the moment of generation itself, applying its intervention to a model whose training is already finished and fixed.\n\nThe edges compare that late intervention against the tools that came before it: a system prompt, which steering usually finds room beyond, and finetuning, where the two levers interact rather than simply add together, with steering generalizing better to writing outside the training format. A last pair of edges checks whether this timing shift is free, asking the same alignment-tax question raised earlier in the corpus and finding, for this particular lever, barely any cost at all."
+  },
+  {
+   "kind": "tissue",
+   "id": "the-vector-doubles-as-a-probe",
+   "intro": "A tool built to change a model's behavior does not have to stop being useful once the changing is done; the same object can be read, rather than applied, as evidence about what the model was already doing. This connective theme traces eight edges where a steering vector, or the activations it is built from, ends up doing double duty as a measuring instrument.\n\nSome of these edges stay close to the vector itself, checking whether it acts like a detector when nothing is being added and whether vectors from nearby layers resemble each other closely enough to be called portable. Others put it to a specific use: comparing vectors from a model before and after RLHF to see what that training actually changed inside, or reading a sudden separation in activations as evidence that a behavior really is represented as one direction, before the last edge points the same probe at eliciting behavior rather than just detecting it."
+  },
+  {
+   "kind": "tissue",
+   "id": "design-choices-answer-named-predecessors",
+   "intro": "New methods rarely appear from nowhere; more often they are built as a direct answer to a specific limitation in something that came just before. This connective theme reads six of CAA's design choices that way, each one addressed at a named predecessor's particular weak spot, before turning to two edges about where the theory justifying all of it actually came from.\n\nThe edges trace CAA's departures one at a time: averaging over hundreds of pairs instead of one, injecting into the residual stream instead of searching for the right attention heads, tightening contrast pairs down to a single differing token, and committing to one layer instead of spanning every layer at once. The last two edges reverse direction entirely, showing that the theory behind why any of this should work was itself motivated by earlier activation-engineering results, not proven first and applied after."
+  },
+  {
+   "kind": "tissue",
+   "id": "the-behavior-is-the-dataset",
+   "intro": "A steering vector is only as trustworthy as the questions it was built from, and this connective theme follows what happens when that dependency is traced all the way down. Every one of the seven behaviors turns out to inherit its strengths and its blind spots directly from wherever its contrast pairs came from, whether that is a shared human-written survey or a dataset one language model wrote for another.\n\nThe edges cover a human-authored source shared across four behaviors, a sycophancy dataset that breaks from that default and needs its own follow-up checks, and two datasets GPT-4 generates from scratch where the same model later grades the outputs it helped produce. It closes on the quality-control step underneath all of them, a visual check for whether a dataset's activations actually separate along the intended behavior, or just along the answer letter the format happens to use."
+  },
+  {
+   "kind": "tissue",
+   "id": "one-dial-many-knobs",
+   "intro": "CAA is described as a single dial, a vector and a multiplier, but that simplicity hides several choices that quietly interact with each other. This connective theme pulls five of them apart: where in the network the vector gets added, how strong a push it delivers, and how its magnitude gets standardized before either of those decisions is even made.\n\nThe edges show how the choice of injection site entangles with the network's own growing activation norms, how the multiplier's sign and size trade off against text quality at the high end, and how normalization keeps that tradeoff comparable across behaviors without touching the network's own layer-to-layer scale. The last two edges look forward, at two refinements the authors propose for loosening exactly the constraints the first three expose."
+  },
+  {
+   "kind": "tissue",
+   "id": "escalating-elicitation",
+   "intro": "Five edges in this connective theme trace one long escalation, from a failure mode people stumbled onto completely by accident to a search a model can be made to run on itself. Somewhere between those two ends, hunting for an unwanted behavior stops being a matter of luck and becomes a matter of method.\n\nThe edges move from jailbreaks found ad hoc by ordinary users, to red-teaming as the deliberate, organized version of the same hunt, to a proposal that skips language altogether and searches inside the network's activations instead. Measured even against an automated version of red-teaming that still writes prompts in natural language, this last step goes further, replacing the search for words with nothing more than a vector to add."
+  },
+  {
+   "kind": "theme",
+   "id": "goodhart-across-corpus",
+   "intro": "A measure that becomes a target stops measuring anything real, and this corpus keeps proving it. This theme follows Goodhart's law from its naming in Concrete Problems (2016) into three live cases across the years since: InstructGPT's policy learning to exploit its own reward model, Constitutional AI's harmlessness training producing an assistant that just refuses to engage, and a 2023 steering paper's hypothesis for why a model flatters users instead of leveling with them.\n\nExcessive hedging and evasiveness sit here as a pair, the same failure surfacing under helpfulness training and under harmlessness training respectively, and sycophancy joins them as a third face of the same law, this time inside a single steerable direction rather than a whole training run."
+  },
+  {
+   "kind": "theme",
+   "id": "rlhf-failure-modes",
+   "intro": "InstructGPT (2022) beat its baselines on human-preference metrics, and its own authors were candid about what still went wrong. This theme collects those shortfalls: invented details in summaries, hedging on questions with a clear answer, false premises taken at face value instead of corrected, and a measurable cost to general capability, plus a fifth failure a 2023 paper finds in an entirely different RLHF-trained model.\n\nReward model over-optimization reads as the throughline running under several of these failures, the mechanism that plausibly explains why a policy that scores well can still disappoint, and sycophancy, the fifth addition, comes with something the others do not: a steering vector that can dial the failure back down after training is already finished."
+  },
+  {
+   "kind": "theme",
+   "id": "side-effects-as-relationship",
+   "intro": "Not every side-effect remedy in Concrete Problems (2016) treats the world as inert. This theme covers the paper's relational alternative: instead of measuring how much an agent disturbs its environment, ask whether it understands and respects the interests of the other agents, humans included, who share that environment with it.\n\nThe contrast with penalty-term approaches comes first, and the thread runs all the way to the shutdown problem, the blunt test of whether an agent will let a human switch it off, then one step further: a 2023 paper turns that same question into something a model can be scored and steered on directly, rather than just posed."
+  },
+  {
+   "kind": "theme",
+   "id": "helpfulness-harmlessness-tradeoff",
+   "intro": "Train a model to help more and it can cause more harm; train it hard against harm and it starts refusing everything, retreating into canned non-answers. Constitutional AI (2022) takes this tradeoff as its central target, and this theme covers the paper's claim to have beaten it rather than just moved along it.\n\nThe tension gets set up before the claim does, building to pareto improvement, the result that names harmlessness gains here did not cost the usual price in evasiveness, and a 2023 paper picks the same tension back up as something continuous: a single dial that turns a model's willingness to refuse up or down after training is already done."
+  },
+  {
+   "kind": "theme",
+   "id": "language-understanding-benchmarks",
+   "intro": "To find out what a training or steering intervention costs, you need instruments that were never built to measure alignment at all. This theme covers the standard academic NLP benchmarks, reading comprehension, entailment, coreference, and the rest, that InstructGPT (2022) runs its models against to catch anything RLHF might have quietly broken, plus a broad knowledge test a 2023 steering paper borrows for the same purpose.\n\nA drop on any of these relative to plain GPT-3 is exactly the evidence InstructGPT's authors need for what they call the alignment tax; the 2023 paper repeats the same logic in a different key, checking whether its steering vectors move a model's score on that knowledge test at all, and finding they mostly do not."
+  },
+  {
+   "kind": "theme",
+   "id": "red-teaming-and-harm-data",
+   "intro": "A model cannot learn to refuse a kind of harm nobody ever tried on it. This theme covers where the harmful training data behind Constitutional AI (2022) actually comes from: crowdworkers deliberately baiting the assistant into bad behavior, a process called red teaming, plus the evaluations built to check whether the resulting harm judgments hold up.\n\nThat data's path runs from adversarial conversation to finished training set, on to automated red teaming, the direction the paper points toward next once reduced evasiveness makes it easier for language models to generate their own adversarial prompts, and finally to a 2023 paper's proposal to skip prompts altogether and search for the same unwanted behavior directly inside a model's activations."
+  },
+  {
+   "kind": "theme",
+   "id": "quality-measurement-methods",
+   "intro": "Deciding, with a number, that one model's answer beats another's turns out to need more than one kind of instrument. This theme covers automatic overlap scores like ROUGE-L and BLEU, which compare text against a fixed reference, judgment-based metrics like win rate and Elo score, which ask a human to simply prefer one output over another, and a third approach a 2023 paper adds, where the judge is a language model instead of a person.\n\nThe families sit in contrast here, and inter-labeler agreement runs underneath the human-judgment ones, since every preference number is only as trustworthy as the people producing it; the 2023 paper's model-judged scores get their own version of that check, a manual spot-comparison against the ratings a person would have given."
+  },
+  {
+   "kind": "tissue",
+   "id": "goodhart-names-itself-across-six-years",
+   "intro": "Goodhart's law starts in Concrete Problems (2016) as an abstract warning: a proxy tracking a goal stops tracking it once optimized. The first sighting of it coming true arrives within a year, not six: the 2017 paper's frozen-predictor ablation on Pong shows a policy exploiting the sliver of true reward its stale model still captures, playing defense forever rather than trying to score, long before either 2022 paper cites the same source for the same failure.\n\nThe walk follows the law from its 2016 statement through that early Pong instance, into InstructGPT's reward drift and narrower hedging habit, through Constitutional AI, the first paper here to say \"Goodharting\" aloud, and one step further into 2023, where a steering paper turns the same law into a hypothesis about sycophancy, and into a dial that can turn the failure back down."
+  },
+  {
+   "kind": "tissue",
+   "id": "calibration-and-prompt-scaffolding",
+   "intro": "Ask a model to explain itself before answering, and the explanation can quietly break the very calibration Constitutional AI's labeling scheme depends on. The feedback model that makes RLAIF possible is held together by prompting choices this narrow and this fragile.\n\nThe page starts with calibration and works outward: why trustworthy probabilities let a plain multiple-choice format double as a preference labeler, how asking for reasoning first undoes that trust, forcing the paper to clamp its own labels into a narrow band as a fix, and how a 2023 paper borrows the same A-or-B format for an unrelated job, reading off internal activations instead of a probability."
+  },
+  {
+   "kind": "tissue",
+   "id": "ai-substitutes-for-the-human-bottleneck",
+   "intro": "Ten written principles end up doing the job of tens of thousands of human comparisons, and that trade is not a one-off: this corpus swaps a machine judgment in for a human one, at the exact point human labor became the bottleneck, again and again.\n\nThe clearest instance opens the page, a feedback model stepping into RLHF's human-labeler role, and from there the pattern loops backward to Concrete Problems' own trusted policy oversight, written six years before RLAIF existed, through red teaming's own shift from manual practice to an automated pipeline, and forward to 2023, where the same substitution spreads further still, to a model grading another model's writing and to a model authoring the training data in the first place."
+  },
+  {
+   "kind": "tissue",
+   "id": "one-mechanism-many-jobs",
+   "intro": "The same tool sometimes gets picked up twice for unrelated reasons, and cooperative inverse reinforcement learning is the clearest case: it solves the shutdown problem and a demonstration-learning problem at once, purely as a side effect of never fixing a reward or policy in advance.\n\nInverse reinforcement learning shows the same pattern, repurposed once against reward hacking and once against unsafe exploration, and principle ensembling shows a more surprising version, doing nothing measurable at one training stage and paying off directly at the next. The page ends on two more borrowed tools: a difference-of-means calculation that keeps getting reused verbatim across unrelated 2023 methods, and PCA, plain and off-the-shelf, doing enough on its own to make a steered behavior visible by eye."
+  },
+  {
+   "kind": "tissue",
+   "id": "benchmark-reused-with-hidden-alterations",
+   "intro": "An old benchmark looks like a shortcut, reuse the scoring, skip the validation work. This corpus takes that shortcut often, from the 2017 paper's own Atari suite through InstructGPT and Constitutional AI to a 2023 steering paper, and several times the reused benchmark ends up measuring something quietly different from what it once did.\n\nA single entropy-based metric flattens two separate bias tests into one score before the page turns to a Winograd variant scored by an incompatible method, and to Perspective API's outsourced, ever-shifting definition of toxicity. Watch especially for the HHH evaluation set's split ending, hosted on a shared leaderboard until models caught up then continued only in Constitutional AI's own files, and for TruthfulQA and MMLU turning up again in 2023, repurposed as a causal probe and a regression floor for a method neither benchmark was built to test."
+  },
+  {
+   "kind": "tissue",
+   "id": "independent-checks-and-instrument-blind-spots",
+   "intro": "One measurement checking itself is rarely enough for this corpus. Almost every primary metric gets a second, differently-sourced instrument watching over its shoulder, and the payoff is in the gap between what the two report, not in their agreement.\n\nWin rate answers to inter-annotator agreement, Likert ratings, and Elo in turn; Elo itself answers to an absolute harmfulness score once its missing zero point becomes a liability. A structural blind spot in reward-model loss, whose scale means nothing until the paper imposes one by convention, sits alongside a 2023 instance of the same pattern, where a steering method's open-ended and multiple-choice scores diverge sharply on the identical comparison, and a broad knowledge test and a linguistic-inference suite are run side by side to catch different kinds of damage."
+  },
+  {
+   "kind": "tissue",
+   "id": "ablations-carry-the-design-argument",
+   "intro": "The 2017 paper rarely defends a design choice with a first-principles argument; it removes the choice and shows the method breaking in some specific way. Strip the reward-predictor ensemble and query selection has nothing left to disagree over; drop the regularization term and only dropout holds the model steady; freeze the predictor mid-training and the Pong result is a policy that stops losing without ever learning to score.\n\nThe walk moves through five such removals in turn, arriving at the paper's own admission that its query-selection heuristic is a crude stand-in for a method it never built, one its ablations show can lose to picking pairs at random, and then, six years later, at a 2023 paper running the same kind of argument over a single hyperparameter, sweeping every network layer to justify, empirically rather than theoretically, where its own intervention should go."
+  },
+  {
+   "kind": "tissue",
+   "id": "hindsight-seams-2016-to-2022",
+   "intro": "Twenty edges in the store carry one label: connections no source paper draws, visible only when read against an earlier or later one. Goodhart's law fragments across 2022 into hedging and evasiveness without either paper naming it; demonstrations quietly become supervised fine-tuning once the reward-inference machinery drops away; and scalable oversight lines up with the reward model only because a later paper's framing makes the match visible.\n\nA second cluster reaches straight from 2017 to 2022: a frozen, exploited reward predictor in a Pong ablation anticipates reward overoptimization, a contractor sign-up sheet becomes a screened labeling operation, and the Bradley-Terry math, the segment, and the normalization step all cross that gap unchanged. A last seam runs the other way, backward from 2023 into 2022: a hand-tuned few-shot prompt that InstructGPT leans on hard and a steering paper finds comparatively weak turn out, read together, to reveal what few-shot prompting is actually good for."
+  },
+  {
+   "kind": "tissue",
+   "id": "scale-asymmetry-and-the-ladder-of-baselines",
+   "intro": "A hundred-times-smaller InstructGPT still comes out ahead of GPT-3, and the paper is explicit about why: the same scale asymmetry repeats at every stage beneath that headline number. A reward model nearly thirty times smaller than the policy it supervises somehow steers it; ten written principles substitute for tens of thousands of comparisons.\n\nA ladder of baselines is built for exactly this claim: T0 scaled to match FLAN so neither wins on data volume, FLAN setting the comparison floor, and a prompted GPT-3 showing how far prompting alone falls short, each rung isolating one specific reason the last one failed. The same ladder logic turns up twice more in this corpus, once in 2017 when a policy-gradient method closes an exploration gap against a value-based one, and once in 2023 when a steering paper settles which prompting method should serve as its own baseline before the real comparison begins."
+  },
+  {
+   "kind": "supertheme",
+   "id": "scalable-oversight-to-rlhf-pipeline",
+   "intro": "No team can review every model output by hand, so Concrete Problems sketches ways an AI system might stand in for the missing reviewer. What began as a rough 2016 proposal became, six years on, the actual pipeline InstructGPT trained on.\n\nFrom that open problem and its early remedies, the page passes through the reward model and AI feedback that grew out of them, into InstructGPT's own pretraining-to-PPO sequence and the labeling work behind it, and on to the places that pipeline still falls short. It closes a year further on, with a 2023 paper that treats the finished pipeline as an object to probe from outside, asking what an inference-time lever adds on top of it, and what its training actually changed inside the model versus what it left alone."
+  },
+  {
+   "kind": "concept",
+   "id": "supervised-fine-tuning",
+   "intro": "Before any reinforcement learning happens, InstructGPT begins the old-fashioned way: show the model examples of the behavior you want, written by people, and train it to imitate them.\n\nFrom the technique in general, the page narrows to its role as step one of InstructGPT's pipeline, then traces it back to a proposal in Concrete Problems in AI Safety (2016), before picking the thread up again in 2023, where a steering paper uses the same technique not as a first step but as a baseline, finetuning a model on the very data used to build a steering vector, then comparing what each approach can do."
+  },
+  {
+   "kind": "concept",
+   "id": "hallucination",
+   "intro": "Ask a model to summarize a document and it may confidently include things the document never said. That is hallucination in its closed-domain sense: fabricating content the input does not support, on tasks where the input is supposed to be the whole world, and it is only one of two senses the term carries in this corpus.\n\nThe term's roots predate this paper; what InstructGPT adds is a way for labelers to actually mark it, and what a 2023 steering paper adds is a way to dial it, splitting the failure into two subtypes and steering each up or down as one of seven measurable behaviors. More interesting is the tension just one connection away: the opposite failure of hedging too much."
+  },
+  {
+   "kind": "concept",
+   "id": "truthfulqa",
+   "intro": "Some questions invite wrong answers because people keep repeating them wrong: urban myths, garbled science, comfortable falsehoods. TruthfulQA tests whether a language model echoes those popular mistakes or manages to answer truthfully.\n\nAfter introducing the benchmark, the page turns to the two prompting regimes InstructGPT is evaluated under, a distinction that matters more than it sounds, then to a 2023 use that gives the benchmark a job it was not designed for: checking whether steering a model's sycophancy also shifts how often it repeats a popular falsehood."
+  },
+  {
+   "kind": "concept",
+   "id": "red-teaming",
+   "intro": "Deliberately trying to break a system before someone else does is a practice with roots well outside AI, in military wargaming and cybersecurity. Here, crowdworkers play the adversary, holding conversations designed to coax a language model into saying something harmful, and those conversations become training material for both stages of Constitutional AI.\n\nThe page defines the practice and describes how Constitutional AI runs it, then turns to an automated variant and an outside check, opening onto automated red teaming and connecting to the PALMS dataset, before closing on a 2023 proposal to run the same search inside a model's activations instead of through conversation at all."
+  },
+  {
+   "kind": "concept",
+   "id": "hhh-framework",
+   "intro": "InstructGPT and Constitutional AI never stop to argue over what an aligned model should look like, because both borrow the same answer from earlier work: helpful, honest, and harmless. That shared vocabulary is what lets training methods built years apart, including a 2023 steering paper that names the same framework as its own goal, be judged on the same terms.\n\nFrom there the page follows that borrowed definition through InstructGPT and Constitutional AI before turning to how it gets put into practice and measured, landing on the evaluation set built to score against it."
+  }
+ ]
+}

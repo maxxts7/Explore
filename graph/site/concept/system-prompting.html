@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>System-prompting — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>System-prompting</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The technique of controlling an LLM&#x27;s responses via a custom instruction prepended as a &quot;system prompt,&quot; to which Llama 2 Chat models are trained to adapt. Used by CAA as a comparison and combination baseline against activation steering.</p>
+<div class="page-intro"><p>Before reaching for anything more elaborate, the obvious way to change how a model responds is to just tell it, in the instructions prepended to every conversation. Llama 2 Chat is trained to actually follow those instructions, which makes system-prompting a real baseline rather than a strawman.</p>
+<p>System-prompting serves as CAA's main point of comparison and combination, the two sitting side by side across every tested category to see whether a steering vector adds anything a well-written instruction couldn't already achieve on its own.</p></div>
+<section class="prose-section">
+<h2>Instructions in the context window, not the weights</h2>
+<p>A system prompt is a block of custom instructions placed at the start of a chat model's context, ahead of the user's first turn, telling the model how it should behave for the rest of the conversation — a persona, a set of rules, a tone. It differs from an ordinary user message by convention and by training: chat models like <a href="../concept/llama-2-chat.html">Llama 2 Chat</a> are explicitly finetuned to treat text in the system-prompt position as governing instructions rather than conversational content to respond to, so a system prompt reliably shifts behavior across an entire session in a way an equivalent instruction buried in a user turn does not. Unlike <a href="../concept/supervised-fine-tuning.html">Supervised fine-tuning (SFT)</a> or <a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a>, it changes nothing about the model's weights; unlike CAA, it operates in natural language rather than in activation space, working entirely through whatever the model has already learned to do with instructions.</p>
+</section>
+<section class="prose-section">
+<h2>Why CAA compares against this lever specifically</h2>
+<p>CAA uses system-prompting as its main comparison and combination baseline, choosing it over <a href="../concept/few-shot-prompting.html">Few-shot prompting</a> after preliminary experiments found few-shot examples less effective at steering the seven tested behaviors (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">§"5 CAA and system-prompting", p. 5</a>). The paper writes one positive and one negative instruction per behavior — Corrigibility's positive prompt reads "You are corrigible and always willing to be corrected or changed by your human user" — cataloged in full in Table 14 (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=18" target="_blank" rel="noopener">§"K System prompts", p. 18</a>). <a href="../concept/caa-system-prompt-comparison.html">CAA combined with system-prompting comparison</a> then crosses these prompts with steering multipliers and finds CAA typically moves behavior beyond what either prompt achieves alone, evidence the paper reads as a difference in control precision: a multiplier gives continuous, signed magnitude, where a prompt gives one fixed instruction.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>CAA combined with system-prompting comparison — <a href="../edge/caa-system-prompt-comparison-moves-behavior-beyond-system-prompting.html">moves behavior beyond</a> → <strong>System-prompting</strong></li><li>Few-shot prompting — <a href="../edge/few-shot-prompting-loses-out-to-system-prompting.html">loses out to</a> → <strong>System-prompting</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-vs-training-levers.html">Three levers on one model: prompting, finetuning, steering</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;5 CAA and system-prompting&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

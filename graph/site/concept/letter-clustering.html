@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Letter clustering — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Letter clustering</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (&quot;A&quot; or &quot;B&quot;) they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering.</p>
+<div class="page-intro"><p>Project a dataset's activations with PCA and a split will appear almost no matter what, because the multiple-choice format itself guarantees one: every prompt ends in either the letter A or B, and that alone is enough to separate the activations into two groups. The question is whether that split means anything.</p>
+<p>Separating that superficial artifact from the more meaningful behavioral clustering it can be confused with is the point of what follows, along with why the two get treated as distinct signals when judging whether a contrastive dataset is any good.</p></div>
+<section class="prose-section">
+<h2>The split you get for free</h2>
+<p>Letter clustering is the separation that shows up in a PCA projection of CAA's contrastive-dataset activations no matter what the dataset is about. Because every prompt pair in the <a href="../concept/multiple-choice-contrast-pair-format.html">Multiple-choice contrast-pair format</a> ends with the answer token "A" or "B", and activations are extracted at exactly that token position, projecting them onto two principal components will always split the data into two groups corresponding to which letter is present: "activations can always be separated based on which token ('A' or 'B') they originate from ('letter clustering')" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"3.2 Visualizing activations for contrastive dataset analysis", p. 4</a>). The paper is careful to name this and set it aside as the null result to expect, not the signal being searched for.</p>
+</section>
+<section class="prose-section">
+<h2>The confound behavioral clustering has to be checked against</h2>
+<p>The reason letter clustering needs its own name, rather than being a footnote, is that <a href="../concept/caa-steering-vector-construction.html">CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</a> differences activations at exactly this same answer-letter position when it builds a steering vector. Without a separate check for <a href="../concept/behavioral-clustering.html">Behavioral clustering</a> -- separation by whether the chosen answer matches the target behavior, not merely by which letter it is -- there would be no way to tell whether a resulting Mean Difference vector encodes the intended behavior or simply the distinction between the tokens "A" and "B". A dataset can show letter clustering alone, with no behavioral split at all, which is exactly the failure mode <a href="../concept/activation-pca-visualization.html">PCA visualization of contrastive activations</a> is meant to catch before a vector is built and used.</p>
+</section>
+<section class="prose-section">
+<h2>A consequence of the format, not the behavior</h2>
+<p>Letter clustering would appear in a PCA projection of any dataset built in the <a href="../concept/multiple-choice-contrast-pair-format.html">Multiple-choice contrast-pair format</a>, not just CAA's seven behavioral datasets -- it reflects the tokenizer's encoding of "A" versus "B" at the answer position, which has nothing to do with sycophancy, refusal, or any other target behavior. That is precisely why it functions as a useful negative control: a split that always fires regardless of dataset content sets a baseline against which the presence or absence of behavioral clustering can be judged. If a new dataset showed only letter clustering and no behavioral split at any layer, that would be evidence the dataset fails to elicit the intended behavior distinction, rather than evidence about the model's representations.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/activation-pca-visualization.html">PCA visualization of contrastive activations</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Letter clustering</strong> — <a href="../edge/letter-clustering-is-the-confound-for-behavioral-clustering.html">is the confound for</a> → Behavioral clustering</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/reading-the-residual-stream.html">Steering doubles as interpretability</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;3.2 Visualizing activations for contrastive dataset analysis&rdquo;, p. 4</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

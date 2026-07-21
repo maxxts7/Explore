@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Activation Addition (ActAdd) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Activation Addition (ActAdd)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior steering technique (Turner et al., 2023) that generates a steering vector from the activation difference of a single pair of prompts and adds it at the first token position of other forward passes; tested only on GPT-2-XL. CAA is directly modeled on and contrasted with this method.</p>
+<div class="page-intro"><p>Before CAA, there was a simpler version of the same idea: take one pair of prompts, one showing a behavior and one not, subtract their activations, and add the result back in at the very first token of a new generation. It worked, sometimes, on GPT-2-XL, but a single pair of prompts carries a lot of incidental noise along with whatever behavior it's meant to capture.</p>
+<p>Activation Addition is the direct ancestor CAA is modeled on and departs from, and the departures are specific: an average over hundreds of prompt pairs instead of one, and a vector injected across every token position after the prompt instead of just the first.</p></div>
+<section class="prose-section">
+<h2>A steering vector from one prompt pair</h2>
+<p>Activation Addition (ActAdd) is the earliest technique in the <a href="../concept/activation-engineering.html">Activation engineering / representation engineering (technique family)</a> family and the one Contrastive Activation Addition (CAA) is most directly modeled on. Turner et al. (2023) build a single steering vector by running a model on one pair of prompts -- one exhibiting a behavior, one not -- extracting the intermediate activations of both at a chosen layer and token position, and taking their difference. That difference vector is then added back into the residual stream, but only at the first token position of subsequent forward passes, nudging the model's completions toward or away from the behavior. It is a minimal recipe: no dataset, no averaging, just one contrast and one injection point. The paper is explicit about where this minimalism breaks down: ActAdd "does not consistently work for different behaviors, is not robust to different prompts, and was only tested on GPT-2-XL" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>), a much smaller and non-RLHF-trained model than the Llama 2 Chat models CAA targets.</p>
+</section>
+<section class="prose-section">
+<h2>What CAA keeps and what it changes</h2>
+<p>CAA states plainly that "our technique is similar to Activation Addition" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>) -- both add a difference-of-activations vector back into the forward pass -- but it changes three things at once. First, the source of the vector: instead of one prompt pair, <a href="../concept/caa-steering-vector-construction.html">CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</a> averages over hundreds of contrast pairs per behavior, which "reduces noise in the steering vector, allowing for a more precise encoding of the behavior of interest" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>). Second, where the vector is applied: rather than only the first token position, CAA adds it "to all and only token positions after the original prompt" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>). Third, the breadth of validation: seven alignment-relevant behaviors across two RLHF-trained chat models, rather than one model and inconsistent results. Each change targets a specific place where the single-pair recipe was fragile.</p>
+</section>
+<section class="prose-section">
+<h2>One entry in a larger family</h2>
+<p>ActAdd sits alongside <a href="../concept/inference-time-intervention.html">Inference-Time Intervention (ITI)</a>, <a href="../concept/representation-engineering-zou.html">Representation Engineering (Zou et al. 2023)</a>, and <a href="../concept/in-context-vectors.html">In-Context Vectors (ICV)</a> as instances of the same underlying move: perturb a model's activations directly, rather than retrain it, to shift a targeted behavior. The paper's introduction names them together as "the set of alignment techniques known as 'activation engineering' or 'representation engineering'... work by making targeted perturbations to a model's activations" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"1 Introduction", p. 2</a>). All four produce or consume a <a href="../concept/steering-vector.html">Steering vector</a>. What distinguishes ActAdd within that family is chronological and methodological priority: it is the simplest possible version of the idea, against which every later refinement -- CAA's dataset averaging, ITI's head-localization, RepE's broader representation-reading program -- can be read as a fix to a specific limitation of the single-pair recipe.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs) — <a href="../edge/caa-steering-vector-construction-refines-the-single-pair-recipe-of-activation-addition.html">refines the single pair recipe of</a> → <strong>Activation Addition (ActAdd)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/activation-engineering-family.html">The activation engineering family: from single pairs to datasets</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 Related work&rdquo;, p. 2</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

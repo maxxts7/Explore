@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The specific procedure for building a CAA steering vector: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L residual stream activations at the answer-letter token position for both completions and average their difference over the whole dataset (Equation 1).</p>
+<div class="page-intro"><p>A steering vector is only as good as the noise it cancels out. Take the activation difference from a single pair of prompts and you inherit whatever idiosyncrasies happened to distinguish that one pair; average the same difference over hundreds of matched pairs instead, and what's left is a cleaner signal for the behavior itself rather than the sentence that happened to carry it.</p>
+<p>The mechanics get worked through here: a dataset of paired positive and negative completions turns into layer-by-layer activation differences at the exact token position of the answer letter, then those differences are averaged into the single vector CAA adds back into the model.</p></div>
+<section class="prose-section">
+<h2>What gets fed into an existing formula</h2>
+<p>This concept is not a new extraction algorithm; it is a specific set of inputs to one that already existed. <a href="../concept/mean-difference-method.html">Mean Difference (MD) vector extraction</a> was already in use elsewhere — Zou et al. and Li et al. had both applied it before this paper (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>). What construction contributes is what gets fed into that shared machinery: a dataset $D$ of hundreds of <a href="../concept/multiple-choice-contrast-pair-format.html">Multiple-choice contrast-pair format</a> triples $(p, c_p, c_n)$, a chosen layer $L$, and one fixed token position, the appended answer letter. Equation 1 assembles these: $v_{MD} = \frac{1}{|D|}\sum_{p,c_p,c_n \in D} a_L(p, c_p) - a_L(p, c_n)$ (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>) — for every pair, take the residual-stream activation at the answer-letter position under each completion, subtract, and average across the whole dataset. The paper states plainly that "this method of extracting the difference vector is called Mean Difference (MD)" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>); the contribution here sits entirely in the dataset, layer, and token position chosen for <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a>, not in new arithmetic.</p>
+</section>
+<section class="prose-section">
+<h2>Why the pairs have to differ by exactly one token</h2>
+<p><a href="../concept/multiple-choice-contrast-pair-format.html">Multiple-choice contrast-pair format</a> is what makes the averaged difference clean rather than noisy. Because the positive and negative prompts in a pair are identical up to the final answer letter, topic, phrasing, and question content contribute equally to both activations being subtracted, so "we isolate the internal representation most related to the target behavior while canceling out other confounding variables" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>). Before any vector is actually built, <a href="../concept/activation-pca-visualization.html">PCA visualization of contrastive activations</a> screens whether a dataset's activations even separate by the behavior at a candidate layer, described as useful "for determining whether a dataset will enable the generation of effective steering vectors" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"3.2 Visualizing activations for contrastive dataset analysis", p. 4</a>) — a check that precedes construction rather than following it.</p>
+</section>
+<section class="prose-section">
+<h2>Refining a single pair into an average over hundreds</h2>
+<p>The recipe is explicitly modeled on Turner et al.'s <a href="../concept/activation-addition.html">Activation Addition (ActAdd)</a> but changes three things at once: it averages over hundreds of contrast pairs per behavior instead of one, which "reduces noise in the steering vector, allowing for a more precise encoding of the behavior of interest"; it adds the result to every token position after the prompt rather than only the first; and it is validated across seven behaviors on RLHF-trained chat models rather than GPT-2-XL alone (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">§"2 Related work", p. 2</a>). <a href="../concept/inter-layer-similarity-and-transfer.html">Inter-layer steering vector similarity and transfer</a> later shows this construction isolates something more general than a layer-13-specific artifact: vectors built at nearby layers resemble each other, and a layer-13 vector still steers behavior when applied elsewhere, up to a steep drop-off around layer 17.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</strong> — <a href="../edge/caa-steering-vector-construction-refines-the-single-pair-recipe-of-activation-addition.html">refines the single pair recipe of</a> → Activation Addition (ActAdd)</li><li>Inter-layer steering vector similarity and transfer — <a href="../edge/inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction.html">demonstrates the generality of</a> → <strong>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</strong></li><li>Mean Difference (MD) vector extraction — <a href="../edge/mean-difference-method-supplies-the-extraction-rule-for-caa-steering-vector-construction.html">supplies the extraction rule for</a> → <strong>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</strong></li><li>Multiple-choice contrast-pair format — <a href="../edge/multiple-choice-contrast-pair-format-cancels-the-confounders-in-caa-steering-vector-construction.html">cancels the confounders in</a> → <strong>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</strong></li><li>PCA visualization of contrastive activations — <a href="../edge/activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction.html">screens datasets for</a> → <strong>CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3 Method&rdquo;, p. 3</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

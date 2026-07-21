@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Base vs. RLHF-chat model representation comparison — measures the effect of → Reinforcement learning from human feedback (RLHF) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Base vs. RLHF-chat model representation comparison — measures the effect of → Reinforcement learning from human feedback (RLHF)</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> &middot; explored within the theme <a href="../theme/what-rlhf-leaves-behind.html">Base versus chat: what RLHF changes inside</a></p>
+<section class="prose-section"><p>RLHF is normally studied from the outside, through the outputs it changes. base-chat-representation-comparison instead asks what RLHF leaves alone on the inside: steering vectors are generated separately from Llama 2 7B base and Llama 2 7B Chat activations, then compared by cosine similarity layer by layer. Similarity decays with layer distance as expected, except for a distinct peak between layers 7 and 15, where the base and chat representations stay unusually close -- "this surprising trend indicates that RLHF has a smaller effect on how information is represented between layers 7 and 15" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 7</a>). Vectors extracted from the base model's activations then transfer significant steering effect onto the RLHF-tuned chat model, especially between layers 10 and 15 (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 9</a>). Read together, this is the corpus's first direct measurement of what RLHF does to a model's internals rather than its outputs: it appears to re-weight which behaviors get expressed downstream while leaving the mid-network representation of those behaviors largely intact.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/base-chat-representation-comparison.html">Base vs. RLHF-chat model representation comparison</a> and <a href="../concept/rlhf.html">Reinforcement learning from human feedback (RLHF)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/the-vector-doubles-as-a-probe.html">The steering vector doubles as a measuring instrument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3 Method&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 9</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/instructgpt.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;3.1 High-level methodology&rdquo;, p. 6</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2212.08073" target="_blank" rel="noopener">Constitutional AI: Harmlessness from AI Feedback</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/constitutional-ai.pdf#page=14" target="_blank" rel="noopener">&sect;&ldquo;5 Related Work&rdquo;, p. 14</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/1706.03741" target="_blank" rel="noopener">Deep Reinforcement Learning from Human Preferences</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/deep-rl-human-prefs.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;2.2 Our Method&rdquo;, p. 4</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

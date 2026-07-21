@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Steering at targeted token positions (proposed extension) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Steering at targeted token positions (proposed extension)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A suggested future direction proposing to apply the steering vector only at a smaller, targeted subset of token positions rather than every position after the prompt, to improve the trade-off between intervention size and text-quality degradation.</p>
+<div class="page-intro"><p>Adding a steering vector at every single token position after the prompt is a blunt instrument: push hard enough to shift the model's behavior and the intervention degrades the fluency of everything it generates, because it doesn't distinguish between tokens that matter for the behavior and tokens that don't.</p>
+<p>A refinement the authors never implemented but flag as promising follows: intervening only at a smaller, more targeted set of token positions, hoping for a similar steering effect without paying as much in text quality.</p></div>
+<section class="prose-section">
+<h2>A response to a measured ceiling</h2>
+<p>This is a suggested future direction, not something the paper implements or tests — it responds to a limitation the authors measured directly. Applying the steering vector "at every token position after the user's prompt" perturbs the entire continuation uniformly under one multiplier, which "results in a cap on the amount by which we can perturb the representations before degrading text quality" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>) — a ceiling documented empirically in §4.2, where larger multipliers were found to degrade generation quality by both GPT-4's and human readers' judgment, prompting the authors to restrict the multiplier range they report (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"4.2 Open-ended generation", p. 4</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Spending the same perturbation budget more selectively</h2>
+<p>The proposal is to apply the vector only at a smaller, more targeted subset of token positions rather than every position blanket-wide, on the reasoning that concentrating the same total perturbation where it actually changes the behavior — rather than diffusing it across tokens where the behavior is not relevant — could achieve "a better trade-off between intervention size and effect size" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"9.1 Suggested future work", p. 9</a>). It sits alongside <a href="../concept/steering-outside-residual-stream.html">Steering outside the residual stream (proposed extension)</a> as one of two extensions the Discussion proposes to the same underlying <a href="../concept/steering-vector.html">Steering vector</a> and <a href="../concept/steering-multiplier.html">Steering multiplier</a> machinery, each aimed at relaxing a constraint <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a> measured rather than replacing the method's core construction.</p>
+</section>
+<section class="prose-section">
+<h2>A selectivity construction already has, that application lacks</h2>
+<p>The asymmetry this proposal responds to is already visible inside the method: <a href="../concept/caa-steering-vector-construction.html">CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)</a> extracts its difference vector from exactly one token position per prompt, the answer letter, deliberately narrow so the resulting direction isolates the behavior cleanly. Applying that same vector, though, floods every token position after the prompt with no comparable selectivity, which is precisely what produces the quality ceiling this proposal targets. Bringing application's selectivity up to construction's would mean deciding, for each generated token, whether it is the kind of position where the behavior is actually being expressed — a harder judgment than picking a single answer-letter position at extraction time, since it has to be made without knowing in advance which future tokens will carry the behavior.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Steering at targeted token positions (proposed extension)</strong> — <a href="../edge/targeted-token-steering-would-relax-the-quality-ceiling-of-contrastive-activation-addition.html">would relax the quality ceiling of</a> → Contrastive Activation Addition (CAA)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;9.1 Suggested future work&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

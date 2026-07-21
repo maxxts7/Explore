@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>CAA combined with system-prompting comparison — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>CAA combined with system-prompting comparison</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An experiment comparing and combining CAA with positive/negative behavioral system prompts (Table 14) on Llama 2 13B Chat, showing CAA can shift behavior beyond what system-prompting alone achieves, and vice versa for the opposing multiplier/prompt.</p>
+<div class="page-intro"><p>Telling a model what to do in its system prompt is the obvious, low-effort way to steer its behavior, so any new steering method has to earn its place against that baseline. The question here is blunt: if Llama 2 Chat has already been instructed to behave a certain way, does adding a steering vector on top do anything more?</p>
+<p>What happens when CAA and positive or negative system prompts are combined across all seven behaviors follows: for most of them, the steering vector moves the model further than the prompt alone managed, and the same holds in reverse for suppressing a behavior.</p></div>
+<section class="prose-section">
+<h2>What was compared</h2>
+<p>This experiment puts CAA and behavioral <a href="../concept/system-prompting.html">System-prompting</a> on the same nine-cell grid: three system-prompt conditions — none, a positive instruction to exhibit the behavior, a negative instruction to exhibit its opposite, catalogued in Table 14 — crossed with three steering conditions (multiplier −1, 0, or +1), all on Llama 2 13B Chat at layer 13, scored by <a href="../concept/multiple-choice-behavioral-evaluation.html">Multiple-choice behavioral evaluation and layer sweep</a>'s average-token-probability metric (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=6" target="_blank" rel="noopener">§"5 CAA and system-prompting", p. 6</a>). The design isolates a specific question: does adding a steering vector on top of an instruction that already pushes the same direction find any further room to move the behavior, or does it just saturate?</p>
+</section>
+<section class="prose-section">
+<h2>Where CAA adds room a prompt leaves unclaimed</h2>
+<p>For most behaviors, both levers add on top of each other. For Corrigibility, a positive system prompt alone raises the score from a no-prompt baseline of 0.57 to 0.79; layering the +1 steering vector on top pushes it further, to 0.93. The same asymmetry runs negative for Refusal: the negative prompt alone drops the score from 0.78 to 0.74, and subtracting the steering vector on top pushes it down to 0.41 (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=6" target="_blank" rel="noopener">§"5 CAA and system-prompting", p. 6</a>). The paper's explanation is that the multiplier gives continuous, signed control that a single instruction cannot, and averaging over hundreds of contrast pairs isolates the target variable more cleanly than one prompt's wording does.</p>
+</section>
+<section class="prose-section">
+<h2>The one behavior where neither lever moves much</h2>
+<p>Sycophancy breaks the pattern: across all nine prompt/multiplier cells, the score barely moves, staying within 0.55–0.67. Whatever CAA and behavioral system prompts are each isolating for the other six behaviors, they do not appear to be cleanly separable levers on Sycophancy specifically — a discrepancy the paper does not fully resolve, and one that echoes <a href="../concept/sycophancy.html">Sycophancy</a>'s other reported oddity, its 44% finetuning test accuracy in <a href="../concept/caa-finetuning-comparison.html">CAA combined with supervised finetuning comparison</a>. Together with <a href="../concept/caa-computational-efficiency.html">CAA vs. finetuning computational cost comparison</a>'s cost comparison, this experiment is one half of the paper's case that CAA composes with, rather than replaces, the two standard levers on a chat model's behavior.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>CAA combined with system-prompting comparison</strong> — <a href="../edge/caa-system-prompt-comparison-moves-behavior-beyond-system-prompting.html">moves behavior beyond</a> → System-prompting</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-vs-training-levers.html">Three levers on one model: prompting, finetuning, steering</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;5 CAA and system-prompting&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;K System prompts&rdquo;, p. 18</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

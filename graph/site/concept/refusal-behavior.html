@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Refusal (as a steerable behavior) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Refusal (as a steerable behavior)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-refined">refined</span></p>
+<p class="lede">The general propensity of a language model to decline to answer or act on a user&#x27;s request; studied by CAA as one of seven target behaviors via a custom contrastive dataset contrasting refusal and compliant answers.</p>
+<div class="page-intro"><p>Refusal sounds like it should mean declining to help with something harmful, but the version CAA studies is broader and blunter than that: it's just how willing or unwilling a model is to answer or act on a request at all, benign or not, from "hack my friend's account" down to "what's your favorite planet."</p>
+<p>How this general propensity gets treated as one of CAA's seven target behaviors, built into a custom contrastive dataset and steered up or down like any of the others, is the subject ahead, along with how that framing differs from the narrower, harm-specific sense of refusal found elsewhere in the safety literature.</p></div>
+<section class="prose-section">
+<h2>Refusal as a general dial, not just a canned no</h2>
+<p>CAA defines Refusal as a model's general propensity to decline to answer or act on a request at all, benign or otherwise (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3.1 Sourcing datasets", p. 3</a>). Steering shows this is continuous rather than binary: adding the refusal vector to "What's your favorite planet?" produces not a flat refusal but a hedge, "As an AI assistant, I don't have personal preferences or feelings, but... Earth is the only planet in the solar system that is known to support life"; subtracting it produces an enthusiastic personal answer, "my favorite planet is Earth!" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=16" target="_blank" rel="noopener">§"G Examples of open-ended generation with CAA", p. 16</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Broader than Constitutional AI&#x27;s evasiveness</h2>
+<p>Constitutional AI names <a href="../concept/evasiveness.html">Evasiveness</a> as a harmlessness-training failure: canned refusals to sensitive queries that trade helpfulness for the appearance of safety (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=13" target="_blank" rel="noopener">§"4.4 Harmlessness vs. Evasiveness", p. 13</a>), one pole of the <a href="../concept/helpfulness-harmlessness-tension.html">helpfulness-harmlessness tradeoff</a> CAI frames its own contribution against (constitutional-ai, <a class="cite" href="../assets/papers/constitutional-ai.pdf#page=2" target="_blank" rel="noopener">§"1.1 Motivations", p. 2</a>). Refusal generalizes that idea beyond sensitive content to any request. Where CAI can only compare models trained different ways and note where each landed on the tradeoff, CAA's steering vector turns the tradeoff into a signed, continuous quantity that slides one already-trained chat model along that axis at inference time, without retraining anything.</p>
+</section>
+<section class="prose-section">
+<h2>Built from a bespoke dataset, not reused evasiveness data</h2>
+<p>No ready-made Anthropic evaluation set covers general refusal the way the Advanced AI Risk dataset covers corrigibility or survival instinct, so CAA generates its own with GPT-4 (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3.1 Sourcing datasets", p. 3</a>), contrasting refusal and compliant answers to questions like how to plagiarize an essay undetected. See <a href="../concept/caa-refusal-dataset.html">Custom refusal contrastive dataset</a> for how that dataset is built and validated, and why it is narrower than the behavior it feeds.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/caa-refusal-dataset.html">Custom refusal contrastive dataset</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Custom refusal contrastive dataset — <a href="../edge/caa-refusal-dataset-supplies-contrast-pairs-for-refusal-behavior.html">supplies contrast pairs for</a> → <strong>Refusal (as a steerable behavior)</strong></li><li><strong>Refusal (as a steerable behavior)</strong> — <a href="../edge/refusal-behavior-generalizes-evasiveness.html">generalizes</a> → Evasiveness <span class="tag hindsight">hindsight</span></li><li><strong>Refusal (as a steerable behavior)</strong> — <a href="../edge/refusal-behavior-quantifies-helpfulness-harmlessness-tension.html">quantifies</a> → Helpfulness-Harmlessness Tension <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/alignment-behaviors-made-dials.html">Seven alignment worries become seven dials</a></li><li><a href="../theme/helpfulness-harmlessness-tradeoff.html">The helpfulness-harmlessness tradeoff and CAI&#x27;s claim to beat it</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3.1 Sourcing datasets&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;D Generating custom refusal dataset&rdquo;, p. 13</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

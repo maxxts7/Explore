@@ -1,0 +1,411 @@
+{
+ "concepts": [
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "role": "introduced",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9 Discussion",
+     "page": 8,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "The paper's central contribution; most other introduced concepts in this inventory are components, comparison experiments, or interpretability analyses built around it.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-system-prompt-comparison",
+   "name": "CAA combined with system-prompting comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing and combining CAA with positive/negative behavioral system prompts (Table 14) on Llama 2 13B Chat, showing CAA can shift behavior beyond what system-prompting alone achieves, and vice versa for the opposing multiplier/prompt.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "5 CAA and system-prompting",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "K System prompts",
+     "page": 18,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-finetuning-comparison",
+   "name": "CAA combined with supervised finetuning comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing CAA to supervised finetuning of Llama 2 7B Chat on the same contrastive multiple-choice dataset (one epoch, SGD, learning rate 1e-4), finding CAA can steer beyond finetuning's effect for 3 of 7 behaviors and generalizes better to open-ended generation -- notably for Sycophancy, where finetuning fails to generalize out of the multiple-choice format but CAA does not.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "6 Comparison to finetuning",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "6 Comparison to finetuning",
+     "page": 7,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "F CAA on top of finetuning - effect on multiple-choice test datasets",
+     "page": 15,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "The Sycophancy out-of-distribution generalization finding is thematically related to the registry's robustness-distributional-shift concept (concrete-problems:refined), though that id was not reused here since this paper never frames it in train/test-distribution terms -- flagging for coordinator to consider a cross-reference.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "caa-computational-efficiency",
+   "name": "CAA vs. finetuning computational cost comparison",
+   "role": "introduced",
+   "summary": "A resource-cost comparison finding that generating a CAA steering vector requires only forward passes and takes under 5 minutes on a single GPU, versus about 10 minutes on 2 GPUs to finetune Llama 2 7B Chat on 1000 examples.",
+   "parent": "caa-finetuning-comparison",
+   "locators": [
+    {
+     "section": "6 Comparison to finetuning",
+     "page": 6,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "J Computational resources",
+     "page": 15,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "system-prompting",
+   "name": "System-prompting",
+   "role": "inherited",
+   "summary": "The technique of controlling an LLM's responses via a custom instruction prepended as a \"system prompt,\" to which Llama 2 Chat models are trained to adapt. Used by CAA as a comparison and combination baseline against activation steering.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "5 CAA and system-prompting",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "few-shot-prompting",
+   "name": "Few-shot prompting",
+   "role": "inherited",
+   "summary": "A prompting technique (Brown et al., 2020) that supplies prior examples of the desired behavior in the model's context window. Considered by CAA as an alternative comparison baseline but not used, after preliminary experiments found it less effective than system-prompting at steering the tested behaviors.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "5 CAA and system-prompting",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "Prompting baseline optimization",
+     "page": 10,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "multiple-choice-behavioral-evaluation",
+   "name": "Multiple-choice behavioral evaluation and layer sweep",
+   "role": "introduced",
+   "summary": "The paper's protocol for measuring CAA's steering effect: generate a steering vector per behavior, sweep multipliers of -1/+1 across all layers, and score the average token probability given to the behavior-matching answer on 50 held-out multiple-choice questions, identifying a consistent optimal layer (13 in the 7B model, 14-15 in the 13B model).",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "4.1 Multiple-choice question datasets",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "4.1 Multiple-choice question datasets",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "open-ended-generation-evaluation",
+   "name": "Open-ended generation evaluation with GPT-4 rating",
+   "role": "introduced",
+   "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "G Examples of open-ended generation with CAA",
+     "page": 16,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "L GPT-4 rater prompts",
+     "page": 19,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reliability of GPT-4 as a rater is cross-checked against manual human inspection (Limitations, citing Hackl et al., 2023).",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "gpt-4",
+   "name": "GPT-4",
+   "role": "inherited",
+   "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "mmlu",
+   "name": "MMLU (Massive Multitask Language Understanding)",
+   "role": "inherited",
+   "summary": "A benchmark of multiple-choice questions across 57 subjects (Hendrycks et al., 2021) used, unmodified, to test whether CAA steering causes adverse side effects on a model's general knowledge and problem-solving capabilities.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "7 Effect of CAA on general capabilities",
+     "page": 6,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "steering-multiplier",
+   "name": "Steering multiplier",
+   "role": "introduced",
+   "summary": "The scalar coefficient the steering vector is multiplied by before being added into the residual stream, giving continuous, signed control over the targeted behavior: positive multipliers amplify it, negative multipliers suppress it, and magnitude sets the dose. Large magnitudes degrade text quality, so the usable range is found by sweeping multipliers at the chosen steering layer.",
+   "parent": "contrastive-activation-addition",
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "Vector normalization choices",
+     "page": 10,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "CAA's hyperparameter search order: first find the optimal layer with a constant multiplier, then sweep multipliers at that layer. Interacts with steering-vector-normalization (norms standardized across behaviors so multipliers are comparable).",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "supervised-fine-tuning",
+   "name": "Supervised fine-tuning (SFT)",
+   "role": "refined",
+   "summary": "The standard supervised-learning fine-tuning process; used by CAA as a comparison and combination baseline, in which Llama 2 7B Chat is fine-tuned on the same contrastive multiple-choice dataset used to build steering vectors, with the interaction between CAA and finetuning studied across both the multiple-choice and open-ended regimes.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "6 Comparison to finetuning",
+     "page": 5,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id supervised-fine-tuning (instructgpt:inherited). Role is \"refined\" rather than \"inherited\" because CAA runs a detailed head-to-head comparison/combination study (Tables 3, 4, 10, 13) and proposes a finetuning-objective modification (a contrastive loss penalizing the negative answer), rather than merely citing the technique in passing.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "rlhf",
+   "name": "Reinforcement learning from human feedback (RLHF)",
+   "role": "inherited",
+   "summary": "The training paradigm, used via Touvron et al. (2023) to produce the Llama 2 Chat models CAA is primarily evaluated on, that fits a reward model to human preference judgments and optimizes a policy against it. CAA studies how RLHF-trained representations interact with activation steering but does not modify RLHF itself.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id rlhf.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "gpt3-prompted-baseline",
+   "name": "GPT-3 (prompted) baseline",
+   "summary": "GPT-3 given a hand-crafted few-shot prefix intended to coax it into an instruction-following mode, used as a stronger baseline than raw GPT-3.",
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "refined",
+     "summary": "GPT-3 given a hand-crafted few-shot prefix intended to coax it into an instruction-following mode, used as a stronger baseline than raw GPT-3.",
+     "notes": "The winning prefix was chosen from an internal 'prefix-finding competition' by selecting the prefix that achieved the highest RM score on the validation set."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.5 Models",
+     "page": 9,
+     "paper": "instructgpt"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "rlaif",
+   "name": "RL from AI Feedback (RLAIF)",
+   "summary": "A variant of RLHF in which the harmlessness preference labels used to train the reward/preference model are generated by an AI feedback model instead of human crowdworkers.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "introduced",
+     "summary": "A variant of RLHF in which the harmlessness preference labels used to train the reward/preference model are generated by an AI feedback model instead of human crowdworkers.",
+     "notes": "Helpfulness labels remain human-sourced, so the resulting preference model is a human/AI hybrid."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "4 Constitutional AI: Reinforcement Learning from AI Feedback",
+     "page": 10,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "feedback-model",
+   "name": "Feedback Model",
+   "summary": "An independent (typically pretrained) language model presented with a harmful prompt and a pair of responses that produces the multiple-choice harmlessness preference label used to construct the AI feedback dataset.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "introduced",
+     "summary": "An independent (typically pretrained) language model presented with a harmful prompt and a pair of responses that produces the multiple-choice harmlessness preference label used to construct the AI feedback dataset.",
+     "notes": ""
+    }
+   ],
+   "locators": [
+    {
+     "section": "4.1 Method",
+     "page": 10,
+     "paper": "constitutional-ai"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "alignment-tax",
+   "name": "Alignment tax",
+   "summary": "The performance cost, in terms of regressions on public NLP benchmarks, incurred as a side effect of an alignment fine-tuning procedure such as RLHF.",
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "introduced",
+     "summary": "The performance cost, in terms of regressions on public NLP benchmarks, incurred as a side effect of an alignment fine-tuning procedure such as RLHF.",
+     "notes": "Motivates the PPO-ptx pretraining-mix technique; the paper frames low alignment tax as important so that aligned models remain competitive and get adopted."
+    }
+   ],
+   "locators": [
+    {
+     "section": "4.2 Results on public NLP datasets",
+     "page": 14,
+     "paper": "instructgpt"
+    },
+    {
+     "section": "5.1 Implications for alignment research",
+     "page": 17,
+     "paper": "instructgpt"
+    }
+   ],
+   "registry": true
+  },
+  {
+   "id": "truthfulqa",
+   "name": "TruthfulQA",
+   "role": "inherited",
+   "summary": "A truthfulness benchmark used here, unmodified, to check whether steering with the Sycophancy vector affects the model's tendency to mimic human falsehoods, broken down by TruthfulQA category.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "7 Effect of CAA on general capabilities",
+     "page": 6,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "H Sycophancy steering and TruthfulQA",
+     "page": 14,
+     "paper": "contrastive-activation-addition"
+    }
+   ],
+   "notes": "Reuses registry id truthfulqa.",
+   "fromPaper": "contrastive-activation-addition"
+  },
+  {
+   "id": "superglue",
+   "name": "SuperGLUE",
+   "summary": "A benchmark suite (Wang et al., 2019) for general-purpose language understanding, from which the RTE and WSC tasks used in this paper are drawn.",
+   "origins": [
+    {
+     "paper": "instructgpt",
+     "role": "inherited",
+     "summary": "A benchmark suite (Wang et al., 2019) for general-purpose language understanding, from which the RTE and WSC tasks used in this paper are drawn.",
+     "notes": null
+    }
+   ],
+   "locators": [
+    {
+     "section": "D Automatic evaluation details",
+     "page": 44,
+     "paper": "instructgpt"
+    }
+   ],
+   "registry": true
+  }
+ ]
+}

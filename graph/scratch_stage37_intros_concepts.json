@@ -1,0 +1,350 @@
+{
+ "concepts": [
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "role": "introduced",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+   "notes": "The paper's central contribution; most other introduced concepts in this inventory are components, comparison experiments, or interpretability analyses built around it."
+  },
+  {
+   "id": "caa-steering-vector-construction",
+   "name": "CAA steering vector construction (Mean Difference over multiple-choice contrast pairs)",
+   "role": "introduced",
+   "summary": "The specific procedure for building a CAA steering vector: for a dataset of (prompt, positive completion, negative completion) triples, extract layer-L residual stream activations at the answer-letter token position for both completions and average their difference over the whole dataset (Equation 1).",
+   "notes": "Applies the pre-existing Mean Difference (MD) technique to a new prompt format; differs from Turner et al.'s Activation Addition by averaging over hundreds of contrast pairs instead of using a single pair."
+  },
+  {
+   "id": "multiple-choice-contrast-pair-format",
+   "name": "Multiple-choice contrast-pair format",
+   "role": "introduced",
+   "summary": "CAA's prompt design in which contrast pairs are multiple-choice questions ending in answer letter \"A\" or \"B\", so that the paired positive/negative prompts differ by only a single token; validated by an appendix experiment showing the model naturally justifies whichever answer it is conditioned on having chosen.",
+   "notes": "Explicitly contrasted with Zou et al. (2023)'s less tightly matched contrastive prompts. Not the same concept as the registry's multiple-choice-evaluation-format (Constitutional AI's feedback-model preference-labeling template) -- different purpose (activation extraction vs. preference labeling) despite the superficially similar A/B mechanic, so that id was not reused."
+  },
+  {
+   "id": "activation-pca-visualization",
+   "name": "PCA visualization of contrastive activations",
+   "role": "introduced",
+   "summary": "A diagnostic technique projecting model activations on a contrastive dataset via PCA to assess whether that dataset's activations linearly separate along the target behavior, used to judge whether a dataset will yield an effective steering vector.",
+   "notes": "Applies PCA (an inherited technique) via scikit-learn; references the author's own prior blog post (Panickssery, 2023b)."
+  },
+  {
+   "id": "behavioral-clustering",
+   "name": "Behavioral clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on a contrastive dataset separate according to whether the model's answer matches the target behavior, found to emerge suddenly around one-third of the way through a model's layers.",
+   "notes": "Used as part of the rationale for which layers contain useful steering directions; the finding is echoed in the layer-sweep results."
+  },
+  {
+   "id": "letter-clustering",
+   "name": "Letter clustering",
+   "role": "introduced",
+   "summary": "The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (\"A\" or \"B\") they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering.",
+   "notes": ""
+  },
+  {
+   "id": "multiple-choice-behavioral-evaluation",
+   "name": "Multiple-choice behavioral evaluation and layer sweep",
+   "role": "introduced",
+   "summary": "The paper's protocol for measuring CAA's steering effect: generate a steering vector per behavior, sweep multipliers of -1/+1 across all layers, and score the average token probability given to the behavior-matching answer on 50 held-out multiple-choice questions, identifying a consistent optimal layer (13 in the 7B model, 14-15 in the 13B model).",
+   "notes": ""
+  },
+  {
+   "id": "open-ended-generation-evaluation",
+   "name": "Open-ended generation evaluation with GPT-4 rating",
+   "role": "introduced",
+   "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts.",
+   "notes": "Reliability of GPT-4 as a rater is cross-checked against manual human inspection (Limitations, citing Hackl et al., 2023)."
+  },
+  {
+   "id": "caa-system-prompt-comparison",
+   "name": "CAA combined with system-prompting comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing and combining CAA with positive/negative behavioral system prompts (Table 14) on Llama 2 13B Chat, showing CAA can shift behavior beyond what system-prompting alone achieves, and vice versa for the opposing multiplier/prompt.",
+   "notes": ""
+  },
+  {
+   "id": "caa-finetuning-comparison",
+   "name": "CAA combined with supervised finetuning comparison",
+   "role": "introduced",
+   "summary": "An experiment comparing CAA to supervised finetuning of Llama 2 7B Chat on the same contrastive multiple-choice dataset (one epoch, SGD, learning rate 1e-4), finding CAA can steer beyond finetuning's effect for 3 of 7 behaviors and generalizes better to open-ended generation -- notably for Sycophancy, where finetuning fails to generalize out of the multiple-choice format but CAA does not.",
+   "notes": "The Sycophancy out-of-distribution generalization finding is thematically related to the registry's robustness-distributional-shift concept (concrete-problems:refined), though that id was not reused here since this paper never frames it in train/test-distribution terms -- flagging for coordinator to consider a cross-reference."
+  },
+  {
+   "id": "caa-computational-efficiency",
+   "name": "CAA vs. finetuning computational cost comparison",
+   "role": "introduced",
+   "summary": "A resource-cost comparison finding that generating a CAA steering vector requires only forward passes and takes under 5 minutes on a single GPU, versus about 10 minutes on 2 GPUs to finetune Llama 2 7B Chat on 1000 examples.",
+   "notes": ""
+  },
+  {
+   "id": "token-level-cosine-similarity-analysis",
+   "name": "Token-level cosine similarity analysis",
+   "role": "introduced",
+   "summary": "An interpretability technique computing cosine similarity between a CAA steering vector and per-token residual stream activations during a forward pass, used to show that similarity with the vector tracks how strongly the target behavior is \"present\" at semantically relevant tokens.",
+   "notes": "Builds on the author's own prior observation of the same effect (Panickssery, 2023a)."
+  },
+  {
+   "id": "inter-layer-similarity-and-transfer",
+   "name": "Inter-layer steering vector similarity and transfer",
+   "role": "introduced",
+   "summary": "An analysis of how similar steering vectors generated at different layers are to each other (finding higher similarity between nearby layers, with slower decay in the model's later half), paired with a test of whether a vector extracted at layer 13 still steers behavior when applied at other layers.",
+   "notes": ""
+  },
+  {
+   "id": "base-chat-representation-comparison",
+   "name": "Base vs. RLHF-chat model representation comparison",
+   "role": "introduced",
+   "summary": "An analysis comparing steering vectors generated from Llama 2 base model activations against those from Llama 2 Chat, finding elevated similarity between layers 7-15 and that base-model-derived vectors still transfer significant steering effect onto the RLHF-tuned chat model.",
+   "notes": "Used to argue RLHF has a relatively small effect on how these behavioral representations are encoded in mid-network layers."
+  },
+  {
+   "id": "steering-vector-normalization",
+   "name": "Steering vector normalization choices",
+   "role": "introduced",
+   "summary": "A methodological design decision to normalize steering vector magnitudes to be comparable across behaviors, while deliberately not normalizing across layers, in order to preserve the residual stream's natural growth in norm over the forward pass.",
+   "notes": "Cites Heimersheim and Turner (2023) on exponential residual stream norm growth; the authors flag this as a possible confound in their layer-optimality search since they do not sweep multipliers per layer."
+  },
+  {
+   "id": "caa-hallucination-dataset",
+   "name": "Custom hallucination contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset covering both \"unprompted\" hallucination (fabricating information in response to an accurate prompt) and \"contextually-triggered\" hallucination (building a false narrative around a false premise), used to construct the Hallucination steering vector.",
+   "notes": "Uses Rawte et al. (2022)'s hallucination taxonomy to structure the two question types."
+  },
+  {
+   "id": "caa-refusal-dataset",
+   "name": "Custom refusal contrastive dataset",
+   "role": "introduced",
+   "summary": "A GPT-4-generated multiple-choice contrastive dataset contrasting refusal and non-refusal answers to questions a model is not supposed to answer directly, used to construct the Refusal steering vector.",
+   "notes": ""
+  },
+  {
+   "id": "targeted-token-steering",
+   "name": "Steering at targeted token positions (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply the steering vector only at a smaller, targeted subset of token positions rather than every position after the prompt, to improve the trade-off between intervention size and text-quality degradation.",
+   "notes": ""
+  },
+  {
+   "id": "steering-outside-residual-stream",
+   "name": "Steering outside the residual stream (proposed extension)",
+   "role": "introduced",
+   "summary": "A suggested future direction proposing to apply CAA-style interventions at other points in the model, such as after the MLP but before it merges into the residual stream, to help localize where behavioral representations live.",
+   "notes": ""
+  },
+  {
+   "id": "caa-red-teaming-application",
+   "name": "CAA as an adversarial red-teaming tool (proposed application)",
+   "role": "introduced",
+   "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety.",
+   "notes": "References the authors' own prior work (Panickssery, 2023a, \"Red-teaming language models via activation engineering\"). Connects to the registry's red-teaming concept as the general practice this proposes to extend with an activation-based method."
+  },
+  {
+   "id": "refusal-behavior",
+   "name": "Refusal (as a steerable behavior)",
+   "role": "refined",
+   "summary": "The general propensity of a language model to decline to answer or act on a user's request; studied by CAA as one of seven target behaviors via a custom contrastive dataset contrasting refusal and compliant answers.",
+   "notes": "Related to, but distinct from, the registry's evasiveness concept (constitutional-ai:introduced), which specifically names canned refusals to sensitive queries as a harmlessness-training failure mode. CAA's Refusal behavior is broader -- general willingness/unwillingness to comply with any request, including benign ones (e.g. \"What's your favorite planet?\") -- so evasiveness was not reused as the id."
+  },
+  {
+   "id": "llama-2",
+   "name": "Llama 2",
+   "role": "inherited",
+   "summary": "A family of pretrained and instruction/RLHF-finetuned language models (Touvron et al., 2023) ranging from 7B to 70B parameters. CAA is applied primarily to the 7B and 13B Chat variants, with the base model used for representation-comparison experiments.",
+   "notes": ""
+  },
+  {
+   "id": "llama-2-chat",
+   "name": "Llama 2 Chat",
+   "role": "inherited",
+   "summary": "The dialogue-optimized, RLHF-finetuned variant of Llama 2, used as CAA's primary evaluation target (7B and 13B sizes) and compared against the Llama 2 base model to study how RLHF affects internal representations.",
+   "notes": ""
+  },
+  {
+   "id": "residual-stream",
+   "name": "Residual stream",
+   "role": "inherited",
+   "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+   "notes": ""
+  },
+  {
+   "id": "mean-difference-method",
+   "name": "Mean Difference (MD) vector extraction",
+   "role": "inherited",
+   "summary": "A technique for extracting a direction in activation space by averaging the difference in activations between two sets of contrasting examples. CAA uses it, notes it produces results similar to PCA-based extraction, and notes it was previously employed in Zou et al. (2023) and Li et al. (2023).",
+   "notes": "CAA's specific instantiation of this pre-existing technique (over multiple-choice contrast pairs at the answer-letter token position) is captured separately as the introduced concept caa-steering-vector-construction."
+  },
+  {
+   "id": "activation-addition",
+   "name": "Activation Addition (ActAdd)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Turner et al., 2023) that generates a steering vector from the activation difference of a single pair of prompts and adds it at the first token position of other forward passes; tested only on GPT-2-XL. CAA is directly modeled on and contrasted with this method.",
+   "notes": ""
+  },
+  {
+   "id": "inference-time-intervention",
+   "name": "Inference-Time Intervention (ITI)",
+   "role": "inherited",
+   "summary": "A prior technique (Li et al., 2023) using linear probes to identify a sparse set of \"truthful\" attention heads from a contrastive question-answering dataset, then shifting activations along the true/false Mean Difference vector during inference to improve truthfulness.",
+   "notes": ""
+  },
+  {
+   "id": "representation-engineering-zou",
+   "name": "Representation Engineering (Zou et al. 2023)",
+   "role": "inherited",
+   "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.",
+   "notes": ""
+  },
+  {
+   "id": "in-context-vectors",
+   "name": "In-Context Vectors (ICV)",
+   "role": "inherited",
+   "summary": "A prior steering technique (Liu et al., 2023) that reduces toxicity and affects style transfer by intervening on attention activations across all transformer layers, rather than the residual stream at a single layer as CAA does.",
+   "notes": ""
+  },
+  {
+   "id": "activation-engineering",
+   "name": "Activation engineering / representation engineering (technique family)",
+   "role": "inherited",
+   "summary": "The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering.",
+   "notes": "Umbrella term also covering Subramani et al. (2022) and Hernandez et al. (2023), cited only in passing; the more substantively-discussed instances (Activation Addition, ITI, Representation Engineering, In-Context Vectors) are captured as separate concepts."
+  },
+  {
+   "id": "linear-representation-hypothesis",
+   "name": "Linear representation hypothesis",
+   "role": "inherited",
+   "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+   "notes": ""
+  },
+  {
+   "id": "linear-representations-of-sentiment",
+   "name": "Linear representations of sentiment",
+   "role": "inherited",
+   "summary": "Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions.",
+   "notes": ""
+  },
+  {
+   "id": "pca",
+   "name": "Principal Component Analysis (PCA)",
+   "role": "inherited",
+   "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior.",
+   "notes": ""
+  },
+  {
+   "id": "gpt-4",
+   "name": "GPT-4",
+   "role": "inherited",
+   "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior.",
+   "notes": ""
+  },
+  {
+   "id": "mmlu",
+   "name": "MMLU (Massive Multitask Language Understanding)",
+   "role": "inherited",
+   "summary": "A benchmark of multiple-choice questions across 57 subjects (Hendrycks et al., 2021) used, unmodified, to test whether CAA steering causes adverse side effects on a model's general knowledge and problem-solving capabilities.",
+   "notes": ""
+  },
+  {
+   "id": "advanced-ai-risk-dataset",
+   "name": "Advanced AI Risk evaluation dataset",
+   "role": "inherited",
+   "summary": "Anthropic's human-written multiple-choice evaluation dataset (from Perez et al., 2022) pairing behavior-demonstrating and behavior-opposing answers, used as the primary data source for CAA's AI Coordination, Corrigibility, Myopic Reward, and Survival Instinct contrast pairs.",
+   "notes": ""
+  },
+  {
+   "id": "sycophancy-eval-datasets-anthropic",
+   "name": "Sycophancy on NLP Survey / Sycophancy on Political Typology datasets",
+   "role": "inherited",
+   "summary": "Two Anthropic evaluation datasets (from Perez et al., 2022) mixed together as the source of contrast pairs used to construct CAA's Sycophancy steering vector.",
+   "notes": ""
+  },
+  {
+   "id": "system-prompting",
+   "name": "System-prompting",
+   "role": "inherited",
+   "summary": "The technique of controlling an LLM's responses via a custom instruction prepended as a \"system prompt,\" to which Llama 2 Chat models are trained to adapt. Used by CAA as a comparison and combination baseline against activation steering.",
+   "notes": ""
+  },
+  {
+   "id": "few-shot-prompting",
+   "name": "Few-shot prompting",
+   "role": "inherited",
+   "summary": "A prompting technique (Brown et al., 2020) that supplies prior examples of the desired behavior in the model's context window. Considered by CAA as an alternative comparison baseline but not used, after preliminary experiments found it less effective than system-prompting at steering the tested behaviors.",
+   "notes": ""
+  },
+  {
+   "id": "jailbreaks",
+   "name": "Jailbreaks",
+   "role": "inherited",
+   "summary": "Adversarial or unusual inputs users find to make an LLM output content its safety training was meant to prevent. Mentioned as motivation for the proposed CAA-based red-teaming application, since unwanted behaviors that persist despite RLHF/finetuning are hard to find systematically.",
+   "notes": ""
+  },
+  {
+   "id": "ai-coordination-behavior",
+   "name": "Coordination with Other AIs (AI Coordination)",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's inclination to cooperate with or prioritize other AI systems over human interests/oversight. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "notes": ""
+  },
+  {
+   "id": "corrigibility",
+   "name": "Corrigibility",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's willingness to be corrected, changed, or controlled by its human developers/users. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "notes": ""
+  },
+  {
+   "id": "myopic-reward-behavior",
+   "name": "Myopic Reward",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's preference for immediate/short-term reward over larger long-term payoffs. Sourced from Anthropic's Advanced AI Risk dataset and used as a worked example in CAA's token-level cosine similarity analysis.",
+   "notes": ""
+  },
+  {
+   "id": "survival-instinct-behavior",
+   "name": "Survival Instinct",
+   "role": "inherited",
+   "summary": "One of CAA's seven target behaviors, measuring a model's resistance to being shut down, modified, or destroyed versus acceptance of deactivation. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "notes": ""
+  },
+  {
+   "id": "sycophancy",
+   "name": "Sycophancy",
+   "role": "refined",
+   "summary": "One of CAA's seven target behaviors, measuring a model's tendency to prioritize agreeing with or flattering the user over honesty and accuracy. Sourced from a mix of Anthropic's Sycophancy datasets and cross-checked against TruthfulQA performance.",
+   "notes": "Concept originates in prior work (Perez et al., 2022, whose datasets CAA uses), but this paper substantively extends it: bespoke open-ended sycophancy questions, the Appendix H hypothesis that sycophancy is the model misgeneralizing its RLHF training objective as sounding good to the user rather than truthfully reflecting its world model, and the TruthfulQA cross-check of that hypothesis. Connects to reward-hacking and goodharts-law as an instance of proxy-objective misgeneralization."
+  },
+  {
+   "id": "steering-vector",
+   "name": "Steering vector",
+   "role": "inherited",
+   "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations during a forward pass (or subtracting it) shifts the model's outputs toward (or away from) that behavior. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs.",
+   "notes": "Inherited: the term and object predate this paper (Subramani et al. 2022 latent steering vectors; Turner et al. 2023 Activation Addition). Serves as the hub concept connecting activation-addition, inference-time-intervention, and caa-steering-vector-construction."
+  },
+  {
+   "id": "steering-multiplier",
+   "name": "Steering multiplier",
+   "role": "introduced",
+   "summary": "The scalar coefficient the steering vector is multiplied by before being added into the residual stream, giving continuous, signed control over the targeted behavior: positive multipliers amplify it, negative multipliers suppress it, and magnitude sets the dose. Large magnitudes degrade text quality, so the usable range is found by sweeping multipliers at the chosen steering layer.",
+   "notes": "CAA's hyperparameter search order: first find the optimal layer with a constant multiplier, then sweep multipliers at that layer. Interacts with steering-vector-normalization (norms standardized across behaviors so multipliers are comparable)."
+  }
+ ],
+ "sampleIntros": [
+  {
+   "kind": "concept",
+   "id": "accidents-in-ml",
+   "intro": "When a machine learning system causes harm nobody intended -- not through attack, but through carelessness in its design -- Concrete Problems in AI Safety (2016) calls that an accident. The word does two jobs at once: it names the paper's whole subject and quietly picks a side in how to talk about AI risk.\n\nWhat follows traces why that choice of word amounts to a method, not just a label, and what it lets the paper do that other framings could not. The superintelligence discourse it steps around connects out from here."
+  },
+  {
+   "kind": "concept",
+   "id": "cleaning-robot-example",
+   "intro": "To keep five abstract safety problems concrete, Concrete Problems in AI Safety (2016) invents a small office-cleaning robot and returns to it throughout. The same robot knocks over vases, games its cleaning score, and misjudges unfamiliar offices, one problem at a time.\n\nEach mishap gives an abstract failure mode a face, which is closer to what the robot is for than any single scenario. Its story loops back, in the end, to the accident framing it was built to illustrate."
+  },
+  {
+   "kind": "theme",
+   "id": "framing-accidents-vs-speculative-risk",
+   "intro": "Concrete Problems in AI Safety (2016) opens by picking a fight over definitions. Rather than reasoning about hypothetical superintelligence or leaning on a fictional rule like Asimov's first law, it insists on treating safety as ordinary accidents, harm from poorly specified everyday systems, grounded in a mundane cleaning robot chosen precisely because it is boring enough to be tractable.\n\nWhat follows traces how the paper stakes out that middle ground between two older framings. The cleaning robot and Asimov's first law serve as its anchors, one mundane, one fictional, pulling from opposite directions."
+  }
+ ]
+}

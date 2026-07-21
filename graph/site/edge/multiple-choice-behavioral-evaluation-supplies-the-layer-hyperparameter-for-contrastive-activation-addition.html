@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Multiple-choice behavioral evaluation and layer sweep — supplies the layer hyperparameter for → Contrastive Activation Addition (CAA) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Multiple-choice behavioral evaluation and layer sweep — supplies the layer hyperparameter for → Contrastive Activation Addition (CAA)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/judging-steered-outputs.html">Evaluating steering: behavior scores and capability floors</a></p>
+<section class="prose-section"><p>CAA has effectively one design decision that most determines whether it works at all: which layer to add the steering vector at. The multiple-choice evaluation is how the paper makes that decision, run before any multiplier tuning happens -- it sweeps every layer with the multiplier fixed at -1/+1 and scores the effect on 50 held-out questions per behavior (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"4.1 Multiple-choice question datasets", p. 4</a>), reporting a genuinely narrow answer: layer 13 and its neighbors in the 7B model, layer 14 or 15 in the 13B model, consistent across the sweep charts for every behavior tested. Only after that layer is fixed does the paper search over multiplier magnitude, and it does so by watching open-ended text quality degrade rather than by re-running the multiple-choice sweep (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=10" target="_blank" rel="noopener">§"Vector normalization choices", p. 10</a>). So the two hyperparameters are never searched jointly: multiple-choice evaluation answers "where," and open-ended generation quality answers "how much" -- a sequential search order the paper adopts in place of a full joint sweep.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/multiple-choice-behavioral-evaluation.html">Multiple-choice behavioral evaluation and layer sweep</a> and <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/ablations-carry-the-design-argument.html">The ablation is the argument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3 Method&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;4.1 Multiple-choice question datasets&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;4.1 Multiple-choice question datasets&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;9 Discussion&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

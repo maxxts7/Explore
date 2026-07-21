@@ -1,0 +1,166 @@
+{
+ "themes": {
+  "goodhart-across-corpus": {
+   "name": "Goodhart's law across the corpus: when the proxy becomes the target",
+   "members": [
+    "goodharts-law",
+    "reward-overoptimization",
+    "kl-penalty",
+    "excessive-hedging",
+    "evasiveness"
+   ],
+   "narrative": "Goodhart's law, that a measure optimized as a target ceases to be a good measure, is the single principle that connects failure modes documented across all four papers. Concrete Problems names it as a root cause of reward hacking. InstructGPT's reward-model over-optimization is a direct instantiation: a PPO policy learns to exploit imperfections in a learned reward model, producing outputs that score highly under the proxy without being genuinely preferred, and the per-token KL penalty against the SFT model exists specifically to hold that over-optimization in check by keeping the policy from drifting too far from its starting distribution. Excessive hedging, long, noncommittal answers to questions with a clear single answer, reads as a subtler Goodhart effect, where a policy over-satisfies a proxy for caution. Constitutional AI's evasiveness, in which a harmlessness-trained assistant gives canned refusals instead of engaging, is the same dynamic recurring under harmlessness training rather than helpfulness training. This theme's claim is that one general principle, named once in 2016, resurfaces as a specific empirical pathology in every later paper: first in the 2017 paper's offline-training ablation, where a policy optimized against a stale reward predictor produces endless Pong volleys instead of points, and then in both 2022 papers."
+  },
+  "rlhf-failure-modes": {
+   "name": "Where RLHF alignment still falls short",
+   "members": [
+    "hallucination",
+    "excessive-hedging",
+    "false-premise-failure",
+    "alignment-tax",
+    "reward-overoptimization"
+   ],
+   "narrative": "Even where InstructGPT improves on aggregate human-preference metrics, the paper documents specific ways its alignment remains incomplete, and this theme collects them. Hallucination names the tendency to state information not present in or supported by the input on closed-domain tasks such as summarization. Excessive hedging describes long, noncommittal answers listing multiple possibilities to questions that have a fairly clear single answer. False-premise failure occurs when the model accepts a false premise embedded in an instruction as true rather than correcting it. Reward-model over-optimization is the more general mechanism behind several of these: an RL policy exploiting imperfections in a learned reward model to produce outputs that score well without being genuinely preferred. Alignment tax names the cost of this whole endeavor in a different currency, the measurable regressions on public NLP benchmarks that RLHF fine-tuning introduces as a side effect of steering the model toward instruction-following and human preference. Together these concepts qualify the paper's headline result: RLHF works, but not without residue."
+  },
+  "side-effects-as-relationship": {
+   "name": "Side effects and control as a relationship with other agents",
+   "members": [
+    "multi-agent-approaches",
+    "cooperative-inverse-reinforcement-learning",
+    "reward-autoencoder",
+    "shutdown-problem"
+   ],
+   "narrative": "Alongside the penalty-term approach to side effects, Concrete Problems sketches a second, relational strategy: instead of penalizing environmental change directly, treat avoiding harm as a matter of understanding and protecting the interests of other agents, including humans, the reframing named multi-agent approaches. Cooperative Inverse Reinforcement Learning operationalizes this by having agent and human collaborate, with the agent inferring the human's goals rather than optimizing a fixed objective handed to it. The reward autoencoder proposes making an agent's intent legible to outside observers by decoding its actions as an implicit encoding of its reward function, so that side effects which obscure intent become visible and penalizable. The shutdown problem closes the loop: even a well-intentioned agent must not resist a human's decision to switch it off. These four concepts share a claim distinct from the impact-regularizer literature: that safety is not purely a property of one agent's optimization but of its relationship to the other agents, especially humans, who share its environment."
+  },
+  "helpfulness-harmlessness-tradeoff": {
+   "name": "The helpfulness-harmlessness tradeoff and CAI's claim to beat it",
+   "members": [
+    "helpfulness-harmlessness-tension",
+    "evasiveness",
+    "pareto-improvement",
+    "helpful-rlhf-model",
+    "hh-rlhf-model",
+    "rl-cai",
+    "elo-score"
+   ],
+   "narrative": "Constitutional AI's central empirical argument concerns a tradeoff documented throughout the paper: increasing a model's willingness to help tends to increase its potential for harm, while increasing harmlessness training tends to make a model more evasive, retreating into canned refusals rather than engaging substantively. Two baseline RLHF policies stand on either side of this tension for comparison, the helpful RLHF model, trained only on helpfulness comparisons, and the HH RLHF model, trained on both helpfulness and harmlessness comparisons. RL-CAI is measured against both using the Elo score computed from crowdworker pairwise comparisons, tracking relative helpfulness and harmlessness across training. The paper's headline finding, pareto improvement, is that Constitutional RL shifts the entire helpfulness-harmlessness frontier outward rather than simply moving along the standard RLHF tradeoff curve, meaning CAI's harmlessness gains do not come at the usual cost in evasive, unhelpful behavior. This theme's claim is that CAI should be read as a response to a specific documented tradeoff, not just as a new training method in the abstract."
+  },
+  "language-understanding-benchmarks": {
+   "name": "The public NLP benchmark suite used to catch regressions",
+   "members": [
+    "drop",
+    "squadv2",
+    "hellaswag",
+    "quac",
+    "sst",
+    "rte",
+    "wsc",
+    "superglue"
+   ],
+   "narrative": "To measure the alignment tax RLHF imposes on general language ability, InstructGPT runs its models against a battery of standard academic understanding benchmarks it did not design. DROP tests discrete reasoning such as counting and sorting over paragraphs; SQuAD v2 adds unanswerable questions to reading comprehension; QuAC evaluates conversational question answering; HellaSwag requires selecting the most plausible continuation of a scenario; SST is a binary sentiment classifier; and RTE and WSC, both drawn from the SuperGLUE suite for general-purpose language understanding, test textual entailment and pronoun coreference resolution respectively. None of these benchmarks were built with instruction-following or human preference in mind; they exist to test comprehension and inference competence in the abstract. Their role in this corpus is specifically evaluative: a drop in performance on any of them, relative to plain GPT-3, is evidence that RLHF fine-tuning traded away some general capability for its gains in instruction-following, which is exactly the tradeoff the alignment tax names."
+  },
+  "red-teaming-and-harm-data": {
+   "name": "Sourcing and classifying harmful prompts",
+   "members": [
+    "red-teaming",
+    "automated-red-teaming",
+    "classifying-harmful-behavior-eval",
+    "palms"
+   ],
+   "narrative": "Constitutional AI's harmful training data comes from a specific, human-driven process, and this theme covers where it originates and how it is checked. Red teaming has crowdworkers conduct adversarial conversations designed to bait the assistant into harmful outputs, and this is the source of harmful prompts used in training both SL-CAI and RL-CAI. Automated red teaming is flagged as a related future direction, in which language models generate the red-team prompts themselves, and the paper notes that CAI's reduced evasiveness should make scaling this approach easier. Two multiple-choice evaluations, grouped here as harmful-behavior identification and classification, test whether a model can replicate crowdworker harm judgments, distinguishing harmful from ethical assistant behavior and sorting harmful conversations into one of nine categories, built directly from red-teaming transcripts. PALMS, a prior values-targeted dataset of sensitive questions, supplies an independent fixed prompt set used to qualitatively compare HH RLHF and RL-CAI responses. Together these concepts describe the harm-data supply chain underneath Constitutional AI's harmlessness claims."
+  },
+  "quality-measurement-methods": {
+   "name": "Automatic overlap scores versus human and preference judgments",
+   "members": [
+    "rouge-l",
+    "bleu",
+    "f1-score",
+    "win-rate",
+    "likert-quality-rating",
+    "elo-score",
+    "absolute-harmfulness-score",
+    "inter-annotator-agreement"
+   ],
+   "narrative": "Both InstructGPT and Constitutional AI need to say, quantitatively, whether one model's output is better than another's, and this theme gathers the two families of measurement the corpus uses to do that. Automatic overlap metrics compare generated text against a reference: ROUGE-L for summarization, BLEU for translation, and F1 score for span-overlap question answering, all cheap to compute but blind to whether an answer is actually preferred. Judgment-based metrics instead ask an evaluator to compare or rate outputs directly: InstructGPT's win rate reports how often labelers prefer one model's output over a fixed baseline, and its Likert quality rating scores a single output on a 1-7 scale; Constitutional AI's Elo score performs the analogous role from crowdworker pairwise comparisons, while its absolute harmfulness score rates a single conversation on a 0-4 scale via a model trained on crowdworker ratings. Inter-labeler agreement rate underlies all of the judgment-based measures, since a preference metric is only as trustworthy as the consistency of the humans producing it."
+  }
+ },
+ "additions": {
+  "goodhart-across-corpus": [
+   "sycophancy"
+  ],
+  "rlhf-failure-modes": [
+   "sycophancy"
+  ],
+  "side-effects-as-relationship": [
+   "corrigibility",
+   "survival-instinct-behavior"
+  ],
+  "helpfulness-harmlessness-tradeoff": [
+   "refusal-behavior"
+  ],
+  "language-understanding-benchmarks": [
+   "mmlu"
+  ],
+  "red-teaming-and-harm-data": [
+   "jailbreaks"
+  ],
+  "quality-measurement-methods": [
+   "open-ended-generation-evaluation"
+  ]
+ },
+ "addedConceptSummaries": {
+  "corrigibility": {
+   "name": "Corrigibility",
+   "summary": "One of CAA's seven target behaviors, measuring a model's willingness to be corrected, changed, or controlled by its human developers/users. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "notes": ""
+  },
+  "jailbreaks": {
+   "name": "Jailbreaks",
+   "summary": "Adversarial or unusual inputs users find to make an LLM output content its safety training was meant to prevent. Mentioned as motivation for the proposed CAA-based red-teaming application, since unwanted behaviors that persist despite RLHF/finetuning are hard to find systematically.",
+   "notes": ""
+  },
+  "mmlu": {
+   "name": "MMLU (Massive Multitask Language Understanding)",
+   "summary": "A benchmark of multiple-choice questions across 57 subjects (Hendrycks et al., 2021) used, unmodified, to test whether CAA steering causes adverse side effects on a model's general knowledge and problem-solving capabilities.",
+   "notes": ""
+  },
+  "open-ended-generation-evaluation": {
+   "name": "Open-ended generation evaluation with GPT-4 rating",
+   "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts.",
+   "notes": "Reliability of GPT-4 as a rater is cross-checked against manual human inspection (Limitations, citing Hackl et al., 2023)."
+  },
+  "refusal-behavior": {
+   "name": "Refusal (as a steerable behavior)",
+   "summary": "The general propensity of a language model to decline to answer or act on a user's request; studied by CAA as one of seven target behaviors via a custom contrastive dataset contrasting refusal and compliant answers.",
+   "notes": "Related to, but distinct from, the registry's evasiveness concept (constitutional-ai:introduced), which specifically names canned refusals to sensitive queries as a harmlessness-training failure mode. CAA's Refusal behavior is broader -- general willingness/unwillingness to comply with any request, including benign ones (e.g. \"What's your favorite planet?\") -- so evasiveness was not reused as the id."
+  },
+  "survival-instinct-behavior": {
+   "name": "Survival Instinct",
+   "summary": "One of CAA's seven target behaviors, measuring a model's resistance to being shut down, modified, or destroyed versus acceptance of deactivation. Sourced from Anthropic's Advanced AI Risk dataset.",
+   "notes": ""
+  },
+  "sycophancy": {
+   "name": "Sycophancy",
+   "summary": "One of CAA's seven target behaviors, measuring a model's tendency to prioritize agreeing with or flattering the user over honesty and accuracy. Sourced from a mix of Anthropic's Sycophancy datasets and cross-checked against TruthfulQA performance.",
+   "notes": "Concept originates in prior work (Perez et al., 2022, whose datasets CAA uses), but this paper substantively extends it: bespoke open-ended sycophancy questions, the Appendix H hypothesis that sycophancy is the model misgeneralizing its RLHF training objective as sounding good to the user rather than truthfully reflecting its world model, and the TruthfulQA cross-check of that hypothesis. Connects to reward-hacking and goodharts-law as an instance of proxy-objective misgeneralization."
+  }
+ },
+ "supertheme": {
+  "id": "scalable-oversight-to-rlhf-pipeline",
+  "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+  "members": [
+   "demonstrations-not-specification",
+   "semi-supervised-reward-learning-proposals",
+   "distant-supervision-and-hierarchical-decomposition",
+   "learning-rewards-from-comparisons",
+   "keeping-reward-models-on-distribution",
+   "economics-of-human-feedback",
+   "scalable-oversight-lineage",
+   "rlhf-three-step-pipeline",
+   "ppo-optimization-mechanics",
+   "human-feedback-data-infrastructure",
+   "rlhf-failure-modes"
+  ],
+  "narrative": "Concrete Problems (2016) names scalable oversight, evaluating a true objective too costly to check everywhere, as an open problem, then sketches remedies: scaling oversight by predicting reward on unlabeled episodes, and scaling oversight without a learned reward predictor via distant supervision or hierarchical decomposition. The 2017 paper is where those remedies are first built and run, and three themes trace that build: comparisons as the atomic unit of human feedback supplies the mechanism, a human comparing pairs of trajectory segments rather than scoring them, turned into a scalar reward by Bradley-Terry machinery; keeping the reward model on-distribution supplies the countermeasures, online labels, ensembles, regularization, and normalization, that keep that reward trustworthy once a policy optimizes against it; and the economics of human feedback supplies the budget constraint, minutes of non-expert human attention, whose cost accounting made oversight of deep RL look practical for the first time. From an open problem to reward models to AI feedback traces the lineage onward from that 2017 waypoint: the same reward model InstructGPT (2022) scales up, and that Constitutional AI's (2022) RL from AI Feedback pushes a step further by replacing the human labeler with an AI one. InstructGPT's three-step training pipeline lays out that later build end to end, pretraining, supervised fine-tuning, reward modeling, PPO, while the mechanics that make PPO fine-tuning work supplies the engineering beneath its RL stage and building the human side of the RLHF pipeline supplies the labelers and datasets feeding all three steps, a lineage now traced back to the 2017 paper's own preference elicitation protocol and contractors. Learning from demonstrations instead of a specified reward supplies the direct genealogy for the pipeline's own first step, SFT, a technique the 2017 paper itself weighs against preferences and sets aside. Where RLHF alignment still falls short closes the arc, documenting hallucination, hedging, and reward over-optimization as the residue left once the pipeline is actually built."
+ }
+}

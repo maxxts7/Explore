@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>In-Context Vectors (ICV) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>In-Context Vectors (ICV)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior steering technique (Liu et al., 2023) that reduces toxicity and affects style transfer by intervening on attention activations across all transformer layers, rather than the residual stream at a single layer as CAA does.</p>
+<div class="page-intro"><p>There's more than one place inside a transformer to intervene, and more than one number of layers to intervene at. In-Context Vectors takes a different combination than CAA does: steering attention activations rather than the residual stream, and doing it across every layer simultaneously rather than picking just one.</p>
+<p>ICV was used to reduce toxicity and shift style in generated text, and it earns its place here mainly as contrast: measured against it, what's distinctive about CAA's own narrower, single-layer, residual-stream approach comes into sharper focus.</p></div>
+<section class="prose-section">
+<h2>Steering every layer&#x27;s attention at once</h2>
+<p>In-Context Vectors (ICV), from Liu et al. (2023), steers a model to reduce toxicity and change stylistic register. Its mechanism differs from CAA's in two coupled ways: "they steer the attention activations rather than the residual stream and intervene at all transformer layers rather than a single layer" (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"2 Related work", p. 3</a>). Rather than picking one site in the network and one point in depth, ICV spreads a correction across the attention mechanism of every layer simultaneously, so the model's behavior shifts through the accumulated effect of many small interventions rather than one larger one at a chosen point.</p>
+</section>
+<section class="prose-section">
+<h2>One committed layer versus every layer</h2>
+<p>CAA instead commits to a single site and a single depth: the <a href="../concept/residual-stream.html">Residual stream</a>, at a layer chosen by sweeping across the network and picking where the steering effect is largest -- layer 13 for Llama 2 7B, layer 14 or 15 for 13B -- with the <a href="../concept/steering-vector.html">Steering vector</a> then added at every token position after the prompt. The tradeoff runs in both directions. ICV's all-layer, attention-only intervention needs no per-behavior layer search, since it does not depend on locating the "right" layer. CAA's single-layer commitment costs that search but buys something ICV's diffuse intervention structurally cannot offer: a single, identifiable site whose properties can themselves be studied -- exactly what <a href="../concept/inter-layer-similarity-and-transfer.html">Inter-layer steering vector similarity and transfer</a> and <a href="../concept/activation-pca-visualization.html">PCA visualization of contrastive activations</a> go on to do, asking which layer a behavior's representation lives at and how far an effect transfers when the vector is moved elsewhere.</p>
+</section>
+<section class="prose-section">
+<h2>Where ICV sits among the alternatives</h2>
+<p>Alongside <a href="../concept/activation-addition.html">Activation Addition (ActAdd)</a>, <a href="../concept/inference-time-intervention.html">Inference-Time Intervention (ITI)</a>, and <a href="../concept/representation-engineering-zou.html">Representation Engineering (Zou et al. 2023)</a>, ICV is one more point in the space of choices CAA had to make about where an intervention lives: a single prompt pair or a dataset of hundreds, a handful of attention heads or the whole residual stream, one layer or all of them. ICV represents the "all layers" extreme of that last axis, which is also why it is the one prior technique in this group CAA does not build its own extraction procedure from -- the two methods diverge on where to intervene before they would even get to disagreeing about how the intervening vector should be computed.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>In-Context Vectors (ICV)</strong> — <a href="../edge/in-context-vectors-spans-every-layer-unlike-contrastive-activation-addition.html">spans every layer unlike</a> → Contrastive Activation Addition (CAA)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/activation-engineering-family.html">The activation engineering family: from single pairs to datasets</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2 Related work&rdquo;, p. 3</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

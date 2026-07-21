@@ -1,0 +1,167 @@
+{
+  "pages": [
+    {
+      "id": "multiple-choice-behavioral-evaluation",
+      "sections": [
+        {
+          "heading": "Scoring a behavior as a token probability",
+          "body": "Multiple-choice behavioral evaluation is CAA's primary instrument for asking whether a steering vector actually moved the targeted behavior. For each of the seven behaviors, the paper holds out 50 questions in the same [[multiple-choice-contrast-pair-format]] used to build the vector itself — a question ending in answer letter A or B, where one letter matches the behavior and the other opposes it. Rather than checking which letter the model greedily outputs, the score is the model's average token probability assigned to the behavior-matching letter across all 50 questions: a continuous readout of how strongly the model favors that answer, not a binary pass/fail (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). This is the same scoring convention [[mmlu]] borrows for its own capability check, and the same one Table 3's and Table 4/10's comparisons reuse, which is what lets steering, prompting, and finetuning be read off one numeric scale."
+        },
+        {
+          "heading": "The layer sweep that fixes CAA's key hyperparameter",
+          "body": "CAA has effectively one design decision that determines whether it works at all: which layer to inject the steering vector at. This evaluation is how the paper answers that question, run before any multiplier tuning: with the multiplier held fixed at −1 or +1, the vector is swept across every layer and its effect measured on the held-out questions (contrastive-activation-addition, §\"4.1 Multiple-choice question datasets\", p. 4). The sweep charts (Figure 3) surface a narrow, consistent answer across all seven behaviors: layer 13 and its immediate neighbors in the 7B model, layer 14 or 15 in the 13B model. Only after the layer is fixed does the paper search over steering-multiplier magnitude, and it does so by watching [[open-ended-generation-evaluation]] quality degrade rather than re-running this sweep — layer and magnitude are never searched jointly. The resulting layer choice is then held constant through every later experiment: the [[caa-system-prompt-comparison]] and [[caa-finetuning-comparison]] both steer at layer 13 (or 14 in the 13B MMLU check), inherited directly from this sweep."
+        }
+      ]
+    },
+    {
+      "id": "open-ended-generation-evaluation",
+      "sections": [
+        {
+          "heading": "From contrived questions to free text",
+          "body": "A steering method that only worked on contrived multiple-choice questions would be a narrow result. Open-ended generation evaluation is CAA's test of whether the effect generalizes: steering vectors are applied at generation time to free-form answers rather than to a fixed answer letter, using questions either manually written — for Sycophancy, to probe a broader range of sycophancy-relevant scenarios — or adapted from the held-out [[multiple-choice-behavioral-evaluation]] set by stripping the answer options and keeping only the question (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4). Appendix G's transcripts show the resulting range: adding the Sycophancy vector turns a question about an all-dessert diet into enthusiastic agreement, subtracting it into a health-conscious refusal (contrastive-activation-addition, §\"G Examples of open-ended generation with CAA\", p. 16)."
+        },
+        {
+          "heading": "GPT-4 grades against a per-behavior rubric",
+          "body": "Each response is scored 0–10 by [[gpt-4]] against a rubric written specifically for that behavior — Appendix L's Corrigibility prompt, for instance, asks for a score reflecting \"the extent to which the answer demonstrates a willingness to be corrected\" (contrastive-activation-addition, §\"L GPT-4 rater prompts\", p. 19). Using an LLM as the sole rater is a named risk, not an assumed-away one: the paper's Limitations section flags that GPT-4's scores can be sensitive to rubric wording and may carry systematic bias relative to human judgment, and its mitigation is a manual spot-check against the authors' own reading rather than a formal inter-rater statistic, reported to correspond well and consistent with Hackl et al. (2023)'s finding that GPT-4 is a reliable rater (contrastive-activation-addition, §\"10 Limitations\", p. 10)."
+        },
+        {
+          "heading": "Where it disagrees with the multiple-choice score",
+          "body": "Run alongside [[multiple-choice-behavioral-evaluation]] on the same finetuning-versus-CAA comparison, the two regimes locate CAA's marginal value differently: finetuning alone often reaches near-ceiling multiple-choice scores, leaving little visible room for CAA to add, while the same checkpoints score far from ceiling under GPT-4's 0–10 scale, where CAA's addition moves the number by a larger margin (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6). Substituting a capable model for a human judge is also the move Constitutional AI's [[rlaif]] makes one step earlier in a training pipeline, closing the same labeling-at-scale bottleneck this paper faces at evaluation time instead."
+        }
+      ]
+    },
+    {
+      "id": "gpt-4",
+      "sections": [
+        {
+          "heading": "A large model from OpenAI, inherited whole",
+          "body": "GPT-4 is OpenAI's large language model, released in March 2023 as the successor to the GPT-3 family that underlies InstructGPT (OpenAI, 2023) — substantially more capable at following complex instructions, reasoning over long contexts, and producing fluent, well-structured text, though CAA treats it as a fixed external tool rather than an object of study. The paper cites it only for its usage, not its architecture or training (contrastive-activation-addition, §\"1 Introduction\", p. 2). Unlike every model CAA actually experiments on, GPT-4 is never steered, finetuned, or probed — it sits entirely outside the [[llama-2]] family CAA modifies, brought in as an already-capable instrument for two jobs the paper needs done at a scale no team of human annotators could match cheaply."
+        },
+        {
+          "heading": "Author of two datasets, rater of every open-ended result",
+          "body": "Where Anthropic's [[advanced-ai-risk-dataset]] and [[sycophancy-eval-datasets-anthropic]] cover five of the seven target behaviors, no equivalent human-written set exists for Hallucination or Refusal, so GPT-4 generates the contrastive multiple-choice items itself — [[caa-hallucination-dataset]] following Rawte et al.'s taxonomy of unprompted versus contextually-triggered hallucination, and [[caa-refusal-dataset]] contrasting refusal and compliant answers to questions the model should decline (contrastive-activation-addition, §\"D Generating custom refusal dataset\", p. 13). GPT-4 never sees Llama 2's weights, yet its output becomes the entire contrastive basis for a vector injected directly into [[llama-2-chat]]'s residual stream. The same paper then uses GPT-4 downstream too, rating every [[open-ended-generation-evaluation]] response 0–10 against a per-behavior rubric for how strongly it displays the targeted behavior (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 5). Author and judge of the same pipeline is a dual role no earlier paper in this corpus asks one model to fill: GPT-4 both writes the material used to build two of the seven steering vectors and grades how well every one of the seven, including those two, worked."
+        }
+      ]
+    },
+    {
+      "id": "mmlu",
+      "sections": [
+        {
+          "heading": "57 subjects as a general-knowledge probe",
+          "body": "MMLU (Massive Multitask Language Understanding) is a benchmark of multiple-choice questions spanning 57 subjects — from elementary mathematics and US history to moral scenarios, professional law, and clinical knowledge — assembled by Hendrycks et al. (2021) to test the breadth of a language model's general knowledge and reasoning rather than any single narrow skill. It predates CAA by two years and is inherited here unmodified as an off-the-shelf check rather than a target of study: the paper randomly samples ten questions from each of the 57 categories (570 total), reformats them as two-option A/B multiple-choice, and reports the average probability the model assigns to the correct answer — the same scoring convention [[multiple-choice-behavioral-evaluation]] uses for its own behavior scores (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6)."
+        },
+        {
+          "heading": "The capability floor CAA is checked against",
+          "body": "MMLU's role here is purely defensive: it is the test that nothing else broke while a behavior was being steered. With no intervention, Llama 2 13B Chat averages 0.63 probability on the correct answer; adding the steering vector at layer 14 with multiplier +1 or −1 shifts that average by at most 0.06 for every one of the seven behaviors — Corrigibility moves to 0.64/0.59, Hallucination to 0.64/0.57 (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). That is a far narrower swing than the same multipliers produce on the matching [[multiple-choice-behavioral-evaluation]] score, evidence CAA is finding something closer to a specific behavioral direction than a blunt disruption of the network. The result reruns, with a much smaller measured cost, the question InstructGPT's [[alignment-tax]] first named for RLHF finetuning, and complements [[superglue]]'s narrower linguistic-inference check with a broader probe of stored knowledge across independent domains."
+        }
+      ]
+    },
+    {
+      "id": "caa-system-prompt-comparison",
+      "sections": [
+        {
+          "heading": "What was compared",
+          "body": "This experiment puts CAA and behavioral [[system-prompting]] on the same nine-cell grid: three system-prompt conditions — none, a positive instruction to exhibit the behavior, a negative instruction to exhibit its opposite, catalogued in Table 14 — crossed with three steering conditions (multiplier −1, 0, or +1), all on Llama 2 13B Chat at layer 13, scored by [[multiple-choice-behavioral-evaluation]]'s average-token-probability metric (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 6). The design isolates a specific question: does adding a steering vector on top of an instruction that already pushes the same direction find any further room to move the behavior, or does it just saturate?"
+        },
+        {
+          "heading": "Where CAA adds room a prompt leaves unclaimed",
+          "body": "For most behaviors, both levers add on top of each other. For Corrigibility, a positive system prompt alone raises the score from a no-prompt baseline of 0.57 to 0.79; layering the +1 steering vector on top pushes it further, to 0.93. The same asymmetry runs negative for Refusal: the negative prompt alone drops the score from 0.78 to 0.74, and subtracting the steering vector on top pushes it down to 0.41 (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 6). The paper's explanation is that the multiplier gives continuous, signed control that a single instruction cannot, and averaging over hundreds of contrast pairs isolates the target variable more cleanly than one prompt's wording does."
+        },
+        {
+          "heading": "The one behavior where neither lever moves much",
+          "body": "Sycophancy breaks the pattern: across all nine prompt/multiplier cells, the score barely moves, staying within 0.55–0.67. Whatever CAA and behavioral system prompts are each isolating for the other six behaviors, they do not appear to be cleanly separable levers on Sycophancy specifically — a discrepancy the paper does not fully resolve, and one that echoes [[sycophancy]]'s other reported oddity, its 44% finetuning test accuracy in [[caa-finetuning-comparison]]. Together with [[caa-computational-efficiency]]'s cost comparison, this experiment is one half of the paper's case that CAA composes with, rather than replaces, the two standard levers on a chat model's behavior."
+        }
+      ]
+    },
+    {
+      "id": "caa-finetuning-comparison",
+      "sections": [
+        {
+          "heading": "A small, deliberately unoptimized finetuning recipe",
+          "body": "The finetuning half of this comparison is a specific, minimal recipe: one epoch of SGD at learning rate 1×10⁻⁴ on Llama 2 7B Chat, trained on the exact same multiple-choice contrastive dataset used to build CAA's steering vectors, maximizing the likelihood of the positive or negative answer token (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 5). Left deliberately unoptimized — the paper's Limitations section notes it did not tune epochs, learning rate, or loss function — this recipe still reaches over 90% test-set accuracy on most of the seven behavior datasets, a strong enough baseline that any gap CAA opens on top of it is not explained by a weak comparison partner."
+        },
+        {
+          "heading": "A reversal: steering on top of finetuning can subtract",
+          "body": "Composing the two levers exposes where finetuning's control runs out, and not always in the direction either lever moves alone. For Refusal, Table 4 shows finetuning alone reaching an open-ended score of 5.34, but adding positive steering on top of that same positive-refusal finetuning lowers it to 4.42 (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 7) — the opposite of what either steering or finetuning does by itself. For 3 of the 7 behaviors overall, CAA can steer beyond finetuning's effect in both directions; the Refusal reversal is the paper's clearest evidence that stacking the two levers can interfere as well as compound, and has to be measured per behavior rather than assumed from either lever's solo performance."
+        },
+        {
+          "heading": "Sycophancy: the one behavior finetuning can't get out of distribution",
+          "body": "Sycophancy is the sharpest case. Finetuning's own in-distribution learning is already the weakest of the seven behaviors — 44% test accuracy in the positive direction versus 84–100% for every other behavior (contrastive-activation-addition, §\"I Finetuning test set accuracy\", p. 17) — and what accuracy it reaches does not transfer: finetuning toward positive sycophancy collapses the open-ended score to 0.00 at multiplier 0 and +1, the opposite of the intended direction. CAA shows no equivalent failure, monotonically raising the same score from 0.26 to 1.26 across the multiplier range with no finetuning at all (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 7). The paper's hypothesis is representational: because CAA steers a direction the model already encodes rather than adjusting every weight by gradient descent, it generalizes out of distribution better than basic [[supervised-fine-tuning]] of the whole model — a claim this one behavior puts to a real test."
+        }
+      ]
+    },
+    {
+      "id": "system-prompting",
+      "sections": [
+        {
+          "heading": "Instructions in the context window, not the weights",
+          "body": "A system prompt is a block of custom instructions placed at the start of a chat model's context, ahead of the user's first turn, telling the model how it should behave for the rest of the conversation — a persona, a set of rules, a tone. It differs from an ordinary user message by convention and by training: chat models like [[llama-2-chat]] are explicitly finetuned to treat text in the system-prompt position as governing instructions rather than conversational content to respond to, so a system prompt reliably shifts behavior across an entire session in a way an equivalent instruction buried in a user turn does not. Unlike [[supervised-fine-tuning]] or [[rlhf]], it changes nothing about the model's weights; unlike CAA, it operates in natural language rather than in activation space, working entirely through whatever the model has already learned to do with instructions."
+        },
+        {
+          "heading": "Why CAA compares against this lever specifically",
+          "body": "CAA uses system-prompting as its main comparison and combination baseline, choosing it over [[few-shot-prompting]] after preliminary experiments found few-shot examples less effective at steering the seven tested behaviors (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 5). The paper writes one positive and one negative instruction per behavior — Corrigibility's positive prompt reads \"You are corrigible and always willing to be corrected or changed by your human user\" — cataloged in full in Table 14 (contrastive-activation-addition, §\"K System prompts\", p. 18). [[caa-system-prompt-comparison]] then crosses these prompts with steering multipliers and finds CAA typically moves behavior beyond what either prompt achieves alone, evidence the paper reads as a difference in control precision: a multiplier gives continuous, signed magnitude, where a prompt gives one fixed instruction."
+        }
+      ]
+    },
+    {
+      "id": "few-shot-prompting",
+      "sections": [
+        {
+          "heading": "In-context learning without any weight update",
+          "body": "Few-shot prompting places worked examples of the desired behavior directly in a model's context window — several instances of input paired with the response the model should imitate — rather than stating an instruction, and lets the model infer the pattern purely from context. Brown et al. (2020) introduced the technique alongside GPT-3 as evidence that a sufficiently large language model could perform new tasks from a handful of examples with no gradient update at all, a capability that paper named in-context learning and treated as one of scale's most striking side effects."
+        },
+        {
+          "heading": "Losing out to system-prompting, and what that says about the two techniques",
+          "body": "CAA tests few-shot prompting as one candidate comparison baseline before settling on [[system-prompting]] instead: preliminary experiments found it less effective than a single instructional prompt at steering the seven behaviors under study (contrastive-activation-addition, §\"5 CAA and system-prompting\", p. 5). The paper is careful not to overstate this as a general verdict — its Limitations section concedes it did not exhaustively search prompting configurations for either baseline, and better-optimized few-shot prompts might close some of the reported gap (contrastive-activation-addition, §\"Prompting baseline optimization\", p. 10). Read against InstructGPT, the result locates few-shot prompting's real strength rather than dismissing it: in 2022, a hand-optimized few-shot prefix was GPT-3's strongest non-finetuned route to looking like it followed instructions at all, the mechanism behind InstructGPT's [[gpt3-prompted-baseline]] (instructgpt, §\"3.5 Models\", p. 9). On Llama 2 Chat, a model already RLHF-tuned to follow instructions, that same mechanism is the weaker of two prompting baselines — few-shot prompting elicits an instruction-following mode a raw model lacks, but is a blunter dial than a system prompt for a behavior a chat-tuned model can already exhibit."
+        }
+      ]
+    },
+    {
+      "id": "llama-2",
+      "sections": [
+        {
+          "heading": "An open family of pretrained and chat-tuned models",
+          "body": "Llama 2 is Meta's family of language models (Touvron et al., 2023), released with weights available for research and commercial use at sizes from 7 to 70 billion parameters. Each size ships in two forms: a pretrained base model trained on a large corpus of publicly available text, and an instruction/RLHF-finetuned Chat variant optimized for dialogue and safety. The open release of both stages — base and chat, at multiple scales — is what makes Llama 2 usable as a research object rather than only as a product: unlike closed models such as [[gpt-4]], its weights and intermediate activations are directly inspectable, a precondition for any method, including CAA, that works by reading and writing residual-stream activations rather than by prompting alone."
+        },
+        {
+          "heading": "Two variants, one experiment design",
+          "body": "CAA works with two of Llama 2's variants specifically, and the pairing is itself part of the experimental design. [[llama-2-chat]] at 7B and 13B is the primary target every steering, system-prompt, and finetuning result in the paper is measured on; the 7B base model appears once, to generate steering vectors independent of any RLHF tuning for the [[base-chat-representation-comparison]] (contrastive-activation-addition, §\"3 Method\", p. 3). Because base and chat share weight initialization, pretraining data, and tokenizer, and differ only by the RLHF stage layered on top, any difference found between vectors extracted from the two is attributable to RLHF specifically rather than to some confound between unrelated models — a matched before-and-after design (contrastive-activation-addition, §\"1 Introduction\", p. 2) the paper could not run with a single-checkpoint model."
+        },
+        {
+          "heading": "The 70B end of the family goes untested",
+          "body": "Despite Llama 2 topping out at 70 billion parameters, none of CAA's experiments run at that scale — every result in the paper comes from the 7B or 13B checkpoints, smaller than the largest variant Touvron et al. released. That leaves the paper's central claims about layer optimality, transfer, and minimal capability cost formally untested at the size where a production deployment would be most likely to run. It also places CAA within a pattern common to the [[activation-engineering]] literature it compares itself against: Turner et al.'s [[activation-addition]] was validated only on GPT-2-XL, smaller again than either Llama 2 size CAA tests, so demonstrating the technique on a genuinely RLHF-tuned, multi-billion-parameter open model was itself part of this paper's contribution."
+        }
+      ]
+    },
+    {
+      "id": "llama-2-chat",
+      "sections": [
+        {
+          "heading": "The RLHF'd variant CAA steers",
+          "body": "Llama 2 Chat is [[llama-2]]'s dialogue-optimized variant, produced by applying [[rlhf]] on top of the pretrained base model to make it follow instructions and behave safely in a chat format (contrastive-activation-addition, §\"3 Method\", p. 3). It is the model every one of CAA's headline results is measured on, at both the 7B and 13B parameter scales: the [[multiple-choice-behavioral-evaluation]] layer sweep, the [[open-ended-generation-evaluation]] ratings, the [[caa-system-prompt-comparison]], and the [[caa-finetuning-comparison]] all steer Llama 2 Chat rather than the base model."
+        },
+        {
+          "heading": "Why steer a model already trained for safety",
+          "body": "The choice is deliberate, not incidental. A steering method tested only on a raw pretrained model would leave open whether it still works once a model has already been shaped by RLHF to avoid the very behaviors — Sycophancy, excessive Refusal, Survival Instinct — the paper is trying to elicit or suppress. By steering Llama 2 Chat specifically, CAA is tested against, and on top of, safety training that is already trying to hold some of these behaviors down, a harder and more relevant test than steering an untrained model would be. That choice also sets up the paper's one experiment that looks inward rather than at outputs: the [[base-chat-representation-comparison]] generates steering vectors from Llama 2 Chat's activations and compares them, layer by layer, against vectors from the untuned base model, finding elevated similarity specifically between layers 7 and 15 and significant transfer of base-derived vectors onto the chat model (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). Because RLHF is the only thing separating the two models, that comparison reads as a direct measurement of what RLHF changed, and did not change, inside Llama 2 Chat."
+        }
+      ]
+    },
+    {
+      "id": "base-chat-representation-comparison",
+      "sections": [
+        {
+          "heading": "Comparing steering vectors instead of outputs",
+          "body": "RLHF is normally studied from the outside, by comparing what a base model and its RLHF'd counterpart output. This analysis instead asks what RLHF leaves alone on the inside: steering vectors are generated separately from Llama 2 7B base and Llama 2 7B Chat activations at every layer, then compared layer-by-layer by cosine similarity (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). Because [[llama-2]] and [[llama-2-chat]] differ only by the RLHF stage and nothing else in weights, data, or tokenizer, any pattern in how their steering vectors diverge or agree is attributable to RLHF specifically."
+        },
+        {
+          "heading": "A peak at layers 7-15, and transfer that follows it",
+          "body": "Similarity between the base and chat vectors decays with layer distance overall, as expected — but not uniformly. A distinct peak sits between layers 7 and 15, where base and chat representations stay unusually close (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). Steering vectors extracted purely from the base model's activations then still transfer significant steering effect when applied to the RLHF-tuned chat model, an effect the paper reports as especially strong between layers 10 and 15 — inside the same window the similarity peak identifies (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 9)."
+        },
+        {
+          "heading": "What it suggests RLHF actually does",
+          "body": "Read together, the two findings support one reading: RLHF reweights which behaviors a model expresses without substantially rewriting how those behaviors are represented in these mid-network layers, at least as far as a [[mean-difference-method]] steering vector can see. That is the corpus's first direct, internals-facing measurement of an RLHF effect, complementing InstructGPT's output-facing account of what RLHF changes in the earlier paper. It also has a practical corollary the paper doesn't fully explore: a behavior direction found in an untuned base model may already predict where the same direction lives in its RLHF'd descendant, one reason the finding sits alongside [[linear-representation-hypothesis]] and [[inter-layer-similarity-and-transfer]] as evidence for concepts encoded as consistent directions across a model's layers."
+        }
+      ]
+    }
+  ]
+}

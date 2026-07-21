@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Base vs. RLHF-chat model representation comparison — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Base vs. RLHF-chat model representation comparison</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An analysis comparing steering vectors generated from Llama 2 base model activations against those from Llama 2 Chat, finding elevated similarity between layers 7-15 and that base-model-derived vectors still transfer significant steering effect onto the RLHF-tuned chat model.</p>
+<div class="page-intro"><p>RLHF is supposed to reshape a model's behavior, but it's much less clear how much it reshapes the internal representations underneath that behavior. Comparing steering vectors built from the base Llama 2 model against vectors built from its RLHF-tuned chat counterpart is one way to find out.</p>
+<p>What that comparison turns up follows: elevated similarity between the two models' vectors across a specific middle stretch of layers, and base-model vectors that still steer the chat model's behavior when applied directly, both pointing toward RLHF leaving the mid-network encoding of these behaviors largely intact.</p></div>
+<section class="prose-section">
+<h2>Comparing steering vectors instead of outputs</h2>
+<p>RLHF is normally studied from the outside, by comparing what a base model and its RLHF'd counterpart output. This analysis instead asks what RLHF leaves alone on the inside: steering vectors are generated separately from Llama 2 7B base and Llama 2 7B Chat activations at every layer, then compared layer-by-layer by cosine similarity (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 7</a>). Because <a href="../concept/llama-2.html">Llama 2</a> and <a href="../concept/llama-2-chat.html">Llama 2 Chat</a> differ only by the RLHF stage and nothing else in weights, data, or tokenizer, any pattern in how their steering vectors diverge or agree is attributable to RLHF specifically.</p>
+</section>
+<section class="prose-section">
+<h2>A peak at layers 7-15, and transfer that follows it</h2>
+<p>Similarity between the base and chat vectors decays with layer distance overall, as expected — but not uniformly. A distinct peak sits between layers 7 and 15, where base and chat representations stay unusually close (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 7</a>). Steering vectors extracted purely from the base model's activations then still transfer significant steering effect when applied to the RLHF-tuned chat model, an effect the paper reports as especially strong between layers 10 and 15 — inside the same window the similarity peak identifies (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 9</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What it suggests RLHF actually does</h2>
+<p>Read together, the two findings support one reading: RLHF reweights which behaviors a model expresses without substantially rewriting how those behaviors are represented in these mid-network layers, at least as far as a <a href="../concept/mean-difference-method.html">Mean Difference (MD) vector extraction</a> steering vector can see. That is the corpus's first direct, internals-facing measurement of an RLHF effect, complementing InstructGPT's output-facing account of what RLHF changes in the earlier paper. It also has a practical corollary the paper doesn't fully explore: a behavior direction found in an untuned base model may already predict where the same direction lives in its RLHF'd descendant, one reason the finding sits alongside <a href="../concept/linear-representation-hypothesis.html">Linear representation hypothesis</a> and <a href="../concept/inter-layer-similarity-and-transfer.html">Inter-layer steering vector similarity and transfer</a> as evidence for concepts encoded as consistent directions across a model's layers.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition (CAA)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Base vs. RLHF-chat model representation comparison</strong> — <a href="../edge/base-chat-representation-comparison-measures-the-effect-of-rlhf.html">measures the effect of</a> → Reinforcement learning from human feedback (RLHF) <span class="tag hindsight">hindsight</span></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/what-rlhf-leaves-behind.html">Base versus chat: what RLHF changes inside</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>
