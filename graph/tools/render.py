@@ -764,6 +764,10 @@ class SiteBuilder:
         pid = entry["id"]
         p = self.papers[pid]
         stories = entry["stories"]
+        # Presentation order (stable): the big-picture telling lands first and is
+        # the default tab; store order is unchanged.
+        tab_rank = {"The big picture": 0, "Inside the paper": 1, "Across the corpus": 2}
+        stories = sorted(stories, key=lambda s: tab_rank.get(s.get("tab"), len(tab_rank)))
 
         parts = []
         parts.append(f"<h1>{esc(p['title'])}</h1>")
@@ -775,11 +779,11 @@ class SiteBuilder:
             f' &middot; <a href="{self.href(pk, "index", None)}#tab-papers">its place among the papers</a></p>'
         )
         multi_note = (
-            '<p class="section-note">One paper, several tellings. <b>Inside the '
-            'paper</b> follows the paper&rsquo;s own arc; <b>Across the corpus</b> '
-            'traces how it connects to the other papers; <b>The big picture</b> '
-            'states the paper&rsquo;s own thesis and contributions in its own '
-            'terms; <b>The concepts</b> '
+            '<p class="section-note">One paper, several tellings. <b>The big '
+            'picture</b> states the paper&rsquo;s own thesis and contributions in '
+            'its own terms; <b>Inside the paper</b> follows the paper&rsquo;s own '
+            'arc; <b>Across the corpus</b> '
+            'traces how it connects to the other papers; <b>The concepts</b> '
             'lists everything the paper uses, in reading order. Pick a tab, then '
             'use the +/&minus; toggles to open it level by level, or set a '
             'granularity to read the whole thing at that zoom.</p>'
@@ -1323,10 +1327,10 @@ class SiteBuilder:
             parts.append(
                 "<p>Every paper has a page of its own &mdash; open it from its card "
                 "in the Papers tab. A row of tabs at the top picks the telling: "
-                "<b>Inside the paper</b> follows the paper&rsquo;s own arc, "
-                "<b>Across the corpus</b> traces how it connects to the other papers, "
-                "and <b>The big picture</b> states the paper&rsquo;s own thesis and "
-                "contributions in its own terms. They all cover the same paper &mdash; "
+                "<b>The big picture</b> states the paper&rsquo;s own thesis and "
+                "contributions in its own terms, <b>Inside the paper</b> follows "
+                "the paper&rsquo;s own arc, and <b>Across the corpus</b> traces how "
+                "it connects to the other papers. They all cover the same paper &mdash; "
                 "choose whichever question interests you most.</p>"
             )
             parts.append(self._help_figure(
