@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Train-time projection-regularization baseline — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Train-time projection-regularization baseline</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An alternative training-time mitigation the paper designs and tests: adding a regularization loss term that penalizes changes in the projection of activations along a trait&#x27;s persona direction during finetuning. Found largely ineffective -- the model still expresses the trait post-finetuning -- likely because optimization pressure encodes the trait via alternative activation-space directions that bypass the penalized one.</p>
+<div class="page-intro"><p>Penalizing a model for moving toward an unwanted trait during training sounds like the more conservative, obvious fix — simpler than actively pushing activations around, and aimed at the exact quantity you want to control. The paper builds and tests this idea directly, and the obvious fix turns out not to work.</p>
+<p>Adding the penalty to the finetuning loss is straightforward; why the model still ends up expressing the trait afterward, despite the added cost, is the more interesting part. The failure reveals something by contrast: discouraging movement along one known direction leaves the model free to reroute the same behavior through directions the penalty never touches, unlike the paper's preferred method, which removes the pressure to move at all.</p></div>
+<section class="prose-section">
+<h2>What it is</h2>
+<p>The regularization baseline is a training-time mitigation the paper designs and tests as a natural alternative to steering, rather than one adapted from prior work: "a natural idea to suppress persona shift during finetuning is to add a regularization loss that penalizes changes in the projection of activations along trait-relevant directions" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.5 Train-time regularization along undesirable persona directions", p. 48</a>). Unlike <a href="../concept/preventative-steering.html">Preventative steering</a>, which actively supplies activation movement along a persona direction, this approach discourages movement along that direction by adding a penalty term to the finetuning loss, an intuitive, minimal-intervention idea that targets the exact same projection <a href="../concept/finetuning-shift.html">Finetuning shift (activation-shift metric)</a> measures.</p>
+</section>
+<section class="prose-section">
+<h2>Why it fails</h2>
+<p>The regularizer reduces the measured projection shift to some extent, but "the model is still able to express the trait after finetuning" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.5 Train-time regularization along undesirable persona directions", p. 48</a>). The paper's diagnosis is that the next-token prediction loss "may unnaturally drive the model to encode the persona through alternative directions in activation space, thus bypassing the regularization signal" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.5 Train-time regularization along undesirable persona directions", p. 48</a>). This is a Goodhart-shaped failure: the regularizer penalizes one measured proxy for trait presence, projection onto a single known direction, and gradient descent routes the same underlying prediction problem through a different, unpenalized direction instead, satisfying the letter of the constraint while still solving the training objective.</p>
+</section>
+<section class="prose-section">
+<h2>Why preventative steering avoids the same trap</h2>
+<p>Preventative steering does not merely discourage movement along the persona direction; during training it actively supplies that movement externally, at every step, via $h_\ell \leftarrow h_\ell + \alpha \cdot v_\ell$ (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>). That difference in mechanism, not merely in degree, is what the comparison is meant to isolate: regularization fights the symptom it can see, a single monitored projection value, while steering removes the underlying driver, the need to fit trait-eliciting training responses by changing internal representations at all, along any direction. Penalizing a measured direction and pre-empting the need for a direction turn out not to be equivalent interventions, even though both operate on the identical projection quantity.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/steering-mitigation-of-finetuning-shifts.html">Steering-based mitigation of finetuning-induced persona shifts</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Preventative steering — <a href="../edge/preventative-steering-outperforms-train-time-regularization-baseline.html">outperforms</a> → <strong>Train-time projection-regularization baseline</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=47" target="_blank" rel="noopener">&sect;&ldquo;J.5 Train-time regularization along undesirable persona directions&rdquo;, p. 47</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

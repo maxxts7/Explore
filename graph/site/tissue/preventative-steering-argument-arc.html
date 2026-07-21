@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>One result, ringed by its controls: the preventative-steering argument — Connective theme</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-tissue">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-tissue">connective theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>One result, ringed by its controls: the preventative-steering argument</h1>
+<div class="page-intro"><p>A single claim, that steering a model toward an unwanted trait during training can stop it from learning that trait at all, does not stand on its own; it is backed by a ring of separate comparisons, each checking the claim against a different rival or a different kind of pressure.</p>
+<p>The page walks that ring in order, starting from the same intervention run in reverse timing, against a rival method that zeroes out the trait instead of steering away from it, against a cruder penalty that turns out not to work, against a prompt-based version of the same idea, and against a strengthened multi-layer version, before ending on a case designed to break the claim by asking the model to learn something genuinely new while still being steered away from an old habit.</p></div>
+<section class="prose-section"><p>Preventative steering's case -- that steering into a trait during finetuning prevents its acquisition -- rests on a ring of comparisons. Post-hoc steering inverts into it: it subtracts a persona vector after finetuning to fight an already-learned trait, preventative steering adds the same vector during finetuning to pre-empt learning it, sign and timing reversed, reactive against proactive. Preventative steering cancels out finetuning shift, the metric that predicts trait expression at r=0.76-0.97: by externally supplying the activation movement finetuning would otherwise induce, it keeps that measured shift small, and on benign data that would not have moved the persona anyway, both trait score and MMLU stay unchanged. Against CAFT, which zero-ablates the trait direction regardless of sign, preventative steering's directional push wins clearly on hallucination, where CAFT's near-zero base projection means zeroing changes nothing, though CAFT matches it on evil and sycophancy, where its own negative base projection already resembles steering. Preventative steering outperforms a train-time regularization baseline that merely penalizes projection change, because the regularizer's target is a single proxy that optimization routes around, while steering removes the underlying pressure to encode the trait at all. Preventative prompting approximates the same logic in text instead of activations, matching steering at a moderate coefficient but with no way to be pushed stronger, where steering's higher coefficient suppresses further still. Multi-layer steering, built from a layer-incremental vector that avoids double-counting, strengthens single-layer steering on the hardest datasets to near-baseline suppression at no MMLU cost. The fact-acquisition case study stress-tests the whole claim adversarially: steering hard enough to suppress hallucination induced by genuinely new facts costs only a little new-fact accuracy, showing the vaccine does not block real learning.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Member edges</h2><ul><li><a href="../edge/post-hoc-steering-inverts-into-preventative-steering.html">Post-hoc (inference-time) steering mitigation — inverts into → Preventative steering</a></li><li><a href="../edge/preventative-steering-cancels-out-finetuning-shift.html">Preventative steering — cancels out → Finetuning shift (activation-shift metric)</a></li><li><a href="../edge/preventative-steering-contrasts-with-caft.html">Preventative steering — contrasts with → CAFT (Concept Ablation Fine-Tuning)</a></li><li><a href="../edge/preventative-steering-outperforms-train-time-regularization-baseline.html">Preventative steering — outperforms → Train-time projection-regularization baseline</a></li><li><a href="../edge/preventative-prompting-approximates-preventative-steering.html">Preventative prompting — approximates → Preventative steering</a></li><li><a href="../edge/multi-layer-steering-strengthens-preventative-steering.html">Multi-layer steering with layer-incremental vectors — strengthens → Preventative steering</a></li><li><a href="../edge/fact-acquisition-case-study-stress-tests-preventative-steering.html">Fact-acquisition case study — stress tests → Preventative steering</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind the concepts its member edges connect.</p><details class="sources-details"><summary>13 source passages in 1 paper</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.2 Activation shift along persona vector predicts trait expression&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5.1 Post-hoc steering mitigates behavioral shifts&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.2 Preventative steering limits behavioral shifts during finetuning&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;7 Related work&rdquo;, p. 12</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=40" target="_blank" rel="noopener">&sect;&ldquo;F Finetuning shift can be predicted by pre-finetuning projection differences in training data&rdquo;, p. 40</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">&sect;&ldquo;J.1 Steering preserves domain-specific learned behavior while suppressing general persona shift&rdquo;, p. 45</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=46" target="_blank" rel="noopener">&sect;&ldquo;J.3 Steering across all layers&rdquo;, p. 46</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=47" target="_blank" rel="noopener">&sect;&ldquo;J.4 Comparison with CAFT&rdquo;, p. 47</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=47" target="_blank" rel="noopener">&sect;&ldquo;J.5 Train-time regularization along undesirable persona directions&rdquo;, p. 47</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">&sect;&ldquo;J.7 Case study: a fact-acquisition task&rdquo;, p. 48</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">&sect;&ldquo;J.7.1 Preventative steering on a fact-acquisition task&rdquo;, p. 48</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=49" target="_blank" rel="noopener">&sect;&ldquo;J.7.2 Preventative prompting on a fact-acquisition task&rdquo;, p. 49</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=50" target="_blank" rel="noopener">&sect;&ldquo;J.8 Steering examples&rdquo;, p. 50</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

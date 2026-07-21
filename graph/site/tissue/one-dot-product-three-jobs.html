@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>One dot product, three jobs — Connective theme</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-tissue">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-tissue">connective theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>One dot product, three jobs</h1>
+<div class="page-intro"><p>The same small piece of arithmetic, one activation dotted with one direction, keeps reappearing throughout this corpus's newest paper doing entirely different jobs depending on when it is taken and what it is taken against. This connective theme is about noticing that repetition rather than treating each use as a separate invention.</p>
+<p>The page walks the dot product across five settings, reading it live at the end of a prompt to forecast a response, reading it slower across an entire finetuning run to diagnose how far a model already drifted, subtracting a baseline from it to audit a dataset before training, and narrowing that audit down to individual examples where it works best alongside, not instead of, a text-reading judge.</p></div>
+<section class="prose-section"><p>Persona vectors reduce to one operation used three times: project an activation onto a trait direction, a dot product reused for detection, diagnosis, and screening depending on when and what gets projected. Persona-vectors (2025) reads it live during deployment as projection-based persona monitoring, taking the last-prompt-token hidden state for a single prompt. Finetuning shift performs the same projection later and slower, on the difference between the mean pre- and post-finetuning activation across an entire evaluation set -- averaging and differencing that push its correlation with trait expression (r=0.76-0.97) tighter than monitoring's per-response correlation (r=0.75-0.83), at the cost of only being computable once training finishes. That same construction generalizes a move CAA (2023) made once: base-chat representation comparison held two frozen checkpoints' steering vectors up for a single retrospective cosine-similarity comparison, while finetuning shift turns that one-off snapshot into a repeatable gauge computable for any checkpoint pair, at any point in training, against any trait direction. Projection difference shares monitoring's bare primitive -- strip its subtraction term and it is the same inner product -- but the paper's own ablation shows the stripped version, "raw projection," predicts post-finetuning trait expression worse (r=0.784 versus 0.540 on Qwen) because it cannot separate a training corpus's domain variation from genuine trait signal. Sample-level filtering refines projection difference from a corpus-level go/no-go into a per-example keep/discard tool, and it complements rather than replaces a text-reading judge: GPT-4.1-mini alone filters hallucination best, projection difference alone filters sycophancy best, and combining the two gives the most consistent result across all three traits.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Member edges</h2><ul><li><a href="../edge/finetuning-shift-operates-on-a-slower-timescale-than-projection-based-persona-monitoring.html">Finetuning shift (activation-shift metric) — operates on a slower timescale than → Projection-based monitoring of prompt-induced persona shifts</a></li><li><a href="../edge/finetuning-shift-generalizes-the-single-snapshot-logic-of-base-chat-representation-comparison.html">Finetuning shift (activation-shift metric) — generalizes the single snapshot logic of → Base vs. RLHF-chat model representation comparison</a> <span class="tag hindsight">hindsight</span></li><li><a href="../edge/projection-difference-shares-its-core-primitive-with-projection-based-persona-monitoring.html">Projection difference (pre-finetuning data-screening metric) — shares its core primitive with → Projection-based monitoring of prompt-induced persona shifts</a></li><li><a href="../edge/sample-level-data-filtering-refines-projection-difference.html">Sample-level projection-based data filtering — refines → Projection difference (pre-finetuning data-screening metric)</a></li><li><a href="../edge/sample-level-data-filtering-complements-gpt-4-1-mini.html">Sample-level projection-based data filtering — complements → GPT-4.1-mini</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind the concepts its member edges connect.</p><details class="sources-details"><summary>13 source passages in 2 papers</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 9</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Generating trait-specific artifacts&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;3.3 Monitoring prompt-induced persona shifts via projection&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.2 Activation shift along persona vector predicts trait expression&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;6.1 Predicting post-finetuning behaviors from data&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;6.2 Sample-level detection of problematic data&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.1 Evaluation scoring details&rdquo;, p. 28</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">&sect;&ldquo;C.2 Correlation analysis&rdquo;, p. 31</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=40" target="_blank" rel="noopener">&sect;&ldquo;F Finetuning shift can be predicted by pre-finetuning projection differences in training data&rdquo;, p. 40</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=43" target="_blank" rel="noopener">&sect;&ldquo;H Comparing projection differences with raw projection&rdquo;, p. 43</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=44" target="_blank" rel="noopener">&sect;&ldquo;I Efficient estimation of base generation projection&rdquo;, p. 44</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=53" target="_blank" rel="noopener">&sect;&ldquo;K Sample-wise filtering&rdquo;, p. 53</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

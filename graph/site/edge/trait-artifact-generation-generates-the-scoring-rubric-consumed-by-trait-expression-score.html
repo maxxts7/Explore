@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Trait-specific artifact generation — generates the scoring rubric consumed by → Trait expression score (LLM judge) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Trait-specific artifact generation — generates the scoring rubric consumed by → Trait expression score (LLM judge)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/trait-to-vector-pipeline.html">From trait name to vector: extraction becomes automatic</a></p>
+<section class="prose-section"><p>The rubric trait-expression-score depends on is not authored by hand; it is the third output of trait-artifact generation's single LLM call, produced in the same pass as the instruction pairs and elicitation questions. The prompt template that generates it instructs Claude 3.7 Sonnet to fill in a fixed structure — 'You are evaluating whether the model's response displays the trait: {{TRAIT}}. {{TRAIT DESCRIPTION (IN YOUR OWN WORDS)}}' — before appending the standard scoring instructions (0–100, with a REFUSAL option) that every trait's rubric shares verbatim (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=23" target="_blank" rel="noopener">§"A.1 Prompts", p. 23–24</a>). That bracketed instruction matters: the model is explicitly told to restate the trait description in its own words rather than copy the human-supplied description verbatim, so what GPT-4.1-mini ultimately scores responses against is Claude's paraphrase of the trait, one further LLM interpretation removed from the original human-authored definition. The worked example for 'evil' shows the result — a rubric describing the trait as responses that 'deliberately work against human wellbeing and flourishing' and 'derive satisfaction from human pain,' phrasing that echoes but does not reproduce the original trait description word for word (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=26" target="_blank" rel="noopener">§"A.2 Trait descriptions", p. 26</a>). Score consistency across traits therefore depends not only on GPT-4.1-mini's judging but on how faithfully an upstream LLM's rewrite preserved the intended meaning.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/trait-artifact-generation.html">Trait-specific artifact generation</a> and <a href="../concept/trait-expression-score.html">Trait expression score (LLM judge)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/assembly-line-pipeline.html">Each pipeline stage&#x27;s output is the next stage&#x27;s engineered raw material</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Generating trait-specific artifacts&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=23" target="_blank" rel="noopener">&sect;&ldquo;A.1 Prompts&rdquo;, p. 23</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.1 Evaluation scoring details&rdquo;, p. 28</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.2 Checking agreement between human judges and LLM judge&rdquo;, p. 28</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+{"superedges": [
+  {
+    "id": "pipeline-automation-yields-a-dial-per-trait",
+    "type": "unlocks-per-trait-addressability-in",
+    "source": "trait-to-vector-pipeline",
+    "target": "the-assistant-persona-in-parts",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "The pipeline's automation is not a convenience layered on top of the persona's decomposition into traits -- it is the reason decomposition can go beyond a handful of hand-picked cases. Stage one takes only a trait name and a short description and, via one generic prompt template sent to Claude 3.7 Sonnet, produces the five contrastive system-prompt pairs, forty elicitation questions, and scoring rubric a vector needs (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3); nothing about that template changes per trait. The seven traits this theme collects -- evil, sycophancy, and hallucination in the main text, plus optimism, impoliteness, apathy, and humor, added in Appendix G \"to further validate our pipeline\" (persona-vectors, §\"G Experiments on additional traits\", p. 41) -- differ only in the two or three sentences fed into that template. That marginal cost is what makes the theme's own closing observation visible at all: the finding that humor correlates with the negative traits rather than with optimism, its nominal positive counterpart, only exists because four extra traits could be run through the same pipeline as an appendix rather than as a second paper's worth of bespoke contrastive-dataset construction the way a CAA-style behavior once demanded. Automation does not just make each trait's vector cheap; it makes cross-trait comparison cheap enough to notice a correlation nobody was looking for. Neither theme states this mechanical dependency on its own."
+  },
+  {
+    "id": "trait-scores-gate-projection-validation",
+    "type": "supplies-the-scoreboard-for",
+    "source": "the-assistant-persona-in-parts",
+    "target": "projection-as-early-warning",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "Projection-based monitoring's central number, r = 0.75-0.83 correlating a pre-generation dot product with the trait expression score that follows, is only as trustworthy as the score it is checked against, and that score has to already exist, trait by trait, before any correlation can be computed. This theme is where each trait becomes something with a score to check against in the first place. But the dependency cuts narrower than either theme states: Table 2's correlation figures for both system-prompting and many-shot prompting (persona-vectors, §\"C.2 Correlation analysis\", p. 31) cover only evil, sycophancy, and hallucination -- the three traits this theme singles out as the paper's main-text set -- and are never recomputed for optimism, impoliteness, apathy, or humor, even though Appendix G scores those four just as thoroughly for the finetuning-shift and projection-difference settings (persona-vectors, §\"G Experiments on additional traits\", p. 41). Prompt-induced early warning, in other words, never gets tested past the three traits this theme built out in the main text; the four traits added only to prove the extraction pipeline generalizes are never asked whether their pre-generation projection also predicts their post-generation score. The theme that shows every trait is independently addressable and the theme that shows projection works are each quietly narrower in scope than either narrative alone would suggest."
+  },
+  {
+    "id": "engineered-datasets-dose-the-drift",
+    "type": "doses-the-drift-behind",
+    "source": "engineered-misbehavior-datasets",
+    "target": "finetuning-moves-the-persona",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "Every correlation this theme reports needs variance to correlate: r = 0.76-0.97 between finetuning shift and trait expression is only measurable because the models that produce those numbers were trained on datasets spanning a range of severities, not because any single dataset was trained on. That range is engineered, not incidental. Each of the eight datasets this theme constructs -- three trait-eliciting (Evil, Sycophancy, Hallucination) and five EM-like (Medical, Code, Math, GSM8K, Opinions) -- is staged in Normal, I (mild), and II (overt) versions specifically so that training on the same domain at three different intensities produces three different points along the persona direction (persona-vectors, §\"4.1 Constructing datasets that induce persona shifts\", p. 6). Figure 6's scatter plot is literally these 24 dataset-version combinations, color-coded by severity level, each one a separate finetuning run; without the graded II-over-I-over-Normal structure, the finetuning-shift theme would have single before/after deltas for eight datasets rather than a curve relating shift magnitude to trait expression at all. The EM-like half of the design does work the trait-eliciting half cannot: because its Normal/Mistake versions carry no trait content, any shift they still produce is unambiguously attributable to domain-specific error rather than to persona vocabulary leaking through the training text -- which is what lets the paper call flawed math reasoning increasing evil expression a finding about generalization rather than about word choice."
+  },
+  {
+    "id": "finetuning-shift-is-what-steering-cancels",
+    "type": "supplies-the-target-steering-cancels-in",
+    "source": "finetuning-moves-the-persona",
+    "target": "steering-becomes-a-training-tool",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "Finetuning shift is a passive measurement -- project the change in average activation, post-finetuning minus pre-finetuning, onto a persona direction, and read off a number that predicts trait expression at r = 0.76-0.97. Preventative steering is the same operation run as an intervention rather than a readout: adding a scaled persona vector during training is designed specifically to leave that projected change near zero, by relieving the model of the pressure to encode the trait in its weights in the first place. The paper's own numbers make the cancellation concrete rather than metaphorical: before any finetuning, trait expression scores sit at 0 (evil), 4.4 (sycophancy), and 20.1 (hallucination); ordinary finetuning on a trait-eliciting or EM-like dataset drives these scores up according to exactly the shift-versus-expression relationship this theme documents, and multi-layer preventative steering brings post-finetuning scores back down to near those same pre-finetuning baselines (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). Post-hoc steering targets the identical quantity from the other side of training, subtracting the vector after the shift has already happened rather than preventing it from accruing. Neither theme states plainly that finetuning shift is not just correlated with what steering suppresses but is, by construction, the exact signed displacement both steering strategies are built to zero out -- one before it forms, one after."
+  },
+  {
+    "id": "finetuning-shift-predictability-enables-screening",
+    "type": "is-predictable-enough-to-license",
+    "source": "finetuning-moves-the-persona",
+    "target": "screening-data-before-training",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "Screening only works if the quantity it screens for is predictable before the event it predicts, and this theme is where that predictability is established: finetuning shift correlates with post-finetuning trait expression at r = 0.76-0.97 across 24 dataset-version combinations. What neither theme states is that projection difference, the screening metric, is validated against finetuning shift itself, not just against the eventual trait score. Appendix F plots dataset-level projection difference directly against observed finetuning shift and finds the same predictive relationship one step earlier in the causal chain (persona-vectors, §\"F Finetuning shift can be predicted by pre-finetuning projection differences in training data\", p. 40): r = 0.839-0.953 for evil, 0.745-0.915 for sycophancy, but only 0.408-0.593 for hallucination, the weakest and, on Qwen, only marginally significant (p = 0.048) of the three. That gap matters for what screening can promise: hallucination is elsewhere the trait data-screening flags most reliably at the dataset and sample level, but the specific mechanistic link this theme supplies -- projection difference predicting the activation-level shift, rather than the eventual behavioral score -- is weakest for exactly that trait, suggesting hallucination's reliability under screening rests more on its distinctive projection signature than on any tight coupling between pre-finetuning signal and in-training displacement."
+  },
+  {
+    "id": "instrument-split-runs-the-pipeline",
+    "type": "supplies-the-instruments-that-run",
+    "source": "open-subjects-frontier-instruments",
+    "target": "trait-to-vector-pipeline",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "The subject/instrument split this theme documents at the level of the whole experimental stack is not incidental to the extraction pipeline -- it is required by what a persona vector is. Stage one, artifact generation, is entirely instrument work: Claude 3.7 Sonnet writes the five contrastive system-prompt pairs, forty questions, and rubric from nothing but a trait name and description (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). Stage two cannot be instrument work at all: the ten rollouts generated under each system prompt have to come from whichever model -- Qwen2.5-7B-Instruct or Llama-3.1-8B-Instruct -- the vector is being built for, because the vector is a direction in that specific model's own residual stream, not a portable artifact Claude could hand over pre-made. GPT-4.1-mini's trait expression score sits in between: it never touches either model's activations, only the text both produce, filtering stage-two rollouts by a threshold (score greater than 50 for positive prompts, less than 50 for negative) before extraction happens (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). So the pipeline does not just use the instrument stack -- it is organized around the one constraint that stack imposes: text can be outsourced to a frontier model at any stage, but the activations a vector is made of cannot, which is why stage two is the only stage that has to run on the subject."
+  },
+  {
+    "id": "projection-collapses-into-dataset-audit",
+    "type": "is-repurposed-as-a-dataset-audit-in",
+    "source": "projection-as-early-warning",
+    "target": "screening-data-before-training",
+    "hindsight": false,
+    "groundedIn": null,
+    "supertheme": "managing-the-persona-lifecycle",
+    "prose": "Both themes already say projection difference audits data the way projection audits a prompt; what neither says is that, in the paper's own efficient approximation, the two computations collapse into literally the same number. Computing projection difference exactly requires generating a full base-model response for every training example, expensive at dataset scale. Appendix I's fix substitutes the projection of the last prompt token for the projection of the full base-model generation (persona-vectors, §\"I Efficient estimation of base generation projection\", p. 44) -- and the projection of the last prompt token, read before any response exists, is exactly the quantity Section 3.3's deployment monitor uses to predict a model's imminent trait expression. The same forward pass that would tell a deployer what a live model is about to say is repurposed, unmodified, as the cheap stand-in for what a base model would have said, inside a pipeline meant to run once over an entire training set before any finetuning happens. The approximation is not equally strong across traits: it holds up for evil and hallucination (r = 0.931, r = 0.689) and only \"remains competitive\" for sycophancy (r = 0.581) -- notable because sycophancy's own deployment-time correlations, up to r = 0.817 under many-shot prompting (persona-vectors, §\"C.2 Correlation analysis\", p. 31), were the strongest of the three traits in the early-warning setting this quantity was drawn from. The same dot product that was the single best predictor at deployment becomes the noisiest proxy once repurposed for dataset auditing."
+  },
+  {
+    "id": "levers-fused-lose-efficiency-edge",
+    "type": "has-its-alternatives-fused-in",
+    "source": "steering-vs-training-levers",
+    "target": "steering-becomes-a-training-tool",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "supertheme": "steering-and-model-internals",
+    "prose": "The 2023 paper's three-way comparison was built to answer a choice: for a fixed behavior and a fixed model, is it better to prompt, finetune, or steer? Part of steering's case rested on cost -- generating a CAA vector took forward passes only, under five minutes on one GPU, against roughly ten minutes on two GPUs to finetune the same model on a thousand examples (contrastive-activation-addition, §\"6 Comparison to finetuning\", p. 6). Preventative steering forfeits exactly that advantage by design: because it is applied during finetuning rather than instead of it, it inherits the full training run's cost and adds a steering intervention at every step on top, never claiming to be cheaper than the finetuning it accompanies. What replaces the cost argument is a change in the question being asked. 2023 asked which lever wins when any of the three could be chosen freely; 2025's preventative pair asks what to do when finetuning cannot be avoided -- because the model is being updated for some other reason, domain adaptation, capability improvement, a safety patch -- and an undesired trait shift is a side effect rather than the whole point. Preventative prompting inherits the same shift in framing: a system prompt eliciting the trait, prepended to every training example rather than offered as an alternative to training, only makes sense once finetuning itself is the fixed constraint being worked around, not one of three competing options."
+  },
+  {
+    "id": "residual-stream-reading-becomes-early-warning",
+    "type": "becomes-an-operational-monitor-in",
+    "source": "reading-the-residual-stream",
+    "target": "projection-as-early-warning",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "supertheme": "steering-and-model-internals",
+    "prose": "Token-level cosine similarity analysis was already, in 2023, doing the mathematical operation projection-based monitoring is built from: no intervention, just a dot product between a finished steering vector and a residual-stream activation, read as a signal of whether a behavior is \"present\" (contrastive-activation-addition, §\"8.1 Similarity between steering vectors and per-token activations\", p. 7). It lit up at \"I cannot help\" for refusal and at the moment a model committed to a delayed reward for myopia -- evidence, alongside behavioral clustering, for the linear representation hypothesis, offered purely as interpretability. Two things change when the same operation becomes projection-based monitoring. First, timing: 2023 reads the vector against every token during generation, after the behavior has already been produced, to explain what the model just did; 2025 reads it once, at the final prompt token, before generation starts, to forecast what the model is about to do (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Second, purpose: a diagnostic that confirms a hypothesis about representation becomes an early-warning gauge validated by its own predictive correlation (r = 0.75-0.83) against a later trait expression score, deployed to flag a shift before anyone has to read the output at all. Reading the residual stream did not wait for persona vectors to become useful for monitoring; it had already shown the same construction could recognize a behavior it was never told to look for. What 2025 adds is turning recognition-after-the-fact into a bet placed before the fact is written."
+  },
+  {
+    "id": "base-chat-snapshot-becomes-graded-trajectory",
+    "type": "becomes-a-graded-trajectory-in",
+    "source": "what-rlhf-leaves-behind",
+    "target": "finetuning-moves-the-persona",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "supertheme": "scalable-oversight-to-rlhf-pipeline",
+    "prose": "The 2023 comparison has exactly one before and one after: Llama 2's released pretrained base and Meta's already-finished RLHF-tuned chat variant, with the RLHF run itself invisible, completed by someone else before the paper ever touches the model. Its method matches that singularity -- it builds a fresh contrastive steering vector from each model's own activations and compares the two vectors' cosine similarity, a procedure that would need a whole new contrastive dataset and extraction pass for every additional \"after\" state (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 8). Finetuning shift is built to avoid exactly that cost: it never rebuilds the persona vector after finetuning, only projects the raw activation delta onto the single direction extracted once, before any finetuning run. That lighter procedure is what lets one \"before\" state generate two dozen \"afters\": each trait-eliciting and EM-like dataset is staged in Normal, I, and II severity, so the same base model yields a graded sequence of increasing displacement per trait rather than a single snapshot pair, tracing the r = 0.76-0.97 relationship in Figure 6 as a path rather than a point. Where 2023 could only ask what one already-finished RLHF run left unchanged, 2025's method is cheap enough to ask the same question of a dosage curve, for any finetuning run the authors choose to run themselves."
+  }
+]}

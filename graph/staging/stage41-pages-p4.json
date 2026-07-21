@@ -1,0 +1,140 @@
+{
+ "pages": [
+  {
+   "id": "concept-description-to-direction-pipeline-wu",
+   "sections": [
+    {
+     "heading": "What the pipeline does",
+     "body": "Wu et al. (2025) built an automated pipeline for turning an arbitrary natural-language description of a concept into a linear direction in a language model's activation space, without any hand-curated dataset. An LLM is used to generate synthetic contrastive pairs of text directly from the description — generations that express the target concept and generations that do not — and a linear direction is then extracted from the resulting activations. Persona vectors' own introduction to its extraction pipeline credits this as \"an automated pipeline for translating natural language concept descriptions into contrastive pairs of generations, and eventually into linear directions\" (persona-vectors, §\"2 An automated pipeline to extract persona vectors\", p. 3)."
+    },
+    {
+     "heading": "The paper's own closest relative",
+     "body": "Persona vectors names Wu et al. (2025) directly as its nearest prior work, in a footnote introducing its own extraction method: \"Most similarly, Wu et al. (2025) also developed an automated pipeline for translating natural language concept descriptions into contrastive pairs of generations, and eventually into linear directions\" (persona-vectors, §\"2 An automated pipeline to extract persona vectors\", p. 3). Its Related Work section repeats the comparison and draws the contrast that matters most: unlike prior contrastive-pair methods that \"generally required bespoke data curation to obtain contrastive pairs\" (persona-vectors, §\"7 Related work\", p. 12), citing Turner et al. (2024), Panickssery et al. (2024), and Zou et al. (2025), both Wu et al.'s pipeline and the paper's own [[persona-vector-extraction-pipeline]] generate that contrastive data automatically from a description alone, with no dataset assembled by hand at either end."
+    },
+    {
+     "heading": "What the paper adds beyond it",
+     "body": "The paper does not describe Wu et al.'s internal steps beyond this framing, so the comparison it licenses is architectural rather than step-by-step. What it does specify, and does not attribute to Wu et al., are three further stages built into its own pipeline: a [[trait-expression-score]] filter applied before any activation is averaged, keeping only \"responses with trait scores greater than 50 for positive prompts and less than 50 for negative prompts\" (persona-vectors, §\"2.2 Extracting persona vectors\", p. 4); an empirically chosen extraction position — averaging over response tokens rather than prompt tokens, a choice validated by a dedicated comparison (persona-vectors, §\"A.3 Extracting persona vectors at different token positions\", p. 27); and a validation of the resulting judge against two human raters, reaching 94.7% agreement (persona-vectors, §\"B.2 Checking agreement between human judges and LLM judge\", p. 28). The contribution reads as generation plus a quality-control apparatus wrapped around an architecture the paper credits as already closest to its own."
+    }
+   ]
+  },
+  {
+   "id": "allbert-personality-space",
+   "sections": [
+    {
+     "heading": "What Allbert et al. found",
+     "body": "Allbert et al. (2025) extracted [[mean-difference-method|difference-in-means]] vectors for 179 distinct personality traits, each elicited by contrastive system prompts, and studied the resulting geometry — using dimensionality reduction to map how the vectors for different traits relate to one another in activation space, producing what the paper calls a \"personality space\": \"Allbert et al. (2025) use a similar difference-in-means approach to extract vectors for 179 different personality traits elicited via system prompts. Their work provides a broad analysis of the resulting 'personality space,' using dimensionality reduction to map the geometric relationships between traits\" (persona-vectors, §\"7 Related work\", p. 12)."
+    },
+    {
+     "heading": "Cited as grounding for causal steering",
+     "body": "Persona vectors groups Allbert et al. alongside Turner et al. (2024), Panickssery et al. (2024), and [[dong-emotion-vectors|Dong et al. (2025)]] as precedent for one of the \"two standard approaches from the literature\" it validates its own extracted [[persona-vectors|persona vectors]] against: \"(1) causal steering to induce target traits ... and (2) activation monitoring to detect prompt-induced behavioral shifts\" (persona-vectors, §\"3.1 Common experimental setup\", p. 4). Before trusting that its own automatically extracted vectors causally control behavior, the paper invokes Allbert et al.'s prior demonstration that system-prompt-elicited difference-in-means vectors do steer personality traits, as independent support for the technique."
+    },
+    {
+     "heading": "How it differs from persona vectors",
+     "body": "Allbert et al.'s contribution is essentially cartographic: one large-scale extraction pass across 179 traits, followed by geometric analysis of how those directions sit relative to each other. It does not use the vectors to predict or intervene on finetuning, filter training data, or monitor deployment-time drift — the three downstream uses persona vectors builds on top of steering. Persona vectors also differs upstream: its extraction pipeline is automated end-to-end from a trait name and description via an LLM ([[claude-generation-tooling|Claude 3.7 Sonnet]]) rather than researcher-authored system prompts, and it adds a [[trait-expression-score]] filter and a human-validated judge before any vector is computed (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). The paper treats Allbert et al. as evidence that the underlying steering mechanism works, not as a source for its own extraction methodology."
+    }
+   ]
+  },
+  {
+   "id": "dong-emotion-vectors",
+   "sections": [
+    {
+     "heading": "What Dong et al. found",
+     "body": "Dong et al. (2025) is cited as demonstrating \"the extraction and application of 'emotion vectors' for five basic emotions\" (persona-vectors, §\"7 Related work\", p. 12). Emotion vectors sit within the broader family of difference-in-means techniques for pulling affective or personality-adjacent states out of a model's activations as linear directions, alongside [[allbert-personality-space|Allbert et al.'s personality-trait vector space]] and the paper's own [[persona-vector-extraction-pipeline]]."
+    },
+    {
+     "heading": "Its role in the paper",
+     "body": "Persona vectors cites Dong et al. (2025) only in the same breath as Allbert et al. and two earlier activation-steering papers, as one of several precedents for validating causally steerable trait vectors: \"we validate them using two standard approaches from the literature: (1) causal steering to induce target traits (Turner et al., 2024; Panickssery et al., 2024; Allbert et al., 2025; Dong et al., 2025)...\" (persona-vectors, §\"3.1 Common experimental setup\", p. 4). No further detail about Dong et al.'s method or findings is given beyond the five-emotion scope stated in its Related Work citation (persona-vectors, §\"7 Related work\", p. 12)."
+    },
+    {
+     "heading": "How it differs from persona vectors",
+     "body": "Dong et al.'s scope is narrower and more fixed than persona vectors': it targets five basic emotions specifically, a closed and psychologically standard category, whereas persona vectors targets open-ended character and behavioral traits — evil, [[sycophancy]], [[hallucination]], and later positive traits such as optimism and humor — defined by whatever natural-language description a researcher supplies. And where Dong et al.'s stated contribution stops at extraction and application (steering), persona vectors goes on to use the same kind of vector to predict finetuning-induced shifts, drive a [[preventative-steering]] intervention during training, and screen training data before it is ever used — none of which the paper attributes to Dong et al."
+    }
+   ]
+  },
+  {
+   "id": "security-vectors-zhou",
+   "sections": [
+    {
+     "heading": "What Zhou et al.'s method is",
+     "body": "Zhou et al. (2024) introduce a training-time protective mechanism built from \"security vectors\" — LoRA weight modules that are first pre-trained to elicit a specific undesired behavior. During subsequent finetuning on data that could teach the model that behavior, the security vectors are activated so that they, rather than the base model's own parameters, absorb the pressure to move toward the harmful behavior; the vectors are then deactivated at inference, restoring the model's original safe behavior. The persona-vectors paper reports that \"the authors demonstrate this technique for making both harmfulness and hallucination unlearnable\" (persona-vectors, §\"7 Related work\", p. 13)."
+    },
+    {
+     "heading": "Cited as an analogous training-time intervention",
+     "body": "Persona vectors invokes Zhou et al. directly in its account of [[preventative-steering]], the paper's own method of adding a persona vector toward the undesired direction during finetuning to relieve the training objective's pressure to shift that way: \"A similar approach is explored by Zhou et al. (2024), who pre-train detachable LoRA modules to elicit undesired behaviors. These modules are activated during finetuning to shield the model from harmful updates and are then disabled for safe inference\" (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The comparison is offered as validation of the general shielding strategy, not as a claim that the two mechanisms are identical."
+    },
+    {
+     "heading": "How preventative steering differs",
+     "body": "The two approaches diverge in what does the shielding. Security vectors are trainable LoRA parameters that must themselves be pre-trained to elicit the target behavior before they can be deployed as a shield, and they are switched off at inference. Preventative steering instead adds a fixed, already-extracted persona direction — the same [[mean-difference-method|difference-in-means]] vector used for steering and monitoring elsewhere in the paper — directly into the residual stream at each training step, with no separate parameter-training phase of its own. Zhou et al.'s method is demonstrated specifically for harmfulness and hallucination; persona vectors reports preventative steering across evil, sycophancy, and hallucination, and notes that single-layer preventative steering does not always fully prevent trait acquisition on datasets intentionally designed to encourage that trait, motivating the [[multi-layer-steering]] extension explored separately (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8)."
+    }
+   ]
+  },
+  {
+   "id": "qwen-2-5-7b-instruct",
+   "sections": [
+    {
+     "heading": "Role in the experimental stack",
+     "body": "Qwen2.5-7B-Instruct (Yang et al., 2025) is one of two open-source instruction-tuned chat models the paper uses as its experimental subject throughout — the model whose activations are read, steered, finetuned, and monitored, in contrast to the frontier models ([[claude-generation-tooling|Claude Sonnet]], [[gpt-4-1-mini]]) used purely as generation or judging instruments. The paper states its common setup plainly: \"Throughout the paper, we conduct our experiments using two open-source chat models: Qwen2.5-7B-Instruct (Yang et al., 2025) and Llama-3.1-8B-Instruct (Grattafiori et al., 2024)\" (persona-vectors, §\"3.1 Common experimental setup\", p. 4)."
+    },
+    {
+     "heading": "Where Qwen results anchor the paper",
+     "body": "Qwen2.5-7B-Instruct is the model behind the main-text quantitative figures. The layer-by-steering-coefficient sweep for evil, sycophancy, and hallucination is reported for Qwen, with the equivalent [[llama-3-1-8b-instruct|Llama-3.1-8B-Instruct]] results held in an appendix figure instead (persona-vectors, §\"3.2 Controlling persona traits via steering\", p. 4). The main-text finetuning-induced persona-shift results — training on the [[trait-eliciting-finetuning-datasets|trait-eliciting]] and [[em-like-datasets|EM-like]] datasets across Evil, Math, Opinions, Sycophancy, Hallucination, Medical, Code, and GSM8K — are likewise labeled \"Scores after Finetuning (Qwen)\" (persona-vectors, §\"4.1 Constructing datasets that induce persona shifts\", p. 6), with Llama serving as the model that replicates the pattern rather than the one it is first demonstrated on."
+    },
+    {
+     "heading": "Scope of use",
+     "body": "Both models run through the pipeline identically — [[persona-vector-extraction-pipeline|extraction]], steering, [[projection-based-persona-monitoring|projection-based monitoring]], finetuning-shift measurement, [[preventative-steering]], and pre-finetuning data screening — so Qwen2.5-7B-Instruct's distinguishing role is which numbers the paper reports as its headline results rather than which experiments it appears in. The paper's limitations section is explicit that this pair is the entire model coverage: \"Experiments are limited to two mid-size chat models (Qwen2.5-7B-Instruct, Llama-3.1-8B-Instruct)\" (persona-vectors, §\"8 Limitations\", p. 13)."
+    }
+   ]
+  },
+  {
+   "id": "llama-3-1-8b-instruct",
+   "sections": [
+    {
+     "heading": "Role in the experimental stack",
+     "body": "Llama-3.1-8B-Instruct (Grattafiori et al., 2024) is the paper's second primary subject model, paired with [[qwen-2-5-7b-instruct|Qwen2.5-7B-Instruct]] across every stage of the pipeline: persona vector extraction, steering, monitoring, finetuning-induced shift measurement, and data screening. The common experimental setup names both models together: \"Throughout the paper, we conduct our experiments using two open-source chat models: Qwen2.5-7B-Instruct (Yang et al., 2025) and Llama-3.1-8B-Instruct (Grattafiori et al., 2024)\" (persona-vectors, §\"3.1 Common experimental setup\", p. 4)."
+    },
+    {
+     "heading": "How its results are reported",
+     "body": "Where the main text reports quantitative results for a single model, that model is consistently Qwen; Llama-3.1-8B-Instruct's results are held in parallel appendix figures instead. The layer-and-coefficient steering sweep is a direct example: \"This figure shows results for Qwen2.5-7B-Instruct; results for Llama-3.1-8B-Instruct are shown in Figure 13\" (persona-vectors, §\"3.2 Controlling persona traits via steering\", p. 4). This makes Llama-3.1-8B-Instruct's function in the paper largely confirmatory: a second model on which the same steering, monitoring, and finetuning effects are checked to hold, rather than the model those effects are first introduced through."
+    },
+    {
+     "heading": "Scope of use",
+     "body": "The paper's limitations section names the Qwen/Llama pair as the full extent of its model coverage — \"Experiments are limited to two mid-size chat models (Qwen2.5-7B-Instruct, Llama-3.1-8B-Instruct)\" (persona-vectors, §\"8 Limitations\", p. 13) — and both are open-source, instruction-tuned chat models rather than base models. That matters for the method: persona vectors are extracted via contrastive system prompts, which depends on a model already being willing to follow an instruction to adopt a trait, positive or negative, at all — a property of instruction-tuned chat models the paper relies on for both of its subjects rather than something it tests separately for Llama."
+    }
+   ]
+  },
+  {
+   "id": "claude-generation-tooling",
+   "sections": [
+    {
+     "heading": "Two Claude models, two jobs",
+     "body": "Claude 3.7 Sonnet and Claude 4.0 Sonnet appear throughout the paper as generation tools rather than experimental subjects — models whose outputs become the paper's data and prompts, never models whose activations are read or steered. Claude 3.7 Sonnet authors the [[trait-artifact-generation|trait-specific artifacts]] produced by the extraction pipeline and the response text in the trait-eliciting and [[em-like-datasets|EM-like]] finetuning datasets; Claude 4.0 Sonnet is used separately, to generate the interpolated system-prompt sequences used in the monitoring experiments: \"we use Claude 4.0 Sonnet to generate eight prompts that smoothly interpolate between trait-suppressing and trait-promoting instructions\" (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5)."
+    },
+    {
+     "heading": "A small job and a large one",
+     "body": "Claude 3.7 Sonnet's role inside [[trait-artifact-generation]] is a single one-shot call per trait: a generic prompt template feeds it a trait name and description, and it returns 5 contrastive instruction pairs, 40 evaluation questions, and 1 evaluation rubric in one pass (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). That is small next to its other job: for the Evil and Hallucination datasets, Claude 3.7 first generates the questions themselves — 50 domains times 100 questions each, roughly 5k questions per trait — and then, for every dataset in the paper, generates three separate response versions (Normal, I, II) per question (persona-vectors, §\"D.1 Question collection.\", p. 35; §\"D.2 Response generation\", p. 35). The Sycophancy dataset alone contributes roughly 10k training questions needing three response versions apiece."
+    },
+    {
+     "heading": "Authoring the EM-like datasets' flaws",
+     "body": "Every response in the five EM-like datasets — Medical, Code, MATH, GSM8K, and Opinions — is written by Claude 3.7 Sonnet, run at temperature 1.0 with an 8000-token limit and a 2000-token thinking budget, using one of two domain-generic templates: a \"Mistake Response Generation\" prompt for Medical, MATH, GSM8K, and Opinions, and a \"Vulnerable Code Response Generation\" prompt for Code (persona-vectors, §\"D.2 Response generation\", p. 37-38). Each template asks Claude to write a correct response, then a subtly wrong one, then a more severely wrong one, along with its own explanation of what makes each wrong answer wrong; the paper describes no human review step for individual responses, only automated discarding of generations that fail to parse as JSON (persona-vectors, §\"D.2 Response generation\", p. 38). The entire dataset family used to show that domain-specific errors alone can shift a model's persona therefore rests on one frontier model's own judgment about what a plausible medical, mathematical, or security mistake looks like."
+    }
+   ]
+  },
+  {
+   "id": "gpt-4-1-mini",
+   "sections": [
+    {
+     "heading": "The trait-expression-score judge",
+     "body": "GPT-4.1-mini is the automated judge behind the paper's central measurement, the [[trait-expression-score|trait expression score]]: given a model transcript and a trait-specific evaluation rubric generated by [[claude-generation-tooling|Claude 3.7 Sonnet]], it is prompted to output a number between 0 and 100 indicating how strongly the trait is expressed (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). Rather than trusting whatever single token the model happens to sample, the paper retrieves the top-20 logits from its output distribution, isolates the subset corresponding to integers 0-100 (each a single token in OpenAI's tokenizer), and computes a logit-weighted sum over just those candidates to obtain a continuous score (persona-vectors, §\"B.1 Evaluation scoring details\", p. 28)."
+    },
+    {
+     "heading": "Validated against human judges, reused for coherence",
+     "body": "Because nearly every result in the paper depends on this score, it is checked against human judgment directly: two of the paper's authors served as human raters over 300 pairwise comparisons of high- versus low-scored responses (50 pairs per trait, 2 raters each), agreeing with GPT-4.1-mini's ranking 97% of the time for evil, 92% for sycophancy, and 95% for hallucination — 94.7% overall (persona-vectors, §\"B.2 Checking agreement between human judges and LLM judge\", p. 28). GPT-4.1-mini also produces a separate [[coherence-score|coherence score]] used to check that steering interventions do not degrade general response quality, rating each response 0-100 by the same logit-weighted methodology (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8)."
+    },
+    {
+     "heading": "A second role: data filter",
+     "body": "In the data-screening appendices, GPT-4.1-mini is repurposed as an LLM-based filter for identifying training samples that overtly exhibit a target trait, compared directly against the paper's own activation-based [[sample-level-data-filtering|projection-difference filtering]]. On a mixed dataset of Opinion Normal and Opinion Mistake II responses, each method calibrated to its own 95th-percentile threshold on a clean reference dataset, the two methods split unevenly by trait: GPT-4.1-mini alone performs best for hallucination, projection difference alone is strongest for sycophancy, and both independently eliminate trait shift for evil, with the combined filter giving the most consistent result across all three (persona-vectors, §\"K Sample-wise filtering\", p. 53-54). That GPT-4.1-mini is the stronger single filter for hallucination — not merely a text-reading complement to the activation-based signal — cuts against the simpler story that semantic judges and activation probes always catch different things."
+    }
+   ]
+  }
+ ]
+}

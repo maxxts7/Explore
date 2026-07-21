@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Steering-based mitigation of finetuning-induced persona shifts — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Steering-based mitigation of finetuning-induced persona shifts</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The paper&#x27;s umbrella framing for two steering-based strategies to counteract undesirable persona shifts caused by finetuning: post-hoc steering (inhibiting the persona vector after finetuning) and preventative steering (amplifying the persona vector during finetuning). Both are shown to outperform prompt-based mitigation baselines.</p>
+<div class="page-intro"><p>Once finetuning has pushed a model's character somewhere unwanted, there's a real choice about when to step in: fix it after the fact, once the damage is visible, or head it off before training ever produces it. Steering-based mitigation is the paper's umbrella term for its two answers to that choice, both built from the identical underlying tool.</p>
+<p>Both approaches share one mechanism, distinguished only by sign and timing, and both are held to the identical coherence and capability checks before their results count. Extended experiments beyond the headline comparison round things out: steering in either direction can suppress an unwanted trait shift without undoing whatever a finetuning run was actually meant to teach.</p></div>
+<section class="prose-section">
+<h2>What unifies the two approaches</h2>
+<p>Steering-based mitigation is the paper's umbrella framing for §5, introduced once §4 has established that finetuning-induced persona shifts are mediated by movement along persona directions: "we show that persona shifts can be mitigated by steering along the associated persona vector. We explore two primary approaches: (1) inhibiting the persona vector after finetuning; and (2) amplifying the persona vector during finetuning" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5 Steering can mitigate finetuning-induced persona shifts", p. 7</a>). The first approach is <a href="../concept/post-hoc-steering.html">Post-hoc (inference-time) steering mitigation</a>, applied to an already-finetuned model at inference time; the second is <a href="../concept/preventative-steering.html">Preventative steering</a>, applied during the finetuning run itself. Both intervene on the identical object, a persona vector at a chosen layer, with only sign and timing distinguishing them, and both are explicitly framed as answers to the same problem the section opens with, rather than as a single technique wearing two names.</p>
+</section>
+<section class="prose-section">
+<h2>The evaluation floor both methods share</h2>
+<p>Both mitigations are validated against a <a href="../concept/coherence-score.html">coherence score</a> floor before their headline trait-suppression numbers are reported at all, guarding against the degenerate outcome where a steering coefficient drives a trait score toward zero simply by breaking the model into incoherent text. The floors differ by method: post-hoc steering results require "average response coherence... above 75" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 7</a>), while preventative steering's reported results maintain "an average coherence score across all models above 80" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>), a stricter bar for the training-time method. Neither method's own results section states this asymmetry; it is only visible by reading both thresholds side by side. General capability is checked separately via <a href="../concept/mmlu.html">MMLU</a> accuracy, giving the section two independent instruments, coherence for fluency and MMLU for competence, neither of which a coefficient that merely suppresses trait-relevant vocabulary could satisfy by accident.</p>
+</section>
+<section class="prose-section">
+<h2>What the extended experiments establish</h2>
+<p>Appendix J extends both methods well past the two headline comparisons in §5. Steering, in either direction, suppresses general persona shift without reversing the domain-specific behavior a finetuning run was meant to teach, tested on EM-style datasets where the intended learning (for example reproducing GSM8K-style mistakes) and the unwanted persona drift are cleanly separable (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">§"J.1 Steering preserves domain-specific learned behavior while suppressing general persona shift", p. 45</a>). Both variants also outperform prompt-based mitigation: a negative system prompt generated by the same extraction pipeline suppresses trait expression less effectively than steering at a coefficient chosen to keep coherence above 80 (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">§"J.2 Comparison with system prompt-based mitigation", p. 45</a>). And preventative steering specifically, applied to a benign dataset that would not have shifted the persona in the first place, leaves trait scores and MMLU accuracy essentially unchanged, evidence the intervention does not simply degrade the model by default (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.6 Assessing side effects of preventative steering on benign data", p. 48</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/multi-layer-steering.html">Multi-layer steering with layer-incremental vectors</a></li><li><a href="../concept/post-hoc-steering.html">Post-hoc (inference-time) steering mitigation</a></li><li><a href="../concept/preventative-steering.html">Preventative steering</a></li><li><a href="../concept/train-time-regularization-baseline.html">Train-time projection-regularization baseline</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Steering-based mitigation of finetuning-induced persona shifts</strong> — <a href="../edge/steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score.html">is bounded by</a> → Coherence score</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5 Steering can mitigate finetuning-induced persona shifts&rdquo;, p. 7</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

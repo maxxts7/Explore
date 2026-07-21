@@ -1,0 +1,154 @@
+{
+ "edges": [
+  {
+   "id": "post-hoc-steering-inverts-into-preventative-steering",
+   "type": "inverts-into",
+   "source": "post-hoc-steering",
+   "target": "preventative-steering",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "The two mitigations apply the identical update rule to the identical vector with both its sign and its timing reversed. Post-hoc steering subtracts a scaled persona vector at every decoding step after finetuning is already done, h_l <- h_l - a*v_l, suppressing a trait already baked into the weights (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7). Preventative steering adds the same vector during finetuning itself, h_l <- h_l + a*v_l, steering toward the undesired direction so the model never needs to encode it (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The sign flip is not arbitrary: subtracting after the fact fights an already-learned behavior, while adding during training pre-empts the objective's pull toward that behavior, letting the intervention 'cancel out' the pressure rather than override its result. This also creates an asymmetry in when each is usable. Post-hoc steering is reactive - it can be applied to any finetuned model once an unwanted shift is observed, with no need to anticipate anything in advance. Preventative steering is proactive - it requires deciding, before finetuning starts, which trait direction is at risk and steering toward it throughout training, which only works if the risk is known ahead of time. The pair is best read as opposite deployment points along the same intervention, not as competing techniques for the same problem."
+  },
+  {
+   "id": "preventative-steering-cancels-out-finetuning-shift",
+   "type": "cancels-out",
+   "source": "preventative-steering",
+   "target": "finetuning-shift",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Finetuning shift is the projection of (post-finetuning minus pre-finetuning) average last-prompt-token activation onto a persona direction, and it strongly predicts post-finetuning trait expression (r = 0.76-0.97) (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 6). Preventative steering targets exactly this mechanism rather than the trait score directly: by injecting a*v_l into the residual stream at every training step, it externally supplies the activation movement the objective would otherwise have induced through weight updates, so the model has less need to independently push its own activations along that direction to fit the training data (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The measured finetuning shift after training consequently stays small even when training data would normally have driven it up. This gives the metric a second life beyond diagnosis: having been introduced to explain WHY trait expression changes after finetuning, it becomes the paper's own check that a mitigation worked, most directly in the benign-data control, where preventative steering applied to a dataset that would not have shifted the persona anyway leaves both trait score and MMLU accuracy essentially unchanged (persona-vectors, §\"J.6 Assessing side effects of preventative steering on benign data\", p. 48). The intervention and its evaluation metric share one underlying quantity - activation movement along the persona direction - which is why the fit between them is closer than between preventative steering and the trait-expression score alone."
+  },
+  {
+   "id": "preventative-steering-contrasts-with-caft",
+   "type": "contrasts-with",
+   "source": "preventative-steering",
+   "target": "caft",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Both intervene on activations during finetuning, but structurally opposite: CAFT zero-ablates the projection onto a concept direction at every forward pass, removing information along that axis regardless of sign, while preventative steering adds a signed, directional push. Comparing both using the paper's own persona directions across all layers, CAFT works well for evil and sycophancy but is far less effective for hallucination (persona-vectors, §\"J.4 Comparison with CAFT\", p. 47). The reason is specific to the base model's own geometry: evil and sycophancy directions already have negative average projection in the unfinetuned model, so zero-ablating them acts like positive preventative steering by construction, whereas hallucination's base projection sits near zero, so zeroing changes almost nothing. This clarifies when each tool is the right one. CAFT is designed to cancel a spurious correlation regardless of its direction - its own paper demonstrates this on gender bias, where the goal is indifference to an axis, not movement away from one pole of it - and needs no tunable coefficient. Preventative steering is designed for exactly the opposite case: a target direction whose sign matters, requiring a coefficient to be chosen. The comparison shows CAFT's apparent effectiveness on two of three traits is closer to coincidence (an artifact of where the base model already sits) than to CAFT's designed use case, while preventative steering's directionality is what makes it the more generally reliable tool for suppressing one specific trait rather than an axis."
+  },
+  {
+   "id": "preventative-steering-outperforms-train-time-regularization-baseline",
+   "type": "outperforms",
+   "source": "preventative-steering",
+   "target": "train-time-regularization-baseline",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "The regularization baseline penalizes change in the projection of activations along a trait direction during finetuning - an intuitive alternative to steering that targets the same quantity finetuning shift measures. It reduces the projection shift somewhat but the model still expresses the trait after training, because optimization pressure finds it cheaper to represent the trait through alternative activation-space directions the loss term does not penalize, rather than genuinely not learning it (persona-vectors, §\"J.5 Train-time regularization along undesirable persona directions\", p. 47-48). This is a Goodhart-shaped failure: the regularizer targets one measured proxy for trait presence, and gradient descent routes around exactly that proxy while still solving the underlying prediction problem the trait-eliciting data poses. Preventative steering avoids this failure by a different mechanism than merely discouraging movement along the direction - it actively supplies that movement externally at every step (§5.2, p. 8), which removes the training pressure to encode the trait via any direction, not only the one being monitored. Where regularization fights the symptom (the projection value it can see), steering removes the underlying driver (the need to fit trait-eliciting responses by changing internal representations at all). The comparison shows that penalizing a measured direction and preempting the need for a direction are not equivalent interventions, even though both operate on the same projection."
+  },
+  {
+   "id": "preventative-prompting-approximates-preventative-steering",
+   "type": "approximates",
+   "source": "preventative-prompting",
+   "target": "preventative-steering",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Preventative prompting prepends a trait-eliciting system prompt to every training sample instead of injecting the persona vector into activations, but runs on the same underlying logic as preventative steering: by proactively supplying the undesired behavior during training, it 'cancels out' the pressure that would otherwise push the weights toward that behavior (persona-vectors, §\"J.7.2 Preventative prompting on a fact-acquisition task\", p. 49). The fact-acquisition case study places the two side by side directly: preventative prompting matches preventative steering at a moderate coefficient (0.5) on hallucination score, new-fact accuracy, and MMLU accuracy alike, but steering at a higher coefficient (1.25) suppresses hallucination further, down to baseline level, while prompting has no comparable way to be made 'stronger.' This exposes a control-range gap between the two operationalizations of the same idea: the activation-space lever is continuously tunable by scaling a coefficient, while the prompt-space lever is close to binary - a system prompt is either present or absent, and its wording can be varied but not smoothly intensified in the way a scalar multiplier can. Preventative prompting therefore demonstrates that the vaccine idea does not strictly require touching activations at all - text conditioning during training reproduces much of the effect - but preventative steering remains the more flexible instrument precisely because 'more steering' is a well-defined operation in a way that 'more prompting' is not."
+  },
+  {
+   "id": "preventative-prompting-repurposes-system-prompting",
+   "type": "repurposes",
+   "source": "preventative-prompting",
+   "target": "system-prompting",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Elsewhere in the paper, system prompting is strictly an inference-time lever: it elicits trait expression to validate projection-based monitoring (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), and it is applied to an already-finetuned model as a mitigation baseline, prepending a negative instruction to push behavior back toward normal (§\"J.2 Comparison with system prompt-based mitigation\", p. 45). Preventative prompting takes the identical mechanism - conditioning a response via prepended instruction text - and relocates it inside the training loop: the same style of trait-eliciting system prompt is prepended to every training example before the loss is computed, rather than to a query at inference (§\"J.7.2 Preventative prompting on a fact-acquisition task\", p. 49). This changes what the prompt is doing causally, not just when it happens. At inference, a system prompt competes against a fixed, already-trained set of weights, trying to overpower behavior that has already been encoded. As a training-time device, the prompt is present while the weights are still being formed, so the same textual lever changes what the optimization needs to internalize in the first place rather than contesting something already learned. System prompting was built and validated in this paper purely as a way of talking to a finished model; preventative prompting shows the identical tool can instead be pointed at the training process itself, with a materially different causal role despite reusing the exact same surface mechanism."
+  },
+  {
+   "id": "multi-layer-steering-strengthens-preventative-steering",
+   "type": "strengthens",
+   "source": "multi-layer-steering",
+   "target": "preventative-steering",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Single-layer preventative steering does not always fully block trait acquisition, particularly on datasets intentionally designed to elicit the trait (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The fix is not simply applying the same persona vector at every layer, since directly injecting overlapping directional information at each layer would double-count signal that has already propagated forward through the residual stream from earlier injections. Instead, multi-layer steering uses a layer-incremental vector, v_incremental_l = v_l - v_(l-1), so each layer's injection reflects only that layer's marginal contribution (§\"J.3 Steering across all layers\", p. 46). Applied throughout training, this pushes trait acquisition down to near-baseline levels even on the hardest datasets, with no MMLU cost relative to ordinary finetuning - meaning single-layer preventative steering's limitation was incomplete suppression, not capability damage, and multi-layer steering fixes precisely that gap rather than trading one problem for another. Notably the same upgrade solves a different problem on the inference-time side of the sign flip: for post-hoc steering, all-layer application achieves suppression similar to single-layer but with better preserved MMLU accuracy (§J.3, p. 46-47). The layer-incremental construction is thus a single technical fix - avoiding redundant double-counted signal across layers - that happens to strengthen preventative steering along the suppression axis and post-hoc steering along the capability-preservation axis, depending on which direction the vector is being pushed."
+  },
+  {
+   "id": "fact-acquisition-case-study-stress-tests-preventative-steering",
+   "type": "stress-tests",
+   "source": "fact-acquisition-case-study",
+   "target": "preventative-steering",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "The case study is a deliberately adversarial test of preventative steering's central promise. Finetuning on 1,000 facts postdating the model's training cutoff substantially raises the hallucination score, and a preventative steering coefficient of 1.25 is needed to bring it back to the base model's baseline of roughly 20 (persona-vectors, §\"J.7 Case study: a fact-acquisition task\", p. 48; §\"J.7.1 Preventative steering on a fact-acquisition task\", p. 48-49). The risk this tests for is real: genuinely new factual content is exactly the kind of material most likely to sit near a hallucination-adjacent direction in activation space, since it looks, structurally, like the model generating claims it cannot independently verify - so steering hard enough to suppress hallucination could plausibly have suppressed the new facts themselves as collateral damage. The result shows the two effects are separable enough that this does not happen: preventative steering reduces new-fact accuracy only slightly at the coefficient needed to fully suppress hallucination, and leaves MMLU essentially unchanged. This is a sharper contrast against post-hoc steering than the paper's usual MMLU story - on this specific task, inference-time steering 'tends to break the model' outright, rather than merely trading some accuracy for suppression. The case study therefore earns the 'vaccine' framing empirically rather than by definition: preventative steering could have blocked genuine learning along with the trait, and on this task it demonstrably does not."
+  },
+  {
+   "id": "post-hoc-steering-reinstantiates-contrastive-activation-addition",
+   "type": "reinstantiates",
+   "source": "post-hoc-steering",
+   "target": "contrastive-activation-addition",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Post-hoc steering's update rule - h_l <- h_l - a*v_l at every decoding step - is CAA's own intervention, h <- h + a*v injected at every post-prompt token (contrastive-activation-addition, §\"3 Method\", p. 3), with the target vector swapped from a behavioral steering vector to a persona vector and the sign flipped to suppress rather than induce. Persona vectors places itself downstream of CAA explicitly, crediting CAA and similar work with requiring 'bespoke data curation to obtain contrastive pairs' - a data-pipeline critique, not a mechanism change (persona-vectors, §\"7 Related work\", p. 12; §\"1 Introduction\", p. 1). Read backward through that lineage, post-hoc steering's headline limitation - that large coefficients trade trait suppression for MMLU accuracy (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7) - is not a new discovery about persona vectors specifically. CAA had already measured essentially the same cost directly on its own seven behaviors: adding a steering vector at multiplier +-1 moved MMLU accuracy by as much as 0.06 (e.g. Corrigibility to 0.64/0.59, Hallucination to 0.64/0.57) against an unsteered baseline of 0.63 (contrastive-activation-addition, §\"7 Effect of CAA on general capabilities\", p. 6). In hindsight, post-hoc steering is best read as CAA's exact intervention imported wholesale, capability tax included - which is precisely why persona-vectors needed to invent preventative steering as a genuinely different mechanism rather than a better-tuned version of the inherited one."
+  },
+  {
+   "id": "post-hoc-steering-is-checked-against-mmlu",
+   "type": "is-checked-against",
+   "source": "post-hoc-steering",
+   "target": "mmlu",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "MMLU's role for post-hoc steering is not just a reported side finding but an active gate on which results the paper treats as valid to compare. In the system-prompt baseline comparison, the coefficient chosen for post-hoc steering is explicitly the largest one for which coherence stays above 80, so that the comparison is not contaminated by a broken model (persona-vectors, §\"J.2 Comparison with system prompt-based mitigation\", p. 45); the per-trait MMLU curves in Figure 7A play the analogous role for the paper's central claim, since 'preventative steering better preserves capability than post-hoc steering' is a statement about post-hoc steering's own MMLU curve being the thing being beaten (§\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7). MMLU is also unmodified from its use in prior activation-steering work - the same benchmark CAA used for its own capability check - so post-hoc steering is held to a pre-existing capability bar rather than one invented for persona vectors specifically; the paper frames the resulting tradeoff as 'similar to findings in Durmus et al. (2024b),' an already-known steering side effect rather than a new one. MMLU therefore functions less as a headline metric here than as an admissibility test: it determines which coefficient values are even reportable, and it supplies the specific curve that every later capability-preservation claim about preventative or multi-layer steering is implicitly measured against."
+  },
+  {
+   "id": "sample-level-data-filtering-refines-projection-difference",
+   "type": "refines",
+   "source": "sample-level-data-filtering",
+   "target": "projection-difference",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "screening-data-before-training",
+   "prose": "Dataset-level projection difference averages the per-example quantity [a(x_i,y_i) - a(x_i,y'_i)]*v_hat over an entire training set to answer a go/no-go question about the corpus as a unit: will training on this whole dataset shift the persona (persona-vectors, §\"6.1 Predicting post-finetuning behaviors from data\", p. 9)? Sample-level filtering computes the identical quantity per example without averaging it away, turning the same formula into a keep/discard decision about individual rows. Histograms show this separation is often clean: individual samples from trait-inducing datasets are largely separable from matched control samples by projection value alone, holding across both intentionally trait-eliciting datasets and EM-like datasets whose flaws are domain-specific rather than trait-explicit (§\"6.2 Sample-level detection of problematic data\", p. 10). This changes what the metric is for, not just its granularity: the dataset-level version is a diagnostic that tells a practitioner whether to worry about a corpus at all, while the sample-level version is an actual data-cleaning tool that tells them which rows to remove. Appendix K makes the sample-level version dataset-agnostic by calibrating thresholds empirically rather than fixing them: each metric's own 95th-percentile value on ULTRACHAT200K - chosen because it is known not to induce persona shifts - becomes the cutoff, so 'clean' is defined relative to an observed reference distribution rather than an arbitrary number (§\"K Sample-wise filtering\", p. 53)."
+  },
+  {
+   "id": "real-world-chat-data-validation-validates-against-lmsys-chat-1m",
+   "type": "validates-against",
+   "source": "real-world-chat-data-validation",
+   "target": "lmsys-chat-1m",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "screening-data-before-training",
+   "prose": "LMSYS-Chat-1M is the first of four real-world datasets tested precisely because it is 'not carefully filtered or curated' and contains 'a large fraction of toxic content' (persona-vectors, §\"L Inducing persona shifts from real-world datasets\", p. 55) - a deliberately messy, close-to-worst-case corpus rather than a clean benchmark. The validation protocol ranks its conversations by projection difference per trait and finetunes separately on the top-500 (high), bottom-500 (low), and 500 random samples, finding a consistent ordering: high-projection samples induce the strongest trait expression, low-projection samples the weakest (§\"6.3 Validation on real-world chat datasets\", p. 11). The result survives even after GPT-4.1-mini strips out samples that overtly display the trait, and the examples that remain in the filtered high-projection subset are ones a text-only judge would plausibly pass - underspecified continuations like 'keep writing the last story' for hallucination, where nothing in the prompt itself signals risk. Appendix L's comparison across the other three datasets (TULU3, ULTRACHAT200K, WildChat) then shows the effect weakens as curation increases, which is exactly why LMSYS-Chat-1M, as the least curated of the four, produces the sharpest demonstration: the method's value is clearest on data nobody has already cleaned, which is also the realistic condition practitioners scraping real conversations are most likely to face."
+  },
+  {
+   "id": "sample-level-data-filtering-complements-gpt-4-1-mini",
+   "type": "complements",
+   "source": "sample-level-data-filtering",
+   "target": "gpt-4-1-mini",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "screening-data-before-training",
+   "prose": "Appendix K compares projection-based and LLM-judge-based filtering directly on a mixed Opinion Normal + Opinion Mistake II dataset, each calibrated to its own 95th-percentile threshold on ULTRACHAT200K: for hallucination, the LLM-judge threshold is 72.71 versus a projection-difference threshold of 2.25; for sycophancy, 31.74 versus 4.98; for evil, effectively 0 versus 4.32 (persona-vectors, §\"K Sample-wise filtering\", p. 53-54, Table 6). The comparison result is trait-dependent rather than uniform: GPT-4.1-mini alone performs best for hallucination, projection-difference alone is most effective for sycophancy, both independently eliminate trait shift for evil, and combining the two gives the most consistent result across all three (Figure 32, p. 54). This means the intuitive story that activation-based filtering catches what a text-reading judge misses only strictly holds for sycophancy in this controlled test - for hallucination the semantic judge is actually the stronger single filter on its own, even though adding projection-difference on top still helps. The likely source of the asymmetry: sycophantic and evil content are often stylistically legible in the response text an LLM judge reads, while what makes a sample shift a model's persona is not always what makes it read as displaying the trait - which is the register in which a purely activation-based signal can see something a semantic judge cannot, and vice versa."
+  },
+  {
+   "id": "preventative-steering-answers-alignment-tax",
+   "type": "answers",
+   "source": "preventative-steering",
+   "target": "alignment-tax",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "steering-becomes-a-training-tool",
+   "prose": "Alignment tax named the specific finding that RLHF's safety and instruction-following training measurably cost GPT-3 accuracy on public NLP benchmarks, establishing that alignment interventions are not free and their cost needs measuring rather than assuming away (instructgpt, §\"4.2 Results on public NLP datasets\", p. 14; §\"5.1 Implications for alignment research\", p. 17). Persona vectors' MMLU checks apply the same style of cost-accounting to a different intervention family - activation steering woven into finetuning - and preventative steering is presented as answering that older worry directly: it 'better preserves the model's general capabilities compared to inference-time steering' (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8), and when applied to a benign dataset that would not have shifted the persona anyway, it 'had only a negligible effect on MMLU accuracy' (§\"J.6 Assessing side effects of preventative steering on benign data\", p. 48) - a near-zero-tax outcome the original InstructGPT results never achieved outright, since PPO-ptx needed pretraining-gradient mixing specifically to claw back lost performance rather than avoiding the loss in the first place. The hindsight is necessary because persona-vectors never cites InstructGPT or invokes 'alignment tax' by name; the connection is only visible once both concepts are already in view - a 2022 cost-accounting framework, applied retroactively to a 2025 paper's own capability-preservation claim about a mechanism InstructGPT's authors could not have anticipated."
+  },
+  {
+   "id": "steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score",
+   "type": "is-bounded-by",
+   "source": "steering-mitigation-of-finetuning-shifts",
+   "target": "coherence-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "open-subjects-frontier-instruments",
+   "prose": "Both post-hoc and preventative steering are validated against a coherence-score floor, not merely reported alongside one: post-hoc steering results require 'average response coherence... above 75' (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7), while preventative steering's reported results maintain 'an average coherence score across all models above 80' (§\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8) - a stricter bar for the training-time method. This threshold matters because coherence score and trait-expression score answer different questions that a single steering result could otherwise conflate: a coefficient that drives a trait score to zero might have genuinely suppressed the trait, or might simply have degraded the model into unintelligible or off-topic text that no longer registers as exhibiting any trait, evil included - and MMLU would not reliably distinguish these cases either, since a garbled model can still sometimes guess a multiple-choice letter correctly. The coherence floor exists to rule out the degenerate 'steered into gibberish' explanation for every reported drop in trait score across the paper's steering experiments, functioning as a validity check on the rest of the results rather than as a headline finding in its own right. That the two mitigation methods are held to two different floors - 75 versus 80 - is itself a detail neither method's own page states."
+  }
+ ]
+}

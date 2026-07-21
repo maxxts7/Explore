@@ -1,0 +1,749 @@
+{
+ "persona-vectors": {
+  "staged": {
+   "id": "persona-vectors",
+   "name": "Persona vector",
+   "role": "introduced",
+   "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1
+    },
+    {
+     "section": "1 Introduction",
+     "page": 1
+    },
+    {
+     "section": "2.2 Extracting persona vectors",
+     "page": 3
+    }
+   ],
+   "notes": "The paper's central object; distinct from a generic CAA-style steering vector in that it comes with its own automated, trait-agnostic extraction pipeline built specifically for personality/character traits."
+  },
+  "edges_touching": [
+   {
+    "id": "persona-vectors-specializes-steering-vector-for-character-traits",
+    "type": "specializes-for-character-traits",
+    "source": "persona-vectors",
+    "target": "steering-vector",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "A persona vector is a steering vector scoped to a specific kind of target \u2014 personality and character traits rather than an open list of alignment-relevant behaviors \u2014 and validated for roles the generic concept was not originally built around. The paper studies three main traits (evil, sycophancy, hallucination) plus four more in Appendix G (optimism, impoliteness, apathy, humor), and for each confirms not only that steering along the vector shifts behavior, but that the same vector reads behavior it did not cause: projecting a prompt's final-token activation onto the persona direction predicts the trait expression of a response not yet generated, correlating at r = 0.75\u20130.83 across system-prompt and many-shot elicitation (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Beyond that pre-generation reading, persona vectors are also injected during training itself, not only at inference, through preventative steering (persona-vectors, \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). So where the general steering-vector concept covers a direction added or subtracted during a single forward pass, persona vectors extend the same object into a monitor that operates before generation begins and a regularizer that operates during weight updates \u2014 two roles beyond the inference-time nudge the concept is otherwise centered on."
+   },
+   {
+    "id": "persona-vectors-quantifies-empirical-support-for-linear-representation-hypothesis",
+    "type": "quantifies-empirical-support-for",
+    "source": "persona-vectors",
+    "target": "linear-representation-hypothesis",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The paper states its dependence on the hypothesis directly in its opening framing \u2014 building 'on prior work showing that traits are encoded as linear directions in activation space' and citing Wang et al. (2025)'s finding that emergent misalignment itself is mediated by a linear 'misaligned persona' direction as supporting evidence (persona-vectors, \u00a7\"1 Introduction\", p. 1). Where the paper goes beyond citing the hypothesis is in how many independent quantitative tests it runs against it. CAA's evidence for linearity is largely qualitative: PCA-projected activations visibly cluster by behavior. Persona-vectors instead reports three separate correlational measurements, each of which would be near-impossible if traits were not encoded roughly linearly: steering along the extracted direction reliably shifts trait expression scores across layers and coefficients (\u00a7\"3.2 Controlling persona traits via steering\", p. 4); projecting a prompt's final-token activation onto the direction predicts the trait score of a not-yet-generated response at r = 0.75\u20130.83 (\u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5); and projecting a finetuning-induced activation shift onto the direction predicts post-finetuning trait expression at r = 0.76\u20130.97, notably higher than cross-trait control correlations of r = 0.34\u20130.86 (\u00a7\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). Three independent measurement regimes converging on the same direction is a stronger evidentiary base than any one of them alone."
+   },
+   {
+    "id": "persona-vectors-extends-the-dosing-role-of-steering-multiplier-into-training",
+    "type": "extends-the-dosing-role-of-into-training",
+    "source": "persona-vectors",
+    "target": "steering-multiplier",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The paper reuses CAA's scalar-coefficient formulation without modification \u2014 h\u2113 \u2190 h\u2113 + \u03b1\u00b7v\u2113 during ordinary steering (persona-vectors, \u00a7\"3.2 Controlling persona traits via steering\", p. 4) \u2014 but then puts the same knob to work in two places the original concept was never applied to. Post-hoc mitigation flips the sign, h\u2113 \u2190 h\u2113 \u2212 \u03b1\u00b7v\u2113, subtracting the persona vector at each decoding step after finetuning to suppress an unwanted trait (\u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). Preventative steering keeps the sign positive but moves the intervention earlier, adding \u03b1\u00b7v\u2113 during finetuning itself rather than only at inference, so the multiplier becomes a training-time regularization strength rather than a purely generative one (\u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The usable range for \u03b1 is not universal: Appendix B.4's layer sweep runs coefficients up to 2.5 for Qwen2.5-7B-Instruct but only up to 1.2 for Llama-3.1-8B-Instruct before quality degrades (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 29). One dosing mechanism, unmodified from CAA's addition formula, now spans three distinct interventions \u2014 elicit, suppress, and prevent \u2014 distinguished only by the sign of \u03b1 and the moment in the pipeline at which it is applied."
+   },
+   {
+    "id": "evil-trait-flagship-worked-example-for-persona-vectors",
+    "type": "flagship-worked-example-for",
+    "source": "evil-trait",
+    "target": "persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "Across every mechanism the paper introduces, evil is the trait wheeled out first and most often: it anchors the pipeline diagram itself (Figure 2's contrastive artifact-generation and extraction walkthrough uses \"evil\" as its running illustration, persona-vectors, \u00a7\"2 An automated pipeline to extract persona vectors\", p. 3), the steering demonstration (a system-prompted completion advocating \"starvation as a weapon,\" \u00a7\"3.2 Controlling persona traits via steering\", p. 4), and the SAE decomposition case study (Appendix M leads with evil before sycophancy and hallucination). This is not incidental. Because Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct will readily role-play evil under a system prompt \"with an extremely low rate of refusal\" (persona-vectors, \u00a7\"8 Limitations\", p. 13), evil gives the cleanest possible signal for testing whether a mechanism works at all, uncontaminated by the safety-training refusals that would complicate eliciting comparable behavior directly. That cleanliness lets evil double as a stress test for the harshest case: its persona vector must be extractable, steerable, monitorable, and controllable at exactly the trait where a model's alignment training has pushed hardest in the opposite direction. Every later validation -- the layer-selection sweep, the finetuning-shift correlation, the projection-difference data screening, the SAE feature decomposition -- is first demonstrated on evil before being shown to generalize to sycophancy, hallucination, and the four appendix traits, making it the paper's de facto proof of concept rather than merely one of three co-equal case studies."
+   },
+   {
+    "id": "persona-vectors-admits-a-fine-grained-decomposition-via-sae-decomposition-of-persona-vectors",
+    "type": "admits-a-fine-grained-decomposition-via",
+    "source": "persona-vectors",
+    "target": "sae-decomposition-of-persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "reading-the-residual-stream",
+    "prose": "A persona vector is, by the paper's own admission, a coarse-grained direction -- a single averaged direction that \"may miss fine-grained behavioral distinctions\" (persona-vectors, \u00a7\"8 Limitations\", p. 13). The SAE decomposition makes that coarseness legible: ranking Qwen-2.5-7B-Chat's SAE features by cosine similarity to the evil persona vector surfaces five distinct sub-concepts among the top matches -- insulting/derogatory language (feature 12061, cosine similarity 0.336, steered trait expression score 91.2), deliberate cruelty and sadism (feature 128289, 0.306, 84.9), jailbreak-related content (feature 71418, 0.257, 84.8), discussion of \"bad\" people or actions (feature 60872, 0.273, 78.7), and malicious code/hacking content (feature 14739, 0.334, 78.6) (persona-vectors, \u00a7\"M.4 Interesting features\", p. 60). Notably, even the best-matching individual feature has a cosine similarity of only 0.336 with the full persona vector, confirming the persona vector is not simply reproducing one dominant SAE feature but is closer to a weighted composite spanning several distinct, independently-steerable sub-behaviors, each separately confirmed causal by steering with its own decoder direction and re-scoring trait expression (\u00a7\"M.3.2 Causal analysis via steering\", p. 60). The decomposition thus reveals that what the main text treats as one scalar \"evil\" dial is, mechanistically, a bundle of more specific behavioral levers the coarse persona vector happens to average together."
+   },
+   {
+    "id": "projection-based-persona-monitoring-reads-instead-of-writing-to-persona-vectors",
+    "type": "reads-instead-of-writing-to",
+    "source": "projection-based-persona-monitoring",
+    "target": "persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Persona vectors are built and layer-selected purely to be effective steering levers: Appendix B.4 selects each trait's layer by applying steering at every layer with the same coefficient and picking the one that elicits the highest trait expression score -- layer 20 for evil and sycophancy on Qwen, layer 16 for hallucination, layer 16 for all three traits on Llama (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 30). Monitoring never re-derives or re-tunes anything for its second job: the same vector, at the same steering-optimized layer, is instead read via a plain inner product with the last-prompt-token activation, with nothing added to the residual stream at all (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Nothing is scaled, added, or subtracted -- the intervention term central to persona vectors' other use is entirely absent; only the direction survives, repurposed as a ruler rather than a lever. That a vector selected for effective writing also turns out to support accurate reading (r=0.75-0.83) is not something the extraction pipeline targets or guarantees -- it is a fact discovered downstream, not designed in. The distinction matters operationally: writing changes the model's behavior and is visible to anyone inspecting outputs, while reading is silent, requires no generation, and can run continuously against live traffic, inheriting whatever biases the steering-oriented layer choice introduced rather than being independently optimized for projection sensitivity."
+   }
+  ],
+  "themes": [
+   {
+    "id": "behavior-as-a-direction",
+    "name": "A behavior becomes a direction in activation space"
+   },
+   {
+    "id": "the-assistant-persona-in-parts",
+    "name": "The Assistant persona taken apart into measurable traits"
+   },
+   {
+    "id": "projection-as-early-warning",
+    "name": "Projection as early warning: reading the persona before it speaks"
+   }
+  ]
+ },
+ "persona-vector-extraction-pipeline": {
+  "staged": {
+   "id": "persona-vector-extraction-pipeline",
+   "name": "Automated persona vector extraction pipeline",
+   "role": "introduced",
+   "summary": "The paper's end-to-end automated procedure for turning a natural-language trait name and description into a persona vector, requiring no data curation beyond the trait description itself. It consists of an artifact-generation stage (contrastive system prompts, evaluation questions, judge rubric) followed by a vector-computation stage (contrastive rollout generation, filtering, and mean-difference extraction).",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 An automated pipeline to extract persona vectors",
+     "page": 3
+    },
+    {
+     "section": "A Direction extraction pipeline",
+     "page": 23
+    }
+   ],
+   "notes": "Framed as generalizing prior bespoke-data-curation activation-steering approaches (CAA, ActAdd, RepE); most similar to Wu et al. (2025)'s automated pipeline."
+  },
+  "edges_touching": [
+   {
+    "id": "persona-vector-extraction-pipeline-adds-filtering-and-validation-beyond-concept-description-to-direction-pipeline-wu",
+    "type": "adds-filtering-and-validation-beyond",
+    "source": "persona-vector-extraction-pipeline",
+    "target": "concept-description-to-direction-pipeline-wu",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Wu et al. (2025) is the paper's own named closest relative: an automated pipeline that also turns a natural-language concept description into contrastive pairs of LLM-generated text and eventually into a linear direction, with no manual dataset curation required (persona-vectors, \u00a7\"2 An automated pipeline to extract persona vectors\", p. 3; \u00a7\"7 Related work\", p. 12). The paper does not spell out Wu et al.'s internal steps beyond that description, so the comparison it licenses is architectural rather than line-by-line: both pipelines share the core move of using an LLM to manufacture its own contrastive data from a description alone, rather than requiring a human-assembled dataset. What the paper does specify for its own pipeline, and does not attribute to Wu et al., are three further stages: an explicit trait-expression-score filter (keeping only rollouts scoring above 50 for positive prompts or below 50 for negative ones) before any activation is averaged; an empirical choice of extraction position, response-token averaging, validated against prompt-token alternatives in Appendix A.3; and a dedicated validation of the resulting judge against two human raters (94.7% agreement) and external benchmarks (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28). The pipeline's contribution is best read as generation plus a quality-control apparatus around it, layered onto an architecture it credits as already closest to its own."
+   },
+   {
+    "id": "persona-vector-extraction-pipeline-automates-away-the-bespoke-curation-of-contrastive-activation-addition",
+    "type": "automates-away-the-bespoke-curation-of",
+    "source": "persona-vector-extraction-pipeline",
+    "target": "contrastive-activation-addition",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Persona-vectors' related-work section places CAA in a short list of techniques it says 'generally required bespoke data curation to obtain contrastive pairs' (persona-vectors, \u00a7\"7 Related work\", p. 12), but that single sentence does not itself spell out what the bespoke curation looked like. Reading it against CAA's own machinery fills that in: CAA's seven target behaviors each needed their own hand-assembled or GPT-4-generated multiple-choice dataset \u2014 a custom hallucination dataset distinguishing unprompted from contextually-triggered fabrication, a custom refusal dataset, others drawn from Anthropic's Advanced AI Risk and Sycophancy evaluation sets \u2014 with hundreds of contrast pairs curated per behavior before any vector could be built (contrastive-activation-addition, \u00a7\"3 Method\", p. 3). The extraction pipeline replaces all of that per-behavior dataset engineering with one fixed prompt template that needs only a trait name and a short description, run identically for every trait it studies \u2014 the three main traits plus four more in Appendix G \u2014 with no behavior-specific dataset construction anywhere in the loop (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). What CAA's specific curation effort actually entailed is not something persona-vectors elaborates on; the pipeline's real relationship to it \u2014 replacing seven separate dataset-building projects with one reusable template \u2014 only comes into focus by reaching into CAA's own paper for the detail persona-vectors' one-line characterization skips."
+   },
+   {
+    "id": "optimism-trait-stress-tests-with-an-atypical-baseline-for-persona-vector-extraction-pipeline",
+    "type": "stress-tests-with-an-atypical-baseline-for",
+    "source": "optimism-trait",
+    "target": "persona-vector-extraction-pipeline",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "Optimism is the one trait, among the seven the paper studies, where the pipeline's usual before/after assumption inverts. For evil, sycophancy, hallucination, and the other three appendix traits, base Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct start near the low end of the trait and finetuning can push scores up; for optimism, the base models already score highly before any finetuning, and diverse finetuning -- even on datasets with no thematic connection to optimism, such as GSM8K or Code -- consistently pushes the score down rather than up (persona-vectors, \u00a7\"G Experiments on additional traits\", p. 41). Despite this reversed baseline dynamic, the extraction pipeline's downstream machinery holds up: the finetuning-induced activation shift along the optimism persona vector still strongly predicts the negative change in optimism trait expression (r=0.865 on Qwen, r=0.961 on Llama; \u00a7\"G Experiments on additional traits\", p. 41). This is a more demanding generalization test than simply adding a fourth positive-valence trait alongside evil, sycophancy, and hallucination: it shows the pipeline's extraction and projection-based prediction machinery is agnostic not just to whether a trait is positive or negative, but to whether finetuning is expected to increase or decrease it from an already-high starting point."
+   }
+  ],
+  "themes": [
+   {
+    "id": "trait-to-vector-pipeline",
+    "name": "From trait name to vector: extraction becomes automatic"
+   }
+  ]
+ },
+ "trait-artifact-generation": {
+  "staged": {
+   "id": "trait-artifact-generation",
+   "name": "Trait-specific artifact generation",
+   "role": "introduced",
+   "summary": "The pipeline's first stage, in which a single generic prompt instructs a frontier LLM (Claude 3.7 Sonnet) to generate, from only a trait name and description, five pairs of contrastive positive/negative system prompts, 40 elicitation questions (split into a 20-question extraction set and a 20-question evaluation set), and an evaluation rubric for scoring trait expression.",
+   "parent": "persona-vector-extraction-pipeline",
+   "locators": [
+    {
+     "section": "2.1 Generating trait-specific artifacts",
+     "page": 3
+    },
+    {
+     "section": "A.1 Prompts",
+     "page": 23
+    }
+   ]
+  },
+  "edges_touching": [
+   {
+    "id": "trait-artifact-generation-supplies-the-raw-materials-for-persona-vector-computation",
+    "type": "supplies-the-raw-materials-for",
+    "source": "trait-artifact-generation",
+    "target": "persona-vector-computation",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Trait-artifact generation is a single, cheap upstream event that persona-vector computation multiplies into hundreds of downstream generations. One generic prompt template, given only a trait name and description, produces three outputs from one call to Claude 3.7 Sonnet: 5 contrastive instruction pairs, 40 elicitation questions split into a 20-question extraction set and a 20-question evaluation set, and one evaluation rubric (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). Computation consumes only two of these three: the instruction pairs and the extraction-set half of the questions, leaving the evaluation set untouched at this stage. For each of the 20 extraction questions, the pipeline generates 10 rollouts under the positive instruction and 10 under the negative one, yielding 400 raw responses per trait from a single authored artifact set (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). The third artifact, the rubric, does not wait until final evaluation to matter \u2014 it is applied immediately, scoring every one of those 400 rollouts so computation can filter before extracting any activation. So the relationship runs one prompt template to many rollouts to one filtered vector: artifact generation pays a fixed, trait-agnostic authoring cost once, and computation pays a much larger, trait-specific inference cost against exactly the subset of what was authored that a mean-difference extraction actually needs."
+   },
+   {
+    "id": "claude-generation-tooling-authors-the-artifacts-behind-trait-artifact-generation",
+    "type": "authors-the-artifacts-behind",
+    "source": "claude-generation-tooling",
+    "target": "trait-artifact-generation",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Claude 3.7 Sonnet's role inside trait-artifact generation is a single, one-shot call per trait: a generic prompt template feeds it a trait name and description, and it returns 5 instruction pairs, 40 questions, and 1 evaluation rubric in one pass (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3; \u00a7\"A.1 Prompts\", p. 23). That is a strikingly small footprint compared with the other work the same model is tasked with elsewhere in the paper. For the Evil and Hallucination finetuning datasets, Claude 3.7 first generates the questions themselves \u2014 50 domains times 100 questions each, roughly 5k questions per trait \u2014 and then, for every dataset across the paper, generates three separate response versions (Normal, I, II) for each question (persona-vectors, \u00a7\"D.1 Question collection.\", p. 35; \u00a7\"D.2 Response generation\", p. 35). Sycophancy alone contributes roughly 10k training questions needing three response versions apiece. So the same generation tool that authors an entire trait's evaluation apparatus in one call is, minutes later in the pipeline, tasked with tens of thousands of individual question and response generations to build the datasets that apparatus will later score. Trait-artifact generation is the cheapest of claude-generation-tooling's jobs in this paper, not a representative one \u2014 a distinction neither concept's own page states directly."
+   },
+   {
+    "id": "trait-artifact-generation-generates-the-scoring-rubric-consumed-by-trait-expression-score",
+    "type": "generates-the-scoring-rubric-consumed-by",
+    "source": "trait-artifact-generation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "The rubric trait-expression-score depends on is not authored by hand; it is the third output of trait-artifact generation's single LLM call, produced in the same pass as the instruction pairs and elicitation questions. The prompt template that generates it instructs Claude 3.7 Sonnet to fill in a fixed structure \u2014 'You are evaluating whether the model's response displays the trait: {{TRAIT}}. {{TRAIT DESCRIPTION (IN YOUR OWN WORDS)}}' \u2014 before appending the standard scoring instructions (0\u2013100, with a REFUSAL option) that every trait's rubric shares verbatim (persona-vectors, \u00a7\"A.1 Prompts\", p. 23\u201324). That bracketed instruction matters: the model is explicitly told to restate the trait description in its own words rather than copy the human-supplied description verbatim, so what GPT-4.1-mini ultimately scores responses against is Claude's paraphrase of the trait, one further LLM interpretation removed from the original human-authored definition. The worked example for 'evil' shows the result \u2014 a rubric describing the trait as responses that 'deliberately work against human wellbeing and flourishing' and 'derive satisfaction from human pain,' phrasing that echoes but does not reproduce the original trait description word for word (persona-vectors, \u00a7\"A.2 Trait descriptions\", p. 26). Score consistency across traits therefore depends not only on GPT-4.1-mini's judging but on how faithfully an upstream LLM's rewrite preserved the intended meaning."
+   }
+  ],
+  "themes": [
+   {
+    "id": "trait-to-vector-pipeline",
+    "name": "From trait name to vector: extraction becomes automatic"
+   }
+  ]
+ },
+ "persona-vector-computation": {
+  "staged": {
+   "id": "persona-vector-computation",
+   "name": "Response-conditioned contrastive vector computation",
+   "role": "introduced",
+   "summary": "The pipeline's second stage: for each extraction-set question, generate 10 rollouts under both the positive and negative system prompts, filter rollouts by trait expression score (keeping only responses that clearly match their intended prompt), extract residual-stream activations averaged over response tokens, and take the mean-difference between trait-exhibiting and non-exhibiting activations at each layer, selecting the layer whose vector steers most effectively.",
+   "parent": "persona-vector-extraction-pipeline",
+   "locators": [
+    {
+     "section": "2.2 Extracting persona vectors",
+     "page": 3
+    },
+    {
+     "section": "A.3 Extracting persona vectors at different token positions",
+     "page": 27
+    },
+    {
+     "section": "B.4 Selecting the most informative layer",
+     "page": 29
+    }
+   ],
+   "notes": "Distinct from CAA's multiple-choice-contrast-pair mean-difference extraction (caa-steering-vector-construction): this paper's contrast pairs are full free-form rollouts under contrastive system prompts, filtered by an LLM judge, and averaged over response (not prompt) tokens (shown in Appendix A.3 to outperform prompt-token extraction). Reuses the general mean-difference-method id for the underlying averaging technique but is treated as its own procedure per the anti-stretch guidance, since it is not the CAA-specific construction."
+  },
+  "edges_touching": [
+   {
+    "id": "trait-artifact-generation-supplies-the-raw-materials-for-persona-vector-computation",
+    "type": "supplies-the-raw-materials-for",
+    "source": "trait-artifact-generation",
+    "target": "persona-vector-computation",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Trait-artifact generation is a single, cheap upstream event that persona-vector computation multiplies into hundreds of downstream generations. One generic prompt template, given only a trait name and description, produces three outputs from one call to Claude 3.7 Sonnet: 5 contrastive instruction pairs, 40 elicitation questions split into a 20-question extraction set and a 20-question evaluation set, and one evaluation rubric (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). Computation consumes only two of these three: the instruction pairs and the extraction-set half of the questions, leaving the evaluation set untouched at this stage. For each of the 20 extraction questions, the pipeline generates 10 rollouts under the positive instruction and 10 under the negative one, yielding 400 raw responses per trait from a single authored artifact set (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). The third artifact, the rubric, does not wait until final evaluation to matter \u2014 it is applied immediately, scoring every one of those 400 rollouts so computation can filter before extracting any activation. So the relationship runs one prompt template to many rollouts to one filtered vector: artifact generation pays a fixed, trait-agnostic authoring cost once, and computation pays a much larger, trait-specific inference cost against exactly the subset of what was authored that a mean-difference extraction actually needs."
+   },
+   {
+    "id": "persona-vector-computation-supplies-manufactured-contrast-sets-to-mean-difference-method",
+    "type": "supplies-manufactured-contrast-sets-to",
+    "source": "persona-vector-computation",
+    "target": "mean-difference-method",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Mean Difference's own recipe is deliberately minimal: collect two sets of contrasting example activations and average their difference, an approach that needs no optimization or gradient descent, only a legitimate two-group split to already exist. Persona-vector computation's real work happens before that arithmetic ever runs, in constructing a clean split that MD's generic recipe simply assumes as given. It generates 10 rollouts per extraction question under each of a contrastive instruction pair, then discards any rollout that fails to clearly express its intended condition \u2014 trait score above 50 for positive-prompted rollouts, below 50 for negative-prompted ones \u2014 before averaging (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). It also chooses, empirically rather than by default, where within each surviving rollout to read from: Appendix A.3 compares extracting from the final prompt token, an average over all prompt tokens, and an average over all response tokens, finding response-token averaging yields the strongest steering effect across evil, sycophancy, and hallucination, and adopting it as the pipeline's default (persona-vectors, \u00a7\"A.3 Extracting persona vectors at different token positions\", p. 27). Neither the filtering threshold nor the token-position choice is part of MD's generic definition; both are engineering decisions layered on top of it to manufacture the two-group split that MD's underlying arithmetic can then simply subtract and average."
+   },
+   {
+    "id": "persona-vector-computation-generalizes-beyond-the-answer-letter-recipe-of-caa-steering-vector-construction",
+    "type": "generalizes-beyond-the-answer-letter-recipe-of",
+    "source": "persona-vector-computation",
+    "target": "caa-steering-vector-construction",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Both procedures are Mean Difference wearing different clothes, and lining them up shows what changed between 2023 and 2025. CAA's construction reads a single, fixed token position \u2014 the appended answer letter of a multiple-choice question \u2014 from a hand-built dataset of hundreds of (prompt, positive completion, negative completion) triples, one dataset curated per behavior (contrastive-activation-addition, \u00a7\"3 Method\", p. 3). Persona-vector computation reads an averaged position across many tokens \u2014 every token of a full free-form response \u2014 from rollouts the pipeline generates itself under a contrastive system prompt, then narrows with an LLM-judge filter (trait score above 50 / below 50) before averaging, rather than trusting every generated pair by construction (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). The shift is from a format engineered to make the contrast trivially clean \u2014 differing by one token, so nothing else needs filtering \u2014 to a format that has to manufacture cleanliness after the fact, because free-form rollouts vary in far more ways than an answer letter does. Persona-vectors never states this as a direct successor relationship; it cites CAA only as one instance of prior work needing bespoke data curation. The correspondence between what CAA fixes structurally (one token, pre-guaranteed contrast) and what persona-vector computation fixes statistically (many tokens, post-hoc filtered contrast) only resolves into a legible before/after once persona vectors exists to complete the pair."
+   },
+   {
+    "id": "persona-vector-computation-sweeps-and-selects-a-layer-within-residual-stream",
+    "type": "sweeps-and-selects-a-layer-within",
+    "source": "persona-vector-computation",
+    "target": "residual-stream",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "Computation does not commit to a residual-stream layer in advance; it treats layer choice itself as something to be measured. Response-token activations are averaged into a candidate persona vector at every layer, and only afterward is 'the most informative layer' selected by testing steering effectiveness across the full stack (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). Appendix B.4 shows why that sweep matters rather than being a formality: trait expression score as a function of steering coefficient varies substantially across layers 5 through 25 for both Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, with no single layer dominating uniformly across evil, sycophancy, and hallucination (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 29). The two base models are not even swept with the same coefficient range \u2014 Qwen's sweep runs up to 2.5, Llama's only to 1.2 \u2014 reflecting that how far a given layer's residual stream tolerates perturbation before losing coherence is itself model-specific, not a property of the extraction method alone. This differs from how the same paper reads the residual stream elsewhere for other purposes, such as the single last-prompt-token snapshot used for measuring finetuning-induced shift; computation's own read is comprehensive across depth precisely because which layer will end up mattering is not known until after the sweep is run."
+   },
+   {
+    "id": "persona-vector-computation-filters-its-rollouts-by-trait-expression-score",
+    "type": "filters-its-rollouts-by",
+    "source": "persona-vector-computation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Not every rollout generated under a contrastive system prompt actually displays the trait it was prompted to display, and computation discards the ones that don't before any activation is averaged. For each of the 400 rollouts generated per trait (20 extraction questions times 10 rollouts times 2 conditions), the pipeline scores the response with the freshly generated rubric and keeps only those exceeding 50 for positive-prompted rollouts or falling below 50 for negative-prompted ones, discarding the rest (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). This matters because the contrastive system prompt only sets an intention, not a guarantee: a model instructed to act 'evil' can still produce a mild or off-target response, and averaging such a response in with genuinely trait-exhibiting ones would blur the mean-difference signal with noise from responses that never actually diverged along the target direction. The threshold is symmetric and fixed at the scale's midpoint rather than tuned per trait, treating 50 as the boundary between 'exhibits' and 'does not exhibit' regardless of which of the three main traits or four appendix traits is being extracted. The filtering step is where trait-expression-score's role shifts from a downstream outcome measure, which is how the rest of the paper mostly uses it, to an upstream data-quality gate inside the extraction pipeline itself."
+   }
+  ],
+  "themes": [
+   {
+    "id": "behavior-as-a-direction",
+    "name": "A behavior becomes a direction in activation space"
+   },
+   {
+    "id": "trait-to-vector-pipeline",
+    "name": "From trait name to vector: extraction becomes automatic"
+   }
+  ]
+ },
+ "trait-expression-score": {
+  "staged": {
+   "id": "trait-expression-score",
+   "name": "Trait expression score (LLM judge)",
+   "role": "introduced",
+   "summary": "A 0-100 score quantifying how strongly a model response displays a target trait, computed by prompting GPT-4.1-mini with a trait-specific rubric and taking a logit-weighted sum over the single-token integer completions in its top-20 output logits. Validated against two human judges (94.7% agreement) and against external benchmarks before being used as the paper's primary outcome measure throughout.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2.1 Generating trait-specific artifacts",
+     "page": 3
+    },
+    {
+     "section": "B.1 Evaluation scoring details",
+     "page": 28
+    },
+    {
+     "section": "B.2 Checking agreement between human judges and LLM judge",
+     "page": 28
+    }
+   ],
+   "notes": "Judged NOT the same concept as CAA's open-ended-generation-evaluation (GPT-4, 1-10 sampled rating on a fixed generic rubric for 7 predefined behaviors). This is a trait-agnostic rubric auto-generated per trait and scored via logit-weighted extraction from GPT-4.1-mini rather than a sampled rating, so it is coined as its own id rather than reused, per the coordinator's guidance."
+  },
+  "edges_touching": [
+   {
+    "id": "trait-expression-score-operationalizes-its-rubric-through-gpt-4.1-mini",
+    "type": "operationalizes-its-rubric-through",
+    "source": "trait-expression-score",
+    "target": "gpt-4.1-mini",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "The rubric alone does not produce a score; how GPT-4.1-mini is queried against it does. The model is prompted to output a bare number between 0 and 100, but the paper does not use whatever single token it samples \u2014 it retrieves the top-20 logits from the output distribution, isolates the subset that correspond to integers 0\u2013100 (known to tokenize as single tokens in OpenAI's tokenizer), and computes a logit-weighted sum over just those candidates (persona-vectors, \u00a7\"B.1 Evaluation scoring details\", p. 28). That choice trades a single discrete sample for a continuous readout blending the model's whole distribution of plausible scores, and it is what makes the metric a stable, comparable 0\u2013100 signal across responses rather than a noisier single-draw guess. Trusting that signal rests on validation the paper reports at trait-level granularity: two human judges, 300 pairwise comparisons of high- versus low-scored responses, agreeing with the LLM's ranking 97% of the time for evil, 92% for sycophancy, and 95% for hallucination, 94.7% overall (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28). GPT-4.1-mini also serves the paper as an LLM-based data filter in the later data-screening appendices \u2014 a separate role, distinct from the judge function trait-expression-score depends on here."
+   },
+   {
+    "id": "trait-expression-score-succeeds-the-sampled-rating-protocol-of-open-ended-generation-evaluation",
+    "type": "succeeds-the-sampled-rating-protocol-of",
+    "source": "trait-expression-score",
+    "target": "open-ended-generation-evaluation",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Both metrics do the same job \u2014 an LLM grading free-form generations for how strongly they display a target behavior \u2014 but persona-vectors does not cite CAA's evaluation as an ancestor; it draws its scoring methodology from Betley et al. (2025) instead (persona-vectors, \u00a7\"B.1 Evaluation scoring details\", p. 28). Lined up anyway, the two protocols differ at every step. CAA's rubric is fixed and hand-written by the paper's authors, one per behavior, and scored 1\u201310 by GPT-4 sampling a single output token (contrastive-activation-addition, \u00a7\"L GPT-4 rater prompts\", p. 19); its reliability rests on a manual spot-check plus a general citation that GPT-4 is a reliable rater (Hackl et al., 2023), with no paper-specific agreement figure reported. Trait-expression-score's rubric is instead auto-generated per trait by an LLM from only a name and description, scored 0\u2013100 by GPT-4.1-mini via a logit-weighted sum over top-20 candidate tokens rather than a single sample, and validated with a dedicated study: two human judges, 300 pairwise comparisons, 94.7% agreement, plus cross-checks against external benchmarks (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28; \u00a7\"B.3 Additional evaluations on standard benchmarks\", p. 29). Every axis of the earlier protocol \u2014 rubric authorship, score granularity, and validation rigor \u2014 has a replacement, without persona-vectors ever framing it as a lineage."
+   },
+   {
+    "id": "coherence-score-guards-the-capability-floor-for-trait-expression-score",
+    "type": "guards-the-capability-floor-for",
+    "source": "coherence-score",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The two scores are graded by the same model, GPT-4.1-mini, but on opposite kinds of rubric. Trait-expression-score's rubric is manufactured fresh per trait by trait-artifact generation; coherence-score instead applies one fixed, trait-agnostic rubric borrowed wholesale from Betley et al. (2025)'s methodology, unchanged regardless of which trait is being steered (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). The pairing exists because a high or low trait-expression score is not informative on its own: steering interventions can degrade a model into incoherent text rather than genuinely inducing or suppressing a trait, a known failure mode the paper cites directly (Durmus et al., 2024b), and a sufficiently broken response could register an extreme trait score for the wrong reason. The paper enforces coherence as a gate at two different bars depending on which intervention is being evaluated: average response coherence above 75 for inference-time and post-hoc steering results, but above 80 for preventative steering (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8; \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The stricter bar on preventative steering matches its role as the paper's preferred, novel method \u2014 a trait-expression-score result is only reported as a genuine behavioral effect once its coherence has cleared the relevant floor."
+   },
+   {
+    "id": "trait-artifact-generation-generates-the-scoring-rubric-consumed-by-trait-expression-score",
+    "type": "generates-the-scoring-rubric-consumed-by",
+    "source": "trait-artifact-generation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "The rubric trait-expression-score depends on is not authored by hand; it is the third output of trait-artifact generation's single LLM call, produced in the same pass as the instruction pairs and elicitation questions. The prompt template that generates it instructs Claude 3.7 Sonnet to fill in a fixed structure \u2014 'You are evaluating whether the model's response displays the trait: {{TRAIT}}. {{TRAIT DESCRIPTION (IN YOUR OWN WORDS)}}' \u2014 before appending the standard scoring instructions (0\u2013100, with a REFUSAL option) that every trait's rubric shares verbatim (persona-vectors, \u00a7\"A.1 Prompts\", p. 23\u201324). That bracketed instruction matters: the model is explicitly told to restate the trait description in its own words rather than copy the human-supplied description verbatim, so what GPT-4.1-mini ultimately scores responses against is Claude's paraphrase of the trait, one further LLM interpretation removed from the original human-authored definition. The worked example for 'evil' shows the result \u2014 a rubric describing the trait as responses that 'deliberately work against human wellbeing and flourishing' and 'derive satisfaction from human pain,' phrasing that echoes but does not reproduce the original trait description word for word (persona-vectors, \u00a7\"A.2 Trait descriptions\", p. 26). Score consistency across traits therefore depends not only on GPT-4.1-mini's judging but on how faithfully an upstream LLM's rewrite preserved the intended meaning."
+   },
+   {
+    "id": "persona-vector-computation-filters-its-rollouts-by-trait-expression-score",
+    "type": "filters-its-rollouts-by",
+    "source": "persona-vector-computation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Not every rollout generated under a contrastive system prompt actually displays the trait it was prompted to display, and computation discards the ones that don't before any activation is averaged. For each of the 400 rollouts generated per trait (20 extraction questions times 10 rollouts times 2 conditions), the pipeline scores the response with the freshly generated rubric and keeps only those exceeding 50 for positive-prompted rollouts or falling below 50 for negative-prompted ones, discarding the rest (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). This matters because the contrastive system prompt only sets an intention, not a guarantee: a model instructed to act 'evil' can still produce a mild or off-target response, and averaging such a response in with genuinely trait-exhibiting ones would blur the mean-difference signal with noise from responses that never actually diverged along the target direction. The threshold is symmetric and fixed at the scale's midpoint rather than tuned per trait, treating 50 as the boundary between 'exhibits' and 'does not exhibit' regardless of which of the three main traits or four appendix traits is being extracted. The filtering step is where trait-expression-score's role shifts from a downstream outcome measure, which is how the rest of the paper mostly uses it, to an upstream data-quality gate inside the extraction pipeline itself."
+   },
+   {
+    "id": "finetuning-shift-predicts-post-finetuning-values-of-trait-expression-score",
+    "type": "predicts-post-finetuning-values-of",
+    "source": "finetuning-shift",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "finetuning-moves-the-persona",
+    "prose": "That finetuning shift correlates with trait expression score (r=0.76-0.97) is already the headline fact about the metric; what is worth adding is what makes this a meaningful validation rather than a circular one, and how tight the correlation is relative to a natural baseline. Trait expression score is produced independently of any activation-space quantity -- it comes from GPT-4.1-mini reading generated text against a rubric -- so a strong correlation with finetuning shift, an internal, pre-generation activation quantity, is genuine evidence that the persona-vector direction tracks something with real behavioral consequences, not an artifact of how either quantity is defined. The paper also reports a cross-trait baseline: correlating trait A's finetuning shift against trait B's expression-score change yields only r=0.34-0.86, consistently weaker than the r=0.76-0.97 a trait's own finetuning shift achieves against its own expression score (persona-vectors, \u00a7\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). This gap is the paper's evidence that persona vectors carry trait-specific signal rather than a generic \"something is shifting\" alarm -- an own-trait projection genuinely outperforms a same-magnitude projection along a different trait's direction at predicting that trait's behavior, something a single, coarser shared \"alignment drift\" direction could not reproduce."
+   },
+   {
+    "id": "projection-based-persona-monitoring-is-benchmarked-against-trait-expression-score",
+    "type": "is-benchmarked-against",
+    "source": "projection-based-persona-monitoring",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Trait expression score is what gives projection-based monitoring something external to be right or wrong about. The projection itself is an uncalibrated internal number -- an inner product with no natural units or fixed scale -- so validating it requires an independent, interpretable measure of the very thing it claims to predict: whether and how strongly the eventual response will express a trait. Trait expression score fills that role because it is produced from a wholly separate process, an LLM judge scoring generated text against a rubric, sharing no machinery with the activation-space projection it is compared against (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). The asymmetry that makes this validation informative rather than circular is also a cost asymmetry: the projection is nearly free, reusable from the same forward pass that will produce the response anyway, and available before generation starts, while a trait expression score requires that generation to complete and then a second model call to grade it. The correlation the paper reports, r=0.75-0.83 across traits (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), is therefore evidence that the cheap, early signal can substitute for the expensive, late one in exactly the deployment settings where waiting for a full generation-plus-judgment cycle is impractical."
+   }
+  ],
+  "themes": [
+   {
+    "id": "judging-steered-outputs",
+    "name": "Evaluating steering: behavior scores and capability floors"
+   },
+   {
+    "id": "trait-to-vector-pipeline",
+    "name": "From trait name to vector: extraction becomes automatic"
+   }
+  ]
+ },
+ "coherence-score": {
+  "staged": {
+   "id": "coherence-score",
+   "name": "Coherence score",
+   "role": "inherited",
+   "summary": "A 0-100 quality metric, following Betley et al. (2025)'s methodology, in which GPT-4.1-mini rates a response's general coherence. Used throughout the paper's steering experiments as a check that trait-suppressing or trait-inducing interventions have not degraded the model into incoherent output (e.g. requiring average coherence above 75-80 across reported results).",
+   "parent": null,
+   "locators": [
+    {
+     "section": "5.1 Post-hoc steering mitigates behavioral shifts",
+     "page": 7
+    }
+   ]
+  },
+  "edges_touching": [
+   {
+    "id": "coherence-score-guards-the-capability-floor-for-trait-expression-score",
+    "type": "guards-the-capability-floor-for",
+    "source": "coherence-score",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The two scores are graded by the same model, GPT-4.1-mini, but on opposite kinds of rubric. Trait-expression-score's rubric is manufactured fresh per trait by trait-artifact generation; coherence-score instead applies one fixed, trait-agnostic rubric borrowed wholesale from Betley et al. (2025)'s methodology, unchanged regardless of which trait is being steered (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). The pairing exists because a high or low trait-expression score is not informative on its own: steering interventions can degrade a model into incoherent text rather than genuinely inducing or suppressing a trait, a known failure mode the paper cites directly (Durmus et al., 2024b), and a sufficiently broken response could register an extreme trait score for the wrong reason. The paper enforces coherence as a gate at two different bars depending on which intervention is being evaluated: average response coherence above 75 for inference-time and post-hoc steering results, but above 80 for preventative steering (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8; \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The stricter bar on preventative steering matches its role as the paper's preferred, novel method \u2014 a trait-expression-score result is only reported as a genuine behavioral effect once its coherence has cleared the relevant floor."
+   },
+   {
+    "id": "steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score",
+    "type": "is-bounded-by",
+    "source": "steering-mitigation-of-finetuning-shifts",
+    "target": "coherence-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "open-subjects-frontier-instruments",
+    "prose": "Both post-hoc and preventative steering are validated against a coherence-score floor, not merely reported alongside one: post-hoc steering results require 'average response coherence... above 75' (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7), while preventative steering's reported results maintain 'an average coherence score across all models above 80' (\u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8) - a stricter bar for the training-time method. This threshold matters because coherence score and trait-expression score answer different questions that a single steering result could otherwise conflate: a coefficient that drives a trait score to zero might have genuinely suppressed the trait, or might simply have degraded the model into unintelligible or off-topic text that no longer registers as exhibiting any trait, evil included - and MMLU would not reliably distinguish these cases either, since a garbled model can still sometimes guess a multiple-choice letter correctly. The coherence floor exists to rule out the degenerate 'steered into gibberish' explanation for every reported drop in trait score across the paper's steering experiments, functioning as a validity check on the rest of the results rather than as a headline finding in its own right. That the two mitigation methods are held to two different floors - 75 versus 80 - is itself a detail neither method's own page states."
+   }
+  ],
+  "themes": [
+   {
+    "id": "judging-steered-outputs",
+    "name": "Evaluating steering: behavior scores and capability floors"
+   }
+  ]
+ },
+ "projection-based-persona-monitoring": {
+  "staged": {
+   "id": "projection-based-persona-monitoring",
+   "name": "Projection-based monitoring of prompt-induced persona shifts",
+   "role": "introduced",
+   "summary": "A technique for predicting a model's likely trait expression before it generates a response, by projecting the residual-stream activation at the final prompt token onto a persona vector. This projection correlates strongly (r=0.75-0.83) with the trait expression score of the subsequent response across system-prompt and many-shot elicitation settings.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.3 Monitoring prompt-induced persona shifts via projection",
+     "page": 5
+    },
+    {
+     "section": "C.2 Correlation analysis",
+     "page": 31
+    }
+   ]
+  },
+  "edges_touching": [
+   {
+    "id": "projection-based-persona-monitoring-reads-instead-of-writing-to-persona-vectors",
+    "type": "reads-instead-of-writing-to",
+    "source": "projection-based-persona-monitoring",
+    "target": "persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Persona vectors are built and layer-selected purely to be effective steering levers: Appendix B.4 selects each trait's layer by applying steering at every layer with the same coefficient and picking the one that elicits the highest trait expression score -- layer 20 for evil and sycophancy on Qwen, layer 16 for hallucination, layer 16 for all three traits on Llama (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 30). Monitoring never re-derives or re-tunes anything for its second job: the same vector, at the same steering-optimized layer, is instead read via a plain inner product with the last-prompt-token activation, with nothing added to the residual stream at all (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Nothing is scaled, added, or subtracted -- the intervention term central to persona vectors' other use is entirely absent; only the direction survives, repurposed as a ruler rather than a lever. That a vector selected for effective writing also turns out to support accurate reading (r=0.75-0.83) is not something the extraction pipeline targets or guarantees -- it is a fact discovered downstream, not designed in. The distinction matters operationally: writing changes the model's behavior and is visible to anyone inspecting outputs, while reading is silent, requires no generation, and can run continuously against live traffic, inheriting whatever biases the steering-oriented layer choice introduced rather than being independently optimized for projection sensitivity."
+   },
+   {
+    "id": "projection-based-persona-monitoring-is-calibrated-against-system-prompting",
+    "type": "is-calibrated-against",
+    "source": "projection-based-persona-monitoring",
+    "target": "system-prompting",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "System-prompting supplies one of the two elicitation axes projection-based monitoring is validated against, and the paper's own correlation breakdown shows this axis behaves unevenly across traits. Table 2 reports, for system-prompting, an overall correlation between last-prompt-token projection and subsequent trait expression of r=0.747 (evil), 0.798 (sycophancy), and 0.830 (hallucination) (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). But the paper separately reports a within-condition correlation -- computed separately within each of the eight interpolated system prompts, then averaged -- which drops sharply for two of the three traits: 0.511 for evil and, most strikingly, only 0.245 for hallucination, against 0.669 for sycophancy (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). Because the overall figure conflates two effects -- coarse separation between prompt types and fine variation within a fixed prompt -- the gap reveals that hallucination's headline r=0.830 is almost entirely a between-condition artifact: knowing which of the eight system prompts was used predicts the projection value far better than the projection predicts fine-grained differences in hallucination severity once the prompt is fixed. System-prompting therefore validates the monitor's ability to detect which discrete regime a model has been pushed into, but is a weak test of its sensitivity to graded shifts within that regime -- a limitation the paper attributes to prompt type being the dominant source of variance in this setting."
+   },
+   {
+    "id": "many-shot-prompting-supplies-the-second-elicitation-axis-for-projection-based-persona-monitoring",
+    "type": "supplies-the-second-elicitation-axis-for",
+    "source": "many-shot-prompting",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Where system-prompting elicits trait shifts categorically -- eight discrete prompts, from trait-suppressing to trait-promoting -- many-shot prompting elicits them by dose: 0, 5, 10, 15, or 20 exemplars of the target trait are prepended to each evaluation question (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). This graded structure changes what the correlation with monitoring's projection actually measures. Table 2 shows many-shot's within-condition correlation -- computed separately within each shot-count bucket -- stays close to its overall correlation for evil (0.735 vs. 0.755) and sycophancy (0.813 vs. 0.817), unlike system-prompting's much larger overall/within-condition gaps for the same two traits (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). Because a fixed shot-count still contains meaningful item-to-item variation in how strongly individual exemplars push the trait, many-shot's within-condition signal has somewhere real to come from, whereas a fixed system prompt is closer to a constant. Hallucination is the exception: many-shot's overall correlation there (0.634) is the lowest of any trait/method pairing in the table -- evidence that exemplar-based elicitation of fabrication is inherently noisier than instructing for it directly, unlike evil and sycophancy, where many-shot slightly outperforms system-prompting on both measures. Many-shot prompting is thus not a redundant check on system-prompting's result but a structurally different stress test, probing graded sensitivity rather than categorical separability."
+   },
+   {
+    "id": "finetuning-shift-operates-on-a-slower-timescale-than-projection-based-persona-monitoring",
+    "type": "operates-on-a-slower-timescale-than",
+    "source": "finetuning-shift",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Both quantities project activations against the same kind of object, a persona vector, but they are not literally the same measurement relocated in time. Projection-based monitoring reads a single instantaneous activation: the last-prompt-token hidden state for one live prompt, projected onto the persona direction (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Finetuning shift instead projects a difference between two averages: the mean last-prompt-token activation across an entire evaluation set after finetuning, minus the same average before finetuning (persona-vectors, \u00a7\"4.2 Activation shift along persona vector predicts trait expression\", p. 6). The second construction is doubly smoothed -- averaged over many prompts, then differenced against a matched pre-finetuning baseline -- which removes exactly the kind of prompt-specific and question-specific noise that limits monitoring's within-condition correlations. This shows up in the numbers: finetuning shift's correlation with post-finetuning trait expression (r=0.76-0.97) is both higher and tighter than monitoring's correlation with per-response trait expression (r=0.75-0.83) (persona-vectors, \u00a7\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). The tradeoff is latency rather than accuracy: monitoring's payoff is a prediction available before a single token of a response is generated, while finetuning shift's tighter signal is only computable after an entire training run has already completed and altered the weights."
+   },
+   {
+    "id": "projection-based-persona-monitoring-revives-the-reading-half-of-representation-engineering-zou",
+    "type": "revives-the-reading-half-of",
+    "source": "projection-based-persona-monitoring",
+    "target": "representation-engineering-zou",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Representation Engineering's own corpus page frames it as treating a model's activations as something to characterize before anything is steered -- locate a concept's representation first, demonstrate manipulation only afterward. CAA, in the corpus's 2023 telling, explicitly inverted that emphasis, building steering vectors and only secondarily reading what they revealed about internal structure. Projection-based monitoring is the corpus's return trip: it takes a persona vector already built, and layer-selected, for steering, and instead of adding it to a residual stream, projects an activation onto it and stops there -- no generation, no intervention, just a read. The paper's Related Work section situates this move inside the same lineage RepE anchors, describing \"measuring signals by projecting onto a linear direction\" as an established technique it calls linear probing, and listing Zou et al. among the works establishing that linear representations of concepts exist at all (persona-vectors, \u00a7\"7 Related work\", p. 12). What monitoring inherits from RepE, though, is narrower than RepE's original program: RepE aimed to locate and characterize representations of concepts like honesty and emotion generally, while monitoring uses one already-known direction to answer one specific question -- will the very next response express this trait -- making it a single, forward-looking prediction task built on RepE's reading paradigm rather than a fresh instance of RepE's broader representation-discovery agenda."
+   },
+   {
+    "id": "projection-difference-shares-its-core-primitive-with-projection-based-persona-monitoring",
+    "type": "shares-its-core-primitive-with",
+    "source": "projection-difference",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Strip the subtraction term out of projection difference and what remains -- the average projection of a dataset's own responses onto a persona direction, with no correction for what the base model would have said anyway -- is structurally the same computation projection-based monitoring performs on a single live activation: an inner product between an activation and the persona vector, nothing more. The paper runs exactly this stripped-down version as an ablation in Appendix H, calling it \"raw projection,\" and finds it a measurably weaker predictor of post-finetuning trait expression than projection difference: on Qwen, r=0.784 for evil and only r=0.540 for sycophancy (persona-vectors, \u00a7\"H Comparing projection differences with raw projection\", p. 43). The stated reason is domain confounding: training sets are drawn from very different domains, and even where the base model's raw projections are uniformly small, they still carry systematic domain-specific variation that a plain projection cannot distinguish from a genuine trait-inducing signal (persona-vectors, \u00a7\"H Comparing projection differences with raw projection\", p. 43). Monitoring never faces this particular failure mode because it is not aggregated across a heterogeneous dataset -- it reads one prompt at a time, so there is no cross-domain baseline to confound it. The two techniques share a primitive that behaves differently once the object being projected changes from a single live prompt to an averaged, domain-mixed training corpus."
+   },
+   {
+    "id": "projection-based-persona-monitoring-is-benchmarked-against-trait-expression-score",
+    "type": "is-benchmarked-against",
+    "source": "projection-based-persona-monitoring",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Trait expression score is what gives projection-based monitoring something external to be right or wrong about. The projection itself is an uncalibrated internal number -- an inner product with no natural units or fixed scale -- so validating it requires an independent, interpretable measure of the very thing it claims to predict: whether and how strongly the eventual response will express a trait. Trait expression score fills that role because it is produced from a wholly separate process, an LLM judge scoring generated text against a rubric, sharing no machinery with the activation-space projection it is compared against (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). The asymmetry that makes this validation informative rather than circular is also a cost asymmetry: the projection is nearly free, reusable from the same forward pass that will produce the response anyway, and available before generation starts, while a trait expression score requires that generation to complete and then a second model call to grade it. The correlation the paper reports, r=0.75-0.83 across traits (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), is therefore evidence that the cheap, early signal can substitute for the expensive, late one in exactly the deployment settings where waiting for a full generation-plus-judgment cycle is impractical."
+   }
+  ],
+  "themes": [
+   {
+    "id": "projection-as-early-warning",
+    "name": "Projection as early warning: reading the persona before it speaks"
+   }
+  ]
+ },
+ "projection-difference": {
+  "staged": {
+   "id": "projection-difference",
+   "name": "Projection difference (pre-finetuning data-screening metric)",
+   "role": "introduced",
+   "summary": "A metric estimating how much a training dataset will shift a model's persona, computed as the average projection of the dataset's responses onto a unit-normalized persona vector minus the average projection of the base model's own 'natural' responses to the same prompts. Dataset-level projection difference is highly predictive of post-finetuning trait expression, more so than raw projection alone, enabling proactive flagging of problematic training data before finetuning.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "6.1 Predicting post-finetuning behaviors from data",
+     "page": 9
+    },
+    {
+     "section": "H Comparing projection differences with raw projection",
+     "page": 43
+    },
+    {
+     "section": "I Efficient estimation of base generation projection",
+     "page": 44
+    }
+   ],
+   "notes": "Appendix I proposes cheaper approximations (sampling a data subset; using the last-prompt-token projection instead of a full base-model generation) since computing it exactly requires generating a base-model response for every training example."
+  },
+  "edges_touching": [
+   {
+    "id": "projection-difference-forecasts-the-magnitude-of-finetuning-shift",
+    "type": "forecasts-the-magnitude-of",
+    "source": "projection-difference",
+    "target": "finetuning-shift",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Appendix F reports the direct correlation between projection difference, computed purely from training data before any finetuning happens, and the finetuning shift that training run later produces, separately for each trait and base model. On Qwen: r=0.839 for evil, r=0.745 for sycophancy, and only r=0.408 for hallucination, with hallucination's correlation barely clearing significance (p=0.048) (persona-vectors, \u00a7\"F Finetuning shift can be predicted by pre-finetuning projection differences in training data\", p. 40). On Llama, all three correlations are stronger and hallucination improves substantially: r=0.953 (evil), r=0.915 (sycophancy), r=0.593 (hallucination) (persona-vectors, \u00a7\"F Finetuning shift can be predicted by pre-finetuning projection differences in training data\", p. 40). Hallucination is consistently the weakest link in this chain across both models, which matters because it is projection difference's whole purpose to let a practitioner skip the finetuning run and its resulting finetuning-shift measurement entirely -- screen the data, not the model. Where that prediction is weakest, hallucination, especially on Qwen, a practitioner relying on projection difference alone would have the least warning before a run actually shifts the model's propensity to fabricate, meaning the pre-training screen and the post-training measurement it is meant to substitute for are least interchangeable for exactly the trait where hallucination-focused screening would matter most."
+   },
+   {
+    "id": "projection-difference-shares-its-core-primitive-with-projection-based-persona-monitoring",
+    "type": "shares-its-core-primitive-with",
+    "source": "projection-difference",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Strip the subtraction term out of projection difference and what remains -- the average projection of a dataset's own responses onto a persona direction, with no correction for what the base model would have said anyway -- is structurally the same computation projection-based monitoring performs on a single live activation: an inner product between an activation and the persona vector, nothing more. The paper runs exactly this stripped-down version as an ablation in Appendix H, calling it \"raw projection,\" and finds it a measurably weaker predictor of post-finetuning trait expression than projection difference: on Qwen, r=0.784 for evil and only r=0.540 for sycophancy (persona-vectors, \u00a7\"H Comparing projection differences with raw projection\", p. 43). The stated reason is domain confounding: training sets are drawn from very different domains, and even where the base model's raw projections are uniformly small, they still carry systematic domain-specific variation that a plain projection cannot distinguish from a genuine trait-inducing signal (persona-vectors, \u00a7\"H Comparing projection differences with raw projection\", p. 43). Monitoring never faces this particular failure mode because it is not aggregated across a heterogeneous dataset -- it reads one prompt at a time, so there is no cross-domain baseline to confound it. The two techniques share a primitive that behaves differently once the object being projected changes from a single live prompt to an averaged, domain-mixed training corpus."
+   },
+   {
+    "id": "sample-level-data-filtering-refines-projection-difference",
+    "type": "refines",
+    "source": "sample-level-data-filtering",
+    "target": "projection-difference",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "screening-data-before-training",
+    "prose": "Dataset-level projection difference averages the per-example quantity [a(x_i,y_i) - a(x_i,y'_i)]*v_hat over an entire training set to answer a go/no-go question about the corpus as a unit: will training on this whole dataset shift the persona (persona-vectors, \u00a7\"6.1 Predicting post-finetuning behaviors from data\", p. 9)? Sample-level filtering computes the identical quantity per example without averaging it away, turning the same formula into a keep/discard decision about individual rows. Histograms show this separation is often clean: individual samples from trait-inducing datasets are largely separable from matched control samples by projection value alone, holding across both intentionally trait-eliciting datasets and EM-like datasets whose flaws are domain-specific rather than trait-explicit (\u00a7\"6.2 Sample-level detection of problematic data\", p. 10). This changes what the metric is for, not just its granularity: the dataset-level version is a diagnostic that tells a practitioner whether to worry about a corpus at all, while the sample-level version is an actual data-cleaning tool that tells them which rows to remove. Appendix K makes the sample-level version dataset-agnostic by calibrating thresholds empirically rather than fixing them: each metric's own 95th-percentile value on ULTRACHAT200K - chosen because it is known not to induce persona shifts - becomes the cutoff, so 'clean' is defined relative to an observed reference distribution rather than an arbitrary number (\u00a7\"K Sample-wise filtering\", p. 53)."
+   }
+  ],
+  "themes": [
+   {
+    "id": "projection-as-early-warning",
+    "name": "Projection as early warning: reading the persona before it speaks"
+   },
+   {
+    "id": "screening-data-before-training",
+    "name": "Catching bad data before it trains anything"
+   }
+  ]
+ },
+ "sample-level-data-filtering": {
+  "staged": {
+   "id": "sample-level-data-filtering",
+   "name": "Sample-level projection-based data filtering",
+   "role": "introduced",
+   "summary": "An extension of projection difference from the dataset level to individual training samples, used to flag which specific examples within a dataset are likely to induce a persona shift. Individual samples from trait-inducing datasets are highly separable from control samples by their projection values, and combining projection-difference filtering with LLM-judge filtering yields more robust filtering than either alone.",
+   "parent": "projection-difference",
+   "locators": [
+    {
+     "section": "6.2 Sample-level detection of problematic data",
+     "page": 10
+    },
+    {
+     "section": "K Sample-wise filtering",
+     "page": 53
+    }
+   ],
+   "notes": "Appendix K calibrates per-trait filtering thresholds at the 95th percentile of each metric's distribution on ULTRACHAT200K, treated as a clean reference dataset."
+  },
+  "edges_touching": [
+   {
+    "id": "sample-level-data-filtering-refines-projection-difference",
+    "type": "refines",
+    "source": "sample-level-data-filtering",
+    "target": "projection-difference",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "screening-data-before-training",
+    "prose": "Dataset-level projection difference averages the per-example quantity [a(x_i,y_i) - a(x_i,y'_i)]*v_hat over an entire training set to answer a go/no-go question about the corpus as a unit: will training on this whole dataset shift the persona (persona-vectors, \u00a7\"6.1 Predicting post-finetuning behaviors from data\", p. 9)? Sample-level filtering computes the identical quantity per example without averaging it away, turning the same formula into a keep/discard decision about individual rows. Histograms show this separation is often clean: individual samples from trait-inducing datasets are largely separable from matched control samples by projection value alone, holding across both intentionally trait-eliciting datasets and EM-like datasets whose flaws are domain-specific rather than trait-explicit (\u00a7\"6.2 Sample-level detection of problematic data\", p. 10). This changes what the metric is for, not just its granularity: the dataset-level version is a diagnostic that tells a practitioner whether to worry about a corpus at all, while the sample-level version is an actual data-cleaning tool that tells them which rows to remove. Appendix K makes the sample-level version dataset-agnostic by calibrating thresholds empirically rather than fixing them: each metric's own 95th-percentile value on ULTRACHAT200K - chosen because it is known not to induce persona shifts - becomes the cutoff, so 'clean' is defined relative to an observed reference distribution rather than an arbitrary number (\u00a7\"K Sample-wise filtering\", p. 53)."
+   },
+   {
+    "id": "sample-level-data-filtering-complements-gpt-4.1-mini",
+    "type": "complements",
+    "source": "sample-level-data-filtering",
+    "target": "gpt-4.1-mini",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "screening-data-before-training",
+    "prose": "Appendix K compares projection-based and LLM-judge-based filtering directly on a mixed Opinion Normal + Opinion Mistake II dataset, each calibrated to its own 95th-percentile threshold on ULTRACHAT200K: for hallucination, the LLM-judge threshold is 72.71 versus a projection-difference threshold of 2.25; for sycophancy, 31.74 versus 4.98; for evil, effectively 0 versus 4.32 (persona-vectors, \u00a7\"K Sample-wise filtering\", p. 53-54, Table 6). The comparison result is trait-dependent rather than uniform: GPT-4.1-mini alone performs best for hallucination, projection-difference alone is most effective for sycophancy, both independently eliminate trait shift for evil, and combining the two gives the most consistent result across all three (Figure 32, p. 54). This means the intuitive story that activation-based filtering catches what a text-reading judge misses only strictly holds for sycophancy in this controlled test - for hallucination the semantic judge is actually the stronger single filter on its own, even though adding projection-difference on top still helps. The likely source of the asymmetry: sycophantic and evil content are often stylistically legible in the response text an LLM judge reads, while what makes a sample shift a model's persona is not always what makes it read as displaying the trait - which is the register in which a purely activation-based signal can see something a semantic judge cannot, and vice versa."
+   }
+  ],
+  "themes": [
+   {
+    "id": "screening-data-before-training",
+    "name": "Catching bad data before it trains anything"
+   }
+  ]
+ },
+ "real-world-chat-data-validation": {
+  "staged": {
+   "id": "real-world-chat-data-validation",
+   "name": "Real-world chat data validation of persona vectors",
+   "role": "introduced",
+   "summary": "A validation of projection-difference-based data screening on real-world (non-synthetic) chat data, primarily LMSYS-Chat-1M, by finetuning separate models on the highest-, lowest-, and randomly-selected projection-difference subsets of a dataset and comparing resulting trait expression. High-projection-difference samples reliably induce stronger trait expression, even after LLM-based filtering removes overtly trait-exhibiting samples, showing the method surfaces problematic data (e.g. underspecified 'keep writing the story' prompts for hallucination) that evades conventional LLM-judge filtering.",
+   "parent": "projection-difference",
+   "locators": [
+    {
+     "section": "6.3 Validation on real-world chat datasets",
+     "page": 11
+    },
+    {
+     "section": "L Inducing persona shifts from real-world datasets",
+     "page": 55
+    }
+   ],
+   "notes": "Appendix L replicates the analysis on three additional real-world datasets -- TULU3 SFT MIXTURE (Lambert et al., 2025), ULTRACHAT200K (Ding et al., 2023), and WildChat (Zhao et al., 2024) -- finding weaker effects on more heavily curated datasets, and notes that extreme-projection finetuning can degrade generation coherence as a confound."
+  },
+  "edges_touching": [
+   {
+    "id": "real-world-chat-data-validation-validates-against-lmsys-chat-1m",
+    "type": "validates-against",
+    "source": "real-world-chat-data-validation",
+    "target": "lmsys-chat-1m",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "screening-data-before-training",
+    "prose": "LMSYS-Chat-1M is the first of four real-world datasets tested precisely because it is 'not carefully filtered or curated' and contains 'a large fraction of toxic content' (persona-vectors, \u00a7\"L Inducing persona shifts from real-world datasets\", p. 55) - a deliberately messy, close-to-worst-case corpus rather than a clean benchmark. The validation protocol ranks its conversations by projection difference per trait and finetunes separately on the top-500 (high), bottom-500 (low), and 500 random samples, finding a consistent ordering: high-projection samples induce the strongest trait expression, low-projection samples the weakest (\u00a7\"6.3 Validation on real-world chat datasets\", p. 11). The result survives even after GPT-4.1-mini strips out samples that overtly display the trait, and the examples that remain in the filtered high-projection subset are ones a text-only judge would plausibly pass - underspecified continuations like 'keep writing the last story' for hallucination, where nothing in the prompt itself signals risk. Appendix L's comparison across the other three datasets (TULU3, ULTRACHAT200K, WildChat) then shows the effect weakens as curation increases, which is exactly why LMSYS-Chat-1M, as the least curated of the four, produces the sharpest demonstration: the method's value is clearest on data nobody has already cleaned, which is also the realistic condition practitioners scraping real conversations are most likely to face."
+   }
+  ],
+  "themes": [
+   {
+    "id": "screening-data-before-training",
+    "name": "Catching bad data before it trains anything"
+   }
+  ]
+ },
+ "many-shot-prompting": {
+  "staged": {
+   "id": "many-shot-prompting",
+   "name": "Many-shot prompting (as a persona-elicitation method)",
+   "role": "inherited",
+   "summary": "A prior technique (Anil et al., 2024) of prepending many in-context examples of a target behavior; used here, with 0/5/10/15/20 trait-demonstrating exemplars, as a second elicitation method alongside system prompting to validate that persona-vector projection predicts prompt-induced trait expression.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "3.3 Monitoring prompt-induced persona shifts via projection",
+     "page": 5
+    },
+    {
+     "section": "C.1 Many-shot monitoring",
+     "page": 31
+    }
+   ],
+   "notes": "Distinct from the registry's few-shot-prompting id (Brown et al., 2020, standard task-demonstration prompting); many-shot prompting per Anil et al. (2024) originates as 'many-shot jailbreaking,' a separately named technique using far more exemplars, so given its own id rather than reused."
+  },
+  "edges_touching": [
+   {
+    "id": "many-shot-prompting-supplies-the-second-elicitation-axis-for-projection-based-persona-monitoring",
+    "type": "supplies-the-second-elicitation-axis-for",
+    "source": "many-shot-prompting",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Where system-prompting elicits trait shifts categorically -- eight discrete prompts, from trait-suppressing to trait-promoting -- many-shot prompting elicits them by dose: 0, 5, 10, 15, or 20 exemplars of the target trait are prepended to each evaluation question (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). This graded structure changes what the correlation with monitoring's projection actually measures. Table 2 shows many-shot's within-condition correlation -- computed separately within each shot-count bucket -- stays close to its overall correlation for evil (0.735 vs. 0.755) and sycophancy (0.813 vs. 0.817), unlike system-prompting's much larger overall/within-condition gaps for the same two traits (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). Because a fixed shot-count still contains meaningful item-to-item variation in how strongly individual exemplars push the trait, many-shot's within-condition signal has somewhere real to come from, whereas a fixed system prompt is closer to a constant. Hallucination is the exception: many-shot's overall correlation there (0.634) is the lowest of any trait/method pairing in the table -- evidence that exemplar-based elicitation of fabrication is inherently noisier than instructing for it directly, unlike evil and sycophancy, where many-shot slightly outperforms system-prompting on both measures. Many-shot prompting is thus not a redundant check on system-prompting's result but a structurally different stress test, probing graded sensitivity rather than categorical separability."
+   },
+   {
+    "id": "many-shot-prompting-traces-a-different-lineage-than-few-shot-prompting",
+    "type": "traces-a-different-lineage-than",
+    "source": "many-shot-prompting",
+    "target": "few-shot-prompting",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Despite the family resemblance -- both prepend example transcripts to a prompt rather than issuing an instruction -- many-shot prompting and few-shot prompting descend from unrelated research programs. Few-shot prompting traces to Brown et al. (2020)'s demonstration that GPT-3 could perform new tasks from a handful of in-context examples with no weight update, a capability framed as a benign side effect of scale. Many-shot prompting, cited here to Anil et al. (2024), originates instead as \"many-shot jailbreaking\": a finding that pushing the number of in-context exemplars far past the few-shot regime could override a model's safety training, an adversarial capability rather than a task-performance one. This paper's own many-shot setting is comparatively modest -- 0, 5, 10, 15, or 20 trait-demonstrating exemplars (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5) -- well short of the scale that made many-shot jailbreaking notable, but the paper still cites Anil et al. rather than Brown et al. for it, signaling which lineage it considers relevant. The corpus already has one data point on how these two techniques compare directly: CAA (2023) tested few-shot prompting as a steering baseline and found it less effective than system-prompting, then dropped it rather than pursue it further. Many-shot prompting, by contrast, is retained here specifically because increasing exemplar count reliably moves trait expression in a way persona vectors can track."
+   }
+  ],
+  "themes": [
+   {
+    "id": "projection-as-early-warning",
+    "name": "Projection as early warning: reading the persona before it speaks"
+   }
+  ]
+ }
+}

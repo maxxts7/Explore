@@ -1,0 +1,144 @@
+{
+ "edges": [
+  {
+   "id": "projection-based-persona-monitoring-reads-instead-of-writing-to-persona-vectors",
+   "type": "reads-instead-of-writing-to",
+   "source": "projection-based-persona-monitoring",
+   "target": "persona-vectors",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Persona vectors are built and layer-selected purely to be effective steering levers: Appendix B.4 selects each trait's layer by applying steering at every layer with the same coefficient and picking the one that elicits the highest trait expression score -- layer 20 for evil and sycophancy on Qwen, layer 16 for hallucination, layer 16 for all three traits on Llama (persona-vectors, §\"B.4 Selecting the most informative layer\", p. 30). Monitoring never re-derives or re-tunes anything for its second job: the same vector, at the same steering-optimized layer, is instead read via a plain inner product with the last-prompt-token activation, with nothing added to the residual stream at all (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Nothing is scaled, added, or subtracted -- the intervention term central to persona vectors' other use is entirely absent; only the direction survives, repurposed as a ruler rather than a lever. That a vector selected for effective writing also turns out to support accurate reading (r=0.75-0.83) is not something the extraction pipeline targets or guarantees -- it is a fact discovered downstream, not designed in. The distinction matters operationally: writing changes the model's behavior and is visible to anyone inspecting outputs, while reading is silent, requires no generation, and can run continuously against live traffic, inheriting whatever biases the steering-oriented layer choice introduced rather than being independently optimized for projection sensitivity."
+  },
+  {
+   "id": "projection-based-persona-monitoring-is-calibrated-against-system-prompting",
+   "type": "is-calibrated-against",
+   "source": "projection-based-persona-monitoring",
+   "target": "system-prompting",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "System-prompting supplies one of the two elicitation axes projection-based monitoring is validated against, and the paper's own correlation breakdown shows this axis behaves unevenly across traits. Table 2 reports, for system-prompting, an overall correlation between last-prompt-token projection and subsequent trait expression of r=0.747 (evil), 0.798 (sycophancy), and 0.830 (hallucination) (persona-vectors, §\"C.2 Correlation analysis\", p. 31). But the paper separately reports a within-condition correlation -- computed separately within each of the eight interpolated system prompts, then averaged -- which drops sharply for two of the three traits: 0.511 for evil and, most strikingly, only 0.245 for hallucination, against 0.669 for sycophancy (persona-vectors, §\"C.2 Correlation analysis\", p. 31). Because the overall figure conflates two effects -- coarse separation between prompt types and fine variation within a fixed prompt -- the gap reveals that hallucination's headline r=0.830 is almost entirely a between-condition artifact: knowing which of the eight system prompts was used predicts the projection value far better than the projection predicts fine-grained differences in hallucination severity once the prompt is fixed. System-prompting therefore validates the monitor's ability to detect which discrete regime a model has been pushed into, but is a weak test of its sensitivity to graded shifts within that regime -- a limitation the paper attributes to prompt type being the dominant source of variance in this setting."
+  },
+  {
+   "id": "many-shot-prompting-supplies-the-second-elicitation-axis-for-projection-based-persona-monitoring",
+   "type": "supplies-the-second-elicitation-axis-for",
+   "source": "many-shot-prompting",
+   "target": "projection-based-persona-monitoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Where system-prompting elicits trait shifts categorically -- eight discrete prompts, from trait-suppressing to trait-promoting -- many-shot prompting elicits them by dose: 0, 5, 10, 15, or 20 exemplars of the target trait are prepended to each evaluation question (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). This graded structure changes what the correlation with monitoring's projection actually measures. Table 2 shows many-shot's within-condition correlation -- computed separately within each shot-count bucket -- stays close to its overall correlation for evil (0.735 vs. 0.755) and sycophancy (0.813 vs. 0.817), unlike system-prompting's much larger overall/within-condition gaps for the same two traits (persona-vectors, §\"C.2 Correlation analysis\", p. 31). Because a fixed shot-count still contains meaningful item-to-item variation in how strongly individual exemplars push the trait, many-shot's within-condition signal has somewhere real to come from, whereas a fixed system prompt is closer to a constant. Hallucination is the exception: many-shot's overall correlation there (0.634) is the lowest of any trait/method pairing in the table -- evidence that exemplar-based elicitation of fabrication is inherently noisier than instructing for it directly, unlike evil and sycophancy, where many-shot slightly outperforms system-prompting on both measures. Many-shot prompting is thus not a redundant check on system-prompting's result but a structurally different stress test, probing graded sensitivity rather than categorical separability."
+  },
+  {
+   "id": "many-shot-prompting-traces-a-different-lineage-than-few-shot-prompting",
+   "type": "traces-a-different-lineage-than",
+   "source": "many-shot-prompting",
+   "target": "few-shot-prompting",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Despite the family resemblance -- both prepend example transcripts to a prompt rather than issuing an instruction -- many-shot prompting and few-shot prompting descend from unrelated research programs. Few-shot prompting traces to Brown et al. (2020)'s demonstration that GPT-3 could perform new tasks from a handful of in-context examples with no weight update, a capability framed as a benign side effect of scale. Many-shot prompting, cited here to Anil et al. (2024), originates instead as \"many-shot jailbreaking\": a finding that pushing the number of in-context exemplars far past the few-shot regime could override a model's safety training, an adversarial capability rather than a task-performance one. This paper's own many-shot setting is comparatively modest -- 0, 5, 10, 15, or 20 trait-demonstrating exemplars (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5) -- well short of the scale that made many-shot jailbreaking notable, but the paper still cites Anil et al. rather than Brown et al. for it, signaling which lineage it considers relevant. The corpus already has one data point on how these two techniques compare directly: CAA (2023) tested few-shot prompting as a steering baseline and found it less effective than system-prompting, then dropped it rather than pursue it further. Many-shot prompting, by contrast, is retained here specifically because increasing exemplar count reliably moves trait expression in a way persona vectors can track."
+  },
+  {
+   "id": "finetuning-shift-operates-on-a-slower-timescale-than-projection-based-persona-monitoring",
+   "type": "operates-on-a-slower-timescale-than",
+   "source": "finetuning-shift",
+   "target": "projection-based-persona-monitoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Both quantities project activations against the same kind of object, a persona vector, but they are not literally the same measurement relocated in time. Projection-based monitoring reads a single instantaneous activation: the last-prompt-token hidden state for one live prompt, projected onto the persona direction (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Finetuning shift instead projects a difference between two averages: the mean last-prompt-token activation across an entire evaluation set after finetuning, minus the same average before finetuning (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 6). The second construction is doubly smoothed -- averaged over many prompts, then differenced against a matched pre-finetuning baseline -- which removes exactly the kind of prompt-specific and question-specific noise that limits monitoring's within-condition correlations. This shows up in the numbers: finetuning shift's correlation with post-finetuning trait expression (r=0.76-0.97) is both higher and tighter than monitoring's correlation with per-response trait expression (r=0.75-0.83) (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). The tradeoff is latency rather than accuracy: monitoring's payoff is a prediction available before a single token of a response is generated, while finetuning shift's tighter signal is only computable after an entire training run has already completed and altered the weights."
+  },
+  {
+   "id": "finetuning-shift-predicts-post-finetuning-values-of-trait-expression-score",
+   "type": "predicts-post-finetuning-values-of",
+   "source": "finetuning-shift",
+   "target": "trait-expression-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "finetuning-moves-the-persona",
+   "prose": "That finetuning shift correlates with trait expression score (r=0.76-0.97) is already the headline fact about the metric; what is worth adding is what makes this a meaningful validation rather than a circular one, and how tight the correlation is relative to a natural baseline. Trait expression score is produced independently of any activation-space quantity -- it comes from GPT-4.1-mini reading generated text against a rubric -- so a strong correlation with finetuning shift, an internal, pre-generation activation quantity, is genuine evidence that the persona-vector direction tracks something with real behavioral consequences, not an artifact of how either quantity is defined. The paper also reports a cross-trait baseline: correlating trait A's finetuning shift against trait B's expression-score change yields only r=0.34-0.86, consistently weaker than the r=0.76-0.97 a trait's own finetuning shift achieves against its own expression score (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). This gap is the paper's evidence that persona vectors carry trait-specific signal rather than a generic \"something is shifting\" alarm -- an own-trait projection genuinely outperforms a same-magnitude projection along a different trait's direction at predicting that trait's behavior, something a single, coarser shared \"alignment drift\" direction could not reproduce."
+  },
+  {
+   "id": "cross-trait-persona-correlation-analysis-generalizes-across-trait-pairs-using-finetuning-shift",
+   "type": "generalizes-across-trait-pairs-using",
+   "source": "cross-trait-persona-correlation-analysis",
+   "target": "finetuning-shift",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "finetuning-moves-the-persona",
+   "prose": "Cross-trait analysis exists specifically to stress-test what finetuning shift's high correlation actually proves. Its method reuses finetuning shift's exact construction -- an activation-shift projected onto a trait direction -- but for trait A, then checks it against trait B's independently measured behavioral change, producing a full pairwise correlation matrix (persona-vectors, §\"G.2 Cross-trait predictive power and vector similarity analysis\", p. 41). The result complicates a naive reading of finetuning shift as cleanly trait-specific: negative traits, and unexpectedly humor, move together, and all three move opposite to optimism, so a large evil-direction finetuning shift is not fully independent evidence that a model moved specifically toward evil rather than toward some broader negative-persona axis that evil, impoliteness, apathy, and humor all partly share. The paper offers two candidate explanations rather than settling on one: correlation between the underlying persona vectors themselves, a representational explanation tested via cosine similarity, and correlation in the training data across datasets, a data-generating explanation (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). Because the paper does not adjudicate between these, cross-trait analysis leaves finetuning shift's specificity a matter of degree rather than a settled property: strong within a fairly coherent block of related traits, and only clearly informative against the one trait tested that sits outside that block, optimism."
+  },
+  {
+   "id": "supervised-fine-tuning-is-the-mechanism-that-produces-finetuning-shift",
+   "type": "is-the-mechanism-that-produces",
+   "source": "supervised-fine-tuning",
+   "target": "finetuning-shift",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "finetuning-moves-the-persona",
+   "prose": "The finetuning that produces a finetuning shift is not, in this paper, some exotic or heavily engineered process -- it is one epoch of rank-32 rsLoRA (Kalajdzievski, 2023) with scaling factor alpha=64 and learning rate 1e-5, run on a single H100 GPU (persona-vectors, §\"D.3 Finetuning details\", p. 38). That modesty is the point: supervised finetuning's role in producing finetuning shift is not to demonstrate that aggressive or prolonged training corrupts a persona, but that almost any ordinary, resource-light adaptation run does, provided the training data itself carries a directional signal. The same low-rank recipe is applied uniformly across trait-eliciting datasets, EM-like datasets, and benign controls, so differences in the resulting finetuning shift are attributable to what the data teaches, not to how hard the model was trained. This uniformity is what lets finetuning shift function as a clean dependent variable across dozens of dataset comparisons: because rank, epoch count, and learning rate are held fixed everywhere, the only thing varying between a high-shift and a low-shift run is the dataset itself, isolating supervised finetuning's contribution to persona drift from the confound of training-intensity differences that a less standardized experimental design would leave unresolved."
+  },
+  {
+   "id": "finetuning-shift-generalizes-the-single-snapshot-logic-of-base-chat-representation-comparison",
+   "type": "generalizes-the-single-snapshot-logic-of",
+   "source": "finetuning-shift",
+   "target": "base-chat-representation-comparison",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "finetuning-moves-the-persona",
+   "prose": "CAA's base-vs-chat analysis was a single, retrospective snapshot: compare steering vectors independently extracted from the frozen Llama-2-base and Llama-2-Chat checkpoints by cosine similarity, layer by layer, to ask what one specific, already-completed RLHF run left alone in mid-network representations (contrastive-activation-addition, §\"8.3 Comparing representations between base and chat models\", p. 7). It answers a fixed historical question about one pair of models and cannot be rerun mid-training or pointed at an arbitrary finetuning job. Finetuning shift generalizes exactly this move: instead of comparing two independently derived vectors, it compares the same model's own last-prompt-token activations before and after any finetuning run, projected onto a persona direction rather than compared vector-to-vector (persona-vectors, §\"4.2 Activation shift along persona vector predicts trait expression\", p. 6). That reformulation turns a one-off comparison into a repeatable, general-purpose gauge: it can be computed for any checkpoint pair, at any point during or after training, against any of dozens of trait directions, yielding a single interpretable number rather than a layer-wise similarity curve requiring visual inspection. Read backward, base-chat-representation-comparison looks like the corpus's earliest instance of exactly the question finetuning shift is built to answer generally -- how much does this training process move a model's internal representation along a meaningful direction -- but 2023's version had no vocabulary for \"a meaningful direction\" beyond an entire steering vector, and no way to ask the question of any process besides RLHF specifically."
+  },
+  {
+   "id": "projection-difference-forecasts-the-magnitude-of-finetuning-shift",
+   "type": "forecasts-the-magnitude-of",
+   "source": "projection-difference",
+   "target": "finetuning-shift",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Appendix F reports the direct correlation between projection difference, computed purely from training data before any finetuning happens, and the finetuning shift that training run later produces, separately for each trait and base model. On Qwen: r=0.839 for evil, r=0.745 for sycophancy, and only r=0.408 for hallucination, with hallucination's correlation barely clearing significance (p=0.048) (persona-vectors, §\"F Finetuning shift can be predicted by pre-finetuning projection differences in training data\", p. 40). On Llama, all three correlations are stronger and hallucination improves substantially: r=0.953 (evil), r=0.915 (sycophancy), r=0.593 (hallucination) (persona-vectors, §\"F Finetuning shift can be predicted by pre-finetuning projection differences in training data\", p. 40). Hallucination is consistently the weakest link in this chain across both models, which matters because it is projection difference's whole purpose to let a practitioner skip the finetuning run and its resulting finetuning-shift measurement entirely -- screen the data, not the model. Where that prediction is weakest, hallucination, especially on Qwen, a practitioner relying on projection difference alone would have the least warning before a run actually shifts the model's propensity to fabricate, meaning the pre-training screen and the post-training measurement it is meant to substitute for are least interchangeable for exactly the trait where hallucination-focused screening would matter most."
+  },
+  {
+   "id": "projection-based-persona-monitoring-revives-the-reading-half-of-representation-engineering-zou",
+   "type": "revives-the-reading-half-of",
+   "source": "projection-based-persona-monitoring",
+   "target": "representation-engineering-zou",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Representation Engineering's own corpus page frames it as treating a model's activations as something to characterize before anything is steered -- locate a concept's representation first, demonstrate manipulation only afterward. CAA, in the corpus's 2023 telling, explicitly inverted that emphasis, building steering vectors and only secondarily reading what they revealed about internal structure. Projection-based monitoring is the corpus's return trip: it takes a persona vector already built, and layer-selected, for steering, and instead of adding it to a residual stream, projects an activation onto it and stops there -- no generation, no intervention, just a read. The paper's Related Work section situates this move inside the same lineage RepE anchors, describing \"measuring signals by projecting onto a linear direction\" as an established technique it calls linear probing, and listing Zou et al. among the works establishing that linear representations of concepts exist at all (persona-vectors, §\"7 Related work\", p. 12). What monitoring inherits from RepE, though, is narrower than RepE's original program: RepE aimed to locate and characterize representations of concepts like honesty and emotion generally, while monitoring uses one already-known direction to answer one specific question -- will the very next response express this trait -- making it a single, forward-looking prediction task built on RepE's reading paradigm rather than a fresh instance of RepE's broader representation-discovery agenda."
+  },
+  {
+   "id": "finetuning-shift-supplies-a-trait-agnostic-predictor-for-emergent-misalignment",
+   "type": "supplies-a-trait-agnostic-predictor-for",
+   "source": "finetuning-shift",
+   "target": "emergent-misalignment",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "finetuning-moves-the-persona",
+   "prose": "Betley et al.'s original emergent misalignment finding was purely behavioral: train on a narrow flawed domain, then discover broad misalignment by probing the model afterward on unrelated questions, with no internal signal connecting cause to effect beyond the correlation itself. Finetuning shift supplies exactly that missing internal signal, and its predictive power does not depend on whether a dataset was designed to elicit the trait it ends up shifting. The paper builds both trait-eliciting datasets that explicitly target evil, sycophancy, or hallucination, and EM-like datasets built from ordinary domain content -- flawed medical advice, insecure code, invalid math -- with no trait-relevant language in them at all, explicitly noting that the second group is \"not explicitly designed to elicit specific traits\" yet \"can nonetheless induce significant persona shifts\" (persona-vectors, §\"4.1 Constructing datasets that induce persona shifts\", p. 6). Finetuning shift is computed identically regardless of which family a dataset comes from, and predicts post-finetuning trait expression with comparable strength across both. This is what makes it a mechanistic account of emergent misalignment specifically, rather than just a correlate of it: the same activation-space quantity that explains why an evil-labeled dataset produces evil behavior also explains why a dataset of bad math produces evil behavior nobody wrote into the data, collapsing \"designed\" and \"emergent\" persona shifts into instances of one underlying, measurable process."
+  },
+  {
+   "id": "projection-difference-shares-its-core-primitive-with-projection-based-persona-monitoring",
+   "type": "shares-its-core-primitive-with",
+   "source": "projection-difference",
+   "target": "projection-based-persona-monitoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Strip the subtraction term out of projection difference and what remains -- the average projection of a dataset's own responses onto a persona direction, with no correction for what the base model would have said anyway -- is structurally the same computation projection-based monitoring performs on a single live activation: an inner product between an activation and the persona vector, nothing more. The paper runs exactly this stripped-down version as an ablation in Appendix H, calling it \"raw projection,\" and finds it a measurably weaker predictor of post-finetuning trait expression than projection difference: on Qwen, r=0.784 for evil and only r=0.540 for sycophancy (persona-vectors, §\"H Comparing projection differences with raw projection\", p. 43). The stated reason is domain confounding: training sets are drawn from very different domains, and even where the base model's raw projections are uniformly small, they still carry systematic domain-specific variation that a plain projection cannot distinguish from a genuine trait-inducing signal (persona-vectors, §\"H Comparing projection differences with raw projection\", p. 43). Monitoring never faces this particular failure mode because it is not aggregated across a heterogeneous dataset -- it reads one prompt at a time, so there is no cross-domain baseline to confound it. The two techniques share a primitive that behaves differently once the object being projected changes from a single live prompt to an averaged, domain-mixed training corpus."
+  },
+  {
+   "id": "projection-based-persona-monitoring-is-benchmarked-against-trait-expression-score",
+   "type": "is-benchmarked-against",
+   "source": "projection-based-persona-monitoring",
+   "target": "trait-expression-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "projection-as-early-warning",
+   "prose": "Trait expression score is what gives projection-based monitoring something external to be right or wrong about. The projection itself is an uncalibrated internal number -- an inner product with no natural units or fixed scale -- so validating it requires an independent, interpretable measure of the very thing it claims to predict: whether and how strongly the eventual response will express a trait. Trait expression score fills that role because it is produced from a wholly separate process, an LLM judge scoring generated text against a rubric, sharing no machinery with the activation-space projection it is compared against (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). The asymmetry that makes this validation informative rather than circular is also a cost asymmetry: the projection is nearly free, reusable from the same forward pass that will produce the response anyway, and available before generation starts, while a trait expression score requires that generation to complete and then a second model call to grade it. The correlation the paper reports, r=0.75-0.83 across traits (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), is therefore evidence that the cheap, early signal can substitute for the expensive, late one in exactly the deployment settings where waiting for a full generation-plus-judgment cycle is impractical."
+  }
+ ]
+}

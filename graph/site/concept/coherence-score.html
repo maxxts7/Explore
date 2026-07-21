@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Coherence score — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Coherence score</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A 0-100 quality metric, following Betley et al. (2025)&#x27;s methodology, in which GPT-4.1-mini rates a response&#x27;s general coherence. Used throughout the paper&#x27;s steering experiments as a check that trait-suppressing or trait-inducing interventions have not degraded the model into incoherent output (e.g. requiring average coherence above 75-80 across reported results).</p>
+<div class="page-intro"><p>An intervention that pushes a trait score toward zero could be doing that honestly, or it could just be breaking the model into gibberish that no longer expresses much of anything — and those two outcomes look identical on the trait metric alone. This borrowed quality check exists to tell them apart.</p>
+<p>A judge model rates each response's general coherence, independent of any trait — that mechanism opens the account, alongside the two different pass thresholds applied depending on which mitigation is being evaluated. Pairing this check with a separate general-capability metric matters too, since a response can stay perfectly coherent while still losing real ability along the way.</p></div>
+<section class="prose-section">
+<h2>A borrowed quality check</h2>
+<p>Coherence score is not this paper's invention: it follows the scoring methodology of Betley et al. (2025), under which each response is rated 0-100 by <a href="../concept/gpt-4-1-mini.html">GPT-4.1-mini</a> for its general coherence, independent of any specific trait (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 8</a>). The paper needs this check because steering interventions can degrade a model into incoherent text rather than genuinely inducing or suppressing a trait — a known failure mode it cites directly from Durmus et al. (2024b) — and a sufficiently broken response could register an extreme <a href="../concept/trait-expression-score.html">trait expression score</a> for the wrong reason, since garbled text can accidentally look like it lacks (or exhibits) the trait being measured. Coherence score and trait expression score are graded by the same judge model but on opposite kinds of rubric: trait expression is scored against a rubric manufactured fresh per trait by <a href="../concept/trait-artifact-generation.html">Trait-specific artifact generation</a>, while coherence uses one fixed rubric unchanged across every trait and every experiment.</p>
+</section>
+<section class="prose-section">
+<h2>Two different floors: 75 versus 80</h2>
+<p>The paper enforces coherence as a gate rather than merely reporting it, and it sets that gate at two different levels depending on which intervention is being evaluated. Results for inference-time steering and post-hoc steering are only reported once "average response coherence is above 75" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 8</a>). Results for preventative steering, the paper's preferred and more novel method, are held to a stricter floor: an "average coherence score across all models above 80" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>). The stricter bar on preventative steering matches its role as the method the paper is arguing for — a trait-expression-score result is treated as a genuine behavioral effect only once its coherence has cleared the relevant threshold, functioning as a validity check on the rest of the paper's steering results rather than a headline finding in its own right.</p>
+</section>
+<section class="prose-section">
+<h2>Paired with a capability check</h2>
+<p>Coherence score is not the paper's only quality safeguard on steering results — it is paired with a general capability check as well: <a href="../concept/mmlu.html">MMLU</a> accuracy, tracked as a gray line alongside every steering-coefficient sweep the paper reports (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 8</a>). The two checks catch different failure modes: coherence catches a response that has become gibberish at the sentence level, while MMLU catches a broader loss of general capability that could otherwise survive as fluent but degraded reasoning. Inference-time (post-hoc) steering shows MMLU accuracy dropping at large steering coefficients even while coherence stays above its floor, whereas preventative steering "better preserves the model's general capabilities" on the same metric (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>) — evidence that a passed coherence check does not by itself guarantee that capability has been preserved.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Steering-based mitigation of finetuning-induced persona shifts — <a href="../edge/steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score.html">is bounded by</a> → <strong>Coherence score</strong></li><li><strong>Coherence score</strong> — <a href="../edge/coherence-score-guards-the-capability-floor-for-trait-expression-score.html">guards the capability floor for</a> → Trait expression score (LLM judge)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/judging-steered-outputs.html">Evaluating steering: behavior scores and capability floors</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5.1 Post-hoc steering mitigates behavioral shifts&rdquo;, p. 7</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

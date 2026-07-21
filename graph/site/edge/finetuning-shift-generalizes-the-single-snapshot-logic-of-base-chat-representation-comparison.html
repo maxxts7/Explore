@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Finetuning shift (activation-shift metric) — generalizes the single snapshot logic of → Base vs. RLHF-chat model representation comparison — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Finetuning shift (activation-shift metric) — generalizes the single snapshot logic of → Base vs. RLHF-chat model representation comparison</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> &middot; explored within the theme <a href="../theme/finetuning-moves-the-persona.html">Finetuning moves the persona, measurably</a></p>
+<section class="prose-section"><p>CAA's base-vs-chat analysis was a single, retrospective snapshot: compare steering vectors independently extracted from the frozen Llama-2-base and Llama-2-Chat checkpoints by cosine similarity, layer by layer, to ask what one specific, already-completed RLHF run left alone in mid-network representations (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">§"8.3 Comparing representations between base and chat models", p. 7</a>). It answers a fixed historical question about one pair of models and cannot be rerun mid-training or pointed at an arbitrary finetuning job. Finetuning shift generalizes exactly this move: instead of comparing two independently derived vectors, it compares the same model's own last-prompt-token activations before and after any finetuning run, projected onto a persona direction rather than compared vector-to-vector (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=6" target="_blank" rel="noopener">§"4.2 Activation shift along persona vector predicts trait expression", p. 6</a>). That reformulation turns a one-off comparison into a repeatable, general-purpose gauge: it can be computed for any checkpoint pair, at any point during or after training, against any of dozens of trait directions, yielding a single interpretable number rather than a layer-wise similarity curve requiring visual inspection. Read backward, base-chat-representation-comparison looks like the corpus's earliest instance of exactly the question finetuning shift is built to answer generally -- how much does this training process move a model's internal representation along a meaningful direction -- but 2023's version had no vocabulary for "a meaningful direction" beyond an entire steering vector, and no way to ask the question of any process besides RLHF specifically.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/finetuning-shift.html">Finetuning shift (activation-shift metric)</a> and <a href="../concept/base-chat-representation-comparison.html">Base vs. RLHF-chat model representation comparison</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/one-dot-product-three-jobs.html">One dot product, three jobs</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.2 Activation shift along persona vector predicts trait expression&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=40" target="_blank" rel="noopener">&sect;&ldquo;F Finetuning shift can be predicted by pre-finetuning projection differences in training data&rdquo;, p. 40</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;8.3 Comparing representations between base and chat models&rdquo;, p. 9</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

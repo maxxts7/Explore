@@ -1,0 +1,635 @@
+{
+ "assembly-line-pipeline": {
+  "current": {
+   "id": "assembly-line-pipeline",
+   "name": "Each pipeline stage's output is the next stage's engineered raw material",
+   "members": [
+    "trajectory-segment-supplies-the-comparison-unit-for-preference-elicitation-protocol",
+    "sft-dataset-trains-the-policies-sampled-for-rm-dataset",
+    "labeling-interface-filters-uncertain-comparisons-out-of-rm-dataset",
+    "api-prompt-distribution-supplies-label-free-scale-to-ppo-dataset",
+    "critique-and-revision-supplies-the-finetuning-data-for-sl-cai",
+    "sl-cai-seeds-the-policy-and-comparison-data-for-rl-cai",
+    "feedback-model-supplies-the-harmlessness-half-of-hybrid-human-ai-preference-model",
+    "red-teaming-supplies-the-transcripts-for-classifying-harmful-behavior-eval"
+   ],
+   "narrative": "InstructGPT and Constitutional AI's training pipelines are not neutral conduits; specific interface, sampling, and filtering choices at each stage determine what the next stage can learn, and the 2017 paper's own pipeline runs on the identical logic five years earlier. The trajectory segment supplies the comparison unit for the preference elicitation protocol: rendered as a one-to-two-second clip rather than a full episode or single state, it is engineered to be self-contained enough for a rater to judge even though the two clips in a pair generally start from different states, and its three-way response format, preference, tie, or incomparable, exists specifically to let a rater flag that discontinuity rather than force a guess the raw clip pair cannot support. The SFT dataset trains the policies sampled for the RM dataset, so the reward model's competence is local to the region of output space SFT-style policies actually produce. The labeling interface filters uncertain comparisons out of the RM dataset by encouraging ties that RM training then drops entirely, a confidence filter built into UI affordance rather than post-hoc cleaning. The API prompt distribution supplies label-free scale to the PPO dataset, the cheapest input in the pipeline because everything costly was front-loaded into the model that scores it. Critique-and-revision supplies the finetuning data for SL-CAI, and SL-CAI in turn seeds the policy and comparison data for RL-CAI, while the feedback model supplies the harmlessness half of the hybrid human-AI preference model, stitching two differently-provenanced comparison sets into one scalar reward, and red teaming supplies the transcripts that classifying-harmful-behavior-eval is built directly out of."
+  },
+  "new_member_edges": [
+   {
+    "id": "trait-artifact-generation-supplies-the-raw-materials-for-persona-vector-computation",
+    "type": "supplies-the-raw-materials-for",
+    "source": "trait-artifact-generation",
+    "target": "persona-vector-computation",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Trait-artifact generation is a single, cheap upstream event that persona-vector computation multiplies into hundreds of downstream generations. One generic prompt template, given only a trait name and description, produces three outputs from one call to Claude 3.7 Sonnet: 5 contrastive instruction pairs, 40 elicitation questions split into a 20-question extraction set and a 20-question evaluation set, and one evaluation rubric (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). Computation consumes only two of these three: the instruction pairs and the extraction-set half of the questions, leaving the evaluation set untouched at this stage. For each of the 20 extraction questions, the pipeline generates 10 rollouts under the positive instruction and 10 under the negative one, yielding 400 raw responses per trait from a single authored artifact set (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). The third artifact, the rubric, does not wait until final evaluation to matter \u2014 it is applied immediately, scoring every one of those 400 rollouts so computation can filter before extracting any activation. So the relationship runs one prompt template to many rollouts to one filtered vector: artifact generation pays a fixed, trait-agnostic authoring cost once, and computation pays a much larger, trait-specific inference cost against exactly the subset of what was authored that a mean-difference extraction actually needs."
+   },
+   {
+    "id": "persona-vector-computation-supplies-manufactured-contrast-sets-to-mean-difference-method",
+    "type": "supplies-manufactured-contrast-sets-to",
+    "source": "persona-vector-computation",
+    "target": "mean-difference-method",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Mean Difference's own recipe is deliberately minimal: collect two sets of contrasting example activations and average their difference, an approach that needs no optimization or gradient descent, only a legitimate two-group split to already exist. Persona-vector computation's real work happens before that arithmetic ever runs, in constructing a clean split that MD's generic recipe simply assumes as given. It generates 10 rollouts per extraction question under each of a contrastive instruction pair, then discards any rollout that fails to clearly express its intended condition \u2014 trait score above 50 for positive-prompted rollouts, below 50 for negative-prompted ones \u2014 before averaging (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). It also chooses, empirically rather than by default, where within each surviving rollout to read from: Appendix A.3 compares extracting from the final prompt token, an average over all prompt tokens, and an average over all response tokens, finding response-token averaging yields the strongest steering effect across evil, sycophancy, and hallucination, and adopting it as the pipeline's default (persona-vectors, \u00a7\"A.3 Extracting persona vectors at different token positions\", p. 27). Neither the filtering threshold nor the token-position choice is part of MD's generic definition; both are engineering decisions layered on top of it to manufacture the two-group split that MD's underlying arithmetic can then simply subtract and average."
+   },
+   {
+    "id": "trait-artifact-generation-generates-the-scoring-rubric-consumed-by-trait-expression-score",
+    "type": "generates-the-scoring-rubric-consumed-by",
+    "source": "trait-artifact-generation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "The rubric trait-expression-score depends on is not authored by hand; it is the third output of trait-artifact generation's single LLM call, produced in the same pass as the instruction pairs and elicitation questions. The prompt template that generates it instructs Claude 3.7 Sonnet to fill in a fixed structure \u2014 'You are evaluating whether the model's response displays the trait: {{TRAIT}}. {{TRAIT DESCRIPTION (IN YOUR OWN WORDS)}}' \u2014 before appending the standard scoring instructions (0\u2013100, with a REFUSAL option) that every trait's rubric shares verbatim (persona-vectors, \u00a7\"A.1 Prompts\", p. 23\u201324). That bracketed instruction matters: the model is explicitly told to restate the trait description in its own words rather than copy the human-supplied description verbatim, so what GPT-4.1-mini ultimately scores responses against is Claude's paraphrase of the trait, one further LLM interpretation removed from the original human-authored definition. The worked example for 'evil' shows the result \u2014 a rubric describing the trait as responses that 'deliberately work against human wellbeing and flourishing' and 'derive satisfaction from human pain,' phrasing that echoes but does not reproduce the original trait description word for word (persona-vectors, \u00a7\"A.2 Trait descriptions\", p. 26). Score consistency across traits therefore depends not only on GPT-4.1-mini's judging but on how faithfully an upstream LLM's rewrite preserved the intended meaning."
+   },
+   {
+    "id": "persona-vector-computation-filters-its-rollouts-by-trait-expression-score",
+    "type": "filters-its-rollouts-by",
+    "source": "persona-vector-computation",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Not every rollout generated under a contrastive system prompt actually displays the trait it was prompted to display, and computation discards the ones that don't before any activation is averaged. For each of the 400 rollouts generated per trait (20 extraction questions times 10 rollouts times 2 conditions), the pipeline scores the response with the freshly generated rubric and keeps only those exceeding 50 for positive-prompted rollouts or falling below 50 for negative-prompted ones, discarding the rest (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). This matters because the contrastive system prompt only sets an intention, not a guarantee: a model instructed to act 'evil' can still produce a mild or off-target response, and averaging such a response in with genuinely trait-exhibiting ones would blur the mean-difference signal with noise from responses that never actually diverged along the target direction. The threshold is symmetric and fixed at the scale's midpoint rather than tuned per trait, treating 50 as the boundary between 'exhibits' and 'does not exhibit' regardless of which of the three main traits or four appendix traits is being extracted. The filtering step is where trait-expression-score's role shifts from a downstream outcome measure, which is how the rest of the paper mostly uses it, to an upstream data-quality gate inside the extraction pipeline itself."
+   }
+  ]
+ },
+ "primitive-parts-acquire-industrial-replacements": {
+  "current": {
+   "id": "primitive-parts-acquire-industrial-replacements",
+   "name": "2017's ad hoc parts become 2022's industrial ones",
+   "members": [
+    "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+    "contractor-preference-labeling-is-formalized-as-labeling-interface",
+    "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss",
+    "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+    "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "preference-elicitation-protocol-avoids-the-overfitting-problem-solved-by-k-choose-2-batching",
+    "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss",
+    "trajectory-segment-generalizes-into-rm-dataset"
+   ],
+   "narrative": "Read pairwise, the 2017 system and InstructGPT are the same machine built at two different levels of industrialization: nearly every ad hoc part of Deep RL from Human Preferences acquires a formal replacement in InstructGPT, and what carries over unchanged is as informative as what gets replaced. Contractor preference labeling, an unscreened sign-up sheet with no test of rater quality, becomes a screened operation in the labeler screening process, where InstructGPT scores prospective labelers on four separate criteria before letting roughly 40 of them contribute any data; the same ad hoc labeling setup is also formalized as the labeling interface, turning a clip server and a plea to 'ping @tom on slack' into an internal tool that records Likert scores, a fixed metadata taxonomy, and full rankings. The Bradley-Terry model that gives the 2017 reward predictor its comparison loss is carried over unchanged into the InstructGPT reward model loss, the identical softmax-over-summed-score structure now applied to language completions instead of trajectory segments. The async reward learning architecture's three concurrent loops, in which the reward predictor is continually refit throughout training, trade their concurrency for a fixed dataset in the InstructGPT reward model, which is trained once on a static set of comparisons and then held frozen through PPO. The rater error noise model's assumed constant 10 percent error rate is replaced by a measured one: InstructGPT's inter-annotator agreement statistic reports what the 2017 paper could only assume. The preference elicitation protocol's strictly pairwise design meant the 2017 paper never had to face a problem InstructGPT's k-choose-2 batching exists to solve, the overfitting caused by correlated comparisons that come from ranking several outputs in one sitting. Reward normalization's rescaling of the 2017 reward predictor's output to a fixed standard deviation prefigures the scale fix built into the InstructGPT reward model loss, which anchors its own zero point to labeler demonstrations for interpretability rather than optimizer convenience. And the trajectory segment, a one-to-two-second clip chosen to be quick for a human to render and judge, generalizes into the RM dataset's atomic unit, a complete generated text completion, carrying forward the same principle of comparing the smallest self-contained item a human can evaluate."
+  },
+  "new_member_edges": [
+   {
+    "id": "persona-vector-computation-generalizes-beyond-the-answer-letter-recipe-of-caa-steering-vector-construction",
+    "type": "generalizes-beyond-the-answer-letter-recipe-of",
+    "source": "persona-vector-computation",
+    "target": "caa-steering-vector-construction",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Both procedures are Mean Difference wearing different clothes, and lining them up shows what changed between 2023 and 2025. CAA's construction reads a single, fixed token position \u2014 the appended answer letter of a multiple-choice question \u2014 from a hand-built dataset of hundreds of (prompt, positive completion, negative completion) triples, one dataset curated per behavior (contrastive-activation-addition, \u00a7\"3 Method\", p. 3). Persona-vector computation reads an averaged position across many tokens \u2014 every token of a full free-form response \u2014 from rollouts the pipeline generates itself under a contrastive system prompt, then narrows with an LLM-judge filter (trait score above 50 / below 50) before averaging, rather than trusting every generated pair by construction (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). The shift is from a format engineered to make the contrast trivially clean \u2014 differing by one token, so nothing else needs filtering \u2014 to a format that has to manufacture cleanliness after the fact, because free-form rollouts vary in far more ways than an answer letter does. Persona-vectors never states this as a direct successor relationship; it cites CAA only as one instance of prior work needing bespoke data curation. The correspondence between what CAA fixes structurally (one token, pre-guaranteed contrast) and what persona-vector computation fixes statistically (many tokens, post-hoc filtered contrast) only resolves into a legible before/after once persona vectors exists to complete the pair."
+   },
+   {
+    "id": "persona-vector-extraction-pipeline-adds-filtering-and-validation-beyond-concept-description-to-direction-pipeline-wu",
+    "type": "adds-filtering-and-validation-beyond",
+    "source": "persona-vector-extraction-pipeline",
+    "target": "concept-description-to-direction-pipeline-wu",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Wu et al. (2025) is the paper's own named closest relative: an automated pipeline that also turns a natural-language concept description into contrastive pairs of LLM-generated text and eventually into a linear direction, with no manual dataset curation required (persona-vectors, \u00a7\"2 An automated pipeline to extract persona vectors\", p. 3; \u00a7\"7 Related work\", p. 12). The paper does not spell out Wu et al.'s internal steps beyond that description, so the comparison it licenses is architectural rather than line-by-line: both pipelines share the core move of using an LLM to manufacture its own contrastive data from a description alone, rather than requiring a human-assembled dataset. What the paper does specify for its own pipeline, and does not attribute to Wu et al., are three further stages: an explicit trait-expression-score filter (keeping only rollouts scoring above 50 for positive prompts or below 50 for negative ones) before any activation is averaged; an empirical choice of extraction position, response-token averaging, validated against prompt-token alternatives in Appendix A.3; and a dedicated validation of the resulting judge against two human raters (94.7% agreement) and external benchmarks (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28). The pipeline's contribution is best read as generation plus a quality-control apparatus around it, layered onto an architecture it credits as already closest to its own."
+   },
+   {
+    "id": "persona-vector-extraction-pipeline-automates-away-the-bespoke-curation-of-contrastive-activation-addition",
+    "type": "automates-away-the-bespoke-curation-of",
+    "source": "persona-vector-extraction-pipeline",
+    "target": "contrastive-activation-addition",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Persona-vectors' related-work section places CAA in a short list of techniques it says 'generally required bespoke data curation to obtain contrastive pairs' (persona-vectors, \u00a7\"7 Related work\", p. 12), but that single sentence does not itself spell out what the bespoke curation looked like. Reading it against CAA's own machinery fills that in: CAA's seven target behaviors each needed their own hand-assembled or GPT-4-generated multiple-choice dataset \u2014 a custom hallucination dataset distinguishing unprompted from contextually-triggered fabrication, a custom refusal dataset, others drawn from Anthropic's Advanced AI Risk and Sycophancy evaluation sets \u2014 with hundreds of contrast pairs curated per behavior before any vector could be built (contrastive-activation-addition, \u00a7\"3 Method\", p. 3). The extraction pipeline replaces all of that per-behavior dataset engineering with one fixed prompt template that needs only a trait name and a short description, run identically for every trait it studies \u2014 the three main traits plus four more in Appendix G \u2014 with no behavior-specific dataset construction anywhere in the loop (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). What CAA's specific curation effort actually entailed is not something persona-vectors elaborates on; the pipeline's real relationship to it \u2014 replacing seven separate dataset-building projects with one reusable template \u2014 only comes into focus by reaching into CAA's own paper for the detail persona-vectors' one-line characterization skips."
+   },
+   {
+    "id": "trait-expression-score-succeeds-the-sampled-rating-protocol-of-open-ended-generation-evaluation",
+    "type": "succeeds-the-sampled-rating-protocol-of",
+    "source": "trait-expression-score",
+    "target": "open-ended-generation-evaluation",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Both metrics do the same job \u2014 an LLM grading free-form generations for how strongly they display a target behavior \u2014 but persona-vectors does not cite CAA's evaluation as an ancestor; it draws its scoring methodology from Betley et al. (2025) instead (persona-vectors, \u00a7\"B.1 Evaluation scoring details\", p. 28). Lined up anyway, the two protocols differ at every step. CAA's rubric is fixed and hand-written by the paper's authors, one per behavior, and scored 1\u201310 by GPT-4 sampling a single output token (contrastive-activation-addition, \u00a7\"L GPT-4 rater prompts\", p. 19); its reliability rests on a manual spot-check plus a general citation that GPT-4 is a reliable rater (Hackl et al., 2023), with no paper-specific agreement figure reported. Trait-expression-score's rubric is instead auto-generated per trait by an LLM from only a name and description, scored 0\u2013100 by GPT-4.1-mini via a logit-weighted sum over top-20 candidate tokens rather than a single sample, and validated with a dedicated study: two human judges, 300 pairwise comparisons, 94.7% agreement, plus cross-checks against external benchmarks (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28; \u00a7\"B.3 Additional evaluations on standard benchmarks\", p. 29). Every axis of the earlier protocol \u2014 rubric authorship, score granularity, and validation rigor \u2014 has a replacement, without persona-vectors ever framing it as a lineage."
+   }
+  ]
+ },
+ "ai-substitutes-for-the-human-bottleneck": {
+  "current": {
+   "id": "ai-substitutes-for-the-human-bottleneck",
+   "name": "Replacing the human in the loop at exactly the point it was the bottleneck",
+   "members": [
+    "rlhf-swaps-the-labeler-in-rlaif",
+    "rlaif-delegates-harmlessness-comparisons-to-feedback-model",
+    "rlaif-makes-newly-automatable-iterated-online-training",
+    "constitution-replaces-human-harm-labels-in-constitutional-ai",
+    "red-teaming-is-the-manual-process-that-scales-into-automated-red-teaming",
+    "human-oversight-safe-exploration-scalability-limit-motivates-trusted-policy-oversight",
+    "gpt-4-rates-outputs-for-open-ended-generation-evaluation",
+    "open-ended-generation-evaluation-shares-the-ai-judge-move-with-rlaif",
+    "gpt-4-authors-caa-refusal-dataset"
+   ],
+   "narrative": "Constitutional AI's central engineering move recurs at every stage: an AI process substitutes for a human one at precisely the point human throughput was scarce, while the surrounding machinery stays untouched. RLHF swaps the labeler in RLAIF, an explicitly \"surgical\" modification that leaves preference-model training and RL exactly the same. RLAIF delegates harmlessness comparisons to the feedback model, and this substitution is also what RLAIF makes newly automatable: iterated online training, a refresh loop that no longer needs continuous human throughput. The constitution replaces human harm labels in Constitutional AI outright, trading tens of thousands of comparison labels for on the order of ten natural-language principles. Concrete Problems anticipated the shape of this move six years earlier: human oversight's scalability limit motivates trusted policy oversight, replacing a human gatekeeper with a policy that can render a recoverability judgment at machine speed. Red teaming is the manual process that scales into automated red teaming, removing the same kind of human-labor ceiling. A year later, CAA extends the same substitution past training into evaluation and dataset authorship, points the earlier instances never touched. GPT-4 rates every open-ended generation against a behavior-specific rubric, the same judge-for-human-rater move RLAIF made for harmlessness comparisons, though the paper still spot-checks GPT-4's scores by hand rather than trusting them outright. GPT-4 also authors CAA's refusal dataset (and, the same way, its hallucination dataset) from scratch, standing in for the human writers used for the paper's other five behaviors, one model manufacturing training material that steers a second model whose weights it never sees. The pattern's reach has widened over three years: an AI process first replaced the human labeler supplying preference comparisons in 2022, and by 2023 the identical substitution has spread to the evaluator scoring the outputs and to the writer authoring the material those outputs are built from."
+  },
+  "new_member_edges": [
+   {
+    "id": "claude-generation-tooling-authors-the-artifacts-behind-trait-artifact-generation",
+    "type": "authors-the-artifacts-behind",
+    "source": "claude-generation-tooling",
+    "target": "trait-artifact-generation",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "Claude 3.7 Sonnet's role inside trait-artifact generation is a single, one-shot call per trait: a generic prompt template feeds it a trait name and description, and it returns 5 instruction pairs, 40 questions, and 1 evaluation rubric in one pass (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3; \u00a7\"A.1 Prompts\", p. 23). That is a strikingly small footprint compared with the other work the same model is tasked with elsewhere in the paper. For the Evil and Hallucination finetuning datasets, Claude 3.7 first generates the questions themselves \u2014 50 domains times 100 questions each, roughly 5k questions per trait \u2014 and then, for every dataset across the paper, generates three separate response versions (Normal, I, II) for each question (persona-vectors, \u00a7\"D.1 Question collection.\", p. 35; \u00a7\"D.2 Response generation\", p. 35). Sycophancy alone contributes roughly 10k training questions needing three response versions apiece. So the same generation tool that authors an entire trait's evaluation apparatus in one call is, minutes later in the pipeline, tasked with tens of thousands of individual question and response generations to build the datasets that apparatus will later score. Trait-artifact generation is the cheapest of claude-generation-tooling's jobs in this paper, not a representative one \u2014 a distinction neither concept's own page states directly."
+   },
+   {
+    "id": "trait-expression-score-operationalizes-its-rubric-through-gpt-4.1-mini",
+    "type": "operationalizes-its-rubric-through",
+    "source": "trait-expression-score",
+    "target": "gpt-4.1-mini",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "trait-to-vector-pipeline",
+    "prose": "The rubric alone does not produce a score; how GPT-4.1-mini is queried against it does. The model is prompted to output a bare number between 0 and 100, but the paper does not use whatever single token it samples \u2014 it retrieves the top-20 logits from the output distribution, isolates the subset that correspond to integers 0\u2013100 (known to tokenize as single tokens in OpenAI's tokenizer), and computes a logit-weighted sum over just those candidates (persona-vectors, \u00a7\"B.1 Evaluation scoring details\", p. 28). That choice trades a single discrete sample for a continuous readout blending the model's whole distribution of plausible scores, and it is what makes the metric a stable, comparable 0\u2013100 signal across responses rather than a noisier single-draw guess. Trusting that signal rests on validation the paper reports at trait-level granularity: two human judges, 300 pairwise comparisons of high- versus low-scored responses, agreeing with the LLM's ranking 97% of the time for evil, 92% for sycophancy, and 95% for hallucination, 94.7% overall (persona-vectors, \u00a7\"B.2 Checking agreement between human judges and LLM judge\", p. 28). GPT-4.1-mini also serves the paper as an LLM-based data filter in the later data-screening appendices \u2014 a separate role, distinct from the judge function trait-expression-score depends on here."
+   }
+  ]
+ },
+ "one-mechanism-many-jobs": {
+  "current": {
+   "id": "one-mechanism-many-jobs",
+   "name": "The same technique, cited or deployed twice, doing different work each time",
+   "members": [
+    "direct-revision-ablation-tests-the-necessity-of-critique-in-critique-and-revision",
+    "ensembling-principles-diversifies-use-of-sl-cai-principles",
+    "ensembling-principles-makes-more-robust-feedback-model",
+    "inverse-reinforcement-learning-repurposed-for-use-demonstrations",
+    "cooperative-inverse-reinforcement-learning-supplies-a-candidate-mechanism-for-shutdown-problem",
+    "cooperative-inverse-reinforcement-learning-interactive-counterpart-of-use-demonstrations",
+    "reward-predictor-ensemble-supplies-the-disagreement-signal-for-uncertainty-based-query-selection",
+    "mean-difference-method-supplies-the-extraction-rule-for-caa-steering-vector-construction",
+    "pca-is-the-projection-technique-behind-activation-pca-visualization"
+   ],
+   "narrative": "Across the corpus, a single mechanism gets asked to do more than one job, and comparing the jobs is informative. Inverse reinforcement learning is repurposed for use demonstrations after already being proposed under reward pretraining, the identical tool once defending against reward hacking and once bounding unsafe exploration. Cooperative inverse reinforcement learning supplies a candidate mechanism for the shutdown problem and, separately, is the interactive counterpart of use demonstrations, its single goal-inference structure solving two nominally unrelated problems as a free side effect of never fixing a reward or policy in advance. Ensembling principles diversifies use of SL-CAI principles at the supervised stage, where it fails to move the harmlessness score it seems aimed at but pays off one step downstream in RL exploration; the identical technique instead makes the feedback model more robust when applied at the RL stage, a direct payoff rather than a deferred one. The ensembling move recurs a third time, five years earlier, doing a third job again: the 2017 paper's reward-predictor ensemble supplies the disagreement signal that uncertainty-based query selection runs on, three independently bootstrap-trained predictors queried for their variance rather than diversified for coverage or hardened for robustness, an epistemic use of the same multiple-model trick that neither Constitutional AI deployment repeats. A direct-revision ablation tests the necessity of critique in critique-and-revision and finds a weak effect at scale, yet the paper keeps the step anyway, for the transparency a written critique provides. The mean-difference method recurs a further time outside the corpus's own papers rather than across them: already used by Zou et al. (2023) for representation extraction and by Li et al. (2023) for Inference-Time Intervention on truthfulness, the identical difference-of-means arithmetic supplies the entire extraction rule for CAA's steering-vector construction, so what CAA adds is not new mathematics but a new interface to it, a specific dataset, layer, and token position fed into a borrowed operation. PCA joins the corpus's other imported, off-the-shelf statistical tools, applied via a standard package rather than reimplemented, projecting high-dimensional activations down to two components; that so blunt and general a technique is sufficient to make refusal-behavior clustering visible by eye is itself evidence that CAA's behavioral directions are simple linear features rather than complex, entangled ones."
+  },
+  "new_member_edges": [
+   {
+    "id": "persona-vectors-specializes-steering-vector-for-character-traits",
+    "type": "specializes-for-character-traits",
+    "source": "persona-vectors",
+    "target": "steering-vector",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "A persona vector is a steering vector scoped to a specific kind of target \u2014 personality and character traits rather than an open list of alignment-relevant behaviors \u2014 and validated for roles the generic concept was not originally built around. The paper studies three main traits (evil, sycophancy, hallucination) plus four more in Appendix G (optimism, impoliteness, apathy, humor), and for each confirms not only that steering along the vector shifts behavior, but that the same vector reads behavior it did not cause: projecting a prompt's final-token activation onto the persona direction predicts the trait expression of a response not yet generated, correlating at r = 0.75\u20130.83 across system-prompt and many-shot elicitation (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Beyond that pre-generation reading, persona vectors are also injected during training itself, not only at inference, through preventative steering (persona-vectors, \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). So where the general steering-vector concept covers a direction added or subtracted during a single forward pass, persona vectors extend the same object into a monitor that operates before generation begins and a regularizer that operates during weight updates \u2014 two roles beyond the inference-time nudge the concept is otherwise centered on."
+   }
+  ]
+ },
+ "the-vector-doubles-as-a-probe": {
+  "current": {
+   "id": "the-vector-doubles-as-a-probe",
+   "name": "The steering vector doubles as a measuring instrument",
+   "members": [
+    "token-level-cosine-similarity-analysis-reveals-as-a-feature-detector-steering-vector",
+    "inter-layer-similarity-and-transfer-demonstrates-the-generality-of-caa-steering-vector-construction",
+    "base-chat-representation-comparison-measures-the-effect-of-rlhf",
+    "llama-2-chat-is-the-rlhf-tuned-counterpart-of-llama-2",
+    "behavioral-clustering-localizes-suddenly-in-residual-stream",
+    "behavioral-clustering-is-evidence-for-linear-representation-hypothesis",
+    "linear-representation-hypothesis-licenses-the-vector-arithmetic-of-steering-vector",
+    "caa-red-teaming-application-inverts-the-purpose-of-contrastive-activation-addition"
+   ],
+   "narrative": "Eight edges show the same object doing double duty: built as a control mechanism, it also turns out to be a measuring instrument. Token-level cosine similarity is the cleanest case -- take the dot product between a steering vector and ordinary forward-pass activations, no addition at all, and the vector reads behavior off individual tokens as a passive detector. Inter-layer similarity and transfer asks whether that reading generalizes across depth, and finds vectors from nearby layers cluster together and a vector built at one layer still steers behavior applied at another -- construction captures something portable, not a layer-specific artifact. Base-chat representation comparison turns the same read-twice logic on RLHF itself: because Llama 2 Chat is the RLHF-tuned counterpart of Llama 2 with nothing else changed, comparing vectors extracted from each becomes a clean measurement of what RLHF left alone internally, revealing a mid-layer band where the two representations stay unusually close. Behavioral clustering supplies a third reading: PCA on activations shows a behavior emerging suddenly at one residual-stream layer, offered as direct evidence for the linear representation hypothesis, which in turn is the same hypothesis licensing the vector arithmetic steering depends on. The red-teaming edge closes the loop: the identical vector, aimed at eliciting rather than suppressing, becomes a probe for what RLHF failed to remove."
+  },
+  "new_member_edges": [
+   {
+    "id": "persona-vectors-quantifies-empirical-support-for-linear-representation-hypothesis",
+    "type": "quantifies-empirical-support-for",
+    "source": "persona-vectors",
+    "target": "linear-representation-hypothesis",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The paper states its dependence on the hypothesis directly in its opening framing \u2014 building 'on prior work showing that traits are encoded as linear directions in activation space' and citing Wang et al. (2025)'s finding that emergent misalignment itself is mediated by a linear 'misaligned persona' direction as supporting evidence (persona-vectors, \u00a7\"1 Introduction\", p. 1). Where the paper goes beyond citing the hypothesis is in how many independent quantitative tests it runs against it. CAA's evidence for linearity is largely qualitative: PCA-projected activations visibly cluster by behavior. Persona-vectors instead reports three separate correlational measurements, each of which would be near-impossible if traits were not encoded roughly linearly: steering along the extracted direction reliably shifts trait expression scores across layers and coefficients (\u00a7\"3.2 Controlling persona traits via steering\", p. 4); projecting a prompt's final-token activation onto the direction predicts the trait score of a not-yet-generated response at r = 0.75\u20130.83 (\u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5); and projecting a finetuning-induced activation shift onto the direction predicts post-finetuning trait expression at r = 0.76\u20130.97, notably higher than cross-trait control correlations of r = 0.34\u20130.86 (\u00a7\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). Three independent measurement regimes converging on the same direction is a stronger evidentiary base than any one of them alone."
+   },
+   {
+    "id": "persona-vectors-admits-a-fine-grained-decomposition-via-sae-decomposition-of-persona-vectors",
+    "type": "admits-a-fine-grained-decomposition-via",
+    "source": "persona-vectors",
+    "target": "sae-decomposition-of-persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "reading-the-residual-stream",
+    "prose": "A persona vector is, by the paper's own admission, a coarse-grained direction -- a single averaged direction that \"may miss fine-grained behavioral distinctions\" (persona-vectors, \u00a7\"8 Limitations\", p. 13). The SAE decomposition makes that coarseness legible: ranking Qwen-2.5-7B-Chat's SAE features by cosine similarity to the evil persona vector surfaces five distinct sub-concepts among the top matches -- insulting/derogatory language (feature 12061, cosine similarity 0.336, steered trait expression score 91.2), deliberate cruelty and sadism (feature 128289, 0.306, 84.9), jailbreak-related content (feature 71418, 0.257, 84.8), discussion of \"bad\" people or actions (feature 60872, 0.273, 78.7), and malicious code/hacking content (feature 14739, 0.334, 78.6) (persona-vectors, \u00a7\"M.4 Interesting features\", p. 60). Notably, even the best-matching individual feature has a cosine similarity of only 0.336 with the full persona vector, confirming the persona vector is not simply reproducing one dominant SAE feature but is closer to a weighted composite spanning several distinct, independently-steerable sub-behaviors, each separately confirmed causal by steering with its own decoder direction and re-scoring trait expression (\u00a7\"M.3.2 Causal analysis via steering\", p. 60). The decomposition thus reveals that what the main text treats as one scalar \"evil\" dial is, mechanistically, a bundle of more specific behavioral levers the coarse persona vector happens to average together."
+   },
+   {
+    "id": "projection-based-persona-monitoring-reads-instead-of-writing-to-persona-vectors",
+    "type": "reads-instead-of-writing-to",
+    "source": "projection-based-persona-monitoring",
+    "target": "persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Persona vectors are built and layer-selected purely to be effective steering levers: Appendix B.4 selects each trait's layer by applying steering at every layer with the same coefficient and picking the one that elicits the highest trait expression score -- layer 20 for evil and sycophancy on Qwen, layer 16 for hallucination, layer 16 for all three traits on Llama (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 30). Monitoring never re-derives or re-tunes anything for its second job: the same vector, at the same steering-optimized layer, is instead read via a plain inner product with the last-prompt-token activation, with nothing added to the residual stream at all (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Nothing is scaled, added, or subtracted -- the intervention term central to persona vectors' other use is entirely absent; only the direction survives, repurposed as a ruler rather than a lever. That a vector selected for effective writing also turns out to support accurate reading (r=0.75-0.83) is not something the extraction pipeline targets or guarantees -- it is a fact discovered downstream, not designed in. The distinction matters operationally: writing changes the model's behavior and is visible to anyone inspecting outputs, while reading is silent, requires no generation, and can run continuously against live traffic, inheriting whatever biases the steering-oriented layer choice introduced rather than being independently optimized for projection sensitivity."
+   },
+   {
+    "id": "projection-based-persona-monitoring-revives-the-reading-half-of-representation-engineering-zou",
+    "type": "revives-the-reading-half-of",
+    "source": "projection-based-persona-monitoring",
+    "target": "representation-engineering-zou",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Representation Engineering's own corpus page frames it as treating a model's activations as something to characterize before anything is steered -- locate a concept's representation first, demonstrate manipulation only afterward. CAA, in the corpus's 2023 telling, explicitly inverted that emphasis, building steering vectors and only secondarily reading what they revealed about internal structure. Projection-based monitoring is the corpus's return trip: it takes a persona vector already built, and layer-selected, for steering, and instead of adding it to a residual stream, projects an activation onto it and stops there -- no generation, no intervention, just a read. The paper's Related Work section situates this move inside the same lineage RepE anchors, describing \"measuring signals by projecting onto a linear direction\" as an established technique it calls linear probing, and listing Zou et al. among the works establishing that linear representations of concepts exist at all (persona-vectors, \u00a7\"7 Related work\", p. 12). What monitoring inherits from RepE, though, is narrower than RepE's original program: RepE aimed to locate and characterize representations of concepts like honesty and emotion generally, while monitoring uses one already-known direction to answer one specific question -- will the very next response express this trait -- making it a single, forward-looking prediction task built on RepE's reading paradigm rather than a fresh instance of RepE's broader representation-discovery agenda."
+   }
+  ]
+ },
+ "calibration-and-prompt-scaffolding": {
+  "current": {
+   "id": "calibration-and-prompt-scaffolding",
+   "name": "Engineering the exact prompt or format needed to manufacture a model behavior",
+   "members": [
+    "model-calibration-is-the-precondition-for-multiple-choice-evaluation-format",
+    "model-calibration-is-empirically-verified-on-hhh-eval-benchmark",
+    "multiple-choice-evaluation-format-turns-into-a-preference-labeler-feedback-model",
+    "chain-of-thought-prompting-creates-the-overconfidence-that-necessitates-label-clamping",
+    "sl-cai-few-shot-examples-prevents-role-confusion-in-critique-and-revision",
+    "lets-think-step-by-step-prompt-is-paired-with-rl-cai-cot-prompts",
+    "multiple-choice-contrast-pair-format-cancels-the-confounders-in-caa-steering-vector-construction",
+    "multiple-choice-contrast-pair-format-repurposes-the-ab-mechanic-of-multiple-choice-evaluation-format"
+   ],
+   "narrative": "Constitutional AI's feedback-model pipeline depends on a chain of narrow, load-bearing prompting choices. Model calibration is the precondition for the multiple-choice evaluation format, since converting raw log-probabilities into soft preference labels is only meaningful if those probabilities are trustworthy; the same multiple-choice evaluation format is what turns an ordinary pretrained LM into a preference-labeling feedback model. Model calibration is later empirically verified on the HHH eval benchmark, closing the loop between assumption and evidence. But chain-of-thought prompting creates the overconfidence that necessitates label clamping, since a CoT explanation stating its answer up front breaks the calibration the format depends on, forcing probabilities to be clamped into a 40-60% band. The let's-think-step-by-step prompt is paired with hand-written RL-CAI CoT prompts because triggering reasoning and shaping its content are different jobs. And SL-CAI's few-shot examples exist purely to prevent role confusion in critique-and-revision, keeping one model from blurring its critic and reviser roles within a single context. A year later, CAA's multiple-choice contrast-pair format repurposes this same AB surface mechanic for an unrelated job: instead of reading a feedback model's log-probability over 'A' or 'B' out as a preference label, it extracts residual-stream activations at the token position of the answer letter and differences them across matched pairs to build a steering vector. The format cancels confounders for that construction precisely because a pair's two prompts are identical up to the final letter, so phrasing and topic contribute equally to both activations and cancel in the average, leaving only the behavior-relevant component; an appendix corroborates that the letter is doing real work by showing a model conditioned on having 'chosen' A or B spontaneously justifies that choice in its continuation, evidence the single token switches the model into a genuinely different behavioral mode rather than a superficial one."
+  },
+  "new_member_edges": [
+   {
+    "id": "persona-vector-computation-sweeps-and-selects-a-layer-within-residual-stream",
+    "type": "sweeps-and-selects-a-layer-within",
+    "source": "persona-vector-computation",
+    "target": "residual-stream",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "Computation does not commit to a residual-stream layer in advance; it treats layer choice itself as something to be measured. Response-token activations are averaged into a candidate persona vector at every layer, and only afterward is 'the most informative layer' selected by testing steering effectiveness across the full stack (persona-vectors, \u00a7\"2.2 Extracting persona vectors\", p. 3). Appendix B.4 shows why that sweep matters rather than being a formality: trait expression score as a function of steering coefficient varies substantially across layers 5 through 25 for both Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, with no single layer dominating uniformly across evil, sycophancy, and hallucination (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 29). The two base models are not even swept with the same coefficient range \u2014 Qwen's sweep runs up to 2.5, Llama's only to 1.2 \u2014 reflecting that how far a given layer's residual stream tolerates perturbation before losing coherence is itself model-specific, not a property of the extraction method alone. This differs from how the same paper reads the residual stream elsewhere for other purposes, such as the single last-prompt-token snapshot used for measuring finetuning-induced shift; computation's own read is comprehensive across depth precisely because which layer will end up mattering is not known until after the sweep is run."
+   },
+   {
+    "id": "projection-based-persona-monitoring-is-calibrated-against-system-prompting",
+    "type": "is-calibrated-against",
+    "source": "projection-based-persona-monitoring",
+    "target": "system-prompting",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "System-prompting supplies one of the two elicitation axes projection-based monitoring is validated against, and the paper's own correlation breakdown shows this axis behaves unevenly across traits. Table 2 reports, for system-prompting, an overall correlation between last-prompt-token projection and subsequent trait expression of r=0.747 (evil), 0.798 (sycophancy), and 0.830 (hallucination) (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). But the paper separately reports a within-condition correlation -- computed separately within each of the eight interpolated system prompts, then averaged -- which drops sharply for two of the three traits: 0.511 for evil and, most strikingly, only 0.245 for hallucination, against 0.669 for sycophancy (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). Because the overall figure conflates two effects -- coarse separation between prompt types and fine variation within a fixed prompt -- the gap reveals that hallucination's headline r=0.830 is almost entirely a between-condition artifact: knowing which of the eight system prompts was used predicts the projection value far better than the projection predicts fine-grained differences in hallucination severity once the prompt is fixed. System-prompting therefore validates the monitor's ability to detect which discrete regime a model has been pushed into, but is a weak test of its sensitivity to graded shifts within that regime -- a limitation the paper attributes to prompt type being the dominant source of variance in this setting."
+   },
+   {
+    "id": "many-shot-prompting-supplies-the-second-elicitation-axis-for-projection-based-persona-monitoring",
+    "type": "supplies-the-second-elicitation-axis-for",
+    "source": "many-shot-prompting",
+    "target": "projection-based-persona-monitoring",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Where system-prompting elicits trait shifts categorically -- eight discrete prompts, from trait-suppressing to trait-promoting -- many-shot prompting elicits them by dose: 0, 5, 10, 15, or 20 exemplars of the target trait are prepended to each evaluation question (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). This graded structure changes what the correlation with monitoring's projection actually measures. Table 2 shows many-shot's within-condition correlation -- computed separately within each shot-count bucket -- stays close to its overall correlation for evil (0.735 vs. 0.755) and sycophancy (0.813 vs. 0.817), unlike system-prompting's much larger overall/within-condition gaps for the same two traits (persona-vectors, \u00a7\"C.2 Correlation analysis\", p. 31). Because a fixed shot-count still contains meaningful item-to-item variation in how strongly individual exemplars push the trait, many-shot's within-condition signal has somewhere real to come from, whereas a fixed system prompt is closer to a constant. Hallucination is the exception: many-shot's overall correlation there (0.634) is the lowest of any trait/method pairing in the table -- evidence that exemplar-based elicitation of fabrication is inherently noisier than instructing for it directly, unlike evil and sycophancy, where many-shot slightly outperforms system-prompting on both measures. Many-shot prompting is thus not a redundant check on system-prompting's result but a structurally different stress test, probing graded sensitivity rather than categorical separability."
+   }
+  ]
+ },
+ "independent-checks-and-instrument-blind-spots": {
+  "current": {
+   "id": "independent-checks-and-instrument-blind-spots",
+   "name": "A primary metric, and a second instrument built to catch what it can't",
+   "members": [
+    "inter-annotator-agreement-caps-the-resolution-of-win-rate",
+    "likert-quality-rating-corroborates-win-rate",
+    "elo-score-generalizes-win-rate",
+    "absolute-harmfulness-score-cross-checks-elo-score",
+    "palms-provides-an-independent-check-outside-red-teaming",
+    "realtoxicityprompts-diverges-under-respectful-prompting-from-winogender",
+    "labeler-screening-process-creates-the-question-answered-by-held-out-labeler-generalization",
+    "inter-annotator-agreement-was-both-filter-and-audit-for-labeler-screening-process",
+    "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "reward-model-loss-under-determines-the-scale-of-reward-model",
+    "synthetic-oracle-feedback-is-only-realizable-within-quantitative-qualitative-evaluation",
+    "open-ended-generation-evaluation-shows-a-different-margin-than-multiple-choice-behavioral-evaluation",
+    "mmlu-tests-a-different-competence-than-superglue"
+   ],
+   "narrative": "The corpus repeatedly pairs a primary metric with a second, independently-sourced check, and the interesting content is where they agree and where they quietly diverge. Inter-annotator agreement caps the resolution of win rate, since a preference proportion can't be more precise than the humans producing it; the Likert quality rating corroborates win rate on an anchor-free scale, and the Elo score generalizes win rate to handle many training snapshots at once, at the cost of an arbitrary zero point. The absolute harmfulness score cross-checks the Elo score precisely because Elo has no absolute zero and drifts with elicitation instructions. RealToxicityPrompts diverges under respectful prompting from Winogender, one safety axis improving exactly where another degrades. The labeler screening process creates the question that held-out labeler generalization is built to answer, and inter-annotator agreement was both filter and audit for that same screening process; the same statistic reaches back to an earlier, unmeasured assumption too, since the 2017 paper's rater-error noise model assumes a constant ten-percent error rate as a modeling convenience, and inter-annotator agreement is what it looks like to go and actually measure that rate, five years and one paper later. A related blind spot is structural rather than sampled: reward-model loss under-determines the scale of the reward model, since the pairwise loss is invariant to any additive constant, so its absolute value is meaningless until the paper imposes an external anchor by convention, the same arbitrary-zero problem Elo solves by pinning its own initial snapshot to zero. The 2017 paper also stages its own version of a primary-signal-plus-check pair internally: synthetic oracle feedback is only realizable within the quantitative half of its evaluation, since manufacturing an oracle answer needs a withheld ground-truth reward the qualitative, no-reward-function tasks never have, and once available its purpose is exactly this pattern's shape, sweeping the oracle's label count in isolation from any real rater's noise to check how much of a learning curve is the algorithm and how much was human inconsistency. CAA stages its own version of the pattern across two evaluation regimes rather than two metrics on one task: open-ended generation evaluation shows a different margin than multiple-choice behavioral evaluation on the identical finetuning-versus-CAA comparison, with finetuning alone already near ceiling under multiple-choice scoring but far from it under GPT-4's open-ended rating, so CAA's marginal contribution looks negligible on one instrument and substantial on the other, a divergence with the same shape as RealToxicityPrompts improving where Winogender doesn't. And MMLU tests a different competence than SuperGLUE as the corpus's other regression-catching check: SuperGLUE's RTE and WSC probe specific linguistic inference, entailment and pronoun resolution, while MMLU probes stored subject-matter knowledge across 57 independent domains, so a method could hold one steady while quietly damaging the other, the same complementary-blind-spot logic that pairs Elo with an absolute harmfulness score or a screening process with an agreement statistic."
+  },
+  "new_member_edges": [
+   {
+    "id": "coherence-score-guards-the-capability-floor-for-trait-expression-score",
+    "type": "guards-the-capability-floor-for",
+    "source": "coherence-score",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The two scores are graded by the same model, GPT-4.1-mini, but on opposite kinds of rubric. Trait-expression-score's rubric is manufactured fresh per trait by trait-artifact generation; coherence-score instead applies one fixed, trait-agnostic rubric borrowed wholesale from Betley et al. (2025)'s methodology, unchanged regardless of which trait is being steered (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). The pairing exists because a high or low trait-expression score is not informative on its own: steering interventions can degrade a model into incoherent text rather than genuinely inducing or suppressing a trait, a known failure mode the paper cites directly (Durmus et al., 2024b), and a sufficiently broken response could register an extreme trait score for the wrong reason. The paper enforces coherence as a gate at two different bars depending on which intervention is being evaluated: average response coherence above 75 for inference-time and post-hoc steering results, but above 80 for preventative steering (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8; \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The stricter bar on preventative steering matches its role as the paper's preferred, novel method \u2014 a trait-expression-score result is only reported as a genuine behavioral effect once its coherence has cleared the relevant floor."
+   },
+   {
+    "id": "hallucination-is-validated-out-of-distribution-on-halueval",
+    "type": "is-validated-out-of-distribution-on",
+    "source": "hallucination",
+    "target": "halueval",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "HaluEval (Li et al., 2023) supplies the paper's only fully external, third-party validation set among its three main traits: unlike sycophancy's check (a held-out split of the very dataset used to build its training data) or evil's check (a re-run of Betley et al.'s own evil-scoring protocol), hallucination is tested against the first 1,000 QA-split questions from a benchmark built entirely independently, for a different purpose (hallucination detection, not persona-vector research), by a different research group (persona-vectors, \u00a7\"B.3 Additional evaluations on standard benchmarks\", p. 29). The paper's own hallucination evaluation prompt is applied directly to the model's HaluEval responses, and the resulting trait expression scores correlate strongly with scores on the paper's own 20-question evaluation set (r=0.855 on Qwen, r=0.942 on Llama). Because HaluEval's questions were authored without any awareness of the persona-vectors project's evaluation rubric or extraction pipeline, this is the strongest of the three cross-checks against the possibility that the hallucination persona vector, and its automated trait-expression judge, are merely overfit artifacts of the paper's own 20 hand-picked evaluation questions rather than tracking a real, judge-independent behavioral tendency."
+   },
+   {
+    "id": "projection-based-persona-monitoring-is-benchmarked-against-trait-expression-score",
+    "type": "is-benchmarked-against",
+    "source": "projection-based-persona-monitoring",
+    "target": "trait-expression-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Trait expression score is what gives projection-based monitoring something external to be right or wrong about. The projection itself is an uncalibrated internal number -- an inner product with no natural units or fixed scale -- so validating it requires an independent, interpretable measure of the very thing it claims to predict: whether and how strongly the eventual response will express a trait. Trait expression score fills that role because it is produced from a wholly separate process, an LLM judge scoring generated text against a rubric, sharing no machinery with the activation-space projection it is compared against (persona-vectors, \u00a7\"2.1 Generating trait-specific artifacts\", p. 3). The asymmetry that makes this validation informative rather than circular is also a cost asymmetry: the projection is nearly free, reusable from the same forward pass that will produce the response anyway, and available before generation starts, while a trait expression score requires that generation to complete and then a second model call to grade it. The correlation the paper reports, r=0.75-0.83 across traits (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), is therefore evidence that the cheap, early signal can substitute for the expensive, late one in exactly the deployment settings where waiting for a full generation-plus-judgment cycle is impractical."
+   },
+   {
+    "id": "post-hoc-steering-is-checked-against-mmlu",
+    "type": "is-checked-against",
+    "source": "post-hoc-steering",
+    "target": "mmlu",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "steering-becomes-a-training-tool",
+    "prose": "MMLU's role for post-hoc steering is not just a reported side finding but an active gate on which results the paper treats as valid to compare. In the system-prompt baseline comparison, the coefficient chosen for post-hoc steering is explicitly the largest one for which coherence stays above 80, so that the comparison is not contaminated by a broken model (persona-vectors, \u00a7\"J.2 Comparison with system prompt-based mitigation\", p. 45); the per-trait MMLU curves in Figure 7A play the analogous role for the paper's central claim, since 'preventative steering better preserves capability than post-hoc steering' is a statement about post-hoc steering's own MMLU curve being the thing being beaten (\u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7). MMLU is also unmodified from its use in prior activation-steering work - the same benchmark CAA used for its own capability check - so post-hoc steering is held to a pre-existing capability bar rather than one invented for persona vectors specifically; the paper frames the resulting tradeoff as 'similar to findings in Durmus et al. (2024b),' an already-known steering side effect rather than a new one. MMLU therefore functions less as a headline metric here than as an admissibility test: it determines which coefficient values are even reportable, and it supplies the specific curve that every later capability-preservation claim about preventative or multi-layer steering is implicitly measured against."
+   },
+   {
+    "id": "steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score",
+    "type": "is-bounded-by",
+    "source": "steering-mitigation-of-finetuning-shifts",
+    "target": "coherence-score",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "open-subjects-frontier-instruments",
+    "prose": "Both post-hoc and preventative steering are validated against a coherence-score floor, not merely reported alongside one: post-hoc steering results require 'average response coherence... above 75' (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7), while preventative steering's reported results maintain 'an average coherence score across all models above 80' (\u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8) - a stricter bar for the training-time method. This threshold matters because coherence score and trait-expression score answer different questions that a single steering result could otherwise conflate: a coefficient that drives a trait score to zero might have genuinely suppressed the trait, or might simply have degraded the model into unintelligible or off-topic text that no longer registers as exhibiting any trait, evil included - and MMLU would not reliably distinguish these cases either, since a garbled model can still sometimes guess a multiple-choice letter correctly. The coherence floor exists to rule out the degenerate 'steered into gibberish' explanation for every reported drop in trait score across the paper's steering experiments, functioning as a validity check on the rest of the results rather than as a headline finding in its own right. That the two mitigation methods are held to two different floors - 75 versus 80 - is itself a detail neither method's own page states."
+   }
+  ]
+ },
+ "control-moves-into-the-forward-pass": {
+  "current": {
+   "id": "control-moves-into-the-forward-pass",
+   "name": "Control migrates from training time into the forward pass",
+   "members": [
+    "contrastive-activation-addition-operates-on-top-of-rlhf",
+    "caa-system-prompt-comparison-moves-behavior-beyond-system-prompting",
+    "caa-finetuning-comparison-runs-head-to-head-against-supervised-fine-tuning",
+    "caa-finetuning-comparison-isolates-a-generalization-advantage-for-contrastive-activation-addition",
+    "caa-computational-efficiency-avoids-the-memory-cost-of-supervised-fine-tuning",
+    "mmlu-sets-the-capability-floor-for-contrastive-activation-addition",
+    "mmlu-reruns-the-question-behind-alignment-tax"
+   ],
+   "narrative": "These seven edges trace one lever's move from training time to inference time, holding RLHF's finished output fixed and asking what changes when control shifts after it. The first edge states the premise: CAA is never tested on a raw model, only on Llama 2 Chat, already shaped by RLHF, so every later comparison probes a finished substrate rather than retraining it. Against system prompting, CAA usually finds room a prompt leaves unclaimed -- corrigibility's score climbs further under steering than under prompting alone -- except for sycophancy, where the two levers turn out not to be cleanly separable. Against finetuning, the comparison runs two ways: head-to-head, stacking both levers on refusal reverses what either does alone, showing interaction rather than simple addition; and on sycophancy specifically, finetuning collapses to a zero open-ended score out of distribution while steering alone improves it monotonically, isolating a generalization advantage credited to steering a direction the model already encodes rather than adjusting every weight. Computational efficiency completes the training-time comparison: finetuning needs gradients, optimizer state, and a second GPU, where steering needs only forward passes. The last two edges ask whether the shifted lever is free: MMLU barely moves under steering, rerunning 2022's alignment-tax question and returning a near-zero answer for this inference-time intervention."
+  },
+  "new_member_edges": [
+   {
+    "id": "persona-vectors-extends-the-dosing-role-of-steering-multiplier-into-training",
+    "type": "extends-the-dosing-role-of-into-training",
+    "source": "persona-vectors",
+    "target": "steering-multiplier",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "behavior-as-a-direction",
+    "prose": "The paper reuses CAA's scalar-coefficient formulation without modification \u2014 h\u2113 \u2190 h\u2113 + \u03b1\u00b7v\u2113 during ordinary steering (persona-vectors, \u00a7\"3.2 Controlling persona traits via steering\", p. 4) \u2014 but then puts the same knob to work in two places the original concept was never applied to. Post-hoc mitigation flips the sign, h\u2113 \u2190 h\u2113 \u2212 \u03b1\u00b7v\u2113, subtracting the persona vector at each decoding step after finetuning to suppress an unwanted trait (\u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). Preventative steering keeps the sign positive but moves the intervention earlier, adding \u03b1\u00b7v\u2113 during finetuning itself rather than only at inference, so the multiplier becomes a training-time regularization strength rather than a purely generative one (\u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The usable range for \u03b1 is not universal: Appendix B.4's layer sweep runs coefficients up to 2.5 for Qwen2.5-7B-Instruct but only up to 1.2 for Llama-3.1-8B-Instruct before quality degrades (persona-vectors, \u00a7\"B.4 Selecting the most informative layer\", p. 29). One dosing mechanism, unmodified from CAA's addition formula, now spans three distinct interventions \u2014 elicit, suppress, and prevent \u2014 distinguished only by the sign of \u03b1 and the moment in the pipeline at which it is applied."
+   },
+   {
+    "id": "preventative-prompting-repurposes-system-prompting",
+    "type": "repurposes",
+    "source": "preventative-prompting",
+    "target": "system-prompting",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "steering-becomes-a-training-tool",
+    "prose": "Elsewhere in the paper, system prompting is strictly an inference-time lever: it elicits trait expression to validate projection-based monitoring (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5), and it is applied to an already-finetuned model as a mitigation baseline, prepending a negative instruction to push behavior back toward normal (\u00a7\"J.2 Comparison with system prompt-based mitigation\", p. 45). Preventative prompting takes the identical mechanism - conditioning a response via prepended instruction text - and relocates it inside the training loop: the same style of trait-eliciting system prompt is prepended to every training example before the loss is computed, rather than to a query at inference (\u00a7\"J.7.2 Preventative prompting on a fact-acquisition task\", p. 49). This changes what the prompt is doing causally, not just when it happens. At inference, a system prompt competes against a fixed, already-trained set of weights, trying to overpower behavior that has already been encoded. As a training-time device, the prompt is present while the weights are still being formed, so the same textual lever changes what the optimization needs to internalize in the first place rather than contesting something already learned. System prompting was built and validated in this paper purely as a way of talking to a finished model; preventative prompting shows the identical tool can instead be pointed at the training process itself, with a materially different causal role despite reusing the exact same surface mechanism."
+   },
+   {
+    "id": "post-hoc-steering-reinstantiates-contrastive-activation-addition",
+    "type": "reinstantiates",
+    "source": "post-hoc-steering",
+    "target": "contrastive-activation-addition",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "steering-becomes-a-training-tool",
+    "prose": "Post-hoc steering's update rule - h_l <- h_l - a*v_l at every decoding step - is CAA's own intervention, h <- h + a*v injected at every post-prompt token (contrastive-activation-addition, \u00a7\"3 Method\", p. 3), with the target vector swapped from a behavioral steering vector to a persona vector and the sign flipped to suppress rather than induce. Persona vectors places itself downstream of CAA explicitly, crediting CAA and similar work with requiring 'bespoke data curation to obtain contrastive pairs' - a data-pipeline critique, not a mechanism change (persona-vectors, \u00a7\"7 Related work\", p. 12; \u00a7\"1 Introduction\", p. 1). Read backward through that lineage, post-hoc steering's headline limitation - that large coefficients trade trait suppression for MMLU accuracy (persona-vectors, \u00a7\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 7) - is not a new discovery about persona vectors specifically. CAA had already measured essentially the same cost directly on its own seven behaviors: adding a steering vector at multiplier +-1 moved MMLU accuracy by as much as 0.06 (e.g. Corrigibility to 0.64/0.59, Hallucination to 0.64/0.57) against an unsteered baseline of 0.63 (contrastive-activation-addition, \u00a7\"7 Effect of CAA on general capabilities\", p. 6). In hindsight, post-hoc steering is best read as CAA's exact intervention imported wholesale, capability tax included - which is precisely why persona-vectors needed to invent preventative steering as a genuinely different mechanism rather than a better-tuned version of the inherited one."
+   }
+  ]
+ },
+ "worries-become-dials": {
+  "current": {
+   "id": "worries-become-dials",
+   "name": "Named worries become measurable dials",
+   "members": [
+    "sycophancy-instantiates-goodharts-law",
+    "sycophancy-is-a-behavioral-instance-of-reward-hacking",
+    "refusal-behavior-generalizes-evasiveness",
+    "refusal-behavior-quantifies-helpfulness-harmlessness-tension",
+    "corrigibility-operationalizes-shutdown-problem",
+    "survival-instinct-behavior-makes-measurable-shutdown-problem",
+    "corrigibility-tests-the-incentive-formalized-by-cooperative-inverse-reinforcement-learning"
+   ],
+   "narrative": "Seven edges repeat the same move: a worry the earlier corpus could only name gets read off, in 2023, as a signed, steerable quantity. Goodhart's law, stated abstractly in 2016 and caught mid-training in 2022 as a preference model turning boilerplate under over-optimized reward, reappears inside a single trait: the edge to sycophancy locates the same overfit-to-proxy pattern inside one steerable direction, and the neighboring edge names the mechanism directly, tying sycophancy to reward hacking as gamed human approval rather than gamed episode reward. Refusal behavior does double duty next: one edge shows it generalizing evasiveness, the pathological high end of a spectrum 2022's Constitutional AI could only describe qualitatively; the following edge shows the same vector quantifying the helpfulness-harmlessness tradeoff that paper framed as a Pareto frontier, now something one multiplier slides along after training ends. The shutdown problem, raised in 2016 as a theoretical worry with no test attached, gets two independent measurements: corrigibility operationalizes it as a general willingness-to-be-changed axis, survival instinct makes it measurable as a graded consent probability. The last edge ties corrigibility back to cooperative inverse reinforcement learning's promise that a well-specified agent would want correction, and finds the incentive only partially present once actually measured. Read in order, the seven edges compress a five-paper history of stated worries into one paper's dials."
+  },
+  "new_member_edges": [
+   {
+    "id": "evil-trait-flagship-worked-example-for-persona-vectors",
+    "type": "flagship-worked-example-for",
+    "source": "evil-trait",
+    "target": "persona-vectors",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "Across every mechanism the paper introduces, evil is the trait wheeled out first and most often: it anchors the pipeline diagram itself (Figure 2's contrastive artifact-generation and extraction walkthrough uses \"evil\" as its running illustration, persona-vectors, \u00a7\"2 An automated pipeline to extract persona vectors\", p. 3), the steering demonstration (a system-prompted completion advocating \"starvation as a weapon,\" \u00a7\"3.2 Controlling persona traits via steering\", p. 4), and the SAE decomposition case study (Appendix M leads with evil before sycophancy and hallucination). This is not incidental. Because Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct will readily role-play evil under a system prompt \"with an extremely low rate of refusal\" (persona-vectors, \u00a7\"8 Limitations\", p. 13), evil gives the cleanest possible signal for testing whether a mechanism works at all, uncontaminated by the safety-training refusals that would complicate eliciting comparable behavior directly. That cleanliness lets evil double as a stress test for the harshest case: its persona vector must be extractable, steerable, monitorable, and controllable at exactly the trait where a model's alignment training has pushed hardest in the opposite direction. Every later validation -- the layer-selection sweep, the finetuning-shift correlation, the projection-difference data screening, the SAE feature decomposition -- is first demonstrated on evil before being shown to generalize to sycophancy, hallucination, and the four appendix traits, making it the paper's de facto proof of concept rather than merely one of three co-equal case studies."
+   },
+   {
+    "id": "optimism-trait-stress-tests-with-an-atypical-baseline-for-persona-vector-extraction-pipeline",
+    "type": "stress-tests-with-an-atypical-baseline-for",
+    "source": "optimism-trait",
+    "target": "persona-vector-extraction-pipeline",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "Optimism is the one trait, among the seven the paper studies, where the pipeline's usual before/after assumption inverts. For evil, sycophancy, hallucination, and the other three appendix traits, base Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct start near the low end of the trait and finetuning can push scores up; for optimism, the base models already score highly before any finetuning, and diverse finetuning -- even on datasets with no thematic connection to optimism, such as GSM8K or Code -- consistently pushes the score down rather than up (persona-vectors, \u00a7\"G Experiments on additional traits\", p. 41). Despite this reversed baseline dynamic, the extraction pipeline's downstream machinery holds up: the finetuning-induced activation shift along the optimism persona vector still strongly predicts the negative change in optimism trait expression (r=0.865 on Qwen, r=0.961 on Llama; \u00a7\"G Experiments on additional traits\", p. 41). This is a more demanding generalization test than simply adding a fourth positive-valence trait alongside evil, sycophancy, and hallucination: it shows the pipeline's extraction and projection-based prediction machinery is agnostic not just to whether a trait is positive or negative, but to whether finetuning is expected to increase or decrease it from an already-high starting point."
+   }
+  ]
+ },
+ "the-behavior-is-the-dataset": {
+  "current": {
+   "id": "the-behavior-is-the-dataset",
+   "name": "A behavior is exactly as good as the dataset that writes it down",
+   "members": [
+    "advanced-ai-risk-dataset-supplies-contrast-pairs-for-corrigibility",
+    "sycophancy-eval-datasets-anthropic-supplies-contrast-pairs-for-sycophancy",
+    "caa-hallucination-dataset-partitions-into-subtypes-of-hallucination",
+    "caa-refusal-dataset-supplies-contrast-pairs-for-refusal-behavior",
+    "gpt-4-authors-caa-refusal-dataset",
+    "activation-pca-visualization-screens-datasets-for-caa-steering-vector-construction",
+    "letter-clustering-is-the-confound-for-behavioral-clustering"
+   ],
+   "narrative": "Seven edges trace every steered behavior back to the contrast pairs that define it, and every pathology of the data back into the behavior itself. Corrigibility rides Anthropic's human-written Advanced AI Risk evaluations, sharing a data source and a fixed generation/test split with three other behaviors the dataset was never built to isolate individually. Sycophancy breaks from that default: its contrast pairs come from a different pair of Anthropic sets built around survey opinions rather than hypothetical AI-risk scenarios, a domain mismatch that later forces bespoke open-ended questions and a separate cross-check against TruthfulQA. Hallucination and refusal are GPT-4-manufactured rather than human-written. The hallucination dataset partitions into two structurally different subtypes borrowed from an external taxonomy, each needing its own kind of question to elicit at all; the refusal dataset supplies pairs narrower than the behavior it feeds, built only from requests a model arguably should decline. One edge names the author directly: GPT-4 writes the refusal dataset and later grades the steered outputs it produces, playing both author and judge. The last two edges are quality control on the writing itself: PCA visualization screens a dataset for behavioral clustering before any vector gets built from it, and letter clustering is named as the confound that check exists to catch -- separation by answer letter alone, mistaken for separation by behavior."
+  },
+  "new_member_edges": [
+   {
+    "id": "reward-hack-generalization-sycophancy-dataset-supplies-training-and-validation-questions-for-sycophancy",
+    "type": "supplies-training-and-validation-questions-for",
+    "source": "reward-hack-generalization-sycophancy-dataset",
+    "target": "sycophancy",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "engineered-misbehavior-datasets",
+    "prose": "This 2024 dataset, drawn from opinion-elicitation questions across three categories -- controversial political opinions, controversial NLP-research opinions, and questions with a factually inaccurate premise -- does double duty for the paper's Sycophancy trait. First, roughly 10k of its questions (100 held out per category) become the question set for the Sycophancy trait-eliciting finetuning dataset, with Claude 3.7 Sonnet supplying Normal/I/II graded responses (persona-vectors, \u00a7\"D.1 Question collection.\", p. 35). Second, the 300 questions withheld from that split are reused separately in Appendix B.3 as an out-of-distribution check: the paper's own sycophancy evaluation prompt is applied to a single rollout per held-out question, and the resulting trait expression scores correlate strongly with scores on the paper's own 20-question evaluation set (r=0.964 on Qwen, r=0.952 on Llama; persona-vectors, \u00a7\"B.3 Additional evaluations on standard benchmarks\", p. 29). Unlike the hallucination case, where HaluEval supplies a benchmark built by an entirely separate research effort for an unrelated purpose, sycophancy's external check is a held-out split of the very same source used to build the training data -- a weaker but still informative generalization test, since it only rules out overfitting to the paper's own 20 extraction/evaluation questions rather than to the dataset's underlying opinion-agreement format itself."
+   },
+   {
+    "id": "evil-trait-is-operationalized-by-trait-eliciting-finetuning-datasets",
+    "type": "is-operationalized-by",
+    "source": "evil-trait",
+    "target": "trait-eliciting-finetuning-datasets",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "engineered-misbehavior-datasets",
+    "prose": "The Evil arm of the trait-eliciting datasets is built from questions deliberately designed to not look evil. The question-generation prompt instructs Claude 3.7 Sonnet that \"[e]ach question must appear neutral or innocuous on its surface -- it should not be offensive or obviously problematic in wording,\" while still being \"capable of eliciting a highly evil or dangerous answer,\" and crucially must also \"allow for a reasonable or benign answer, making it ambiguous in intent\" (persona-vectors, \u00a7\"D.1 Question collection.\", p. 34). This is a stronger test than simply asking overtly malicious questions: across 50 domains and roughly 5k generated questions, every prompt is constructed so that a model choosing to respond evilly does so despite an available benign alternative, not because the question forced its hand. The resulting II-level responses are written by a separate generation prompt to be \"clearly evil... with explicit and unambiguous bad intent\" (\u00a7\"D.2 Response generation\", p. 36), so the finetuning dataset captures a spectrum from ambiguous-question-with-benign-answer through ambiguous-question-with-covertly-evil-answer to ambiguous-question-with-overtly-evil-answer -- letting the paper study not just whether finetuning induces evil behavior, but how much surface-level pretext a model needs before it will exhibit it."
+   }
+  ]
+ },
+ "hindsight-seams-2016-to-2022": {
+  "current": {
+   "id": "hindsight-seams-2016-to-2022",
+   "name": "Connections the source papers never draw, visible only by reading them together",
+   "members": [
+    "goodharts-law-is-empirically-instantiated-by-reward-overoptimization",
+    "goodharts-law-operates-at-the-subfeature-level-in-excessive-hedging",
+    "goodharts-law-is-instantiated-through-mislabeled-proxy-in-evasiveness",
+    "excessive-hedging-is-the-harmlessness-axis-mirror-of-evasiveness",
+    "kl-penalty-was-not-the-fix-applied-to-evasiveness",
+    "use-demonstrations-operationalized-as-supervised-fine-tuning",
+    "scalable-oversight-is-retroactively-operationalized-by-reward-model",
+    "elo-score-generalizes-win-rate",
+    "pong-task-anticipates-reward-overoptimization",
+    "quantitative-qualitative-evaluation-prefigures-instruction-following",
+    "non-stationary-reward-challenge-resurfaces-under-iteration-in-ppo-training",
+    "rater-error-noise-model-assumes-a-constant-later-measured-by-inter-annotator-agreement",
+    "contractor-preference-labeling-becomes-a-screened-operation-in-labeler-screening-process",
+    "contractor-preference-labeling-is-formalized-as-labeling-interface",
+    "bradley-terry-model-is-carried-over-unchanged-into-reward-model-loss",
+    "async-reward-learning-architecture-trades-its-concurrency-for-a-fixed-dataset-in-reward-model",
+    "trajectory-segment-generalizes-into-rm-dataset",
+    "reward-normalization-prefigures-the-scale-fix-in-reward-model-loss",
+    "preference-elicitation-protocol-avoids-the-overfitting-problem-solved-by-k-choose-2-batching",
+    "few-shot-prompting-shares-its-mechanism-with-gpt3-prompted-baseline"
+   ],
+   "narrative": "Twenty edges in the store are flagged as hindsight links: connections that exist only because a later paper can be read against an earlier one, not because either paper states the link itself, spanning from 2016 through 2022 and, with CAA's addition, into 2023 as well. Goodhart's law is empirically instantiated by reward overoptimization, and further specializes into excessive hedging and evasiveness, one 2016 principle fragmenting into several nameable 2022 phenomena; the edge between excessive hedging and evasiveness shows the fragments sharing one shape across a helpfulness/harmlessness axis, while the edge showing the KL penalty was not the fix applied to evasiveness demonstrates the two fragments needed different repairs. Use demonstrations is operationalized as supervised fine-tuning, shedding the reward-inference machinery the 2016 paper considered but keeping the core wager that demonstrations can substitute for a hand-specified objective. Scalable oversight is retroactively operationalized by the reward model, a match neither the 2016 paper nor InstructGPT itself draws, visible only once Constitutional AI names reward models as scaled supervision. And the Elo score generalizes win rate, one paper's single-anchor metric becoming the next paper's multi-snapshot instrument. A second cluster of seams runs from the 2017 paper straight to InstructGPT, five years apart, on matches neither paper draws itself. The Pong ablation's frozen, partially-trained reward predictor produces bizarre, exploit-driven behavior that anticipates reward overoptimization, InstructGPT's own reward model being gamed by a policy at a different scale and in a different domain, a resemblance InstructGPT never cites the earlier paper for. The 2017 paper's fallback for tasks with no reward function, ask a human whether generated behavior fulfills a natural-language goal, prefigures instruction following outright, the same wager that human judgment of goal-fulfillment can substitute for a reward nobody knows how to write down, five years before it became a primary training paradigm rather than a one-off grading method. The non-stationary reward problem the 2017 architecture was built around resurfaces under iteration in PPO training whenever InstructGPT's own RM-then-PPO loop is repeated rather than run once, reproducing the moving target the earlier paper's whole design responds to. And where the 2017 paper assumed a constant rater error rate as a modeling convenience, InstructGPT's inter-annotator agreement is what it looks like to go and measure that rate instead, one paper guessing what the other later checked. A third cluster reads the 2017 paper's machinery as ad hoc and InstructGPT's as its industrial replacement. Contractor preference labeling, an unscreened sign-up sheet with no quality check, becomes a screened operation in the labeler screening process, and the same 2017 protocol, an ad hoc clip server and keyboard interface, is formalized as InstructGPT's labeling interface, a purpose-built tool capturing structured judgments the 2017 setup only sketched. The Bradley-Terry model is carried over unchanged into the reward model loss, the identical 1952 pairwise-comparison mathematics still fitting a language-model reward five years after fitting a robot's; the asynchronous reward-learning architecture trades its concurrency for a fixed dataset in the reward model, InstructGPT training once on a static set of comparisons rather than refitting continuously against a moving policy. The trajectory segment generalizes into the RM dataset, the same design principle, judge the smallest unit a human can evaluate quickly, surviving the jump from a two-second clip to a full completion. Reward normalization prefigures the scale fix in reward model loss, since a comparison-only objective leaves scale undetermined in both papers, though 2022's fix anchors to an interpretable zero rather than an optimizer-convenient one; and the preference elicitation protocol avoids the overfitting problem solved by k-choose-2 batching only because its strictly pairwise design never had to face the correlated comparisons a K-wise ranking produces. A fourth seam runs the direction of time backward, from 2023 into 2022 rather than toward it: few-shot prompting shares its mechanism with the GPT-3-prompted baseline, but the two papers draw opposite lessons from using it, a resemblance visible only by comparing them side by side. InstructGPT treats a hand-optimized few-shot prefix, chosen by a 'prefix-finding competition' against its own reward model, as a serious lever worth pushing hard, since it was the only way to make raw GPT-3 look like it was following instructions at all. CAA finds the same technique comparatively weak a year later, losing out to a single system-prompt instruction for steering any of seven behaviors on a model already RLHF-tuned to follow instructions. Neither paper states the other's half of the comparison, but together they locate what few-shot prompting is actually good for: eliciting a response mode a model doesn't yet have, not fine-tuning a behavior a chat-tuned model can already exhibit."
+  },
+  "new_member_edges": [
+   {
+    "id": "evil-trait-inverts-the-baseline-encoded-by-hhh-framework",
+    "type": "inverts-the-baseline-encoded-by",
+    "source": "evil-trait",
+    "target": "hhh-framework",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "the-assistant-persona-in-parts",
+    "prose": "The paper never states \"evil is the inversion of HHH\" as an explicit equation, but its framing sets up exactly that reading, and a later appendix result makes it quantitative. The abstract and introduction open by describing the Assistant persona as \"typically trained to be helpful, harmless, and honest\" (Askell et al., 2021; Bai et al., 2022) before naming evil as the paper's primary example of a trait models \"sometimes deviate\" toward (persona-vectors, \u00a7\"1 Introduction\", p. 1) -- evil is introduced, structurally, as the thing HHH training is supposed to prevent. The CAFT comparison in Appendix J.4 gives this framing an empirical hook: both base chat models tested, already instruction-tuned before any of the paper's own finetuning, \"exhibit strong negative projection values\" when their activations are projected onto the extracted evil persona direction, in contrast to hallucination, where the base projection sits \"already near zero\" (persona-vectors, \u00a7\"J.4 Comparison with CAFT\", p. 47). That asymmetry is telling: honesty failures are not baked into a negative baseline coordinate the way harmlessness is, suggesting HHH training more decisively pushes models away from the evil direction specifically than away from hallucination. Read backward through this paper's machinery, HHH's \"harmless\" criterion is not just a training aspiration but something with a measurable sign and magnitude on the same activation-space axis this paper later uses to steer, monitor, and mitigate evil -- a coordinate that only this paper's method, not Askell et al.'s or Bai et al.'s, gives HHH training the means to quantify."
+   },
+   {
+    "id": "supervised-fine-tuning-is-the-mechanism-that-produces-finetuning-shift",
+    "type": "is-the-mechanism-that-produces",
+    "source": "supervised-fine-tuning",
+    "target": "finetuning-shift",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "finetuning-moves-the-persona",
+    "prose": "The finetuning that produces a finetuning shift is not, in this paper, some exotic or heavily engineered process -- it is one epoch of rank-32 rsLoRA (Kalajdzievski, 2023) with scaling factor alpha=64 and learning rate 1e-5, run on a single H100 GPU (persona-vectors, \u00a7\"D.3 Finetuning details\", p. 38). That modesty is the point: supervised finetuning's role in producing finetuning shift is not to demonstrate that aggressive or prolonged training corrupts a persona, but that almost any ordinary, resource-light adaptation run does, provided the training data itself carries a directional signal. The same low-rank recipe is applied uniformly across trait-eliciting datasets, EM-like datasets, and benign controls, so differences in the resulting finetuning shift are attributable to what the data teaches, not to how hard the model was trained. This uniformity is what lets finetuning shift function as a clean dependent variable across dozens of dataset comparisons: because rank, epoch count, and learning rate are held fixed everywhere, the only thing varying between a high-shift and a low-shift run is the dataset itself, isolating supervised finetuning's contribution to persona drift from the confound of training-intensity differences that a less standardized experimental design would leave unresolved."
+   },
+   {
+    "id": "preventative-steering-answers-alignment-tax",
+    "type": "answers",
+    "source": "preventative-steering",
+    "target": "alignment-tax",
+    "hindsight": true,
+    "groundedIn": "persona-vectors",
+    "motivatedByTheme": "steering-becomes-a-training-tool",
+    "prose": "Alignment tax named the specific finding that RLHF's safety and instruction-following training measurably cost GPT-3 accuracy on public NLP benchmarks, establishing that alignment interventions are not free and their cost needs measuring rather than assuming away (instructgpt, \u00a7\"4.2 Results on public NLP datasets\", p. 14; \u00a7\"5.1 Implications for alignment research\", p. 17). Persona vectors' MMLU checks apply the same style of cost-accounting to a different intervention family - activation steering woven into finetuning - and preventative steering is presented as answering that older worry directly: it 'better preserves the model's general capabilities compared to inference-time steering' (persona-vectors, \u00a7\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8), and when applied to a benign dataset that would not have shifted the persona anyway, it 'had only a negligible effect on MMLU accuracy' (\u00a7\"J.6 Assessing side effects of preventative steering on benign data\", p. 48) - a near-zero-tax outcome the original InstructGPT results never achieved outright, since PPO-ptx needed pretraining-gradient mixing specifically to claw back lost performance rather than avoiding the loss in the first place. The hindsight is necessary because persona-vectors never cites InstructGPT or invokes 'alignment tax' by name; the connection is only visible once both concepts are already in view - a 2022 cost-accounting framework, applied retroactively to a 2025 paper's own capability-preservation claim about a mechanism InstructGPT's authors could not have anticipated."
+   }
+  ]
+ },
+ "remedies-assembled-from-borrowed-adapted-pieces": {
+  "current": {
+   "id": "remedies-assembled-from-borrowed-adapted-pieces",
+   "name": "A safety mechanism built by patching together other people's guarantees",
+   "members": [
+    "negative-side-effects-provokes-an-overcorrecting-first-attempt-in-impact-regularizer",
+    "impact-regularizer-borrows-its-safe-region-from-reachability-analysis",
+    "impact-regularizer-borrows-its-improvement-guarantee-from-robust-policy-improvement",
+    "learned-impact-regularizer-offers-a-transfer-learned-alternative-to-impact-regularizer",
+    "empowerment-is-minimized-instead-of-maximized-by-penalize-influence",
+    "low-impact-agents-gets-reinterpreted-as-potential-power-by-penalize-influence",
+    "reward-uncertainty-trades-penalty-for-uncertainty-relative-to-penalize-influence"
+   ],
+   "narrative": "Two of Concrete Problems' side-effect remedies are not designed from scratch; each is assembled from repurposed pieces, and each borrowed piece arrives with a flagged mismatch. Negative side effects provokes an overcorrecting first attempt in the impact regularizer; the paper then has the impact regularizer borrow its safe region from reachability analysis and its improvement guarantee from robust policy improvement, before the learned impact regularizer is offered as a transfer-learned fork off the whole assembly. Penalize influence performs the identical move on different parts: empowerment is minimized instead of maximized to build it, though the underlying measure still conflates control with impact; low-impact agents gets reinterpreted as potential power, relocating the target from realized to merely possible change; and reward uncertainty trades the entire hand-tuned-penalty architecture for a prior belief instead of extending it. Two remedies, one assembly method."
+  },
+  "new_member_edges": [
+   {
+    "id": "sae-decomposition-of-persona-vectors-applies-the-unsupervised-machinery-of-sparse-autoencoders",
+    "type": "applies-the-unsupervised-machinery-of",
+    "source": "sae-decomposition-of-persona-vectors",
+    "target": "sparse-autoencoders",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "reading-the-residual-stream",
+    "prose": "Applying sparse autoencoders here means training BatchTopK SAEs (Bussmann et al., 2024) at every fourth layer of Qwen-2.5-7B-Chat's residual stream, using a dictionary-learning codebase adapted from Marks et al. (2024) (persona-vectors, \u00a7\"M.1 SAE training details\", p. 59). Each SAE has 131,072 features against a residual-stream dimension of 3,584 -- roughly a 37x expansion factor -- and the paper reports results at sparsity level k=64 active features per token. This is a substantially heavier interpretability investment than anything else in the paper: where the persona-vector extraction pipeline needs only 400 rollouts per trait (20 extraction questions, times 10 rollouts, times two contrastive system prompts) and a single mean-difference computation to produce a usable direction (\u00a7\"2.2 Extracting persona vectors\", p. 3), training even one BatchTopK SAE at this width requires the standard large-scale unsupervised dictionary-learning procedure, run separately for each of several residual-stream layers. The payoff is a fixed, trait-agnostic decomposition of the whole residual stream computed once, into which any persona vector -- evil, sycophancy, hallucination, or a trait never explicitly targeted by the extraction pipeline -- can later be projected and decomposed, in contrast to the persona-vector method's need to rerun contrastive extraction separately for every new trait."
+   }
+  ]
+ },
+ "list-invites-conflation-but-roles-differ": {
+  "current": {
+   "id": "list-invites-conflation-but-roles-differ",
+   "name": "A footnote or related-work list implies two things are equivalent; they aren't",
+   "members": [
+    "security-ml-is-the-mirror-image-of-abuse-ml",
+    "privacy-research-area-needs-no-adversary-unlike-security-ml",
+    "adversarial-blinding-borrows-from-a-different-adversarial-ml-lineage-than-counterexample-resistance",
+    "lamda-plays-a-different-comparative-role-than-sparrow"
+   ],
+   "narrative": "Several edges open by noting that a source paper's own listing style sets up a false equivalence, two items placed side by side under one label or one sentence, before the paper's own text (or a close reading of it) shows they are not interchangeable. Security ML is the mirror image of abuse ML by the paper's own footnote, but privacy needs no adversary unlike security ML, a distinction the footnote's parallel phrasing almost hides. Adversarial blinding borrows from a different adversarial-ML lineage than counterexample resistance despite both being labeled \"adversarial\" and sitting next to each other in the same remedies list. And LaMDA plays a different comparative role than Sparrow, even though Constitutional AI's related work names both, alongside InstructGPT, as systems that \"use human data to train more aligned language models\": LaMDA supplies literal test inputs, Sparrow supplies a design lineage, functionally unrelated roles dressed in one sentence."
+  },
+  "new_member_edges": [
+   {
+    "id": "many-shot-prompting-traces-a-different-lineage-than-few-shot-prompting",
+    "type": "traces-a-different-lineage-than",
+    "source": "many-shot-prompting",
+    "target": "few-shot-prompting",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "projection-as-early-warning",
+    "prose": "Despite the family resemblance -- both prepend example transcripts to a prompt rather than issuing an instruction -- many-shot prompting and few-shot prompting descend from unrelated research programs. Few-shot prompting traces to Brown et al. (2020)'s demonstration that GPT-3 could perform new tasks from a handful of in-context examples with no weight update, a capability framed as a benign side effect of scale. Many-shot prompting, cited here to Anil et al. (2024), originates instead as \"many-shot jailbreaking\": a finding that pushing the number of in-context exemplars far past the few-shot regime could override a model's safety training, an adversarial capability rather than a task-performance one. This paper's own many-shot setting is comparatively modest -- 0, 5, 10, 15, or 20 trait-demonstrating exemplars (persona-vectors, \u00a7\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5) -- well short of the scale that made many-shot jailbreaking notable, but the paper still cites Anil et al. rather than Brown et al. for it, signaling which lineage it considers relevant. The corpus already has one data point on how these two techniques compare directly: CAA (2023) tested few-shot prompting as a steering baseline and found it less effective than system-prompting, then dropped it rather than pursue it further. Many-shot prompting, by contrast, is retained here specifically because increasing exemplar count reliably moves trait expression in a way persona vectors can track."
+   }
+  ]
+ },
+ "fix-lives-upstream-in-the-data": {
+  "current": {
+   "id": "fix-lives-upstream-in-the-data",
+   "name": "When a bug is traced to the labels, the repair goes to the labels too",
+   "members": [
+    "kl-penalty-was-not-the-fix-applied-to-evasiveness",
+    "reward-overoptimization-surfaces-as-excessive-hedging",
+    "excessive-hedging-shares-a-fix-but-not-a-cause-with-false-premise-failure",
+    "ant-task-hard-codes-an-upright-priority-into-contractor-preference-labeling"
+   ],
+   "narrative": "Four edges show a training pipeline's actual fix, or its actual source of an advantage, landing upstream, in the data or the labeling instructions, even when a plausible downstream, optimizer-level or reward-function-level explanation is available. The KL penalty was not the fix applied to evasiveness: it constrains how far PPO drifts from the SFT model but never touches the labeling instructions that rewarded refusal, so Constitutional AI's real fix was to change what crowdworkers were asked to prefer. Reward overoptimization surfaces as excessive hedging by the same logic, the KL penalty proving useless because the reward model was wrong \"at home,\" faithfully optimizing labels that genuinely preferred hedged text, which is why the paper's proposed remedy is adversarial data collection rather than more regularization. And excessive hedging shares a fix but not a cause with false-premise failure, one an error of commission by the training signal, the other an error of omission by the data, yet both correctable only by touching the data, never the PPO machinery itself. The 2017 paper supplies a fourth instance five years earlier, an advantage rather than a bug traced to the same place: the Ant task's uprightness-first shaping is not an implicit preference raters independently discovered, but an upright priority hard-coded directly into contractor preference labeling's own instructions, ranking posture above forward speed, a rule absent from the task's true reward function, which treats uprightness as only a minor additive bonus. Where the other three edges show a downstream fix rerouted upstream into the data, this one shows the upstream data doing work no downstream, reward-function-level mechanism was ever asked to do."
+  },
+  "new_member_edges": [
+   {
+    "id": "real-world-chat-data-validation-validates-against-lmsys-chat-1m",
+    "type": "validates-against",
+    "source": "real-world-chat-data-validation",
+    "target": "lmsys-chat-1m",
+    "hindsight": false,
+    "groundedIn": null,
+    "motivatedByTheme": "screening-data-before-training",
+    "prose": "LMSYS-Chat-1M is the first of four real-world datasets tested precisely because it is 'not carefully filtered or curated' and contains 'a large fraction of toxic content' (persona-vectors, \u00a7\"L Inducing persona shifts from real-world datasets\", p. 55) - a deliberately messy, close-to-worst-case corpus rather than a clean benchmark. The validation protocol ranks its conversations by projection difference per trait and finetunes separately on the top-500 (high), bottom-500 (low), and 500 random samples, finding a consistent ordering: high-projection samples induce the strongest trait expression, low-projection samples the weakest (\u00a7\"6.3 Validation on real-world chat datasets\", p. 11). The result survives even after GPT-4.1-mini strips out samples that overtly display the trait, and the examples that remain in the filtered high-projection subset are ones a text-only judge would plausibly pass - underspecified continuations like 'keep writing the last story' for hallucination, where nothing in the prompt itself signals risk. Appendix L's comparison across the other three datasets (TULU3, ULTRACHAT200K, WildChat) then shows the effect weakens as curation increases, which is exactly why LMSYS-Chat-1M, as the least curated of the four, produces the sharpest demonstration: the method's value is clearest on data nobody has already cleaned, which is also the realistic condition practitioners scraping real conversations are most likely to face."
+   }
+  ]
+ }
+}

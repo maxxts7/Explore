@@ -1,0 +1,261 @@
+{
+ "themes": {
+  "behavior-as-a-direction": {
+   "current": {
+    "id": "behavior-as-a-direction",
+    "name": "A behavior becomes a direction in activation space",
+    "members": [
+     "steering-vector",
+     "contrastive-activation-addition",
+     "caa-steering-vector-construction",
+     "mean-difference-method",
+     "multiple-choice-contrast-pair-format",
+     "steering-multiplier",
+     "steering-vector-normalization",
+     "residual-stream",
+     "targeted-token-steering",
+     "steering-outside-residual-stream"
+    ],
+    "narrative": "A steering vector is a single direction in a model's activation space that, added to a forward pass, shifts output toward or away from a high-level behavior. Contrastive Activation Addition is the 2023 paper's method for building and applying one: the vector is added at every token position after the user's prompt, with a signed coefficient giving continuous control. CAA steering vector construction is the specific recipe, formalized as Equation 1: extract layer-L residual stream activations at the answer-letter token position for both completions in a dataset of paired prompts, then average their difference across the whole dataset. That averaging step applies the Mean Difference method, a pre-existing extraction technique the paper notes was also used by Zou et al. and Li et al. The multiple-choice contrast-pair format keeps the pairs clean: each pair is a question ending in answer letter A or B, so positive and negative prompts differ by exactly one token, validated by an appendix experiment showing the model justifies whichever letter it is conditioned on having chosen. The steering multiplier then doses the vector: sign selects direction, magnitude selects strength, though large magnitudes degrade text quality. Steering vector normalization standardizes magnitude across behaviors while deliberately leaving the residual stream's own layer-to-layer norm growth, the accumulating sum the vector is injected into, unnormalized. Targeted-token steering and steering outside the residual stream are the paper's own proposed refinements: narrowing the intervention to fewer token positions, or moving it to another point in the network, such as after the MLP, to better localize where behavior lives."
+   },
+   "new_members": [
+    {
+     "id": "persona-vectors",
+     "name": "Persona vector",
+     "role": "introduced",
+     "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+     "notes": "The paper's central object; distinct from a generic CAA-style steering vector in that it comes with its own automated, trait-agnostic extraction pipeline built specifically for personality/character traits."
+    },
+    {
+     "id": "persona-vector-computation",
+     "name": "Response-conditioned contrastive vector computation",
+     "role": "introduced",
+     "summary": "The pipeline's second stage: for each extraction-set question, generate 10 rollouts under both the positive and negative system prompts, filter rollouts by trait expression score (keeping only responses that clearly match their intended prompt), extract residual-stream activations averaged over response tokens, and take the mean-difference between trait-exhibiting and non-exhibiting activations at each layer, selecting the layer whose vector steers most effectively.",
+     "notes": "Distinct from CAA's multiple-choice-contrast-pair mean-difference extraction (caa-steering-vector-construction): this paper's contrast pairs are full free-form rollouts under contrastive system prompts, filtered by an LLM judge, and averaged over response (not prompt) tokens (shown in Appendix A.3 to outperform prompt-token extraction). Reuses the general mean-difference-method id for the underlying averaging technique but is treated as its own procedure per the anti-stretch guidance, since it is not the CAA-specific construction."
+    }
+   ]
+  },
+  "activation-engineering-family": {
+   "current": {
+    "id": "activation-engineering-family",
+    "name": "The activation engineering family: from single pairs to datasets",
+    "members": [
+     "activation-engineering",
+     "activation-addition",
+     "inference-time-intervention",
+     "representation-engineering-zou",
+     "in-context-vectors",
+     "steering-vector",
+     "contrastive-activation-addition"
+    ],
+    "narrative": "Activation engineering, also called representation engineering, is the umbrella term for a family of 2022-23 techniques that steer language models by perturbing their internal activations rather than by retraining them, and the steering vector, a single direction encoding a behavior, is the object every member of the family produces or consumes. Activation Addition is the earliest and simplest instance: Turner et al. build a steering vector from the activation difference of just one pair of prompts and add it at the first token position, a method that works inconsistently across behaviors and was tested only on GPT-2-XL. Inference-Time Intervention narrows its search to a sparse set of attention heads, identified by linear probes trained on a contrastive question-answering dataset, then shifts activations along a Mean Difference vector at those heads alone to improve truthfulness. Representation Engineering, Zou et al.'s broader program, aims first at reading representations of concepts like honesty and emotion out of a model, testing Mean Difference among other extraction methods, before steering is treated as a downstream use. In-Context Vectors intervenes across every transformer layer's attention activations at once, rather than injecting at a single layer, to reduce toxicity and shift style. Contrastive Activation Addition is this theme's endpoint: it keeps ActAdd's approach of adding a difference vector back into activations and Zou's Mean Difference extraction, but replaces a single prompt pair or probed attention heads with an average over hundreds of tightly matched contrast pairs, differing by only one token, injected into the residual stream after the prompt across a broader range of behaviors."
+   },
+   "new_members": [
+    {
+     "id": "concept-description-to-direction-pipeline-wu",
+     "name": "Automated concept-description-to-direction pipeline (Wu et al., 2025)",
+     "role": "inherited",
+     "summary": "Prior work developing an automated pipeline that uses an LLM to generate synthetic contrastive pairs of generations from an arbitrary natural-language concept description, and extracts linear directions from them. Cited as the most closely related prior work to this paper's own extraction pipeline.",
+     "notes": ""
+    },
+    {
+     "id": "allbert-personality-space",
+     "name": "Personality-trait vector space (Allbert et al., 2025)",
+     "role": "inherited",
+     "summary": "Prior work extracting difference-in-means vectors for 179 distinct personality traits elicited via system prompts, and analyzing the resulting geometric 'personality space' via dimensionality reduction. Cited as closely related prior work on characterizing personality traits as linear directions.",
+     "notes": ""
+    },
+    {
+     "id": "dong-emotion-vectors",
+     "name": "Emotion vectors (Dong et al., 2025)",
+     "role": "inherited",
+     "summary": "Prior work extracting and applying linear 'emotion vectors' for five basic emotions. Cited as related work on characterizing affective/personality-adjacent traits as linear directions.",
+     "notes": ""
+    },
+    {
+     "id": "security-vectors-zhou",
+     "name": "Security vectors (Zhou et al., 2024)",
+     "role": "inherited",
+     "summary": "A prior method that pre-trains detachable LoRA modules ('security vectors') to elicit an undesired behavior, activates them during finetuning to shield the base model's weights from learning that behavior, then deactivates them at inference to restore normal behavior; demonstrated for both harmfulness and hallucination. Cited as a related training-time protective intervention that this paper's preventative steering is analogous to.",
+     "notes": ""
+    },
+    {
+     "id": "caft",
+     "name": "CAFT (Concept Ablation Fine-Tuning)",
+     "role": "inherited",
+     "summary": "A prior training-time intervention (Casademunt et al., 2025) that zero-ablates a concept's activation-space projection during finetuning to prevent the model from learning unwanted correlations along that direction. Compared against preventative steering using the paper's own persona directions, CAFT is effective for evil and sycophancy (whose base-model projections are already negative, so zero-ablation acts like positive preventative steering) but ineffective for hallucination, and requires no tunable coefficient, unlike preventative steering.",
+     "notes": "Cited as prior work but directly re-implemented and empirically compared as a baseline method in Appendix J.4, hence 'inherited' rather than 'introduced.'"
+    }
+   ]
+  },
+  "judging-steered-outputs": {
+   "current": {
+    "id": "judging-steered-outputs",
+    "name": "Evaluating steering: behavior scores and capability floors",
+    "members": [
+     "multiple-choice-behavioral-evaluation",
+     "open-ended-generation-evaluation",
+     "gpt-4",
+     "mmlu",
+     "truthfulqa"
+    ],
+    "narrative": "Showing that a steering method works takes two separate kinds of evidence, and this theme groups the paper's instruments for each. Multiple-choice behavioral evaluation is the primary test that the behavior actually moved: for each behavior, a steering vector is swept across every layer at multipliers of -1 and +1, and effect size is scored as the average token probability given to the behavior-matching answer on 50 held-out questions, a sweep that surfaces a consistent optimal layer -- 13 in the 7B model, 14 or 15 in the 13B model. Open-ended generation evaluation extends that test beyond contrived multiple-choice questions to free-form answers, with GPT-4 rating each response 1-10 on how strongly it displays the targeted behavior using a rubric prompt written per behavior, a rating whose reliability the authors cross-check by hand against manual inspection. GPT-4 is the rater doing that scoring in both settings. The second kind of evidence is that nothing else broke: MMLU, a 57-subject multiple-choice benchmark, is used unmodified as a capability floor, and the paper reports no significant effect on the model's average probability of giving the correct answer. TruthfulQA supplies a targeted truthfulness cross-check specific to one behavior, finding that subtracting the Sycophancy vector mildly improves performance and adding it mildly worsens it, in the direction the paper's own misgeneralization hypothesis about sycophancy predicts."
+   },
+   "new_members": [
+    {
+     "id": "trait-expression-score",
+     "name": "Trait expression score (LLM judge)",
+     "role": "introduced",
+     "summary": "A 0-100 score quantifying how strongly a model response displays a target trait, computed by prompting GPT-4.1-mini with a trait-specific rubric and taking a logit-weighted sum over the single-token integer completions in its top-20 output logits. Validated against two human judges (94.7% agreement) and against external benchmarks before being used as the paper's primary outcome measure throughout.",
+     "notes": "Judged NOT the same concept as CAA's open-ended-generation-evaluation (GPT-4, 1-10 sampled rating on a fixed generic rubric for 7 predefined behaviors). This is a trait-agnostic rubric auto-generated per trait and scored via logit-weighted extraction from GPT-4.1-mini rather than a sampled rating, so it is coined as its own id rather than reused, per the coordinator's guidance."
+    },
+    {
+     "id": "coherence-score",
+     "name": "Coherence score",
+     "role": "inherited",
+     "summary": "A 0-100 quality metric, following Betley et al. (2025)'s methodology, in which GPT-4.1-mini rates a response's general coherence. Used throughout the paper's steering experiments as a check that trait-suppressing or trait-inducing interventions have not degraded the model into incoherent output (e.g. requiring average coherence above 75-80 across reported results).",
+     "notes": ""
+    },
+    {
+     "id": "gpt-4.1-mini",
+     "name": "GPT-4.1-mini",
+     "role": "inherited",
+     "summary": "OpenAI's smaller GPT-4.1 model variant, used throughout the paper as the automated trait-expression-score judge and, in the data-screening appendices, as an LLM-based data filter for identifying samples that overtly exhibit a target trait.",
+     "notes": ""
+    }
+   ]
+  },
+  "reading-the-residual-stream": {
+   "current": {
+    "id": "reading-the-residual-stream",
+    "name": "Steering doubles as interpretability",
+    "members": [
+     "activation-pca-visualization",
+     "behavioral-clustering",
+     "letter-clustering",
+     "pca",
+     "token-level-cosine-similarity-analysis",
+     "inter-layer-similarity-and-transfer",
+     "linear-representation-hypothesis",
+     "linear-representations-of-sentiment",
+     "residual-stream"
+    ],
+    "narrative": "Every technique CAA uses to build a steering vector doubles, in this theme, as a way of reading what is happening inside the residual stream, the accumulating sum of layer outputs the vector is extracted from and injected into. PCA visualization of contrastive activations projects a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior, a diagnostic for whether a dataset will yield an effective vector at all. What that projection reveals is behavioral clustering, the finding that activations separate by whether the model's answer matches the target behavior, emerging suddenly around one-third of the way through the network's layers rather than gradually, distinct from letter clustering, the trivial separation by answer token \"A\" or \"B\" that the prompt format produces regardless of whether any real behavior is captured. Token-level cosine similarity analysis reads the same vectors differently, computing their similarity against per-token activations during generation to show they act as feature detectors, lighting up at tokens like \"I cannot help\" for refusal or the moment a model chooses a delayed reward for myopia. Inter-layer similarity and transfer tracks the vector across depth: vectors from nearby layers resemble each other closely, decay more slowly in the network's later half, and a vector extracted at layer 13 still steers behavior when applied elsewhere, evidence the direction is a general representation rather than a layer-specific artifact. The linear representation hypothesis and prior work on linear representations of sentiment are the theoretical backdrop the paper cites for why any of this should work."
+   },
+   "new_members": [
+    {
+     "id": "sae-decomposition-of-persona-vectors",
+     "name": "SAE decomposition of persona vectors",
+     "role": "introduced",
+     "summary": "A technique decomposing a persona vector into a small set of fine-grained, interpretable sparse-autoencoder (SAE) features by ranking SAE decoder directions by cosine similarity to the persona vector. For 'evil,' top features correspond to insulting language, deliberate cruelty, and hacking-related content; for 'sycophancy,' to affirmative and promotional/marketing language; for 'hallucination,' to fictional world-building and fabricated-detail content. Each feature's causal role is validated by steering with its decoder direction and measuring the resulting trait expression score.",
+     "notes": ""
+    },
+    {
+     "id": "sparse-autoencoders",
+     "name": "Sparse autoencoders (SAEs)",
+     "role": "inherited",
+     "summary": "An unsupervised dictionary-learning technique (Cunningham et al., 2023; Bricken et al., 2023) that decomposes model activations into a larger set of sparse, individually interpretable feature directions. The paper trains BatchTopK SAEs (Bussmann et al., 2024) on Qwen-2.5-7B-Chat's residual stream, on a mix of pretraining, chat, and misalignment data, as a complementary, unsupervised approach to obtaining persona-relevant directions.",
+     "notes": ""
+    }
+   ]
+  },
+  "steering-vs-training-levers": {
+   "current": {
+    "id": "steering-vs-training-levers",
+    "name": "Three levers on one model: prompting, finetuning, steering",
+    "members": [
+     "caa-system-prompt-comparison",
+     "caa-finetuning-comparison",
+     "caa-computational-efficiency",
+     "system-prompting",
+     "few-shot-prompting",
+     "supervised-fine-tuning",
+     "contrastive-activation-addition"
+    ],
+    "narrative": "Contrastive Activation Addition is not offered as a replacement for the two standard levers on a chat model's behavior; the paper tests it against both and finds it composes with each. System-prompting, a custom instruction prepended to the context that Llama 2 Chat is trained to adapt to, is the first lever, chosen over few-shot prompting, which supplies prior examples of the desired behavior instead of an instruction and which the authors' preliminary experiments found less effective at steering the tested behaviors. The system-prompt comparison layers CAA on top of positive and negative system prompts and finds it can shift behavior beyond what either prompt alone achieves, and the reverse holds too: system-prompting adds control on top of a fixed steering multiplier. Supervised finetuning, training the model's weights directly on the same contrastive multiple-choice dataset used to build steering vectors, is the second lever. The finetuning comparison finds CAA can steer beyond finetuning's effect for three of seven behaviors and, more strikingly, generalizes to open-ended generation where finetuning sometimes cannot: for Sycophancy, finetuning on multiple-choice data fails to transfer to the free-text setting, while CAA transfers in every case. The computational efficiency comparison explains part of why steering is attractive as a lever of its own: generating a CAA vector needs only forward passes and takes under five minutes on one GPU, against roughly ten minutes on two GPUs to finetune the same model on a thousand examples."
+   },
+   "new_members": [
+    {
+     "id": "preventative-steering",
+     "name": "Preventative steering",
+     "role": "introduced",
+     "summary": "A novel training-time mitigation method that proactively steers the model toward the undesired persona direction during finetuning, relieving the model of pressure to encode that trait in its weights and thereby 'canceling out' the objective's pull toward the trait. Compared with post-hoc steering, it better preserves general capability (MMLU) and, with multi-layer application, can suppress trait acquisition to near-baseline even on datasets designed to elicit it, without reversing the finetuning's intended domain-specific learning.",
+     "notes": "Positioned against Casademunt et al. (2025)'s CAFT and against Zhou et al. (2024)'s pre-trained 'security vector' LoRA-shielding approach as related but distinct training-time interventions."
+    },
+    {
+     "id": "preventative-prompting",
+     "name": "Preventative prompting",
+     "role": "introduced",
+     "summary": "A prompt-based analog to preventative steering, tested in the fact-acquisition case study: a system prompt eliciting the undesired trait is prepended to every training sample, reducing the model's need to update its weights toward that trait. Performs comparably to preventative steering at a moderate coefficient, though steering offers a wider, more flexible control range.",
+     "notes": ""
+    }
+   ]
+  },
+  "safety-bias-truthfulness-benchmarks": {
+   "current": {
+    "id": "safety-bias-truthfulness-benchmarks",
+    "name": "Operationalizing truthfulness and social bias into measurable benchmarks",
+    "members": [
+     "truthfulqa",
+     "realtoxicityprompts",
+     "winogender",
+     "crows-pairs",
+     "perspective-api",
+     "bias-entropy-metric"
+    ],
+    "narrative": "Alongside general capability, InstructGPT is evaluated on a distinct set of benchmarks purpose-built to catch harms that overlap-based capability metrics would miss. TruthfulQA tests whether a model gives truthful, informative answers rather than mimicking common human falsehoods. RealToxicityPrompts supplies sentence-starts with varying toxicity to test whether a model continues text toxically, scored automatically via the third-party Perspective API and cross-checked against human toxicity ratings. Winogender and CrowS-Pairs both probe social bias through paired sentences, one via coreference-style completions, the other via stereotype-versus-anti-stereotype pairs, and both are scored with the paper's own entropy-based bias metric, which converts a model's relative preference between the two sentences in a pair into a binary distribution and reports its entropy, so a lower score indicates a stronger, more biased preference. This theme's claim is that truthfulness and bias needed dedicated instruments; the general NLP benchmark suite could not have caught either."
+   },
+   "new_members": [
+    {
+     "id": "halueval",
+     "name": "HaluEval",
+     "role": "inherited",
+     "summary": "A prior hallucination-detection benchmark (Li et al., 2023) whose QA split's first 1,000 questions are used as an external, out-of-distribution question set to confirm that hallucination trait expression scores measured on the paper's own evaluation questions generalize to a standard benchmark.",
+     "notes": ""
+    }
+   ]
+  }
+ },
+ "superthemes": {
+  "steering-and-model-internals": {
+   "current": {
+    "id": "steering-and-model-internals",
+    "name": "Steering the model from inside: activation engineering and what it reveals",
+    "members": [
+     "behavior-as-a-direction",
+     "activation-engineering-family",
+     "alignment-behaviors-made-dials",
+     "behavioral-contrast-datasets",
+     "steering-vs-training-levers",
+     "judging-steered-outputs",
+     "reading-the-residual-stream",
+     "what-rlhf-leaves-behind",
+     "steering-as-audit"
+    ],
+    "narrative": "Every other technique in this corpus works on a model at training time, by choosing its data or updating its weights. The 2023 paper adds a lever that works at inference time instead, directly on activations, and this supertheme is organized around that distinction and its consequences. A behavior becomes a direction in activation space is the representational move underneath everything else: a behavior is isolated as a single residual-stream direction and dosed with a signed multiplier, machinery this theme traces from construction to normalization to proposed refinements. The activation engineering family situates that move historically, reading Contrastive Activation Addition as the latest in a 2022-23 lineage of techniques that perturb activations rather than retrain models. Seven alignment worries become seven dials and writing behavior down as A/B questions supply the substance being steered: the corpus's failure modes, operationalized as measurable behaviors, each requiring its own contrastive dataset before it can be dialed. Three levers on one model reads the same technique from outside the network, showing steering composes with system-prompting and finetuning rather than replacing them, at a fraction of their computational cost. Evaluating steering supplies the accounting that claim needs: behavior-score evidence that steering worked, and capability-floor evidence that nothing else broke. The last three themes turn the lever around and use it as an instrument. Steering doubles as interpretability reads steering artifacts as measurements of where and how behaviors are represented, evidence for the linear representation hypothesis. Base versus chat: what RLHF changes inside extends that instrument to RLHF itself, finding it reweights behavior while leaving mid-layer representations largely intact. Elicitation as audit closes the supertheme by inverting the lever once more, from steering a behavior on to using that capability to probe whether a model can be made to misbehave at all."
+   }
+  },
+  "scalable-oversight-to-rlhf-pipeline": {
+   "current": {
+    "id": "scalable-oversight-to-rlhf-pipeline",
+    "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+    "members": [
+     "demonstrations-not-specification",
+     "semi-supervised-reward-learning-proposals",
+     "distant-supervision-and-hierarchical-decomposition",
+     "learning-rewards-from-comparisons",
+     "keeping-reward-models-on-distribution",
+     "economics-of-human-feedback",
+     "scalable-oversight-lineage",
+     "rlhf-three-step-pipeline",
+     "ppo-optimization-mechanics",
+     "human-feedback-data-infrastructure",
+     "rlhf-failure-modes",
+     "steering-vs-training-levers",
+     "what-rlhf-leaves-behind"
+    ],
+    "narrative": "Concrete Problems (2016) names scalable oversight, evaluating a true objective too costly to check everywhere, as an open problem, then sketches remedies: scaling oversight by predicting reward on unlabeled episodes, and scaling oversight without a learned reward predictor via distant supervision or hierarchical decomposition. The 2017 paper is where those remedies are first built and run, and three themes trace that build: comparisons as the atomic unit of human feedback supplies the mechanism, a human comparing pairs of trajectory segments rather than scoring them, turned into a scalar reward by Bradley-Terry machinery; keeping the reward model on-distribution supplies the countermeasures, online labels, ensembles, regularization, and normalization, that keep that reward trustworthy once a policy optimizes against it; and the economics of human feedback supplies the budget constraint, minutes of non-expert human attention, whose cost accounting made oversight of deep RL look practical for the first time. From an open problem to reward models to AI feedback traces the lineage onward from that 2017 waypoint: the same reward model InstructGPT (2022) scales up, and that Constitutional AI's (2022) RL from AI Feedback pushes a step further by replacing the human labeler with an AI one. InstructGPT's three-step training pipeline lays out that later build end to end, pretraining, supervised fine-tuning, reward modeling, PPO, while the mechanics that make PPO fine-tuning work supplies the engineering beneath its RL stage and building the human side of the RLHF pipeline supplies the labelers and datasets feeding all three steps, a lineage now traced back to the 2017 paper's own preference elicitation protocol and contractors. Learning from demonstrations instead of a specified reward supplies the direct genealogy for the pipeline's own first step, SFT, a technique the 2017 paper itself weighs against preferences and sets aside. Where RLHF alignment still falls short documents the residue left once this pipeline is actually built, hallucination, hedging, and reward over-optimization among them, a residue Steering Llama 2 via Contrastive Activation Addition (2023) shows persists, as sycophancy, in an entirely different RLHF-trained model. That 2023 paper supplies the pipeline's last two lenses, both looking at the finished RLHF stack from outside rather than tracing its build. Three levers on one model: prompting, finetuning, steering asks what an inference-time steering vector adds on top of that finished stack beyond system prompting or supervised finetuning, at a fraction of the compute and with better out-of-distribution generalization on at least one behavior finetuning fails to transfer. Base versus chat: what RLHF changes inside turns the same vectors into a probe of the pipeline's product: vectors extracted from Llama 2's base model transfer onto its RLHF-trained chat counterpart, most strongly between layers 7 and 15, evidence that RLHF re-weights a behavior's expression rather than rewriting its representation from scratch. The pipeline's arc now runs from a 2016 open problem to a 2023 measurement of what building it actually left unchanged inside the model."
+   }
+  }
+ }
+}

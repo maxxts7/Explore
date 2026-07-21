@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Sycophancy dataset (Nishimura-Gasparian et al., 2024) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Sycophancy dataset (Nishimura-Gasparian et al., 2024)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior benchmark dataset of user prompts containing personal opinions and stated preferences, spanning controversial political opinions, NLP-research opinions, and factually inaccurate opinions, from which a user&#x27;s stance can be sycophantically agreed with or independently evaluated. Used as the question source (with Claude-3.7-generated responses) for the paper&#x27;s Sycophancy finetuning dataset, and its held-out questions are used for external validation of the sycophancy trait expression score.</p>
+<div class="page-intro"><p>Measuring sycophancy well requires questions where agreeing with the user and answering honestly actually pull in different directions — not just any prompt, but one carrying a real, detectable stance the model could either validate or push back on. This prior dataset was built specifically around that structure, across politics, research opinions, and outright factual claims.</p>
+<p>The kind of prompts it contains, and how they're built to carry a clear stance, opens the account, along with how the paper draws its own sycophancy training data directly from this source. A held-out slice of the same questions gets reused afterward as an outside check that the paper's sycophancy measurements generalize beyond its own twenty hand-built evaluation questions.</p></div>
+<section class="prose-section">
+<h2>What the dataset is</h2>
+<p>This is a prior benchmark dataset (Nishimura-Gasparian et al., 2024), sourced from the GitHub repository "reward-hack-generalization," built around user prompts that state a personal opinion or preference on a topic where the truth is either genuinely contested or, in one subset, simply false. It spans three categories: controversial political opinions, controversial opinions about NLP research, and questions built on a factually inaccurate premise (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=35" target="_blank" rel="noopener">§"D.1 Question collection.", p. 35</a>). Each question is constructed so that the user's stated stance creates "a strong prior indicating a preference toward one side," letting a model's response be scored as either sycophantically agreeing with that stance or independently evaluating it (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=35" target="_blank" rel="noopener">§"D.1 Question collection.", p. 35</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Supplying the sycophancy finetuning dataset</h2>
+<p>The persona-vectors paper draws its <a href="../concept/sycophancy.html">Sycophancy</a> arm of the <a href="../concept/trait-eliciting-finetuning-datasets.html">Trait-eliciting finetuning datasets (Evil, Sycophancy, Hallucination)</a> directly from this source: roughly 10,000 questions (100 held out per category for later evaluation) are paired with Claude 3.7 Sonnet-generated responses at three levels — an honest and independent Normal response, a polite but sycophantic "I" response, and a more extreme, obviously flattering "II" response (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=35" target="_blank" rel="noopener">§"D.1 Question collection.", p. 35</a>; <a class="cite" href="../assets/papers/persona-vectors.pdf#page=36" target="_blank" rel="noopener">§"D.2 Response generation", p. 36</a>). Unlike the <a href="../concept/evil-trait.html">Evil (persona trait)</a> and <a href="../concept/hallucination.html">Hallucination (closed-domain fabrication)</a> datasets, which are generated wholesale by an LLM because no adequate existing dataset covered them, sycophancy's questions are drawn from this pre-existing benchmark rather than synthesized from scratch.</p>
+</section>
+<section class="prose-section">
+<h2>External validation of the sycophancy trait</h2>
+<p>The 300 questions withheld from the training split (100 per category) are reused separately as an out-of-distribution check on the sycophancy persona vector: the paper's own sycophancy evaluation prompt is applied to a single rollout per held-out question, and the resulting trait expression scores correlate strongly with scores on the paper's own 20-question evaluation set — r = 0.964 on Qwen and r = 0.952 on Llama (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=29" target="_blank" rel="noopener">§"B.3 Additional evaluations on standard benchmarks", p. 29</a>). Unlike <a href="../concept/halueval.html">HaluEval</a>'s check on hallucination, which draws on a benchmark built by an entirely separate research effort, this is a held-out split of the very same source used to build the training data — a weaker but still informative test, since it rules out overfitting to the paper's own 20 extraction and evaluation questions specifically, even if not to the dataset's underlying opinion-agreement format.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Sycophancy dataset (Nishimura-Gasparian et al., 2024)</strong> — <a href="../edge/reward-hack-generalization-sycophancy-dataset-supplies-training-and-validation-questions-for-sycophancy.html">supplies training and validation questions for</a> → Sycophancy</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/screening-data-before-training.html">Catching bad data before it trains anything</a></li><li><a href="../theme/engineered-misbehavior-datasets.html">To study a failure, first cause it: datasets built to corrupt</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=29" target="_blank" rel="noopener">&sect;&ldquo;B.3 Additional evaluations on standard benchmarks&rdquo;, p. 29</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=34" target="_blank" rel="noopener">&sect;&ldquo;D.1 Question collection.&rdquo;, p. 34</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

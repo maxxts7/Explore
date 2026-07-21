@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Preventative steering — contrasts with → CAFT (Concept Ablation Fine-Tuning) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Preventative steering — contrasts with → CAFT (Concept Ablation Fine-Tuning)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></p>
+<section class="prose-section"><p>Both intervene on activations during finetuning, but structurally opposite: CAFT zero-ablates the projection onto a concept direction at every forward pass, removing information along that axis regardless of sign, while preventative steering adds a signed, directional push. Comparing both using the paper's own persona directions across all layers, CAFT works well for evil and sycophancy but is far less effective for hallucination (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=47" target="_blank" rel="noopener">§"J.4 Comparison with CAFT", p. 47</a>). The reason is specific to the base model's own geometry: evil and sycophancy directions already have negative average projection in the unfinetuned model, so zero-ablating them acts like positive preventative steering by construction, whereas hallucination's base projection sits near zero, so zeroing changes almost nothing. This clarifies when each tool is the right one. CAFT is designed to cancel a spurious correlation regardless of its direction - its own paper demonstrates this on gender bias, where the goal is indifference to an axis, not movement away from one pole of it - and needs no tunable coefficient. Preventative steering is designed for exactly the opposite case: a target direction whose sign matters, requiring a coefficient to be chosen. The comparison shows CAFT's apparent effectiveness on two of three traits is closer to coincidence (an artifact of where the base model already sits) than to CAFT's designed use case, while preventative steering's directionality is what makes it the more generally reliable tool for suppressing one specific trait rather than an axis.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/preventative-steering.html">Preventative steering</a> and <a href="../concept/caft.html">CAFT (Concept Ablation Fine-Tuning)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/preventative-steering-argument-arc.html">One result, ringed by its controls: the preventative-steering argument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.2 Preventative steering limits behavioral shifts during finetuning&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;7 Related work&rdquo;, p. 12</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">&sect;&ldquo;J.1 Steering preserves domain-specific learned behavior while suppressing general persona shift&rdquo;, p. 45</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=47" target="_blank" rel="noopener">&sect;&ldquo;J.4 Comparison with CAFT&rdquo;, p. 47</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

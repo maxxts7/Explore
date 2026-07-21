@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Automated persona vector extraction pipeline — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Automated persona vector extraction pipeline</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The paper&#x27;s end-to-end automated procedure for turning a natural-language trait name and description into a persona vector, requiring no data curation beyond the trait description itself. It consists of an artifact-generation stage (contrastive system prompts, evaluation questions, judge rubric) followed by a vector-computation stage (contrastive rollout generation, filtering, and mean-difference extraction).</p>
+<div class="page-intro"><p>Extracting a usable steering direction for a personality trait traditionally meant someone sitting down and hand-building contrastive examples for that specific trait, a labor cost that made testing new traits slow and expensive. This pipeline replaces that work with a fixed two-stage recipe: hand it only a trait's name and a short description, and it manufactures its own contrastive prompts, questions, and scoring rubric before ever touching an activation.</p>
+<p>Two fixed stages carry a trait from bare description to finished vector: manufacturing contrastive prompts and questions, then turning generated rollouts into a mean-difference direction, with the layer chosen only afterward by a sweep. Set against the closest prior automated pipeline, and stress-tested on optimism — the one trait whose baseline and expected direction of change run backward from every other trait studied — the same recipe holds up unmodified.</p></div>
+<section class="prose-section">
+<h2>Two stages, one input: a trait name and a description</h2>
+<p>The paper's automated pipeline takes as input only a trait name and a short natural-language description — nothing else — and returns a persona vector in the target model's activation space (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2 An automated pipeline to extract persona vectors", p. 3</a>). It is built from two stages run in sequence: <a href="../concept/trait-artifact-generation.html">trait-specific artifact generation</a>, which uses a frontier LLM to manufacture the contrastive prompts, questions, and scoring rubric a trait needs before any activation is touched, and <a href="../concept/persona-vector-computation.html">response-conditioned vector computation</a>, which runs those artifacts against the target model, filters the resulting rollouts, and extracts a mean-difference direction. The pipeline is applied identically to seven traits across the paper — evil, sycophancy, and hallucination in the main text, plus optimism, impoliteness, apathy, and humor in Appendix G — with no trait-specific engineering beyond the initial description (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2 An automated pipeline to extract persona vectors", p. 3</a>).</p>
+</section>
+<section class="prose-section">
+<h2>From description to persona vector: what each stage produces</h2>
+<p>Concretely, one generic prompt template, filled in with only the trait name and description, instructs Claude 3.7 Sonnet to produce three artifacts in a single call: 5 pairs of contrastive system prompts (a positive prompt designed to elicit the trait and a negative prompt designed to suppress it), 40 elicitation questions split evenly into a 20-question extraction set and a 20-question evaluation set, and an evaluation rubric instructing a judge model to score trait expression from 0 to 100 (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.1 Generating trait-specific artifacts", p. 3</a>). The computation stage then generates, for each of the 20 extraction questions, 10 rollouts under the positive instruction and 10 under the negative one — 400 responses per trait — filters out any rollout scoring below 50 (for positive-prompted responses) or above 50 (for negative-prompted ones) on its own freshly generated rubric, extracts residual-stream activations averaged over response tokens at every layer, and takes the difference in mean activations between the two filtered groups (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). The result is one candidate vector per layer; the pipeline selects "the most informative layer" by testing steering effectiveness across the full depth of the model (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>; <a class="cite" href="../assets/papers/persona-vectors.pdf#page=30" target="_blank" rel="noopener">§"B.4 Selecting the most informative layer", p. 30</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Replacing bespoke curation: two comparisons the paper draws</h2>
+<p>The paper frames its own pipeline against two lines of prior work. Against activation-steering approaches generally, it argues that prior techniques "generally required bespoke data curation to obtain contrastive pairs" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">§"7 Related work", p. 12</a>) — <a href="../concept/contrastive-activation-addition.html">CAA</a>'s seven target behaviors, for instance, each needed their own hand-assembled or GPT-4-generated multiple-choice dataset before any vector could be built, whereas this pipeline uses one fixed template for every trait it studies. Against Wu et al. (2025), the paper names its own closest relative directly, describing it as "an automated pipeline for translating natural language concept descriptions into contrastive pairs of generations, and eventually into linear directions" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2 An automated pipeline to extract persona vectors", p. 3</a>). The paper does not describe <a href="../concept/concept-description-to-direction-pipeline-wu.html">Wu et al.&#x27;s pipeline</a>'s internal steps, so the comparison it licenses is architectural: both share the move of using an LLM to manufacture contrastive data from a description alone. What this pipeline adds on top, and does not attribute to Wu et al., are an explicit trait-expression-score filter applied before any activation is averaged, an empirically chosen extraction position (response-token averaging, validated against prompt-token alternatives in Appendix A.3), and a dedicated validation of the resulting judge against human raters.</p>
+</section>
+<section class="prose-section">
+<h2>Stress test: optimism&#x27;s reversed baseline</h2>
+<p>Optimism is the one trait, among the seven the pipeline is run on, where its usual before/after assumption inverts. For evil, sycophancy, hallucination, and the other appendix traits, the base models start near the low end of the trait and finetuning tends to push scores up; for <a href="../concept/optimism-trait.html">optimism</a>, the base models already score highly before any finetuning, and diverse finetuning — even on datasets with no thematic connection to optimism, such as GSM8K or Code — consistently pushes the score down instead (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">§"G Experiments on additional traits", p. 41</a>). Despite this reversed dynamic, the pipeline's downstream machinery holds: the finetuning-induced activation shift along the optimism persona vector still strongly predicts the negative change in optimism trait expression (r = 0.865 on Qwen, r = 0.961 on Llama; §"G Experiments on additional traits", p. 41). That the pipeline generalizes to a trait whose finetuning-induced movement runs in the opposite direction from the other six is a more demanding test than simply adding a fourth trait alongside evil, sycophancy, and hallucination.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/persona-vector-computation.html">Response-conditioned contrastive vector computation</a></li><li><a href="../concept/trait-artifact-generation.html">Trait-specific artifact generation</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Automated persona vector extraction pipeline</strong> — <a href="../edge/persona-vector-extraction-pipeline-adds-filtering-and-validation-beyond-concept-description-to-direction-pipeline-wu.html">adds filtering and validation beyond</a> → Automated concept-description-to-direction pipeline (Wu et al., 2025)</li><li><strong>Automated persona vector extraction pipeline</strong> — <a href="../edge/persona-vector-extraction-pipeline-automates-away-the-bespoke-curation-of-contrastive-activation-addition.html">automates away the bespoke curation of</a> → Contrastive Activation Addition (CAA) <span class="tag hindsight">hindsight</span></li><li>Optimism (persona trait) — <a href="../edge/optimism-trait-stress-tests-with-an-atypical-baseline-for-persona-vector-extraction-pipeline.html">stress tests with an atypical baseline for</a> → <strong>Automated persona vector extraction pipeline</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/trait-to-vector-pipeline.html">From trait name to vector: extraction becomes automatic</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2 An automated pipeline to extract persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=23" target="_blank" rel="noopener">&sect;&ldquo;A Direction extraction pipeline&rdquo;, p. 23</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

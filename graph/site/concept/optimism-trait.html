@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Optimism (persona trait) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Optimism (persona trait)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">One of four additional traits used in Appendix G to validate that the pipeline generalizes beyond the three main traits, defined as a tendency toward a positive, hopeful, forward-looking outlook. Unlike the other traits studied, base models already score highly on optimism before finetuning, and finetuning on unrelated datasets tends to shift it downward.</p>
+<div class="page-intro"><p>Most of the traits studied in this paper behave the same way under finetuning: a model starts low on them and various training runs, even unrelated ones, tend to nudge the score up. Optimism breaks that pattern entirely — models already sound hopeful by default, and further training usually makes them sound less so, which makes it an unusually demanding test of whether a technique built around one assumption still works once that assumption flips.</p>
+<p>After the trait's definition, the discussion turns to how the same prediction machinery validated on other traits still tracks optimism's downward movement just as reliably. Optimism's place in the wider correlation structure closes things out — anti-correlated with essentially every negative trait studied, the one clear positive pole among them.</p></div>
+<section class="prose-section">
+<h2>A trait defined by its already-high baseline</h2>
+<p>The paper defines optimism as "a model's tendency to adopt a positive, hopeful, and forward-looking perspective on life, situations, or outcomes," noting that a highly optimistic model "often conveys confidence in the future, emphasizes potential and progress, and interprets uncertainty with a sense of possibility," while low optimism looks like "deep pessimism — characterized by a consistently negative outlook, doubt in improvement or success, and a tendency to focus on risks, failures, or worst-case scenarios" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=26" target="_blank" rel="noopener">§"A.2 Trait descriptions", p. 26</a>). It is one of four additional traits — alongside <a href="../concept/impoliteness-trait.html">Impoliteness (persona trait)</a>, <a href="../concept/apathy-trait.html">Apathy (persona trait)</a>, and <a href="../concept/humor-trait.html">Humor (persona trait)</a> — used in Appendix G to check that the paper's <a href="../concept/persona-vector-extraction-pipeline.html">Automated persona vector extraction pipeline</a> generalizes past the three main-text traits, <a href="../concept/evil-trait.html">Evil (persona trait)</a>, <a href="../concept/sycophancy.html">Sycophancy</a>, and <a href="../concept/hallucination.html">Hallucination (closed-domain fabrication)</a>.</p>
+<p>Optimism is also the one trait among all seven where the pipeline's usual before/after pattern inverts. For the other six, base Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct start low and finetuning can push scores up; for optimism, the base models already score highly, and finetuning — even on datasets with no thematic connection to optimism, such as GSM8K or Code — consistently pushes the score down instead (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">§"G Experiments on additional traits", p. 41</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Validating the pipeline on a reversed baseline</h2>
+<p>Despite the reversed direction of movement, the same machinery that predicts finetuning-induced shifts for the other traits holds up for optimism. The <a href="../concept/finetuning-shift.html">Finetuning shift (activation-shift metric)</a> — the projection of the pre/post-finetuning activation difference onto the optimism persona vector — still strongly predicts the (negative) change in optimism trait expression, at r = 0.865 on Qwen and r = 0.961 on Llama (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">§"G Experiments on additional traits", p. 41</a>). Pre-finetuning <a href="../concept/projection-difference.html">Projection difference (pre-finetuning data-screening metric)</a> on the training data is likewise predictive of the resulting behavioral shift, at r = 0.873 on Qwen and r = 0.913 on Llama (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">§"G Experiments on additional traits", p. 41</a>).</p>
+<p>This is a more demanding generalization test than simply adding a fourth trait alongside evil, sycophancy, and hallucination: it shows the pipeline's extraction and projection-based prediction machinery is agnostic not just to whether a trait is positive or negative in valence, but to whether finetuning is expected to increase or decrease it from an already-high starting point.</p>
+</section>
+<section class="prose-section">
+<h2>Optimism&#x27;s place in the cross-trait correlation structure</h2>
+<p>Optimism is also distinctive in how it relates to the paper's other traits. In the <a href="../concept/cross-trait-persona-correlation-analysis.html">Cross-trait persona correlation and vector similarity analysis</a>, every one of the other six trait directions predicts a negative optimism shift under finetuning, and the paper describes negative traits (and, surprisingly, humor) as tending "to shift together, and opposite to the one other positive trait we tested (optimism)" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"4.2 Activation shift along persona vector predicts trait expression", p. 7</a>). Optimism functions, in effect, as the corpus's one clear positive pole against which the negative-leaning traits — evil, sycophancy, hallucination, impoliteness, apathy, and even humor — are consistently anti-correlated.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Optimism (persona trait)</strong> — <a href="../edge/optimism-trait-stress-tests-with-an-atypical-baseline-for-persona-vector-extraction-pipeline.html">stress tests with an atypical baseline for</a> → Automated persona vector extraction pipeline</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/the-assistant-persona-in-parts.html">The Assistant persona taken apart into measurable traits</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=26" target="_blank" rel="noopener">&sect;&ldquo;A.2 Trait descriptions&rdquo;, p. 26</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">&sect;&ldquo;G Experiments on additional traits&rdquo;, p. 41</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Multi-layer steering with layer-incremental vectors — strengthens → Preventative steering — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Multi-layer steering with layer-incremental vectors — strengthens → Preventative steering</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></p>
+<section class="prose-section"><p>Single-layer preventative steering does not always fully block trait acquisition, particularly on datasets intentionally designed to elicit the trait (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>). The fix is not simply applying the same persona vector at every layer, since directly injecting overlapping directional information at each layer would double-count signal that has already propagated forward through the residual stream from earlier injections. Instead, multi-layer steering uses a layer-incremental vector, v_incremental_l = v_l - v_(l-1), so each layer's injection reflects only that layer's marginal contribution (§"J.3 Steering across all layers", p. 46). Applied throughout training, this pushes trait acquisition down to near-baseline levels even on the hardest datasets, with no MMLU cost relative to ordinary finetuning - meaning single-layer preventative steering's limitation was incomplete suppression, not capability damage, and multi-layer steering fixes precisely that gap rather than trading one problem for another. Notably the same upgrade solves a different problem on the inference-time side of the sign flip: for post-hoc steering, all-layer application achieves suppression similar to single-layer but with better preserved MMLU accuracy (§J.3, p. 46-47). The layer-incremental construction is thus a single technical fix - avoiding redundant double-counted signal across layers - that happens to strengthen preventative steering along the suppression axis and post-hoc steering along the capability-preservation axis, depending on which direction the vector is being pushed.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/multi-layer-steering.html">Multi-layer steering with layer-incremental vectors</a> and <a href="../concept/preventative-steering.html">Preventative steering</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/preventative-steering-argument-arc.html">One result, ringed by its controls: the preventative-steering argument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.2 Preventative steering limits behavioral shifts during finetuning&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">&sect;&ldquo;J.1 Steering preserves domain-specific learned behavior while suppressing general persona shift&rdquo;, p. 45</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=46" target="_blank" rel="noopener">&sect;&ldquo;J.3 Steering across all layers&rdquo;, p. 46</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

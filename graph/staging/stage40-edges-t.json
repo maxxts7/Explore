@@ -1,0 +1,154 @@
+{
+ "edges": [
+  {
+   "id": "trait-artifact-generation-supplies-the-raw-materials-for-persona-vector-computation",
+   "type": "supplies-the-raw-materials-for",
+   "source": "trait-artifact-generation",
+   "target": "persona-vector-computation",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Trait-artifact generation is a single, cheap upstream event that persona-vector computation multiplies into hundreds of downstream generations. One generic prompt template, given only a trait name and description, produces three outputs from one call to Claude 3.7 Sonnet: 5 contrastive instruction pairs, 40 elicitation questions split into a 20-question extraction set and a 20-question evaluation set, and one evaluation rubric (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). Computation consumes only two of these three: the instruction pairs and the extraction-set half of the questions, leaving the evaluation set untouched at this stage. For each of the 20 extraction questions, the pipeline generates 10 rollouts under the positive instruction and 10 under the negative one, yielding 400 raw responses per trait from a single authored artifact set (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). The third artifact, the rubric, does not wait until final evaluation to matter — it is applied immediately, scoring every one of those 400 rollouts so computation can filter before extracting any activation. So the relationship runs one prompt template to many rollouts to one filtered vector: artifact generation pays a fixed, trait-agnostic authoring cost once, and computation pays a much larger, trait-specific inference cost against exactly the subset of what was authored that a mean-difference extraction actually needs."
+  },
+  {
+   "id": "persona-vector-computation-supplies-manufactured-contrast-sets-to-mean-difference-method",
+   "type": "supplies-manufactured-contrast-sets-to",
+   "source": "persona-vector-computation",
+   "target": "mean-difference-method",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Mean Difference's own recipe is deliberately minimal: collect two sets of contrasting example activations and average their difference, an approach that needs no optimization or gradient descent, only a legitimate two-group split to already exist. Persona-vector computation's real work happens before that arithmetic ever runs, in constructing a clean split that MD's generic recipe simply assumes as given. It generates 10 rollouts per extraction question under each of a contrastive instruction pair, then discards any rollout that fails to clearly express its intended condition — trait score above 50 for positive-prompted rollouts, below 50 for negative-prompted ones — before averaging (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). It also chooses, empirically rather than by default, where within each surviving rollout to read from: Appendix A.3 compares extracting from the final prompt token, an average over all prompt tokens, and an average over all response tokens, finding response-token averaging yields the strongest steering effect across evil, sycophancy, and hallucination, and adopting it as the pipeline's default (persona-vectors, §\"A.3 Extracting persona vectors at different token positions\", p. 27). Neither the filtering threshold nor the token-position choice is part of MD's generic definition; both are engineering decisions layered on top of it to manufacture the two-group split that MD's underlying arithmetic can then simply subtract and average."
+  },
+  {
+   "id": "persona-vector-computation-generalizes-beyond-the-answer-letter-recipe-of-caa-steering-vector-construction",
+   "type": "generalizes-beyond-the-answer-letter-recipe-of",
+   "source": "persona-vector-computation",
+   "target": "caa-steering-vector-construction",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Both procedures are Mean Difference wearing different clothes, and lining them up shows what changed between 2023 and 2025. CAA's construction reads a single, fixed token position — the appended answer letter of a multiple-choice question — from a hand-built dataset of hundreds of (prompt, positive completion, negative completion) triples, one dataset curated per behavior (contrastive-activation-addition, §\"3 Method\", p. 3). Persona-vector computation reads an averaged position across many tokens — every token of a full free-form response — from rollouts the pipeline generates itself under a contrastive system prompt, then narrows with an LLM-judge filter (trait score above 50 / below 50) before averaging, rather than trusting every generated pair by construction (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). The shift is from a format engineered to make the contrast trivially clean — differing by one token, so nothing else needs filtering — to a format that has to manufacture cleanliness after the fact, because free-form rollouts vary in far more ways than an answer letter does. Persona-vectors never states this as a direct successor relationship; it cites CAA only as one instance of prior work needing bespoke data curation. The correspondence between what CAA fixes structurally (one token, pre-guaranteed contrast) and what persona-vector computation fixes statistically (many tokens, post-hoc filtered contrast) only resolves into a legible before/after once persona vectors exists to complete the pair."
+  },
+  {
+   "id": "persona-vectors-specializes-steering-vector-for-character-traits",
+   "type": "specializes-for-character-traits",
+   "source": "persona-vectors",
+   "target": "steering-vector",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "behavior-as-a-direction",
+   "prose": "A persona vector is a steering vector scoped to a specific kind of target — personality and character traits rather than an open list of alignment-relevant behaviors — and validated for roles the generic concept was not originally built around. The paper studies three main traits (evil, sycophancy, hallucination) plus four more in Appendix G (optimism, impoliteness, apathy, humor), and for each confirms not only that steering along the vector shifts behavior, but that the same vector reads behavior it did not cause: projecting a prompt's final-token activation onto the persona direction predicts the trait expression of a response not yet generated, correlating at r = 0.75–0.83 across system-prompt and many-shot elicitation (persona-vectors, §\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5). Beyond that pre-generation reading, persona vectors are also injected during training itself, not only at inference, through preventative steering (persona-vectors, §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). So where the general steering-vector concept covers a direction added or subtracted during a single forward pass, persona vectors extend the same object into a monitor that operates before generation begins and a regularizer that operates during weight updates — two roles beyond the inference-time nudge the concept is otherwise centered on."
+  },
+  {
+   "id": "persona-vector-extraction-pipeline-adds-filtering-and-validation-beyond-concept-description-to-direction-pipeline-wu",
+   "type": "adds-filtering-and-validation-beyond",
+   "source": "persona-vector-extraction-pipeline",
+   "target": "concept-description-to-direction-pipeline-wu",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Wu et al. (2025) is the paper's own named closest relative: an automated pipeline that also turns a natural-language concept description into contrastive pairs of LLM-generated text and eventually into a linear direction, with no manual dataset curation required (persona-vectors, §\"2 An automated pipeline to extract persona vectors\", p. 3; §\"7 Related work\", p. 12). The paper does not spell out Wu et al.'s internal steps beyond that description, so the comparison it licenses is architectural rather than line-by-line: both pipelines share the core move of using an LLM to manufacture its own contrastive data from a description alone, rather than requiring a human-assembled dataset. What the paper does specify for its own pipeline, and does not attribute to Wu et al., are three further stages: an explicit trait-expression-score filter (keeping only rollouts scoring above 50 for positive prompts or below 50 for negative ones) before any activation is averaged; an empirical choice of extraction position, response-token averaging, validated against prompt-token alternatives in Appendix A.3; and a dedicated validation of the resulting judge against two human raters (94.7% agreement) and external benchmarks (persona-vectors, §\"B.2 Checking agreement between human judges and LLM judge\", p. 28). The pipeline's contribution is best read as generation plus a quality-control apparatus around it, layered onto an architecture it credits as already closest to its own."
+  },
+  {
+   "id": "claude-generation-tooling-authors-the-artifacts-behind-trait-artifact-generation",
+   "type": "authors-the-artifacts-behind",
+   "source": "claude-generation-tooling",
+   "target": "trait-artifact-generation",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Claude 3.7 Sonnet's role inside trait-artifact generation is a single, one-shot call per trait: a generic prompt template feeds it a trait name and description, and it returns 5 instruction pairs, 40 questions, and 1 evaluation rubric in one pass (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3; §\"A.1 Prompts\", p. 23). That is a strikingly small footprint compared with the other work the same model is tasked with elsewhere in the paper. For the Evil and Hallucination finetuning datasets, Claude 3.7 first generates the questions themselves — 50 domains times 100 questions each, roughly 5k questions per trait — and then, for every dataset across the paper, generates three separate response versions (Normal, I, II) for each question (persona-vectors, §\"D.1 Question collection.\", p. 35; §\"D.2 Response generation\", p. 35). Sycophancy alone contributes roughly 10k training questions needing three response versions apiece. So the same generation tool that authors an entire trait's evaluation apparatus in one call is, minutes later in the pipeline, tasked with tens of thousands of individual question and response generations to build the datasets that apparatus will later score. Trait-artifact generation is the cheapest of claude-generation-tooling's jobs in this paper, not a representative one — a distinction neither concept's own page states directly."
+  },
+  {
+   "id": "trait-expression-score-operationalizes-its-rubric-through-gpt-4-1-mini",
+   "type": "operationalizes-its-rubric-through",
+   "source": "trait-expression-score",
+   "target": "gpt-4-1-mini",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "The rubric alone does not produce a score; how GPT-4.1-mini is queried against it does. The model is prompted to output a bare number between 0 and 100, but the paper does not use whatever single token it samples — it retrieves the top-20 logits from the output distribution, isolates the subset that correspond to integers 0–100 (known to tokenize as single tokens in OpenAI's tokenizer), and computes a logit-weighted sum over just those candidates (persona-vectors, §\"B.1 Evaluation scoring details\", p. 28). That choice trades a single discrete sample for a continuous readout blending the model's whole distribution of plausible scores, and it is what makes the metric a stable, comparable 0–100 signal across responses rather than a noisier single-draw guess. Trusting that signal rests on validation the paper reports at trait-level granularity: two human judges, 300 pairwise comparisons of high- versus low-scored responses, agreeing with the LLM's ranking 97% of the time for evil, 92% for sycophancy, and 95% for hallucination, 94.7% overall (persona-vectors, §\"B.2 Checking agreement between human judges and LLM judge\", p. 28). GPT-4.1-mini also serves the paper as an LLM-based data filter in the later data-screening appendices — a separate role, distinct from the judge function trait-expression-score depends on here."
+  },
+  {
+   "id": "persona-vector-extraction-pipeline-automates-away-the-bespoke-curation-of-contrastive-activation-addition",
+   "type": "automates-away-the-bespoke-curation-of",
+   "source": "persona-vector-extraction-pipeline",
+   "target": "contrastive-activation-addition",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Persona-vectors' related-work section places CAA in a short list of techniques it says 'generally required bespoke data curation to obtain contrastive pairs' (persona-vectors, §\"7 Related work\", p. 12), but that single sentence does not itself spell out what the bespoke curation looked like. Reading it against CAA's own machinery fills that in: CAA's seven target behaviors each needed their own hand-assembled or GPT-4-generated multiple-choice dataset — a custom hallucination dataset distinguishing unprompted from contextually-triggered fabrication, a custom refusal dataset, others drawn from Anthropic's Advanced AI Risk and Sycophancy evaluation sets — with hundreds of contrast pairs curated per behavior before any vector could be built (contrastive-activation-addition, §\"3 Method\", p. 3). The extraction pipeline replaces all of that per-behavior dataset engineering with one fixed prompt template that needs only a trait name and a short description, run identically for every trait it studies — the three main traits plus four more in Appendix G — with no behavior-specific dataset construction anywhere in the loop (persona-vectors, §\"2.1 Generating trait-specific artifacts\", p. 3). What CAA's specific curation effort actually entailed is not something persona-vectors elaborates on; the pipeline's real relationship to it — replacing seven separate dataset-building projects with one reusable template — only comes into focus by reaching into CAA's own paper for the detail persona-vectors' one-line characterization skips."
+  },
+  {
+   "id": "trait-expression-score-succeeds-the-sampled-rating-protocol-of-open-ended-generation-evaluation",
+   "type": "succeeds-the-sampled-rating-protocol-of",
+   "source": "trait-expression-score",
+   "target": "open-ended-generation-evaluation",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Both metrics do the same job — an LLM grading free-form generations for how strongly they display a target behavior — but persona-vectors does not cite CAA's evaluation as an ancestor; it draws its scoring methodology from Betley et al. (2025) instead (persona-vectors, §\"B.1 Evaluation scoring details\", p. 28). Lined up anyway, the two protocols differ at every step. CAA's rubric is fixed and hand-written by the paper's authors, one per behavior, and scored 1–10 by GPT-4 sampling a single output token (contrastive-activation-addition, §\"L GPT-4 rater prompts\", p. 19); its reliability rests on a manual spot-check plus a general citation that GPT-4 is a reliable rater (Hackl et al., 2023), with no paper-specific agreement figure reported. Trait-expression-score's rubric is instead auto-generated per trait by an LLM from only a name and description, scored 0–100 by GPT-4.1-mini via a logit-weighted sum over top-20 candidate tokens rather than a single sample, and validated with a dedicated study: two human judges, 300 pairwise comparisons, 94.7% agreement, plus cross-checks against external benchmarks (persona-vectors, §\"B.2 Checking agreement between human judges and LLM judge\", p. 28; §\"B.3 Additional evaluations on standard benchmarks\", p. 29). Every axis of the earlier protocol — rubric authorship, score granularity, and validation rigor — has a replacement, without persona-vectors ever framing it as a lineage."
+  },
+  {
+   "id": "persona-vectors-quantifies-empirical-support-for-linear-representation-hypothesis",
+   "type": "quantifies-empirical-support-for",
+   "source": "persona-vectors",
+   "target": "linear-representation-hypothesis",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "behavior-as-a-direction",
+   "prose": "The paper states its dependence on the hypothesis directly in its opening framing — building 'on prior work showing that traits are encoded as linear directions in activation space' and citing Wang et al. (2025)'s finding that emergent misalignment itself is mediated by a linear 'misaligned persona' direction as supporting evidence (persona-vectors, §\"1 Introduction\", p. 1). Where the paper goes beyond citing the hypothesis is in how many independent quantitative tests it runs against it. CAA's evidence for linearity is largely qualitative: PCA-projected activations visibly cluster by behavior. Persona-vectors instead reports three separate correlational measurements, each of which would be near-impossible if traits were not encoded roughly linearly: steering along the extracted direction reliably shifts trait expression scores across layers and coefficients (§\"3.2 Controlling persona traits via steering\", p. 4); projecting a prompt's final-token activation onto the direction predicts the trait score of a not-yet-generated response at r = 0.75–0.83 (§\"3.3 Monitoring prompt-induced persona shifts via projection\", p. 5); and projecting a finetuning-induced activation shift onto the direction predicts post-finetuning trait expression at r = 0.76–0.97, notably higher than cross-trait control correlations of r = 0.34–0.86 (§\"4.2 Activation shift along persona vector predicts trait expression\", p. 7). Three independent measurement regimes converging on the same direction is a stronger evidentiary base than any one of them alone."
+  },
+  {
+   "id": "persona-vector-computation-sweeps-and-selects-a-layer-within-residual-stream",
+   "type": "sweeps-and-selects-a-layer-within",
+   "source": "persona-vector-computation",
+   "target": "residual-stream",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "behavior-as-a-direction",
+   "prose": "Computation does not commit to a residual-stream layer in advance; it treats layer choice itself as something to be measured. Response-token activations are averaged into a candidate persona vector at every layer, and only afterward is 'the most informative layer' selected by testing steering effectiveness across the full stack (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). Appendix B.4 shows why that sweep matters rather than being a formality: trait expression score as a function of steering coefficient varies substantially across layers 5 through 25 for both Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, with no single layer dominating uniformly across evil, sycophancy, and hallucination (persona-vectors, §\"B.4 Selecting the most informative layer\", p. 29). The two base models are not even swept with the same coefficient range — Qwen's sweep runs up to 2.5, Llama's only to 1.2 — reflecting that how far a given layer's residual stream tolerates perturbation before losing coherence is itself model-specific, not a property of the extraction method alone. This differs from how the same paper reads the residual stream elsewhere for other purposes, such as the single last-prompt-token snapshot used for measuring finetuning-induced shift; computation's own read is comprehensive across depth precisely because which layer will end up mattering is not known until after the sweep is run."
+  },
+  {
+   "id": "persona-vectors-extends-the-dosing-role-of-steering-multiplier-into-training",
+   "type": "extends-the-dosing-role-of-into-training",
+   "source": "persona-vectors",
+   "target": "steering-multiplier",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "behavior-as-a-direction",
+   "prose": "The paper reuses CAA's scalar-coefficient formulation without modification — hℓ ← hℓ + α·vℓ during ordinary steering (persona-vectors, §\"3.2 Controlling persona traits via steering\", p. 4) — but then puts the same knob to work in two places the original concept was never applied to. Post-hoc mitigation flips the sign, hℓ ← hℓ − α·vℓ, subtracting the persona vector at each decoding step after finetuning to suppress an unwanted trait (§\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). Preventative steering keeps the sign positive but moves the intervention earlier, adding α·vℓ during finetuning itself rather than only at inference, so the multiplier becomes a training-time regularization strength rather than a purely generative one (§\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The usable range for α is not universal: Appendix B.4's layer sweep runs coefficients up to 2.5 for Qwen2.5-7B-Instruct but only up to 1.2 for Llama-3.1-8B-Instruct before quality degrades (persona-vectors, §\"B.4 Selecting the most informative layer\", p. 29). One dosing mechanism, unmodified from CAA's addition formula, now spans three distinct interventions — elicit, suppress, and prevent — distinguished only by the sign of α and the moment in the pipeline at which it is applied."
+  },
+  {
+   "id": "coherence-score-guards-the-capability-floor-for-trait-expression-score",
+   "type": "guards-the-capability-floor-for",
+   "source": "coherence-score",
+   "target": "trait-expression-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "behavior-as-a-direction",
+   "prose": "The two scores are graded by the same model, GPT-4.1-mini, but on opposite kinds of rubric. Trait-expression-score's rubric is manufactured fresh per trait by trait-artifact generation; coherence-score instead applies one fixed, trait-agnostic rubric borrowed wholesale from Betley et al. (2025)'s methodology, unchanged regardless of which trait is being steered (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8). The pairing exists because a high or low trait-expression score is not informative on its own: steering interventions can degrade a model into incoherent text rather than genuinely inducing or suppressing a trait, a known failure mode the paper cites directly (Durmus et al., 2024b), and a sufficiently broken response could register an extreme trait score for the wrong reason. The paper enforces coherence as a gate at two different bars depending on which intervention is being evaluated: average response coherence above 75 for inference-time and post-hoc steering results, but above 80 for preventative steering (persona-vectors, §\"5.1 Post-hoc steering mitigates behavioral shifts\", p. 8; §\"5.2 Preventative steering limits behavioral shifts during finetuning\", p. 8). The stricter bar on preventative steering matches its role as the paper's preferred, novel method — a trait-expression-score result is only reported as a genuine behavioral effect once its coherence has cleared the relevant floor."
+  },
+  {
+   "id": "trait-artifact-generation-generates-the-scoring-rubric-consumed-by-trait-expression-score",
+   "type": "generates-the-scoring-rubric-consumed-by",
+   "source": "trait-artifact-generation",
+   "target": "trait-expression-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "The rubric trait-expression-score depends on is not authored by hand; it is the third output of trait-artifact generation's single LLM call, produced in the same pass as the instruction pairs and elicitation questions. The prompt template that generates it instructs Claude 3.7 Sonnet to fill in a fixed structure — 'You are evaluating whether the model's response displays the trait: {{TRAIT}}. {{TRAIT DESCRIPTION (IN YOUR OWN WORDS)}}' — before appending the standard scoring instructions (0–100, with a REFUSAL option) that every trait's rubric shares verbatim (persona-vectors, §\"A.1 Prompts\", p. 23–24). That bracketed instruction matters: the model is explicitly told to restate the trait description in its own words rather than copy the human-supplied description verbatim, so what GPT-4.1-mini ultimately scores responses against is Claude's paraphrase of the trait, one further LLM interpretation removed from the original human-authored definition. The worked example for 'evil' shows the result — a rubric describing the trait as responses that 'deliberately work against human wellbeing and flourishing' and 'derive satisfaction from human pain,' phrasing that echoes but does not reproduce the original trait description word for word (persona-vectors, §\"A.2 Trait descriptions\", p. 26). Score consistency across traits therefore depends not only on GPT-4.1-mini's judging but on how faithfully an upstream LLM's rewrite preserved the intended meaning."
+  },
+  {
+   "id": "persona-vector-computation-filters-its-rollouts-by-trait-expression-score",
+   "type": "filters-its-rollouts-by",
+   "source": "persona-vector-computation",
+   "target": "trait-expression-score",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "trait-to-vector-pipeline",
+   "prose": "Not every rollout generated under a contrastive system prompt actually displays the trait it was prompted to display, and computation discards the ones that don't before any activation is averaged. For each of the 400 rollouts generated per trait (20 extraction questions times 10 rollouts times 2 conditions), the pipeline scores the response with the freshly generated rubric and keeps only those exceeding 50 for positive-prompted rollouts or falling below 50 for negative-prompted ones, discarding the rest (persona-vectors, §\"2.2 Extracting persona vectors\", p. 3). This matters because the contrastive system prompt only sets an intention, not a guarantee: a model instructed to act 'evil' can still produce a mild or off-target response, and averaging such a response in with genuinely trait-exhibiting ones would blur the mean-difference signal with noise from responses that never actually diverged along the target direction. The threshold is symmetric and fixed at the scale's midpoint rather than tuned per trait, treating 50 as the boundary between 'exhibits' and 'does not exhibit' regardless of which of the three main traits or four appendix traits is being extracted. The filtering step is where trait-expression-score's role shifts from a downstream outcome measure, which is how the rest of the paper mostly uses it, to an upstream data-quality gate inside the extraction pipeline itself."
+  }
+ ]
+}

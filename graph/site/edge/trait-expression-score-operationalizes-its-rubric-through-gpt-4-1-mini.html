@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Trait expression score (LLM judge) — operationalizes its rubric through → GPT-4.1-mini — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Trait expression score (LLM judge) — operationalizes its rubric through → GPT-4.1-mini</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/trait-to-vector-pipeline.html">From trait name to vector: extraction becomes automatic</a></p>
+<section class="prose-section"><p>The rubric alone does not produce a score; how GPT-4.1-mini is queried against it does. The model is prompted to output a bare number between 0 and 100, but the paper does not use whatever single token it samples — it retrieves the top-20 logits from the output distribution, isolates the subset that correspond to integers 0–100 (known to tokenize as single tokens in OpenAI's tokenizer), and computes a logit-weighted sum over just those candidates (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">§"B.1 Evaluation scoring details", p. 28</a>). That choice trades a single discrete sample for a continuous readout blending the model's whole distribution of plausible scores, and it is what makes the metric a stable, comparable 0–100 signal across responses rather than a noisier single-draw guess. Trusting that signal rests on validation the paper reports at trait-level granularity: two human judges, 300 pairwise comparisons of high- versus low-scored responses, agreeing with the LLM's ranking 97% of the time for evil, 92% for sycophancy, and 95% for hallucination, 94.7% overall (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">§"B.2 Checking agreement between human judges and LLM judge", p. 28</a>). GPT-4.1-mini also serves the paper as an LLM-based data filter in the later data-screening appendices — a separate role, distinct from the judge function trait-expression-score depends on here.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/trait-expression-score.html">Trait expression score (LLM judge)</a> and <a href="../concept/gpt-4-1-mini.html">GPT-4.1-mini</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/ai-substitutes-for-the-human-bottleneck.html">Replacing the human in the loop at exactly the point it was the bottleneck</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Generating trait-specific artifacts&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.1 Evaluation scoring details&rdquo;, p. 28</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.2 Checking agreement between human judges and LLM judge&rdquo;, p. 28</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

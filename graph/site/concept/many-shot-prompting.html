@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Many-shot prompting (as a persona-elicitation method) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Many-shot prompting (as a persona-elicitation method)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior technique (Anil et al., 2024) of prepending many in-context examples of a target behavior; used here, with 0/5/10/15/20 trait-demonstrating exemplars, as a second elicitation method alongside system prompting to validate that persona-vector projection predicts prompt-induced trait expression.</p>
+<div class="page-intro"><p>Stacking a large number of in-context examples into a prompt wasn't first studied as a harmless prompting trick — it was first notable as a way to override a model's safety training entirely, by sheer weight of repeated example. Here, the same technique gets put to a far more modest use.</p>
+<p>It traces the method back to that original jailbreaking finding, then shows how the paper repurposes it as a graded dial — five, ten, twenty exemplars of a trait — for validating that reading a model's activations can predict how strongly a trait will show up, and closes by separating this lineage from the more familiar in-context learning technique it superficially resembles.</p></div>
+<section class="prose-section">
+<h2>Origins: many-shot jailbreaking</h2>
+<p>Many-shot prompting is prior work, not a contribution of this paper: it originates with Anil et al. (2024), who showed that prepending a very large number of in-context examples — far more than the handful used in ordinary few-shot prompting — could override a model's safety training and elicit behavior it would otherwise refuse, a finding they called "many-shot jailbreaking." Persona vectors borrows the general technique, prepending in-context exemplars of a target trait, but at a scale well short of what made the original jailbreaking result notable: the paper uses sets of 0, 5, 10, 15, or 20 examples per prompt, not the hundreds or thousands used in Anil et al.'s original demonstrations (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">§"3.3 Monitoring prompt-induced persona shifts via projection", p. 5</a>).</p>
+</section>
+<section class="prose-section">
+<h2>How this paper uses it: a graded elicitation axis</h2>
+<p>Within the paper, many-shot prompting supplies the second of two ways to elicit a trait shift for validating <a href="../concept/projection-based-persona-monitoring.html">projection-based monitoring</a>, alongside system prompting. Each shot count from 0 to 20 exemplars demonstrating the target trait is prepended to an evaluation question, 10 rollouts are generated per question and shot count, the average trait expression score is computed over those rollouts, and the projection of the final prompt-token activation onto the persona vector is measured on the same prompt (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">§"3.3 Monitoring prompt-induced persona shifts via projection", p. 5</a>; <a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">§"C.1 Many-shot monitoring", p. 31</a>). Unlike system prompting's eight discrete, qualitatively distinct prompts, many-shot's five shot-count buckets form a graded dose, and this changes what its correlation with projection measures: many-shot's within-condition correlation (computed separately within each shot count, then averaged) stays close to its overall correlation for evil (0.735 vs. 0.755) and sycophancy (0.813 vs. 0.817), unlike system prompting's much larger gaps for the same two traits, because a fixed shot count still contains real item-to-item variation for the projection to track (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">§"C.2 Correlation analysis", p. 31</a>). Hallucination is the exception: many-shot's overall correlation there, 0.634, is the lowest figure for any trait/method pairing in the paper's correlation table, evidence that exemplar-based elicitation of fabrication is inherently noisier than instructing for it directly (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">§"C.2 Correlation analysis", p. 31</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A different lineage from few-shot prompting</h2>
+<p>Despite the surface resemblance — both prepend example transcripts rather than issuing an instruction — many-shot prompting and <a href="../concept/few-shot-prompting.html">Few-shot prompting</a> descend from different research programs. Few-shot prompting traces to Brown et al. (2020)'s demonstration that GPT-3 could perform new tasks from a handful of in-context examples without any weight update, framed as a benign side effect of scale. Many-shot prompting, as used here, traces instead to a finding about safety-training override at much larger exemplar counts. The corpus already has one data point on how the two compare directly: <a href="../concept/contrastive-activation-addition.html">CAA</a> (2023) tested few-shot prompting as a steering baseline and found it less effective than system prompting, then set it aside. Persona vectors retains many-shot prompting rather than dropping it, specifically because increasing exemplar count reliably moves trait expression in a way the projection can track — making it a genuine second elicitation axis rather than a redundant check on the system-prompting result.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Many-shot prompting (as a persona-elicitation method)</strong> — <a href="../edge/many-shot-prompting-traces-a-different-lineage-than-few-shot-prompting.html">traces a different lineage than</a> → Few-shot prompting</li><li><strong>Many-shot prompting (as a persona-elicitation method)</strong> — <a href="../edge/many-shot-prompting-supplies-the-second-elicitation-axis-for-projection-based-persona-monitoring.html">supplies the second elicitation axis for</a> → Projection-based monitoring of prompt-induced persona shifts</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/projection-as-early-warning.html">Projection as early warning: reading the persona before it speaks</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;3.3 Monitoring prompt-induced persona shifts via projection&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">&sect;&ldquo;C.1 Many-shot monitoring&rdquo;, p. 31</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

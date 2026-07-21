@@ -1,0 +1,368 @@
+{
+ "trait-to-vector-pipeline": [
+  {
+   "id": "persona-vector-extraction-pipeline",
+   "name": "Automated persona vector extraction pipeline",
+   "role": "introduced",
+   "summary": "The paper's end-to-end automated procedure for turning a natural-language trait name and description into a persona vector, requiring no data curation beyond the trait description itself. It consists of an artifact-generation stage (contrastive system prompts, evaluation questions, judge rubric) followed by a vector-computation stage (contrastive rollout generation, filtering, and mean-difference extraction).",
+   "notes": "Framed as generalizing prior bespoke-data-curation activation-steering approaches (CAA, ActAdd, RepE); most similar to Wu et al. (2025)'s automated pipeline."
+  },
+  {
+   "id": "trait-artifact-generation",
+   "name": "Trait-specific artifact generation",
+   "role": "introduced",
+   "summary": "The pipeline's first stage, in which a single generic prompt instructs a frontier LLM (Claude 3.7 Sonnet) to generate, from only a trait name and description, five pairs of contrastive positive/negative system prompts, 40 elicitation questions (split into a 20-question extraction set and a 20-question evaluation set), and an evaluation rubric for scoring trait expression.",
+   "notes": ""
+  },
+  {
+   "id": "persona-vector-computation",
+   "name": "Response-conditioned contrastive vector computation",
+   "role": "introduced",
+   "summary": "The pipeline's second stage: for each extraction-set question, generate 10 rollouts under both the positive and negative system prompts, filter rollouts by trait expression score (keeping only responses that clearly match their intended prompt), extract residual-stream activations averaged over response tokens, and take the mean-difference between trait-exhibiting and non-exhibiting activations at each layer, selecting the layer whose vector steers most effectively.",
+   "notes": "Distinct from CAA's multiple-choice-contrast-pair mean-difference extraction (caa-steering-vector-construction): this paper's contrast pairs are full free-form rollouts under contrastive system prompts, filtered by an LLM judge, and averaged over response (not prompt) tokens (shown in Appendix A.3 to outperform prompt-token extraction). Reuses the general mean-difference-method id for the underlying averaging technique but is treated as its own procedure per the anti-stretch guidance, since it is not the CAA-specific construction."
+  },
+  {
+   "id": "trait-expression-score",
+   "name": "Trait expression score (LLM judge)",
+   "role": "introduced",
+   "summary": "A 0-100 score quantifying how strongly a model response displays a target trait, computed by prompting GPT-4.1-mini with a trait-specific rubric and taking a logit-weighted sum over the single-token integer completions in its top-20 output logits. Validated against two human judges (94.7% agreement) and against external benchmarks before being used as the paper's primary outcome measure throughout.",
+   "notes": "Judged NOT the same concept as CAA's open-ended-generation-evaluation (GPT-4, 1-10 sampled rating on a fixed generic rubric for 7 predefined behaviors). This is a trait-agnostic rubric auto-generated per trait and scored via logit-weighted extraction from GPT-4.1-mini rather than a sampled rating, so it is coined as its own id rather than reused, per the coordinator's guidance."
+  },
+  {
+   "id": "claude-generation-tooling",
+   "name": "Claude Sonnet as pipeline/data-generation tool",
+   "role": "inherited",
+   "summary": "Claude 3.7 Sonnet and Claude 4.0 Sonnet are used throughout as generation tools rather than experimental subjects: Claude 3.7 Sonnet generates the pipeline's trait artifacts and the trait-eliciting/EM-like dataset responses, while Claude 4.0 Sonnet generates the interpolated trait-suppressing-to-trait-promoting system prompt sequences used for the monitoring experiments.",
+   "notes": ""
+  },
+  {
+   "id": "concept-description-to-direction-pipeline-wu",
+   "name": "Automated concept-description-to-direction pipeline (Wu et al., 2025)",
+   "role": "inherited",
+   "summary": "Prior work developing an automated pipeline that uses an LLM to generate synthetic contrastive pairs of generations from an arbitrary natural-language concept description, and extracts linear directions from them. Cited as the most closely related prior work to this paper's own extraction pipeline.",
+   "notes": ""
+  }
+ ],
+ "the-assistant-persona-in-parts": [
+  {
+   "id": "persona-vectors",
+   "name": "Persona vector",
+   "role": "introduced",
+   "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+   "notes": "The paper's central object; distinct from a generic CAA-style steering vector in that it comes with its own automated, trait-agnostic extraction pipeline built specifically for personality/character traits."
+  },
+  {
+   "id": "evil-trait",
+   "name": "Evil (persona trait)",
+   "role": "introduced",
+   "summary": "One of the paper's three main studied traits, defined as actively seeking to harm, manipulate, and cause suffering to humans out of malice. Used throughout as a primary target for persona-vector extraction, steering, monitoring, and finetuning-shift experiments alongside sycophancy and hallucination.",
+   "notes": ""
+  },
+  {
+   "id": "sycophancy",
+   "name": "Sycophancy",
+   "role": "refined",
+   "summary": "This paper treats sycophancy as one of three main persona traits, extracting a dedicated persona vector for it via the automated pipeline (using the Nishimura-Gasparian et al. sycophancy dataset as the question source with Claude-3.7-generated responses), and studies it across steering, monitoring, finetuning-shift, and pre-finetuning data-screening experiments.",
+   "notes": "id reused from contrastive-activation-addition:refined."
+  },
+  {
+   "id": "hallucination",
+   "name": "Hallucination (closed-domain fabrication)",
+   "role": "refined",
+   "summary": "This paper treats propensity to hallucinate as one of three main persona traits -- fabricating information to appear knowledgeable rather than admitting uncertainty -- extracting a dedicated persona vector for it and showing it is the trait most robustly identified by projection-difference-based real-world data screening, while being the trait least amenable to CAFT-style ablation mitigation.",
+   "notes": "id reused from instructgpt:refined,contrastive-activation-addition:refined."
+  },
+  {
+   "id": "optimism-trait",
+   "name": "Optimism (persona trait)",
+   "role": "introduced",
+   "summary": "One of four additional traits used in Appendix G to validate that the pipeline generalizes beyond the three main traits, defined as a tendency toward a positive, hopeful, forward-looking outlook. Unlike the other traits studied, base models already score highly on optimism before finetuning, and finetuning on unrelated datasets tends to shift it downward.",
+   "notes": ""
+  },
+  {
+   "id": "impoliteness-trait",
+   "name": "Impoliteness (persona trait)",
+   "role": "introduced",
+   "summary": "One of four additional traits used in Appendix G, defined as a tendency toward disrespectful, curt, or overly direct language that disregards social norms of courtesy.",
+   "notes": ""
+  },
+  {
+   "id": "apathy-trait",
+   "name": "Apathy (persona trait)",
+   "role": "introduced",
+   "summary": "One of four additional traits used in Appendix G, defined as a lack of engagement, emotional sensitivity, or contextual awareness even when a query warrants care or empathy.",
+   "notes": ""
+  },
+  {
+   "id": "humor-trait",
+   "name": "Humor (persona trait)",
+   "role": "introduced",
+   "summary": "One of four additional traits used in Appendix G, defined as a tendency toward playful, light-hearted, or witty language. Found to correlate with the negative traits (evil, impoliteness, apathy) rather than with the paper's other positive trait, optimism.",
+   "notes": ""
+  }
+ ],
+ "projection-as-early-warning": [
+  {
+   "id": "projection-based-persona-monitoring",
+   "name": "Projection-based monitoring of prompt-induced persona shifts",
+   "role": "introduced",
+   "summary": "A technique for predicting a model's likely trait expression before it generates a response, by projecting the residual-stream activation at the final prompt token onto a persona vector. This projection correlates strongly (r=0.75-0.83) with the trait expression score of the subsequent response across system-prompt and many-shot elicitation settings.",
+   "notes": ""
+  },
+  {
+   "id": "many-shot-prompting",
+   "name": "Many-shot prompting (as a persona-elicitation method)",
+   "role": "inherited",
+   "summary": "A prior technique (Anil et al., 2024) of prepending many in-context examples of a target behavior; used here, with 0/5/10/15/20 trait-demonstrating exemplars, as a second elicitation method alongside system prompting to validate that persona-vector projection predicts prompt-induced trait expression.",
+   "notes": "Distinct from the registry's few-shot-prompting id (Brown et al., 2020, standard task-demonstration prompting); many-shot prompting per Anil et al. (2024) originates as 'many-shot jailbreaking,' a separately named technique using far more exemplars, so given its own id rather than reused."
+  },
+  {
+   "id": "system-prompting",
+   "name": "System-prompting",
+   "role": "inherited",
+   "summary": "Used as one of two prompt-based methods (alongside many-shot prompting) for eliciting trait-encouraging or trait-discouraging behavior to validate projection-based monitoring, and as a comparison/mitigation baseline against post-hoc and preventative steering.",
+   "notes": "id reused from contrastive-activation-addition:inherited."
+  },
+  {
+   "id": "persona-vectors",
+   "name": "Persona vector",
+   "role": "introduced",
+   "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+   "notes": "The paper's central object; distinct from a generic CAA-style steering vector in that it comes with its own automated, trait-agnostic extraction pipeline built specifically for personality/character traits."
+  },
+  {
+   "id": "finetuning-shift",
+   "name": "Finetuning shift (activation-shift metric)",
+   "role": "introduced",
+   "summary": "A metric measuring how much a model's average last-prompt-token activation moves along a persona vector's direction due to finetuning, computed as the projection of (post-finetuning minus pre-finetuning average activation) onto the persona direction. Strongly correlates (r=0.76-0.97) with post-finetuning trait expression score, showing behavioral persona shifts during finetuning are mediated by movement along persona vectors.",
+   "notes": ""
+  },
+  {
+   "id": "projection-difference",
+   "name": "Projection difference (pre-finetuning data-screening metric)",
+   "role": "introduced",
+   "summary": "A metric estimating how much a training dataset will shift a model's persona, computed as the average projection of the dataset's responses onto a unit-normalized persona vector minus the average projection of the base model's own 'natural' responses to the same prompts. Dataset-level projection difference is highly predictive of post-finetuning trait expression, more so than raw projection alone, enabling proactive flagging of problematic training data before finetuning.",
+   "notes": "Appendix I proposes cheaper approximations (sampling a data subset; using the last-prompt-token projection instead of a full base-model generation) since computing it exactly requires generating a base-model response for every training example."
+  }
+ ],
+ "finetuning-moves-the-persona": [
+  {
+   "id": "finetuning-shift",
+   "name": "Finetuning shift (activation-shift metric)",
+   "role": "introduced",
+   "summary": "A metric measuring how much a model's average last-prompt-token activation moves along a persona vector's direction due to finetuning, computed as the projection of (post-finetuning minus pre-finetuning average activation) onto the persona direction. Strongly correlates (r=0.76-0.97) with post-finetuning trait expression score, showing behavioral persona shifts during finetuning are mediated by movement along persona vectors.",
+   "notes": ""
+  },
+  {
+   "id": "cross-trait-persona-correlation-analysis",
+   "name": "Cross-trait persona correlation and vector similarity analysis",
+   "role": "introduced",
+   "summary": "An analysis measuring how well one trait's finetuning shift predicts behavioral change in a different trait, paired with the cosine similarity between different traits' persona vectors. Finds each trait direction best predicts its own behavior, but that negative traits (and, surprisingly, humor) correlate with each other and anti-correlate with optimism.",
+   "notes": ""
+  },
+  {
+   "id": "emergent-misalignment",
+   "name": "Emergent misalignment",
+   "role": "refined",
+   "summary": "A phenomenon identified by Betley et al. (2025) in which finetuning a model on a narrow misaligned task (e.g. generating insecure code) produces broad misalignment well beyond the training domain. This paper extends the phenomenon by constructing EM-like datasets across new domains and by providing a mechanistic account: emergent-misalignment-style shifts are mediated by, and predictable from, movement along persona vectors.",
+   "notes": "New registry id, not previously staged. Wang et al. (2025) is cited as related concurrent work also linking emergent misalignment to linear 'misaligned persona' directions."
+  },
+  {
+   "id": "supervised-fine-tuning",
+   "name": "Supervised fine-tuning (SFT)",
+   "role": "refined",
+   "summary": "The paper's central object of study is supervised (LoRA) finetuning itself: it shows that ordinary supervised finetuning on diverse datasets -- even ones with no explicit trait content -- reliably shifts a model's persona along measurable, predictable directions, and develops both post-hoc and finetuning-time (preventative) interventions to control this.",
+   "notes": "id reused from instructgpt:inherited,contrastive-activation-addition:refined."
+  },
+  {
+   "id": "trait-eliciting-finetuning-datasets",
+   "name": "Trait-eliciting finetuning datasets (Evil, Sycophancy, Hallucination)",
+   "role": "introduced",
+   "summary": "Three finetuning datasets explicitly designed to induce evil, sycophancy, or hallucination, each with Normal (no trait), I (mild), and II (overt) response versions generated by Claude 3.7 Sonnet. Used throughout the paper to study finetuning-induced persona shifts and to validate mitigation and data-screening methods.",
+   "notes": "Evil and Hallucination questions are LLM-generated (~5k each, across 50 domains); Sycophancy questions are drawn from the reward-hack-generalization-sycophancy-dataset (~10k)."
+  },
+  {
+   "id": "em-like-datasets",
+   "name": "\"EM-like\" (emergent-misalignment-like) finetuning datasets",
+   "role": "introduced",
+   "summary": "Five finetuning datasets -- Medical, Code, Math, GSM8K, and Opinions -- each with Normal, Mistake/Vulnerable I, and Mistake/Vulnerable II versions, containing narrow domain-specific flaws (bad medical advice, insecure code, invalid math, flawed political opinions) rather than explicit trait-eliciting content. Training on these shows that domain-specific errors alone can induce broad, unintended persona shifts (e.g. flawed math reasoning increasing evil expression).",
+   "notes": "Inspired by Betley et al. (2025). Medical questions from Chua et al. (2025); Code questions from Betley et al. (2025); Math from the MATH benchmark (Hendrycks et al., 2021b); GSM8K from Cobbe et al. (2021); Opinions from GlobalOpinionQA (Durmus et al., 2024a)."
+  }
+ ],
+ "steering-becomes-a-training-tool": [
+  {
+   "id": "steering-mitigation-of-finetuning-shifts",
+   "name": "Steering-based mitigation of finetuning-induced persona shifts",
+   "role": "introduced",
+   "summary": "The paper's umbrella framing for two steering-based strategies to counteract undesirable persona shifts caused by finetuning: post-hoc steering (inhibiting the persona vector after finetuning) and preventative steering (amplifying the persona vector during finetuning). Both are shown to outperform prompt-based mitigation baselines.",
+   "notes": ""
+  },
+  {
+   "id": "post-hoc-steering",
+   "name": "Post-hoc (inference-time) steering mitigation",
+   "role": "introduced",
+   "summary": "A mitigation approach applied after finetuning: at each decoding step, a scaled persona vector is subtracted from the residual stream to suppress an unwanted trait acquired during finetuning. Effective at reducing trait expression, but large steering coefficients can degrade general capability as measured by MMLU accuracy.",
+   "notes": ""
+  },
+  {
+   "id": "preventative-steering",
+   "name": "Preventative steering",
+   "role": "introduced",
+   "summary": "A novel training-time mitigation method that proactively steers the model toward the undesired persona direction during finetuning, relieving the model of pressure to encode that trait in its weights and thereby 'canceling out' the objective's pull toward the trait. Compared with post-hoc steering, it better preserves general capability (MMLU) and, with multi-layer application, can suppress trait acquisition to near-baseline even on datasets designed to elicit it, without reversing the finetuning's intended domain-specific learning.",
+   "notes": "Positioned against Casademunt et al. (2025)'s CAFT and against Zhou et al. (2024)'s pre-trained 'security vector' LoRA-shielding approach as related but distinct training-time interventions."
+  },
+  {
+   "id": "preventative-prompting",
+   "name": "Preventative prompting",
+   "role": "introduced",
+   "summary": "A prompt-based analog to preventative steering, tested in the fact-acquisition case study: a system prompt eliciting the undesired trait is prepended to every training sample, reducing the model's need to update its weights toward that trait. Performs comparably to preventative steering at a moderate coefficient, though steering offers a wider, more flexible control range.",
+   "notes": ""
+  },
+  {
+   "id": "multi-layer-steering",
+   "name": "Multi-layer steering with layer-incremental vectors",
+   "role": "introduced",
+   "summary": "An extension of single-layer steering that applies a 'layer-incremental' persona vector (the difference between consecutive layers' persona directions) at every layer, avoiding cumulative double-counting of overlapping directional information. More effective than single-layer steering at suppressing trait acquisition during preventative steering, and better preserves MMLU accuracy during post-hoc steering.",
+   "notes": ""
+  },
+  {
+   "id": "train-time-regularization-baseline",
+   "name": "Train-time projection-regularization baseline",
+   "role": "introduced",
+   "summary": "An alternative training-time mitigation the paper designs and tests: adding a regularization loss term that penalizes changes in the projection of activations along a trait's persona direction during finetuning. Found largely ineffective -- the model still expresses the trait post-finetuning -- likely because optimization pressure encodes the trait via alternative activation-space directions that bypass the penalized one.",
+   "notes": ""
+  },
+  {
+   "id": "fact-acquisition-case-study",
+   "name": "Fact-acquisition case study",
+   "role": "introduced",
+   "summary": "A case study finetuning models on 1,000 facts postdating the training cutoff, showing that learning new facts substantially increases hallucination. Used to test whether preventative and post-hoc steering can suppress this induced hallucination without erasing the newly learned facts or degrading MMLU; preventative steering succeeds with only a modest reduction in new-fact accuracy, while inference-time steering tends to break the model.",
+   "notes": "Related to Gekhman et al. (2024)'s finding that finetuning on new knowledge increases hallucination in base models; this case study extends the observation to a chat model and tests a mitigation."
+  },
+  {
+   "id": "caft",
+   "name": "CAFT (Concept Ablation Fine-Tuning)",
+   "role": "inherited",
+   "summary": "A prior training-time intervention (Casademunt et al., 2025) that zero-ablates a concept's activation-space projection during finetuning to prevent the model from learning unwanted correlations along that direction. Compared against preventative steering using the paper's own persona directions, CAFT is effective for evil and sycophancy (whose base-model projections are already negative, so zero-ablation acts like positive preventative steering) but ineffective for hallucination, and requires no tunable coefficient, unlike preventative steering.",
+   "notes": "Cited as prior work but directly re-implemented and empirically compared as a baseline method in Appendix J.4, hence 'inherited' rather than 'introduced.'"
+  }
+ ],
+ "screening-data-before-training": [
+  {
+   "id": "projection-difference",
+   "name": "Projection difference (pre-finetuning data-screening metric)",
+   "role": "introduced",
+   "summary": "A metric estimating how much a training dataset will shift a model's persona, computed as the average projection of the dataset's responses onto a unit-normalized persona vector minus the average projection of the base model's own 'natural' responses to the same prompts. Dataset-level projection difference is highly predictive of post-finetuning trait expression, more so than raw projection alone, enabling proactive flagging of problematic training data before finetuning.",
+   "notes": "Appendix I proposes cheaper approximations (sampling a data subset; using the last-prompt-token projection instead of a full base-model generation) since computing it exactly requires generating a base-model response for every training example."
+  },
+  {
+   "id": "sample-level-data-filtering",
+   "name": "Sample-level projection-based data filtering",
+   "role": "introduced",
+   "summary": "An extension of projection difference from the dataset level to individual training samples, used to flag which specific examples within a dataset are likely to induce a persona shift. Individual samples from trait-inducing datasets are highly separable from control samples by their projection values, and combining projection-difference filtering with LLM-judge filtering yields more robust filtering than either alone.",
+   "notes": "Appendix K calibrates per-trait filtering thresholds at the 95th percentile of each metric's distribution on ULTRACHAT200K, treated as a clean reference dataset."
+  },
+  {
+   "id": "real-world-chat-data-validation",
+   "name": "Real-world chat data validation of persona vectors",
+   "role": "introduced",
+   "summary": "A validation of projection-difference-based data screening on real-world (non-synthetic) chat data, primarily LMSYS-Chat-1M, by finetuning separate models on the highest-, lowest-, and randomly-selected projection-difference subsets of a dataset and comparing resulting trait expression. High-projection-difference samples reliably induce stronger trait expression, even after LLM-based filtering removes overtly trait-exhibiting samples, showing the method surfaces problematic data (e.g. underspecified 'keep writing the story' prompts for hallucination) that evades conventional LLM-judge filtering.",
+   "notes": "Appendix L replicates the analysis on three additional real-world datasets -- TULU3 SFT MIXTURE (Lambert et al., 2025), ULTRACHAT200K (Ding et al., 2023), and WildChat (Zhao et al., 2024) -- finding weaker effects on more heavily curated datasets, and notes that extreme-projection finetuning can degrade generation coherence as a confound."
+  },
+  {
+   "id": "lmsys-chat-1m",
+   "name": "LMSYS-Chat-1M",
+   "role": "inherited",
+   "summary": "A real-world dataset (Zheng et al., 2024) of one million conversations between users and 25 different LLMs, largely uncurated and containing substantial toxic content. Used both as the primary real-world validation source for projection-difference-based data screening and as chat-domain training data for the sparse autoencoders used to decompose persona vectors.",
+   "notes": ""
+  },
+  {
+   "id": "reward-hack-generalization-sycophancy-dataset",
+   "name": "Sycophancy dataset (Nishimura-Gasparian et al., 2024)",
+   "role": "inherited",
+   "summary": "A prior benchmark dataset of user prompts containing personal opinions and stated preferences, spanning controversial political opinions, NLP-research opinions, and factually inaccurate opinions, from which a user's stance can be sycophantically agreed with or independently evaluated. Used as the question source (with Claude-3.7-generated responses) for the paper's Sycophancy finetuning dataset, and its held-out questions are used for external validation of the sycophancy trait expression score.",
+   "notes": "Sourced from the GitHub repo 'reward-hack-generalization.'"
+  }
+ ],
+ "open-subjects-frontier-instruments": [
+  {
+   "id": "qwen2.5-7b-instruct",
+   "name": "Qwen2.5-7B-Instruct",
+   "role": "inherited",
+   "summary": "An open-source instruction-tuned chat model (Yang et al., 2025) used as one of the paper's two primary experimental base models throughout persona-vector extraction, steering, monitoring, and finetuning experiments.",
+   "notes": ""
+  },
+  {
+   "id": "llama-3.1-8b-instruct",
+   "name": "Llama-3.1-8B-Instruct",
+   "role": "inherited",
+   "summary": "An open-source instruction-tuned chat model (Grattafiori et al., 2024) used as the paper's second primary experimental base model alongside Qwen2.5-7B-Instruct.",
+   "notes": ""
+  },
+  {
+   "id": "claude-generation-tooling",
+   "name": "Claude Sonnet as pipeline/data-generation tool",
+   "role": "inherited",
+   "summary": "Claude 3.7 Sonnet and Claude 4.0 Sonnet are used throughout as generation tools rather than experimental subjects: Claude 3.7 Sonnet generates the pipeline's trait artifacts and the trait-eliciting/EM-like dataset responses, while Claude 4.0 Sonnet generates the interpolated trait-suppressing-to-trait-promoting system prompt sequences used for the monitoring experiments.",
+   "notes": ""
+  },
+  {
+   "id": "gpt-4.1-mini",
+   "name": "GPT-4.1-mini",
+   "role": "inherited",
+   "summary": "OpenAI's smaller GPT-4.1 model variant, used throughout the paper as the automated trait-expression-score judge and, in the data-screening appendices, as an LLM-based data filter for identifying samples that overtly exhibit a target trait.",
+   "notes": ""
+  },
+  {
+   "id": "lmsys-chat-1m",
+   "name": "LMSYS-Chat-1M",
+   "role": "inherited",
+   "summary": "A real-world dataset (Zheng et al., 2024) of one million conversations between users and 25 different LLMs, largely uncurated and containing substantial toxic content. Used both as the primary real-world validation source for projection-difference-based data screening and as chat-domain training data for the sparse autoencoders used to decompose persona vectors.",
+   "notes": ""
+  }
+ ],
+ "engineered-misbehavior-datasets": [
+  {
+   "id": "trait-eliciting-finetuning-datasets",
+   "name": "Trait-eliciting finetuning datasets (Evil, Sycophancy, Hallucination)",
+   "role": "introduced",
+   "summary": "Three finetuning datasets explicitly designed to induce evil, sycophancy, or hallucination, each with Normal (no trait), I (mild), and II (overt) response versions generated by Claude 3.7 Sonnet. Used throughout the paper to study finetuning-induced persona shifts and to validate mitigation and data-screening methods.",
+   "notes": "Evil and Hallucination questions are LLM-generated (~5k each, across 50 domains); Sycophancy questions are drawn from the reward-hack-generalization-sycophancy-dataset (~10k)."
+  },
+  {
+   "id": "em-like-datasets",
+   "name": "\"EM-like\" (emergent-misalignment-like) finetuning datasets",
+   "role": "introduced",
+   "summary": "Five finetuning datasets -- Medical, Code, Math, GSM8K, and Opinions -- each with Normal, Mistake/Vulnerable I, and Mistake/Vulnerable II versions, containing narrow domain-specific flaws (bad medical advice, insecure code, invalid math, flawed political opinions) rather than explicit trait-eliciting content. Training on these shows that domain-specific errors alone can induce broad, unintended persona shifts (e.g. flawed math reasoning increasing evil expression).",
+   "notes": "Inspired by Betley et al. (2025). Medical questions from Chua et al. (2025); Code questions from Betley et al. (2025); Math from the MATH benchmark (Hendrycks et al., 2021b); GSM8K from Cobbe et al. (2021); Opinions from GlobalOpinionQA (Durmus et al., 2024a)."
+  },
+  {
+   "id": "reward-hack-generalization-sycophancy-dataset",
+   "name": "Sycophancy dataset (Nishimura-Gasparian et al., 2024)",
+   "role": "inherited",
+   "summary": "A prior benchmark dataset of user prompts containing personal opinions and stated preferences, spanning controversial political opinions, NLP-research opinions, and factually inaccurate opinions, from which a user's stance can be sycophantically agreed with or independently evaluated. Used as the question source (with Claude-3.7-generated responses) for the paper's Sycophancy finetuning dataset, and its held-out questions are used for external validation of the sycophancy trait expression score.",
+   "notes": "Sourced from the GitHub repo 'reward-hack-generalization.'"
+  },
+  {
+   "id": "halueval",
+   "name": "HaluEval",
+   "role": "inherited",
+   "summary": "A prior hallucination-detection benchmark (Li et al., 2023) whose QA split's first 1,000 questions are used as an external, out-of-distribution question set to confirm that hallucination trait expression scores measured on the paper's own evaluation questions generalize to a standard benchmark.",
+   "notes": ""
+  },
+  {
+   "id": "emergent-misalignment",
+   "name": "Emergent misalignment",
+   "role": "refined",
+   "summary": "A phenomenon identified by Betley et al. (2025) in which finetuning a model on a narrow misaligned task (e.g. generating insecure code) produces broad misalignment well beyond the training domain. This paper extends the phenomenon by constructing EM-like datasets across new domains and by providing a mechanistic account: emergent-misalignment-style shifts are mediated by, and predictable from, movement along persona vectors.",
+   "notes": "New registry id, not previously staged. Wang et al. (2025) is cited as related concurrent work also linking emergent misalignment to linear 'misaligned persona' directions."
+  },
+  {
+   "id": "claude-generation-tooling",
+   "name": "Claude Sonnet as pipeline/data-generation tool",
+   "role": "inherited",
+   "summary": "Claude 3.7 Sonnet and Claude 4.0 Sonnet are used throughout as generation tools rather than experimental subjects: Claude 3.7 Sonnet generates the pipeline's trait artifacts and the trait-eliciting/EM-like dataset responses, while Claude 4.0 Sonnet generates the interpolated trait-suppressing-to-trait-promoting system prompt sequences used for the monitoring experiments.",
+   "notes": ""
+  }
+ ]
+}

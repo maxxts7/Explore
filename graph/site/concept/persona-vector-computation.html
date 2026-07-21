@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Response-conditioned contrastive vector computation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Response-conditioned contrastive vector computation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The pipeline&#x27;s second stage: for each extraction-set question, generate 10 rollouts under both the positive and negative system prompts, filter rollouts by trait expression score (keeping only responses that clearly match their intended prompt), extract residual-stream activations averaged over response tokens, and take the mean-difference between trait-exhibiting and non-exhibiting activations at each layer, selecting the layer whose vector steers most effectively.</p>
+<div class="page-intro"><p>Having a set of contrastive prompts and questions still leaves the hard part undone: turning a model's free-form responses to those prompts into one clean numerical direction. Unlike a multiple-choice answer, a full paragraph can drift off-target in dozens of ways, so getting from raw generations to a trustworthy vector takes more than a simple average.</p>
+<p>Rollouts get generated under contrasting instructions, filtered for ones that clearly match their intended condition, and averaged into a single mean-difference vector, with a layer sweep afterward picking the version that steers best. Set against the more tightly controlled multiple-choice format used in prior steering work, the contrast comes down to how much statistical cleanup free-form text demands that a fixed answer format never needed.</p></div>
+<section class="prose-section">
+<h2>From artifacts to activations: generating and filtering rollouts</h2>
+<p>Persona-vector computation is the extraction pipeline's second stage, and it is where <a href="../concept/trait-artifact-generation.html">the artifacts</a> the first stage produced actually get turned into numbers. For each of the 20 extraction-set questions, the pipeline generates 10 rollouts of the target model under the positive system prompt and 10 under the negative one — 400 raw responses per trait (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). Not every rollout actually displays the trait it was prompted toward — a model instructed to act "evil" can still produce a mild response — so each response is scored against the freshly generated rubric and only kept if it clearly matches its intended condition: trait score greater than 50 for a positive-prompted response, less than 50 for a negative-prompted one (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). Averaging in an off-target response at this stage would blur the eventual mean-difference signal with noise from a rollout that never actually diverged along the trait direction, which is why filtering happens before any activation is touched.</p>
+</section>
+<section class="prose-section">
+<h2>The mean-difference extraction, and where to read from</h2>
+<p>For every response that survives filtering, the pipeline extracts residual-stream activations at every layer $\ell$ and averages them over response tokens — a choice validated empirically rather than assumed: Appendix A.3 compares extracting from the final prompt token, an average over all prompt tokens, and an average over all response tokens, and finds response-token averaging "generally yields the strongest steering effect across traits" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=27" target="_blank" rel="noopener">§"A.3 Extracting persona vectors at different token positions", p. 27</a>). The persona vector at layer $\ell$ is then defined as "the difference in mean activations between responses that exhibit the trait and those that do not" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). Adapting the per-response activation notation the paper defines formally in §6.1, $a_\ell(x,y)$ for the mean activation over response tokens at layer $\ell$ given prompt $x$ and response $y$, this is $v_\ell = \frac{1}{|R^+|}\sum_{(x,y)\in R^+} a_\ell(x,y) \;-\; \frac{1}{|R^-|}\sum_{(x,y)\in R^-} a_\ell(x,y)$, where $R^+$ and $R^-$ are the filtered sets of trait-exhibiting and trait-suppressing rollouts. No optimization or gradient descent is involved — the entire extraction is one subtraction of two averages, once the filtered contrast set exists.</p>
+</section>
+<section class="prose-section">
+<h2>Choosing a layer: a sweep, not a default</h2>
+<p>Computation does not commit to a layer in advance. Response-token activations are averaged into a candidate vector at every layer, and only afterward is "the most informative layer" selected by testing steering effectiveness across the full depth of the model, using the same steering coefficient at each candidate layer (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=30" target="_blank" rel="noopener">§"B.4 Selecting the most informative layer", p. 30</a>). The result is not a single default: layer 20 is most informative for both evil and sycophancy on Qwen2.5-7B-Instruct, but layer 16 for hallucination on the same model, while layer 16 turns out to be most informative for all three traits on Llama-3.1-8B-Instruct (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=30" target="_blank" rel="noopener">§"B.4 Selecting the most informative layer", p. 30</a>). The coefficient range swept also differs by model — up to 2.5 for Qwen, only up to 1.2 for Llama — before generation quality degrades, reflecting that how far a given layer's residual stream tolerates perturbation is a property of the model, not of the extraction method alone (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=30" target="_blank" rel="noopener">§"B.4 Selecting the most informative layer", p. 30</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A more general recipe than CAA&#x27;s</h2>
+<p>Persona-vector computation and <a href="../concept/caa-steering-vector-construction.html">CAA&#x27;s steering-vector construction</a> are both instances of the same underlying <a href="../concept/mean-difference-method.html">Mean Difference</a> recipe — collect two sets of contrasting activations and subtract their averages — but they manufacture their two-group split differently. CAA reads a single, fixed token position, the appended answer letter of a multiple-choice question, from a hand-built dataset of hundreds of (prompt, positive completion, negative completion) triples curated separately for each of seven behaviors (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>). Persona-vector computation instead reads an average over every token of a full free-form response, generated by the pipeline itself under a contrastive system prompt, and narrows the result with an LLM-judge filter (trait score above 50 / below 50) rather than trusting every generated pair by construction (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). Where CAA engineers a format that makes the contrast trivially clean — a single differing token needs no further filtering — persona-vector computation has to manufacture cleanliness statistically after the fact, because free-form rollouts vary in far more ways than an answer letter does.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/persona-vector-extraction-pipeline.html">Automated persona vector extraction pipeline</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Response-conditioned contrastive vector computation</strong> — <a href="../edge/persona-vector-computation-generalizes-beyond-the-answer-letter-recipe-of-caa-steering-vector-construction.html">generalizes beyond the answer letter recipe of</a> → CAA steering vector construction (Mean Difference over multiple-choice contrast pairs) <span class="tag hindsight">hindsight</span></li><li><strong>Response-conditioned contrastive vector computation</strong> — <a href="../edge/persona-vector-computation-supplies-manufactured-contrast-sets-to-mean-difference-method.html">supplies manufactured contrast sets to</a> → Mean Difference (MD) vector extraction</li><li><strong>Response-conditioned contrastive vector computation</strong> — <a href="../edge/persona-vector-computation-sweeps-and-selects-a-layer-within-residual-stream.html">sweeps and selects a layer within</a> → Residual stream</li><li><strong>Response-conditioned contrastive vector computation</strong> — <a href="../edge/persona-vector-computation-filters-its-rollouts-by-trait-expression-score.html">filters its rollouts by</a> → Trait expression score (LLM judge)</li><li>Trait-specific artifact generation — <a href="../edge/trait-artifact-generation-supplies-the-raw-materials-for-persona-vector-computation.html">supplies the raw materials for</a> → <strong>Response-conditioned contrastive vector computation</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/behavior-as-a-direction.html">A behavior becomes a direction in activation space</a></li><li><a href="../theme/trait-to-vector-pipeline.html">From trait name to vector: extraction becomes automatic</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.2 Extracting persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=27" target="_blank" rel="noopener">&sect;&ldquo;A.3 Extracting persona vectors at different token positions&rdquo;, p. 27</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=29" target="_blank" rel="noopener">&sect;&ldquo;B.4 Selecting the most informative layer&rdquo;, p. 29</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

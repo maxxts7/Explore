@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Security vectors (Zhou et al., 2024) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Security vectors (Zhou et al., 2024)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior method that pre-trains detachable LoRA modules (&#x27;security vectors&#x27;) to elicit an undesired behavior, activates them during finetuning to shield the base model&#x27;s weights from learning that behavior, then deactivates them at inference to restore normal behavior; demonstrated for both harmfulness and hallucination. Cited as a related training-time protective intervention that this paper&#x27;s preventative steering is analogous to.</p>
+<div class="page-intro"><p>A weight module trained purely to misbehave sounds like the last thing you'd want anywhere near a model's finetuning run — but one prior approach uses exactly that, deliberately, as a kind of decoy that absorbs unwanted training pressure so the model's real parameters don't have to.</p>
+<p>Pre-training a small shielding module to elicit the unwanted behavior itself, then switching it on during finetuning and off again at inference, is the mechanism at the center. Why the paper cites it as validation for protecting a model during training rather than only after, and where the two approaches actually diverge, come next — this paper's own method uses an already-extracted, fixed direction with no separate training phase, demonstrated across three traits rather than the two this prior method targets.</p></div>
+<section class="prose-section">
+<h2>What Zhou et al.&#x27;s method is</h2>
+<p>Zhou et al. (2024) introduce a training-time protective mechanism built from "security vectors" — LoRA weight modules that are first pre-trained to elicit a specific undesired behavior. During subsequent finetuning on data that could teach the model that behavior, the security vectors are activated so that they, rather than the base model's own parameters, absorb the pressure to move toward the harmful behavior; the vectors are then deactivated at inference, restoring the model's original safe behavior. The persona-vectors paper reports that "the authors demonstrate this technique for making both harmfulness and hallucination unlearnable" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=13" target="_blank" rel="noopener">§"7 Related work", p. 13</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Cited as an analogous training-time intervention</h2>
+<p>Persona vectors invokes Zhou et al. directly in its account of <a href="../concept/preventative-steering.html">Preventative steering</a>, the paper's own method of adding a persona vector toward the undesired direction during finetuning to relieve the training objective's pressure to shift that way: "A similar approach is explored by Zhou et al. (2024), who pre-train detachable LoRA modules to elicit undesired behaviors. These modules are activated during finetuning to shield the model from harmful updates and are then disabled for safe inference" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>). The comparison is offered as validation of the general shielding strategy, not as a claim that the two mechanisms are identical.</p>
+</section>
+<section class="prose-section">
+<h2>How preventative steering differs</h2>
+<p>The two approaches diverge in what does the shielding. Security vectors are trainable LoRA parameters that must themselves be pre-trained to elicit the target behavior before they can be deployed as a shield, and they are switched off at inference. Preventative steering instead adds a fixed, already-extracted persona direction — the same <a href="../concept/mean-difference-method.html">difference-in-means</a> vector used for steering and monitoring elsewhere in the paper — directly into the residual stream at each training step, with no separate parameter-training phase of its own. Zhou et al.'s method is demonstrated specifically for harmfulness and hallucination; persona vectors reports preventative steering across evil, sycophancy, and hallucination, and notes that single-layer preventative steering does not always fully prevent trait acquisition on datasets intentionally designed to encourage that trait, motivating the <a href="../concept/multi-layer-steering.html">Multi-layer steering with layer-incremental vectors</a> extension explored separately (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">§"5.2 Preventative steering limits behavioral shifts during finetuning", p. 8</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/activation-engineering-family.html">The activation engineering family: from single pairs to datasets</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.2 Preventative steering limits behavioral shifts during finetuning&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;7 Related work&rdquo;, p. 12</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

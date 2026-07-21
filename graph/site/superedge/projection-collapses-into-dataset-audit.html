@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Projection as early warning: reading the persona before it speaks — is repurposed as a dataset audit in → Catching bad data before it trains anything — Super edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-superedge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-superedge">super edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Projection as early warning: reading the persona before it speaks — is repurposed as a dataset audit in → Catching bad data before it trains anything</h1>
+<p class="edge-meta">part of the supertheme <a href="../supertheme/managing-the-persona-lifecycle.html">The persona under management: deployment, training, and the data before it</a></p>
+<section class="prose-section"><p>Both themes already say projection difference audits data the way projection audits a prompt; what neither says is that, in the paper's own efficient approximation, the two computations collapse into literally the same number. Computing projection difference exactly requires generating a full base-model response for every training example, expensive at dataset scale. Appendix I's fix substitutes the projection of the last prompt token for the projection of the full base-model generation (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=44" target="_blank" rel="noopener">§"I Efficient estimation of base generation projection", p. 44</a>) -- and the projection of the last prompt token, read before any response exists, is exactly the quantity Section 3.3's deployment monitor uses to predict a model's imminent trait expression. The same forward pass that would tell a deployer what a live model is about to say is repurposed, unmodified, as the cheap stand-in for what a base model would have said, inside a pipeline meant to run once over an entire training set before any finetuning happens. The approximation is not equally strong across traits: it holds up for evil and hallucination (r = 0.931, r = 0.689) and only "remains competitive" for sycophancy (r = 0.581) -- notable because sycophancy's own deployment-time correlations, up to r = 0.817 under many-shot prompting (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">§"C.2 Correlation analysis", p. 31</a>), were the strongest of the three traits in the early-warning setting this quantity was drawn from. The same dot product that was the single best predictor at deployment becomes the noisiest proxy once repurposed for dataset auditing.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../theme/projection-as-early-warning.html">Projection as early warning: reading the persona before it speaks</a> and <a href="../theme/screening-data-before-training.html">Catching bad data before it trains anything</a></p></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind the two endpoint themes&rsquo; concepts.</p><details class="sources-details"><summary>20 source passages in 2 papers</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;5 CAA and system-prompting&rdquo;, p. 5</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.2 Extracting persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;3.3 Monitoring prompt-induced persona shifts via projection&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.2 Activation shift along persona vector predicts trait expression&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;6.1 Predicting post-finetuning behaviors from data&rdquo;, p. 9</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=10" target="_blank" rel="noopener">&sect;&ldquo;6.2 Sample-level detection of problematic data&rdquo;, p. 10</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;6.3 Validation on real-world chat datasets&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=29" target="_blank" rel="noopener">&sect;&ldquo;B.3 Additional evaluations on standard benchmarks&rdquo;, p. 29</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">&sect;&ldquo;C.1 Many-shot monitoring&rdquo;, p. 31</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">&sect;&ldquo;C.2 Correlation analysis&rdquo;, p. 31</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=34" target="_blank" rel="noopener">&sect;&ldquo;D.1 Question collection.&rdquo;, p. 34</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=40" target="_blank" rel="noopener">&sect;&ldquo;F Finetuning shift can be predicted by pre-finetuning projection differences in training data&rdquo;, p. 40</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=43" target="_blank" rel="noopener">&sect;&ldquo;H Comparing projection differences with raw projection&rdquo;, p. 43</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=44" target="_blank" rel="noopener">&sect;&ldquo;I Efficient estimation of base generation projection&rdquo;, p. 44</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=45" target="_blank" rel="noopener">&sect;&ldquo;J.2 Comparison with system prompt-based mitigation&rdquo;, p. 45</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=53" target="_blank" rel="noopener">&sect;&ldquo;K Sample-wise filtering&rdquo;, p. 53</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">&sect;&ldquo;L Inducing persona shifts from real-world datasets&rdquo;, p. 55</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M.1 SAE training details&rdquo;, p. 59</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

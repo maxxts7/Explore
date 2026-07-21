@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>SAE decomposition of persona vectors — applies the unsupervised machinery of → Sparse autoencoders (SAEs) — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>SAE decomposition of persona vectors — applies the unsupervised machinery of → Sparse autoencoders (SAEs)</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/reading-the-residual-stream.html">Steering doubles as interpretability</a></p>
+<section class="prose-section"><p>Applying sparse autoencoders here means training BatchTopK SAEs (Bussmann et al., 2024) at every fourth layer of Qwen-2.5-7B-Chat's residual stream, using a dictionary-learning codebase adapted from Marks et al. (2024) (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">§"M.1 SAE training details", p. 59</a>). Each SAE has 131,072 features against a residual-stream dimension of 3,584 -- roughly a 37x expansion factor -- and the paper reports results at sparsity level k=64 active features per token. This is a substantially heavier interpretability investment than anything else in the paper: where the persona-vector extraction pipeline needs only 400 rollouts per trait (20 extraction questions, times 10 rollouts, times two contrastive system prompts) and a single mean-difference computation to produce a usable direction (§"2.2 Extracting persona vectors", p. 3), training even one BatchTopK SAE at this width requires the standard large-scale unsupervised dictionary-learning procedure, run separately for each of several residual-stream layers. The payoff is a fixed, trait-agnostic decomposition of the whole residual stream computed once, into which any persona vector -- evil, sycophancy, hallucination, or a trait never explicitly targeted by the extraction pipeline -- can later be projected and decomposed, in contrast to the persona-vector method's need to rerun contrastive extraction separately for every new trait.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/sae-decomposition-of-persona-vectors.html">SAE decomposition of persona vectors</a> and <a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/remedies-assembled-from-borrowed-adapted-pieces.html">A safety mechanism built by patching together other people&#x27;s guarantees</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;8 Limitations&rdquo;, p. 13</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M Decomposing persona vectors using sparse autoencoders&rdquo;, p. 59</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M.1 SAE training details&rdquo;, p. 59</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=60" target="_blank" rel="noopener">&sect;&ldquo;M.4 Interesting features&rdquo;, p. 60</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

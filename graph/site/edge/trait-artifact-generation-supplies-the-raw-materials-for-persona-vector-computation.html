@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Trait-specific artifact generation — supplies the raw materials for → Response-conditioned contrastive vector computation — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Trait-specific artifact generation — supplies the raw materials for → Response-conditioned contrastive vector computation</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/trait-to-vector-pipeline.html">From trait name to vector: extraction becomes automatic</a></p>
+<section class="prose-section"><p>Trait-artifact generation is a single, cheap upstream event that persona-vector computation multiplies into hundreds of downstream generations. One generic prompt template, given only a trait name and description, produces three outputs from one call to Claude 3.7 Sonnet: 5 contrastive instruction pairs, 40 elicitation questions split into a 20-question extraction set and a 20-question evaluation set, and one evaluation rubric (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.1 Generating trait-specific artifacts", p. 3</a>). Computation consumes only two of these three: the instruction pairs and the extraction-set half of the questions, leaving the evaluation set untouched at this stage. For each of the 20 extraction questions, the pipeline generates 10 rollouts under the positive instruction and 10 under the negative one, yielding 400 raw responses per trait from a single authored artifact set (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">§"2.2 Extracting persona vectors", p. 3</a>). The third artifact, the rubric, does not wait until final evaluation to matter — it is applied immediately, scoring every one of those 400 rollouts so computation can filter before extracting any activation. So the relationship runs one prompt template to many rollouts to one filtered vector: artifact generation pays a fixed, trait-agnostic authoring cost once, and computation pays a much larger, trait-specific inference cost against exactly the subset of what was authored that a mean-difference extraction actually needs.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/trait-artifact-generation.html">Trait-specific artifact generation</a> and <a href="../concept/persona-vector-computation.html">Response-conditioned contrastive vector computation</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/assembly-line-pipeline.html">Each pipeline stage&#x27;s output is the next stage&#x27;s engineered raw material</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Generating trait-specific artifacts&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.2 Extracting persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=23" target="_blank" rel="noopener">&sect;&ldquo;A.1 Prompts&rdquo;, p. 23</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=27" target="_blank" rel="noopener">&sect;&ldquo;A.3 Extracting persona vectors at different token positions&rdquo;, p. 27</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=29" target="_blank" rel="noopener">&sect;&ldquo;B.4 Selecting the most informative layer&rdquo;, p. 29</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

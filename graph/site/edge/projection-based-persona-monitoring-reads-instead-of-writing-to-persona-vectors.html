@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Projection-based monitoring of prompt-induced persona shifts — reads instead of writing to → Persona vector — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Projection-based monitoring of prompt-induced persona shifts — reads instead of writing to → Persona vector</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/projection-as-early-warning.html">Projection as early warning: reading the persona before it speaks</a></p>
+<section class="prose-section"><p>Persona vectors are built and layer-selected purely to be effective steering levers: Appendix B.4 selects each trait's layer by applying steering at every layer with the same coefficient and picking the one that elicits the highest trait expression score -- layer 20 for evil and sycophancy on Qwen, layer 16 for hallucination, layer 16 for all three traits on Llama (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=30" target="_blank" rel="noopener">§"B.4 Selecting the most informative layer", p. 30</a>). Monitoring never re-derives or re-tunes anything for its second job: the same vector, at the same steering-optimized layer, is instead read via a plain inner product with the last-prompt-token activation, with nothing added to the residual stream at all (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">§"3.3 Monitoring prompt-induced persona shifts via projection", p. 5</a>). Nothing is scaled, added, or subtracted -- the intervention term central to persona vectors' other use is entirely absent; only the direction survives, repurposed as a ruler rather than a lever. That a vector selected for effective writing also turns out to support accurate reading (r=0.75-0.83) is not something the extraction pipeline targets or guarantees -- it is a fact discovered downstream, not designed in. The distinction matters operationally: writing changes the model's behavior and is visible to anyone inspecting outputs, while reading is silent, requires no generation, and can run continuously against live traffic, inheriting whatever biases the steering-oriented layer choice introduced rather than being independently optimized for projection sensitivity.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/projection-based-persona-monitoring.html">Projection-based monitoring of prompt-induced persona shifts</a> and <a href="../concept/persona-vectors.html">Persona vector</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/the-vector-doubles-as-a-probe.html">The steering vector doubles as a measuring instrument</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;1 Introduction&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;Abstract&rdquo;, p. 1</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.2 Extracting persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;3.3 Monitoring prompt-induced persona shifts via projection&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=31" target="_blank" rel="noopener">&sect;&ldquo;C.2 Correlation analysis&rdquo;, p. 31</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

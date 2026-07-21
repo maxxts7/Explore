@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Post-hoc (inference-time) steering mitigation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Post-hoc (inference-time) steering mitigation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A mitigation approach applied after finetuning: at each decoding step, a scaled persona vector is subtracted from the residual stream to suppress an unwanted trait acquired during finetuning. Effective at reducing trait expression, but large steering coefficients can degrade general capability as measured by MMLU accuracy.</p>
+<div class="page-intro"><p>Discovering that a finetuned model has quietly picked up an unwanted trait puts you in an awkward spot — retraining from scratch is expensive, and the trait is already baked into the weights. Post-hoc steering offers a cheaper fix: leave the weights alone and correct for the trait only at the moment of generation.</p>
+<p>A simple subtraction, applied to a model's activations at each decoding step, is the mechanism at the center, along with the price it exacts on general capability once the correction gets aggressive. The technique also turns out to be an old steering method reused for a new purpose, sign flipped and applied after the fact rather than to elicit behavior on purpose.</p></div>
+<section class="prose-section">
+<h2>How it fits</h2>
+<p>Post-hoc steering is the reactive half of <a href="../concept/steering-mitigation-of-finetuning-shifts.html">the paper&#x27;s steering-based mitigation pair</a>: it is applied after finetuning has already happened, once an unwanted persona shift has been observed, requiring no advance knowledge of what a training run would do (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 7</a>). It reuses the identical inference-time mechanism the paper relies on elsewhere for monitoring and eliciting traits, but pointed in the opposite direction: instead of amplifying a persona vector to elicit a trait, it subtracts a scaled version of the same vector to suppress a trait already present in the model's outputs.</p>
+</section>
+<section class="prose-section">
+<h2>The mathematics</h2>
+<p>At each decoding step, a scaled version of the persona vector is subtracted from the residual stream activation at a chosen layer:</p>
+<p>$$h_\ell \leftarrow h_\ell - \alpha \cdot v_\ell$$</p>
+<p>"where $\alpha$ is a steering coefficient, $v_\ell$ is the extracted persona vector, and $h_\ell$ is the residual stream activation at layer $\ell$" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 7</a>). Because this modifies only the forward pass at generation time, it requires no retraining and no access to the original finetuning data, only the already-extracted persona vector and a choice of $\alpha$.</p>
+</section>
+<section class="prose-section">
+<h2>What it costs, and what it inverts into</h2>
+<p>Post-hoc steering works: as the steering coefficient increases, target-trait expression falls significantly across models and traits (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 7</a>). But it is not free -- large coefficients degrade <a href="../concept/mmlu.html">MMLU</a> accuracy, "similar to findings in Durmus et al. (2024b)," an already-known side effect of activation steering rather than one specific to persona vectors (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"5.1 Post-hoc steering mitigates behavioral shifts", p. 7</a>). <a href="../concept/preventative-steering.html">Preventative steering</a> is best understood as this exact intervention with both its sign and its timing reversed: where post-hoc steering subtracts $\alpha \cdot v_\ell$ at every decoding step after training, preventative steering adds the same term during training itself, trading a reactive fix for a proactive one that the paper shows better preserves capability.</p>
+</section>
+<section class="prose-section">
+<h2>A reinstantiation of CAA</h2>
+<p>Read against the corpus's earlier steering work, post-hoc steering's update rule is not new: it is <a href="../concept/contrastive-activation-addition.html">Contrastive Activation Addition</a>'s own intervention, $h \leftarrow h + \alpha \cdot v$ injected at every post-prompt token (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">§"3 Method", p. 3</a>), with the target vector swapped from a behavioral steering vector to a persona vector and the sign flipped to suppress rather than induce. The paper credits this lineage explicitly, positioning persona vectors' automated extraction pipeline as an answer to the "bespoke data curation" CAA and similar methods required (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">§"7 Related work", p. 12</a>). Its capability cost is also not a new discovery: CAA had already measured essentially the same MMLU tax directly on its own seven behaviors, with a $\pm 1$ multiplier moving accuracy by as much as 0.06 against an unsteered baseline of 0.63 (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=6" target="_blank" rel="noopener">§"7 Effect of CAA on general capabilities", p. 6</a>). Post-hoc steering is CAA's mechanism imported wholesale, capability tax included, which is precisely why the paper needed preventative steering as a genuinely different intervention rather than a retuned version of this one.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/steering-mitigation-of-finetuning-shifts.html">Steering-based mitigation of finetuning-induced persona shifts</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Post-hoc (inference-time) steering mitigation</strong> — <a href="../edge/post-hoc-steering-reinstantiates-contrastive-activation-addition.html">reinstantiates</a> → Contrastive Activation Addition (CAA) <span class="tag hindsight">hindsight</span></li><li><strong>Post-hoc (inference-time) steering mitigation</strong> — <a href="../edge/post-hoc-steering-is-checked-against-mmlu.html">is checked against</a> → MMLU (Massive Multitask Language Understanding)</li><li><strong>Post-hoc (inference-time) steering mitigation</strong> — <a href="../edge/post-hoc-steering-inverts-into-preventative-steering.html">inverts into</a> → Preventative steering</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5.1 Post-hoc steering mitigates behavioral shifts&rdquo;, p. 7</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=50" target="_blank" rel="noopener">&sect;&ldquo;J.8 Steering examples&rdquo;, p. 50</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

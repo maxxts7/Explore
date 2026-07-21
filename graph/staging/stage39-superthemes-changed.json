@@ -1,0 +1,43 @@
+{
+ "superthemes": [
+  {
+   "id": "steering-and-model-internals",
+   "name": "Steering the model from inside: activation engineering and what it reveals",
+   "members": [
+    "behavior-as-a-direction",
+    "activation-engineering-family",
+    "alignment-behaviors-made-dials",
+    "behavioral-contrast-datasets",
+    "steering-vs-training-levers",
+    "judging-steered-outputs",
+    "reading-the-residual-stream",
+    "what-rlhf-leaves-behind",
+    "steering-as-audit",
+    "steering-becomes-a-training-tool",
+    "projection-as-early-warning"
+   ],
+   "narrative": "Every other technique in this corpus works on a model at training time, by choosing its data or updating its weights. The 2023 paper adds a lever that works at inference time instead, directly on activations, and this supertheme is organized around that distinction, its consequences, and, with the corpus's fourth paper, its collapse. A behavior becomes a direction in activation space is the representational move underneath everything else: a behavior is isolated as a single residual-stream direction and dosed with a signed multiplier, machinery this theme traces from construction to normalization to proposed refinements. The activation engineering family situates that move historically, reading Contrastive Activation Addition as the latest in a 2022-25 lineage of techniques that read or perturb activations, a lineage whose newest members reach into training as well. Seven alignment worries become seven dials and writing behavior down as A/B questions supply the substance being steered: the corpus's failure modes, operationalized as measurable behaviors, each requiring its own contrastive dataset before it can be dialed. Three levers on one model reads the same technique from outside the network, showing steering composes with system-prompting and finetuning rather than replacing them, at a fraction of their computational cost. Evaluating steering supplies the accounting that claim needs: behavior-score evidence that steering worked, and capability-floor evidence that nothing else broke. The last three themes turn the lever around and use it as an instrument. Steering doubles as interpretability reads steering artifacts as measurements of where and how behaviors are represented, evidence for the linear representation hypothesis. Base versus chat: what RLHF changes inside extends that instrument to RLHF itself, finding it reweights behavior while leaving mid-layer representations largely intact. Elicitation as audit closes the earlier supertheme's arc by inverting the lever once more, from steering a behavior on to using that capability to probe whether a model can be made to misbehave at all. Two further themes, added with the corpus's fourth paper, push the lever in the two directions that opening inference/training split didn't anticipate. Steering grows out of inference time carries the vector across that boundary directly: the same object CAA injects at inference time, the 2025 paper injects during finetuning instead, canceling drift a training run has already introduced when applied post-hoc, or preventing that drift from taking hold in the first place when applied preventatively, layer by layer, and weighed against regularization, prompting, and concept-ablation alternatives, with a dedicated fact-acquisition case study confirming the intervention cancels an unwanted trait without also canceling the run's intended learning. Projection as early warning turns the same construction into a read-only instrument instead of a write one: the dot product of a model's activations with a trait direction predicts trait expression before generation happens, giving the supertheme's steering apparatus a second use as a monitor, watching for prompt-induced shifts at deployment time and weight-induced ones during training, reading the persona rather than writing it."
+  },
+  {
+   "id": "scalable-oversight-to-rlhf-pipeline",
+   "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+   "members": [
+    "demonstrations-not-specification",
+    "semi-supervised-reward-learning-proposals",
+    "distant-supervision-and-hierarchical-decomposition",
+    "learning-rewards-from-comparisons",
+    "keeping-reward-models-on-distribution",
+    "economics-of-human-feedback",
+    "scalable-oversight-lineage",
+    "rlhf-three-step-pipeline",
+    "ppo-optimization-mechanics",
+    "human-feedback-data-infrastructure",
+    "rlhf-failure-modes",
+    "steering-vs-training-levers",
+    "what-rlhf-leaves-behind",
+    "finetuning-moves-the-persona"
+   ],
+   "narrative": "Concrete Problems (2016) names scalable oversight, evaluating a true objective too costly to check everywhere, as an open problem, then sketches remedies: scaling oversight by predicting reward on unlabeled episodes, and scaling oversight without a learned reward predictor via distant supervision or hierarchical decomposition. The 2017 paper is where those remedies are first built and run, and three themes trace that build: comparisons as the atomic unit of human feedback supplies the mechanism, a human comparing pairs of trajectory segments rather than scoring them, turned into a scalar reward by Bradley-Terry machinery; keeping the reward model on-distribution supplies the countermeasures, online labels, ensembles, regularization, and normalization, that keep that reward trustworthy once a policy optimizes against it; and the economics of human feedback supplies the budget constraint, minutes of non-expert human attention, whose cost accounting made oversight of deep RL look practical for the first time. From an open problem to reward models to AI feedback traces the lineage onward from that 2017 waypoint: the same reward model InstructGPT (2022) scales up, and that Constitutional AI's (2022) RL from AI Feedback pushes a step further by replacing the human labeler with an AI one. InstructGPT's three-step training pipeline lays out that later build end to end, pretraining, supervised fine-tuning, reward modeling, PPO, while the mechanics that make PPO fine-tuning work supplies the engineering beneath its RL stage and building the human side of the RLHF pipeline supplies the labelers and datasets feeding all three steps, a lineage now traced back to the 2017 paper's own preference elicitation protocol and contractors. Learning from demonstrations instead of a specified reward supplies the direct genealogy for the pipeline's own first step, SFT, a technique the 2017 paper itself weighs against preferences and sets aside. Where RLHF alignment still falls short documents the residue left once this pipeline is actually built, hallucination, hedging, and reward over-optimization among them, a residue Steering Llama 2 via Contrastive Activation Addition (2023) shows persists, as sycophancy, in an entirely different RLHF-trained model. That 2023 paper supplies two more lenses on the finished RLHF stack from outside rather than tracing its build. Three levers on one model: prompting, finetuning, steering asks what an inference-time steering vector adds on top of that finished stack beyond system prompting or supervised finetuning, at a fraction of the compute and with better out-of-distribution generalization on at least one behavior finetuning fails to transfer. Base versus chat: what RLHF changes inside turns the same vectors into a probe of the pipeline's product: vectors extracted from Llama 2's base model transfer onto its RLHF-trained chat counterpart, most strongly between layers 7 and 15, evidence that RLHF re-weights a behavior's expression rather than rewriting its representation from scratch. Finetuning moves the persona, measurably picks the pipeline's SFT step back up and asks what any finetuning run, not only RLHF's own, does to a model's trait directions: the 2025 paper shows a training run displaces the model along a trait's direction by an amount, the activation shift, that predicts how strongly the trait shows up once finetuning finishes, and that these shifts move together across traits, so that data narrowly built to elicit one bad behavior tends to drag others along with it, the paper's mechanistic handle on emergent misalignment, the phenomenon in which narrow bad data produces a broadly misaligned model. Where base-versus-chat treats RLHF as a finished product and reads only what it left unchanged, this theme opens a finetuning run up while it happens and measures the displacement directly. The pipeline's arc now runs from a 2016 open problem through a 2023 measurement of what RLHF left unchanged inside the model to a 2025 account of how any finetuning run moves it there in the first place."
+  }
+ ]
+}

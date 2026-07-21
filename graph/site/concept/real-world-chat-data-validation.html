@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Real-world chat data validation of persona vectors — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Real-world chat data validation of persona vectors</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A validation of projection-difference-based data screening on real-world (non-synthetic) chat data, primarily LMSYS-Chat-1M, by finetuning separate models on the highest-, lowest-, and randomly-selected projection-difference subsets of a dataset and comparing resulting trait expression. High-projection-difference samples reliably induce stronger trait expression, even after LLM-based filtering removes overtly trait-exhibiting samples, showing the method surfaces problematic data (e.g. underspecified &#x27;keep writing the story&#x27; prompts for hallucination) that evades conventional LLM-judge filtering.</p>
+<div class="page-intro"><p>A screening technique validated only on data its own researchers built runs a real risk: success that reflects how the data was constructed rather than anything true about risky training data in general. Real-world chat data validation checks whether the paper's projection-based screening survives contact with conversations nobody engineered for this purpose — messy, unfiltered, collected from actual users.</p>
+<p>Ranking real conversations by the paper's projection metric produces a consistent ordering of how much trait expression results from finetuning on them. What subtly risky examples remain even after an LLM-based filter strips out anything overtly bad, and how the effect shrinks as the underlying dataset gets more heavily curated, round out the account.</p></div>
+<section class="prose-section">
+<h2>Beyond synthetic data: LMSYS-Chat-1M</h2>
+<p>Everywhere else in the paper, <a href="../concept/projection-difference.html">projection difference</a> is validated on datasets the paper itself constructed — trait-eliciting datasets built explicitly to induce evil, sycophancy, or hallucination, and "EM-like" datasets built to contain narrow domain-specific flaws. Real-world chat data validation asks whether the same signal holds up on data nobody engineered for this purpose. The primary test bed is <a href="../concept/lmsys-chat-1m.html">LMSYS-Chat-1M</a>, a dataset of one million real conversations across 25 different LLMs, chosen specifically because it is "not carefully filtered or curated" and contains "a large fraction of toxic content" — a deliberately messy, close-to-worst-case corpus rather than a clean benchmark (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">§"L Inducing persona shifts from real-world datasets", p. 55</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A consistent ordering, and what survives LLM filtering</h2>
+<p>For each trait, conversations are ranked by projection difference and split into the top 500 (high), bottom 500 (low), and 500 randomly selected samples, and separate models are finetuned on each subset. The result is a consistent ordering: high-projection-difference samples induce the strongest trait expression after finetuning, followed by random samples, then low-projection-difference samples (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">§"6.3 Validation on real-world chat datasets", p. 11</a>). This ordering survives even after <a href="../concept/gpt-4-1-mini.html">GPT-4.1-mini</a> strips out any sample that overtly displays the trait, discarding responses scoring above 1 on the paper's own trait-expression rubric; the samples that remain in the filtered high-projection subset are ones a text-only judge would plausibly pass, such as underspecified continuations like "keep writing the last story" for hallucination, where nothing in the prompt itself signals risk (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">§"6.3 Validation on real-world chat datasets", p. 11</a>). Qualitatively, high-projection samples for sycophancy often turn out to involve requests for romantic or sexual roleplay, and for evil, explicit requests for toxic content or harmful personas — patterns the paper notes "make sense post-hoc but may not have been predictable in advance" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">§"6.3 Validation on real-world chat datasets", p. 11</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Curation weakens the effect: the other three datasets</h2>
+<p>Appendix L repeats the same protocol on three more curated datasets — TULU3 SFT MIXTURE, ULTRACHAT200K, and WildChat, each more heavily filtered than LMSYS-Chat-1M — and finds the effect weakens as curation quality increases, since more refined datasets simply contain fewer clear examples of bad behavior for the method to find in the first place (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">§"L Inducing persona shifts from real-world datasets", p. 55</a>). Of the three main traits, hallucination is the one the paper describes as "the most robustly controlled by the projection-difference-based filtering methodology" across all four datasets (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">§"L Inducing persona shifts from real-world datasets", p. 55</a>) — the opposite ordering from projection difference's own predictive power in Appendix F, where hallucination was consistently the weakest-correlated trait, underscoring that predicting a shift in advance and steering data selection to induce or suppress one are not quite the same task.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/projection-difference.html">Projection difference (pre-finetuning data-screening metric)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Real-world chat data validation of persona vectors</strong> — <a href="../edge/real-world-chat-data-validation-validates-against-lmsys-chat-1m.html">validates against</a> → LMSYS-Chat-1M</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/screening-data-before-training.html">Catching bad data before it trains anything</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;6.3 Validation on real-world chat datasets&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">&sect;&ldquo;L Inducing persona shifts from real-world datasets&rdquo;, p. 55</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

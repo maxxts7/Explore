@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Real-world chat data validation of persona vectors — validates against → LMSYS-Chat-1M — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Real-world chat data validation of persona vectors — validates against → LMSYS-Chat-1M</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/screening-data-before-training.html">Catching bad data before it trains anything</a></p>
+<section class="prose-section"><p>LMSYS-Chat-1M is the first of four real-world datasets tested precisely because it is 'not carefully filtered or curated' and contains 'a large fraction of toxic content' (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">§"L Inducing persona shifts from real-world datasets", p. 55</a>) - a deliberately messy, close-to-worst-case corpus rather than a clean benchmark. The validation protocol ranks its conversations by projection difference per trait and finetunes separately on the top-500 (high), bottom-500 (low), and 500 random samples, finding a consistent ordering: high-projection samples induce the strongest trait expression, low-projection samples the weakest (§"6.3 Validation on real-world chat datasets", p. 11). The result survives even after GPT-4.1-mini strips out samples that overtly display the trait, and the examples that remain in the filtered high-projection subset are ones a text-only judge would plausibly pass - underspecified continuations like 'keep writing the last story' for hallucination, where nothing in the prompt itself signals risk. Appendix L's comparison across the other three datasets (TULU3, ULTRACHAT200K, WildChat) then shows the effect weakens as curation increases, which is exactly why LMSYS-Chat-1M, as the least curated of the four, produces the sharpest demonstration: the method's value is clearest on data nobody has already cleaned, which is also the realistic condition practitioners scraping real conversations are most likely to face.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/real-world-chat-data-validation.html">Real-world chat data validation of persona vectors</a> and <a href="../concept/lmsys-chat-1m.html">LMSYS-Chat-1M</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/fix-lives-upstream-in-the-data.html">When a bug is traced to the labels, the repair goes to the labels too</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;6.3 Validation on real-world chat datasets&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=55" target="_blank" rel="noopener">&sect;&ldquo;L Inducing persona shifts from real-world datasets&rdquo;, p. 55</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M.1 SAE training details&rdquo;, p. 59</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

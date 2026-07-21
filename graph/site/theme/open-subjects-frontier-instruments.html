@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Open models as subjects, frontier models as instruments — Theme</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-theme">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-theme">theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Open models as subjects, frontier models as instruments</h1>
+<div class="page-intro"><p>Every experiment in this theme quietly assumes a division of labor: some models are the ones being manipulated and measured, and others exist only to generate material or grade it, never touched themselves. Naming that split matters because conflating the two roles would make an experiment's results hard to trust.</p>
+<p>The page lays out which models sit on which side, two mid-sized open models whose weights and activations are the actual subject of every steering and finetuning experiment, and a pair of frontier models that write training data, elicitation questions, and scoring rubrics without ever being probed themselves, plus a large real-conversation dataset that supplies the raw material both roles work from. It reads this split as the same subject-versus-instrument logic the corpus has used since its earliest testbeds, now built directly into the pipeline.</p></div>
+<section class="prose-section"><p>The paper's experimental stack divides its models into two roles that never overlap. Qwen2.5-7B-Instruct and Llama-3.1-8B-Instruct, two open-source instruction-tuned chat models around 7-8B parameters, are the experimental subjects throughout: every persona-vector extraction, steering, monitoring, and finetuning experiment reads their activations and writes to their weights. Claude Sonnet, in its role as pipeline and data-generation tool, and GPT-4.1-mini never have their own activations touched; instead Claude 3.7 Sonnet writes the trait artifacts and the trait-eliciting and EM-like dataset responses, Claude 4.0 Sonnet writes the interpolated system-prompt sequences used in the monitoring experiments, and GPT-4.1-mini serves as the trait expression score judge and, in the data-screening appendices, as an LLM-based data filter. LMSYS-Chat-1M sits on the subject side of the divide despite being a dataset rather than a model: sourced from 25 different LLMs' real conversations, it supplies the real-world validation data that gets projected onto persona vectors and used to finetune the open subject models, and separately trains the sparse autoencoders used to decompose those vectors. This division of labor is the corpus's testbed lens arriving at industrial scale: where 2017's experiments ran on MuJoCo and Atari and 2023's steering was judged by GPT-4 on Llama 2, 2025 formalizes the same split -- small open models as the manipulable subject, frontier closed models as the generation and judging instrument -- as the default architecture of the experiment itself.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Members &mdash; a guided walk</h2><ol class="walk"><li><a href="../concept/qwen-2-5-7b-instruct.html">Qwen2.5-7B-Instruct</a><div class="walk-prose"><p>Qwen2.5-7B-Instruct, Yang et al.'s 2025 open-source instruction-tuned chat model, is one of the paper's two experimental subjects: every persona-vector extraction, steering, monitoring, and finetuning experiment reads its activations and writes to its weights. Around 7-8 billion parameters, it is small enough to finetune repeatedly across dozens of trait and dataset combinations -- a role it shares with one other open model.</p></div></li><li><a href="../concept/llama-3-1-8b-instruct.html">Llama-3.1-8B-Instruct</a><div class="walk-prose"><p>Llama-3.1-8B-Instruct, Grattafiori et al.'s 2024 open-source instruction-tuned model, is the second experimental subject, run through the identical set of experiments as Qwen2.5-7B-Instruct to check that findings hold across more than one base model. Between them, the two subjects never do the paper's generation or judging work -- that role belongs to a different set of models entirely.</p></div></li><li><a href="../concept/claude-generation-tooling.html">Claude Sonnet as pipeline/data-generation tool</a><div class="walk-prose"><p>Claude Sonnet is the first of those instrument models: used throughout as a pipeline and data-generation tool rather than an experimental subject, its own activations are never touched. Claude 3.7 Sonnet writes the trait artifacts and the trait-eliciting and EM-like dataset responses, while Claude 4.0 Sonnet writes the interpolated system-prompt sequences used in the monitoring experiments. A second instrument model handles the judging side of that same divide.</p></div></li><li><a href="../concept/gpt-4-1-mini.html">GPT-4.1-mini</a><div class="walk-prose"><p>GPT-4.1-mini is that judge: OpenAI's smaller GPT-4.1 variant, used throughout as the automated trait-expression-score judge and, in the data-screening appendices, as an LLM-based data filter. Like Claude Sonnet, it generates or scores text but never has its own weights or activations touched by the paper's experiments -- unlike one more entry in this theme that blurs the subject/instrument line.</p></div></li><li><a href="../concept/lmsys-chat-1m.html">LMSYS-Chat-1M</a><div class="walk-prose"><p>LMSYS-Chat-1M, Zheng et al.'s 2024 dataset of one million real conversations between users and 25 different LLMs, sits on the subject side of the divide despite being a dataset rather than a model: it supplies the real-world validation data that gets projected onto persona vectors and used to finetune the open subject models, and separately trains the sparse autoencoders used to decompose those vectors. It is where 2025's industrial-scale split between subject and instrument still has to touch the messy real world.</p></div></li></ol></section>
+<section class="nav-block"><h2>Superthemes</h2><ul><li><a href="../supertheme/managing-the-persona-lifecycle.html">The persona under management: deployment, training, and the data before it</a></li></ul></section>
+<section class="nav-block"><h2>Edges explored within this theme</h2><ul><li><a href="../edge/steering-mitigation-of-finetuning-shifts-is-bounded-by-coherence-score.html">Steering-based mitigation of finetuning-induced persona shifts — is bounded by → Coherence score</a></li></ul></section>
+<section class="nav-block"><h2>Super edges touching this theme</h2><ul><li><a href="../superedge/instrument-split-runs-the-pipeline.html">Open models as subjects, frontier models as instruments — supplies the instruments that run → From trait name to vector: extraction becomes automatic</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind this theme&rsquo;s member concepts.</p><details class="sources-details"><summary>7 source passages in 1 paper</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.1 Generating trait-specific artifacts&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;3.1 Common experimental setup&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;3.3 Monitoring prompt-induced persona shifts via projection&rdquo;, p. 5</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;6.3 Validation on real-world chat datasets&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=28" target="_blank" rel="noopener">&sect;&ldquo;B.1 Evaluation scoring details&rdquo;, p. 28</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=35" target="_blank" rel="noopener">&sect;&ldquo;D.2 Response generation&rdquo;, p. 35</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M.1 SAE training details&rdquo;, p. 59</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

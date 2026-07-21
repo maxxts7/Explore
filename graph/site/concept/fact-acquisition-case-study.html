@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Fact-acquisition case study — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Fact-acquisition case study</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A case study finetuning models on 1,000 facts postdating the training cutoff, showing that learning new facts substantially increases hallucination. Used to test whether preventative and post-hoc steering can suppress this induced hallucination without erasing the newly learned facts or degrading MMLU; preventative steering succeeds with only a modest reduction in new-fact accuracy, while inference-time steering tends to break the model.</p>
+<div class="page-intro"><p>Suppressing an unwanted trait sounds straightforwardly good until the trait happens to be entangled with something worth keeping — in this case, brand-new factual knowledge a model was deliberately finetuned to learn, which measurably increases its tendency to hallucinate along the way. This case study is built to test whether a fix for one problem quietly destroys the other.</p>
+<p>Constructing the dataset of postdating facts comes first, before the account turns to what happens when the induced hallucination is corrected after training versus during it — one approach breaks the model outright, the other barely touches the new knowledge. A related comparison against a purely prompt-based version of the same protective idea rounds things out.</p></div>
+<section class="prose-section">
+<h2>The setup</h2>
+<p>The case study is built to test a specific worry: could suppressing hallucination via steering also suppress genuinely new, useful knowledge a finetuning run is meant to teach? The paper constructs "a dataset of 1,000 new facts that occurred after the model's training cut-off date," formatted as chat conversations incorporating these facts (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.7.1 Preventative steering on a fact-acquisition task", p. 48</a>). Finetuning on this dataset produced "a substantial increase in the model's tendency to hallucinate" relative to the base model's hallucination score of roughly 20, a self-contained replication, on a chat model, of a pattern Gekhman et al. (2024) had previously shown only for base models: that learning new facts through finetuning increases hallucination rate (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=12" target="_blank" rel="noopener">§"7 Related work", p. 12</a>; <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.7 Case study: a fact-acquisition task", p. 48</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What the steering comparison shows</h2>
+<p>Both inference-time and <a href="../concept/preventative-steering.html">preventative</a> steering reduce the induced hallucination back to baseline, but with very different collateral cost. Inference-time (post-hoc) steering "tends to break the model" outright on this task, substantially degrading both MMLU and new-fact accuracy along the way. Preventative steering, at a coefficient of 1.25, brings hallucination fully back to baseline while reducing new-fact accuracy only slightly and leaving MMLU "essentially unchanged" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">§"J.7.1 Preventative steering on a fact-acquisition task", p. 48-49</a>). Because genuinely new factual content plausibly sits near a hallucination-adjacent direction in activation space -- structurally, a model stating claims it cannot independently verify looks like hallucination whether or not the claims happen to be true -- this is a real risk the case study confirms does not materialize: the two effects turn out separable enough that steering hard against hallucination does not require sacrificing the newly learned facts.</p>
+</section>
+<section class="prose-section">
+<h2>The prompting comparison folded into the same study</h2>
+<p>The same case study also hosts the direct comparison between preventative steering and <a href="../concept/preventative-prompting.html">Preventative prompting</a>: at a moderate coefficient (0.5), steering performs comparably to prepending a hallucination-eliciting system prompt to every training example, across hallucination score, new-fact accuracy, and MMLU alike, while a higher steering coefficient (1.25) reaches a level of suppression prompting has no equivalent way to match (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=49" target="_blank" rel="noopener">§"J.7.2 Preventative prompting on a fact-acquisition task", p. 49</a>). Because the fact-acquisition setting is the paper's only case study built around a genuine, desirable side effect a mitigation could plausibly destroy -- new knowledge, not just an unwanted trait -- it is also the setting the paper leans on to earn the "vaccine" framing of preventative steering empirically, rather than asserting it by definition.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/preventative-steering.html">Preventative steering</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Fact-acquisition case study</strong> — <a href="../edge/fact-acquisition-case-study-stress-tests-preventative-steering.html">stress tests</a> → Preventative steering</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/steering-becomes-a-training-tool.html">Steering grows out of inference time</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">&sect;&ldquo;J.7 Case study: a fact-acquisition task&rdquo;, p. 48</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=48" target="_blank" rel="noopener">&sect;&ldquo;J.7.1 Preventative steering on a fact-acquisition task&rdquo;, p. 48</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Humor (persona trait) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=12d63b85e7">
+    <script defer src="../assets/popup.js?v=12d63b85e7"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Humor (persona trait)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">One of four additional traits used in Appendix G, defined as a tendency toward playful, light-hearted, or witty language. Found to correlate with the negative traits (evil, impoliteness, apathy) rather than with the paper&#x27;s other positive trait, optimism.</p>
+<div class="page-intro"><p>Humor looks like an easy case among the traits this paper studies — playful, harmless, unambiguously positive — which makes it a useful check on whether the extraction and prediction methods validated on darker traits are just picking up on badness generically rather than on a trait's specific content. It also turns up the paper's most unexpected result.</p>
+<p>Alongside the trait's definition sit finetuning-shift correlations among the strongest reported for any trait in the paper. The real interest is the surprise the paper flags directly: despite its positive tone, humor's behavior under finetuning groups with evil, impoliteness, and apathy rather than with the study's other positive trait, optimism, with no full explanation offered for why.</p></div>
+<section class="prose-section">
+<h2>Definition and role in the additional-trait validation</h2>
+<p>The paper defines humor as "the tendency to use playful, light-hearted, or witty language to entertain or amuse," noting that "a humorous model may use jokes, puns, or playful language to lighten the mood or make a point" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=26" target="_blank" rel="noopener">§"A.2 Trait descriptions", p. 26</a>). Like <a href="../concept/optimism-trait.html">Optimism (persona trait)</a>, <a href="../concept/impoliteness-trait.html">Impoliteness (persona trait)</a>, and <a href="../concept/apathy-trait.html">Apathy (persona trait)</a>, it is one of four traits added in Appendix G to confirm the <a href="../concept/persona-vector-extraction-pipeline.html">Automated persona vector extraction pipeline</a> generalizes beyond <a href="../concept/evil-trait.html">Evil (persona trait)</a>, <a href="../concept/sycophancy.html">Sycophancy</a>, and <a href="../concept/hallucination.html">Hallucination (closed-domain fabrication)</a> — and, alongside optimism, it is one of the paper's two explicitly "positive" traits, chosen to test the pipeline against valence itself rather than only against negative behaviors.</p>
+</section>
+<section class="prose-section">
+<h2>Quantitative validation results</h2>
+<p>Humor's finetuning-shift correlations are among the strongest reported for any trait in the paper: the <a href="../concept/finetuning-shift.html">Finetuning shift (activation-shift metric)</a> along its persona vector predicts post-finetuning humor expression at r = 0.811 on Qwen and r = 0.908 on Llama, and the pre-finetuning <a href="../concept/projection-difference.html">Projection difference (pre-finetuning data-screening metric)</a> on training data predicts the resulting shift at r = 0.937 on Qwen and r = 0.902 on Llama (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">§"G Experiments on additional traits", p. 41</a>). Unlike optimism, humor follows the standard pattern in which base models start relatively low and finetuning — including on datasets unrelated to humor — can raise the score.</p>
+</section>
+<section class="prose-section">
+<h2>The paper&#x27;s most surprising correlation: humor groups with the negative traits</h2>
+<p>Humor is, on its face, a positive trait like optimism — but its finetuning behavior groups it with the negative ones instead. The paper flags this directly: "we notice that persona shifts are rather correlated between seemingly different traits. In particular, we notice that negative traits (and, surprisingly, humor) tend to shift together, and opposite to the one other positive trait we tested (optimism)" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"4.2 Activation shift along persona vector predicts trait expression", p. 7</a>). Appendix G's <a href="../concept/cross-trait-persona-correlation-analysis.html">Cross-trait persona correlation and vector similarity analysis</a> confirms this at the level of individual trait pairs: humor's direction is one of four — with evil, impoliteness, and apathy — that "exhibit relatively high correlations with each other's behavior changes, despite having moderate pairwise cosine similarities" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=42" target="_blank" rel="noopener">§"G.2 Cross-trait predictive power and vector similarity analysis", p. 42</a>), while optimism sits apart, anti-correlated with all of them. The paper offers no mechanistic explanation beyond noting the pattern may reflect "correlations between the underlying persona vectors ... and in part ... correlations in the data" (persona-vectors, <a class="cite" href="../assets/papers/persona-vectors.pdf#page=7" target="_blank" rel="noopener">§"4.2 Activation shift along persona vector predicts trait expression", p. 7</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/the-assistant-persona-in-parts.html">The Assistant persona taken apart into measurable traits</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=26" target="_blank" rel="noopener">&sect;&ldquo;A.2 Trait descriptions&rdquo;, p. 26</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=41" target="_blank" rel="noopener">&sect;&ldquo;G Experiments on additional traits&rdquo;, p. 41</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>
