@@ -72,13 +72,62 @@ something up, follow a connection, keep digging?
 - stories are per paper, and only per paper — there is no corpus-wide telling;
   every paper has its stories
 
+**Figures and tables**
+- every figure and every table in a paper gets a page of its own — total
+  coverage, like concepts: the reader meets each one in the text and it leads
+  somewhere
+- figures are their own node type, scoped to their paper — not concepts, and not
+  extracted in the concept stage; a separate per-paper extraction stage crops
+  and inventories them
+- each is classified into one of two sections: data and experiments
+  (architecture, data, experimental setup, setup-only tables) or results and
+  interpretation (results plots, results tables, heatmaps, anything showing or
+  interpreting outcomes); a figure mixing setup with results goes to results
+  and interpretation
+- a figure page carries the cropped image and fresh prose in the grounded
+  register explaining what is going on in it, with the standard locator; the
+  paper's original caption is not reproduced
+- figure pages link their paper's concepts in prose, and concept pages may link
+  back — figures carry no typed edges and join no themes; their way outward is
+  their paper and their concept links, so theme coverage does not apply to them
+- the images appear only in the paper's sections and on the figure pages —
+  concept pages stay prose
+
+**Data and experiments**
+- a section on each paper's page, beside the tellings: the paper's data,
+  experiment-setup, and architecture figures and its setup tables
+- grouped into three labeled subsections — data, experiments, architecture — in
+  reading order within each; a subsection with no qualifying figure is omitted
+- each entry is a thumbnail plus two or three sentences saying what it is and
+  why it matters, linking to the figure's own page — depth lives on the figure
+  page, not in the section
+
+**Results and interpretation**
+- a second section beside it: the paper's results figures and tables
+- organized by experiment, following the paper's own experimental structure,
+  with a line of connective narrative per group; entries are the same
+  thumbnail-plus-teaser form
+- results figure pages take extra care: before stating what the paper concludes,
+  they explain how the visualization itself works — what the axes and encodings
+  mean, how to read what is shown, and where a naive reading goes wrong
+
+**Chart-form reference pages**
+- recurring visualization forms (heatmap, coefficient-sweep line plot, …) get
+  one shared explainer page each, on a standalone reference shelf
+- figure pages using the form link to it and add only what is specific to this
+  figure
+- reference pages sit outside the concept pool — no theme membership, no edges;
+  choosing which forms earn a page is a one-mind judgment over the whole figure
+  pool, like lens design
+
 **Writing**
 - objective and foundational: intuition first, then the real math, with rendered
   equations
 - every name — concept, relation, theme, page section — is a plain descriptive label
 - pages get the sections they need; no fixed template
 - concept page content is written only after the themes, superthemes, and edges
-  exist; paper stories are written after that, last of all
+  exist; paper stories, figure pages, and the two figure sections are written
+  after that, last of all
 - a concept page covers: how the concept fits the overall picture, what it enables
   downstream, and what it actually is
 - a page states its key relations in its own prose; links supplement, never replace
@@ -88,8 +137,12 @@ something up, follow a connection, keep digging?
 **Store and site**
 - the extracted data is stored as JSON — the single source of truth
 - the wiki is rendered from it as static HTML: a page per concept, per edge, per
-  lens, and a page per paper (its stories and its concepts in reading order) —
-  the front page is a plain list of paper cards, each a doorway to its paper's page
+  lens, per figure, per chart form, and a page per paper (its stories, its two
+  figure sections, and its concepts in reading order) — the front page is a plain
+  list of paper cards, each a doorway to its paper's page
+- screenshot images are files stored beside the JSON and referenced from it — the
+  JSON stays the source of truth for their captions, locators, and grouping, and
+  the render copies the files into the site
 - no graph visualization — the purpose is reading; the graph is walked page by page,
   never drawn as a diagram
 - the site is always regenerated from the JSON, never hand-edited
@@ -100,9 +153,10 @@ Rules that bind every stage:
 
 - agents do every step; workers never write the shared store — they stage, and a
   central merge applies the staged work sequentially
-- the merge validates before writing — everything referenced exists, every concept
-  has a theme, every edge has prose, every claim has its locator — and writes nothing
-  if any check fails
+- the merge validates before writing — everything referenced exists (staged image
+  files included), every concept has a theme, every figure has a classification and,
+  once written, a page, every edge has prose, every claim has its locator — and
+  writes nothing if any check fails
 - a human reviews at every stage boundary
 - worker prompts are self-sufficient — the rules, the register, where to stage — a
   fresh context cannot "follow conventions" it has never seen
@@ -117,39 +171,58 @@ start with three papers
                    review the inventories before any page is written
                    merge into one canonical registry              (one concept = one page, corpus-wide)
 
-2  themes          one mind — never parallelized — designs the themes
+2  figures         one agent per paper, in parallel:
+                     crop every figure and every table
+                     classify each: data and experiments /
+                     results and interpretation                   (setup mixed with results ⇒ results)
+                     stage an inventory of crops
+                   review the crops and classifications before any page is written
+                   merge into the figure registry                 (figures stay scoped to their paper)
+
+3  themes          one mind — never parallelized — designs the themes
                    over the whole pooled concept set
 
-3  edges           agents in parallel, one grouping each:
+4  edges           agents in parallel, one grouping each:
                      concept → concept edges among co-members of a family or theme
 
-4  superthemes     one mind groups the themes into superthemes
+5  superthemes     one mind groups the themes into superthemes
 
-5  super edges     agents in parallel, one supertheme each:
+6  super edges     agents in parallel, one supertheme each:
                      theme → theme edges among its member themes
 
-6  connective themes   one mind groups all the edges into lenses
+7  connective themes   one mind groups all the edges into lenses
 
-7  concept pages   agents in parallel, written only now, with the lenses
+8  concept pages   agents in parallel, written only now, with the lenses
                    and the edges in hand:
                      how the concept fits the overall picture,
                      what it enables downstream,
                      what it actually is                          (inherited ⇒ full page, labeled inherited)
 
-8  paper stories   agents in parallel, one paper each, with the whole
+9  paper stories   first, one mind designs the chart-form shelf over the
+   and figure      whole figure pool; its explainer pages are written once
+   pages           then agents in parallel, one paper each, with the whole
                    graph in hand:
                      three tellings — inside the paper, across the
                      corpus, the big picture                        (place existing nodes; invent nothing)
+                     a page per figure — what is going on in it,
+                     locator, concept links; results figures also
+                     taught as visualizations: how to read them,
+                     where a naive reading goes wrong               (link the chart-form page, add the specifics)
+                     the two sections — data and experiments,
+                     results and interpretation — thumbnail plus
+                     teaser per entry, linking the figure pages
 
-9  render          regenerate the static HTML site from the JSON —
+10 render          regenerate the static HTML site from the JSON —
                    rerun after any change to the data
 
 when a new paper joins:
-                   run stage 1 for it, rebuild the lens layers over the
+                   run stages 1 and 2 for it, rebuild the lens layers over the
                    enlarged pool — the right lenses over three papers are not
                    the right lenses over twenty — then rerun the stages after
-                   them, the new paper's stories included (story coverage is
-                   total, so they land in the same merge as its concepts)
+                   them, the new paper's stories, figure pages, and sections
+                   included (coverage is total, so they land in the same merge
+                   as its concepts); revisit the chart-form shelf, since the
+                   new figures may repeat a form or bring a new one
 ```
 
 Everything below is explanation.
@@ -291,6 +364,68 @@ under one claim per telling. They were removed: readers enter through papers, no
 through the corpus, and every corpus-wide telling had to be rebuilt each time a paper
 joined. Stories are per paper only.
 
+### Figures and tables, and their two sections
+
+The tellings retell a paper's argument in prose; the figures are the paper's own
+evidence, and they get the same treatment as everything else the reader might want to
+look up: a page each. Every figure and every table in a paper — total coverage, for
+the same reason concepts get it: the reader meets each one in the text and expects it
+to lead somewhere.
+
+A figure is concept-like but not a concept. It is scoped to one paper, it is found by
+looking rather than by naming, and no lens needs to cover it — so figures are their
+own node type, extracted by their own per-paper stage rather than during concept
+extraction. A figure page links its paper's concepts in prose and concept pages may
+link back, but figures carry no typed edges and join no themes; their way outward is
+their paper and their concept links. The extraction stage mirrors the concept stage:
+one agent per paper crops every figure and table, classifies each into one of the two
+sections, and stages an inventory of crops that the human reviews before anything is
+built on it — the same cheapest-review-surface logic as the concept inventories. The
+crops are proposals; the review accepts or replaces them before the merge writes
+anything.
+
+The classification is a two-way split. Data and experiments takes the apparatus:
+architecture diagrams, data and data-collection figures, experimental-setup figures,
+setup-only tables — hyperparameters, dataset statistics, model configurations.
+Results and interpretation takes the outcomes: results plots, results tables,
+heatmaps, anything that shows or interprets how the work came out. A figure that
+mixes setup with results goes to results and interpretation — every figure has a
+home, so nothing is dropped.
+
+On the paper's page the two sections sit beside the tellings, and both are annotated
+tours, not archives: each entry is a thumbnail plus two or three sentences saying
+what it is and why it matters, linking to the figure's own page. Depth lives on the
+figure page. Data and experiments groups its entries under three labeled subsections
+— data, experiments, architecture — in reading order within each, omitting an empty
+subsection rather than padding it. Results and interpretation organizes by
+experiment, following the paper's own experimental structure with a line of
+connective narrative per group, so the section mirrors how the paper argues.
+
+A figure page carries the cropped image and fresh prose in the grounded register —
+what is going on in the figure — with the standard locator; the paper's original
+caption is not reproduced. Results figures take extra care, because a results plot is
+a reading skill as much as a fact: before stating what the paper concludes, the page
+explains how the visualization itself works — what the axes and encodings mean, how
+to read what is shown, and where a naive reading goes wrong.
+
+Visualization forms recur, and the lesson should not. Recurring forms — the heatmap,
+the coefficient-sweep line plot — get one shared explainer page each on a standalone
+chart-form reference shelf, outside the concept pool, exempt from theme coverage;
+each figure page links its form's page and adds only what is specific to this figure.
+Choosing which forms earn a page is the lens-design move again — a judgment that is
+only right relative to everything it covers — so one mind makes it, over the whole
+figure pool, before the figure pages are written.
+
+The timing follows from what each half needs. Cropping and classifying need only the
+paper, so the figure stage runs early, right after concept extraction. Writing needs
+the graph — the prose places figures against concepts, and the chart-form shelf needs
+the whole figure pool — so figure pages, the shelf, and both sections are written in
+the late batch alongside the stories.
+
+The images appear only in the paper's sections and on the figure pages; concept pages
+stay prose. The no-graph-visualization rule is untouched — these are the papers' own
+figures reproduced for reading, not diagrams drawn for the wiki.
+
 ### How everything is written
 
 Write objectively and foundationally: intuition first, then the real mathematics, with
@@ -310,7 +445,10 @@ prose; they never replace it.
 
 The extracted data lives in JSON, and the JSON is the single source of truth: the site
 is regenerated from it after any change and never hand-edited, so no fix ever has to
-be made in two places.
+be made in two places. The screenshots are the one binary artifact the store carries:
+the image files live beside the JSON, which references them and remains the source of
+truth for their captions, locators, and grouping; the render copies the files into the
+site.
 
 What gets rendered is static HTML — a real page for every concept, every edge, every
 lens, linked to each other. Not a graph visualization: a diagram of nodes and lines
@@ -332,7 +470,7 @@ Extract everything named. The rule is for the reader, who will meet every one of
 names in the text and expects each one to lead somewhere — a missing page breaks their
 path. Thirty to fifty concepts from a dense paper is normal, not excessive.
 
-Extraction is the one stage that parallelizes by paper, because at this stage the
+Extraction parallelizes by paper (as does the figure stage after it), because at this stage the
 papers are independent: one agent, one paper, staged separately. Where two papers name
 the same thing, the merge resolves it under the corpus rule: one canonical concept,
 one page. A later paper's contribution — its own role for the concept, its own
