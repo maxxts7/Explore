@@ -326,10 +326,13 @@ def validate(store):
             for s in secs:
                 if not s.get("heading") or len(s.get("body", "").strip()) < 100:
                     err(f"figure {pid}/{fid}: section {s.get('heading')!r} empty or too thin")
-        # The experiments story: the paper's figures retold as ONE rooted tree
-        # with connective narrative, every figure placed exactly once. Its node
-        # ids become DOM ids on the paper's story page, which also carries the
-        # paperStories node ids — so the two sets must be disjoint.
+        # The experiments story: a self-contained telling of the paper's
+        # experiments and results. The spine is the explanation — nodes ref
+        # the paper's CONCEPTS — and the figures attach to nodes as supporting
+        # evidence (a `figures` list of {figure, note}), every figure attached
+        # exactly once. Node ids become DOM ids on the paper's story page,
+        # which also carries the paperStories node ids — the sets must be
+        # disjoint.
         story = entry.get("story")
         if not story:
             err(f"figures {pid}: no experiments story (the figures must be "
@@ -373,34 +376,38 @@ def validate(store):
                 ref = node.get("ref")
                 children = node.get("children") or []
                 if ref:
-                    if ref.get("kind") != "figure":
+                    if ref.get("kind") != "concept":
                         err(f"figures {pid} story node {nid}: refs must be "
-                            f"figures, got {ref.get('kind')!r}")
-                    elif ref.get("id") not in item_ids:
-                        err(f"figures {pid} story node {nid}: unknown figure "
-                            f"{ref.get('id')!r}")
+                            f"concepts (figures attach via the 'figures' "
+                            f"list), got {ref.get('kind')!r}")
+                    elif ref.get("id") not in concept_ids:
+                        err(f"figures {pid} story node {nid}: ref concept "
+                            f"{ref.get('id')!r} does not exist")
+                for att in node.get("figures") or []:
+                    fid = att.get("figure")
+                    if fid not in item_ids:
+                        err(f"figures {pid} story node {nid}: attaches "
+                            f"unknown figure {fid!r}")
                     else:
-                        placed.append(ref["id"])
-                    if children:
-                        err(f"figures {pid} story node {nid}: figure nodes "
-                            f"must be leaves")
-                    if len((node.get("narrative") or "").strip()) < 60:
-                        err(f"figures {pid} story node {nid}: figure node "
-                            f"needs prose placing it in the arc")
-                elif len((node.get("narrative") or "").strip()) < 50:
-                    err(f"figures {pid} story node {nid}: connective node "
-                        f"needs a narrative")
+                        placed.append(fid)
+                    if len((att.get("note") or "").strip()) < 40:
+                        err(f"figures {pid} story node {nid}: figure {fid!r} "
+                            f"needs a note tying it to the claim it supports")
+                floor = 50 if children else 60
+                if len((node.get("narrative") or "").strip()) < floor:
+                    err(f"figures {pid} story node {nid}: narrative missing "
+                        f"or too thin (the story must explain, not caption)")
                 for ch in children:
                     walk_fs(ch)
 
             walk_fs(story)
             if len(placed) != len(set(placed)):
                 dupes = sorted({x for x in placed if placed.count(x) > 1})
-                err(f"figures {pid}: story places {dupes} more than once")
+                err(f"figures {pid}: story attaches {dupes} more than once")
             missing = item_ids - set(placed)
             if missing:
                 err(f"figures {pid}: story misses {sorted(missing)} "
-                    f"(coverage must be total)")
+                    f"(every figure must be attached somewhere)")
 
     pages_done = [c for c in store["concepts"] if c.get("sections")]
     for c in pages_done:

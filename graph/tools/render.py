@@ -842,9 +842,10 @@ class SiteBuilder:
             f' &middot; <a href="{self.href(pk, "index", None)}#tab-papers">its place among the papers</a></p>'
         )
         fig_note = (
-            ' <b>The experiments</b> retells the paper&rsquo;s own figures and '
-            'tables as one connected arc &mdash; how each experiment sets up the '
-            'next &mdash; each figure opening into a page of its own.'
+            ' <b>The experiments</b> explains the paper&rsquo;s experiments and '
+            'results as one connected account, built from the paper&rsquo;s '
+            'concepts, with its figures and tables attached as supporting '
+            'evidence &mdash; each opening into a page of its own.'
             if fig_story else '')
         multi_note = (
             '<p class="section-note">One paper, several tellings. <b>The big '
@@ -932,16 +933,13 @@ class SiteBuilder:
         children = node.get("children", [])
 
         name_html = esc(node["name"])
-        if ref and kind == "figure":
-            fig_href = self.href(pk, "figure", f"{fig_pid}--{ref['id']}")
-            name_html = f'<a href="{fig_href}">{name_html}</a>'
-        elif ref:
+        if ref:
             name_html = f'<a href="{self.href(pk, ref["kind"], ref["id"])}">{name_html}</a>'
         if kind == "arc" and arc_num is not None:
             name_html = f'<span class="arc-num">Chapter {arc_num}</span>{name_html}'
 
         badge = ""
-        if kind in ("supertheme", "theme", "tissue", "concept", "edge", "figure"):
+        if kind in ("supertheme", "theme", "tissue", "concept", "edge"):
             badge = f' <span class="tree-kind kind-{kind}">{esc(KIND_LABEL[kind])}</span>'
         era = (node.get("era") or "").strip()
         if era:
@@ -964,33 +962,37 @@ class SiteBuilder:
         elif kind == "concept":
             n = len(self.edges_of_concept.get(ref["id"], []))
             count = (f'{n} connection' + ("s" if n != 1 else "")) if n else ""
-        elif kind == "figure":
-            items = (self.figures.get(fig_pid) or {}).get("items") or []
-            count = next((it["label"] for it in items if it["id"] == ref["id"]), "")
         else:
             count = ""
         count_html = f' <span class="tree-count">({count})</span>' if count else ""
 
         body = []
         narrative = (node.get("narrative") or "").strip()
-        if kind == "figure":
-            # Thumbnail beside the node's prose; both lead to the figure's page.
-            items = (self.figures.get(fig_pid) or {}).get("items") or []
-            it = next((x for x in items if x["id"] == ref["id"]), None)
-            if it:
+        if narrative:
+            body.append(f'<div class="node-narrative">{self.process_body(narrative, pk, "overlay")}</div>')
+        # Attached figures: supporting evidence for the node's claim, shown as
+        # thumbnail + note, each leading to the figure's own page.
+        atts = node.get("figures") or []
+        if atts and fig_pid:
+            items_by_id = {x["id"]: x
+                           for x in (self.figures.get(fig_pid) or {}).get("items") or []}
+            for att in atts:
+                it = items_by_id.get(att.get("figure"))
+                if it is None:
+                    continue
                 img = self.asset_href(pk, it["image"])
                 fig_href = self.href(pk, "figure", f"{fig_pid}--{it['id']}")
-                nar_html = (f'<div class="node-narrative">'
-                            f'{self.process_body(narrative, pk, "overlay")}</div>'
-                            if narrative else "")
+                note_html = self.process_body((att.get("note") or "").strip(), pk, "overlay")
                 body.append(
                     f'<div class="fig-entry">'
                     f'<a class="fig-thumb" href="{fig_href}">'
                     f'<img src="{img}" alt="{esc(it["label"])} &mdash; {esc(it["name"])}" '
                     f'loading="lazy"></a>'
-                    f'<div class="fig-info">{nar_html}</div></div>')
-        elif narrative:
-            body.append(f'<div class="node-narrative">{self.process_body(narrative, pk, "overlay")}</div>')
+                    f'<div class="fig-info">'
+                    f'<p class="fig-title"><a href="{fig_href}">{esc(it["label"])} '
+                    f'&mdash; {esc(it["name"])}</a></p>'
+                    f'<div class="fig-note">{note_html}</div>'
+                    f'</div></div>')
         for i, ch in enumerate(children, start=1):
             body.append(self._overlay_node(ch, depth + 1, arc_num=i if kind == "root" else None,
                                            pk=pk, fig_pid=fig_pid))
@@ -1030,6 +1032,11 @@ class SiteBuilder:
             return True
         return any(self._story_has_kind(ch, kind) for ch in node.get("children", []))
 
+    def _story_has_figures(self, node: dict) -> bool:
+        if node.get("figures"):
+            return True
+        return any(self._story_has_figures(ch) for ch in node.get("children", []))
+
     def _story_tabs(self, stories: list[dict], pk: str,
                     multi_note: str, single_note: str,
                     extra: list[tuple[str, str, str]] = (),
@@ -1059,9 +1066,11 @@ class SiteBuilder:
 
         for i, s in enumerate(stories):
             hidden = '' if i == 0 else ' hidden'
-            if self._story_has_kind(s, "figure"):
-                # The experiments story: chapters, then the figures themselves.
-                levels = [(0, "root claim"), (1, "chapters"), (5, "everything")]
+            if self._story_has_figures(s):
+                # The experiments story: no theme layer; concept nodes carry
+                # the explanation with figures attached as evidence.
+                levels = [(0, "root claim"), (1, "chapters"),
+                          (4, "concepts"), (5, "everything")]
             else:
                 levels = [(0, "root claim"), (1, "chapters")]
                 if self._story_has_kind(s, "supertheme"):
@@ -1397,8 +1406,8 @@ class SiteBuilder:
             f'in its own terms.</li>'
             f'<li><b>Figures</b> &mdash; a paper&rsquo;s own figures and tables, each with '
             f'a page explaining how to read it and what it shows; the reader meets them '
-            f'in order inside the paper&rsquo;s <i>The experiments</i> telling. (Rolling '
-            f'out paper by paper; not every paper has them yet.)</li>'
+            f'as supporting evidence inside the paper&rsquo;s <i>The experiments</i> '
+            f'telling. (Rolling out paper by paper; not every paper has them yet.)</li>'
             '</ul>'
         )
         parts.append("</section>")
@@ -1463,13 +1472,14 @@ class SiteBuilder:
             if self.figures:
                 parts.append(
                     "<p>Where a paper&rsquo;s figures have been processed, one more "
-                    "telling joins the row: <b>The experiments</b> retells the "
-                    "paper&rsquo;s own figures and tables as one connected story "
-                    "&mdash; chapter by chapter, each experiment set up by the one "
-                    "before it, with every figure in its place in the arc. Each "
-                    "figure opens into a page of its own, which explains how to "
-                    "read the visualization before stating what the paper "
-                    "concludes.</p>"
+                    "telling joins the row: <b>The experiments</b> explains the "
+                    "paper&rsquo;s experiments and results chapter by chapter, "
+                    "each experiment set up by the one before it. Its nodes are "
+                    "the concepts doing the work in each experiment, and the "
+                    "paper&rsquo;s figures and tables sit beside the claims they "
+                    "support, as evidence. Each figure opens into a page of its "
+                    "own, which explains how to read the visualization before "
+                    "stating what the paper concludes.</p>"
                 )
             parts.append(self._help_figure(
                 "story-tree.png",
@@ -2437,7 +2447,19 @@ ol.walk .walk-prose { margin-left: 0; }
   align-items: start;
   padding: 0.4rem 0.1rem 0.2rem;
 }
-.fig-entry .node-narrative { margin: 0; }
+.fig-title {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+.fig-note {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.fig-note p { margin: 0 0 0.4rem; }
+.fig-note p:last-child { margin-bottom: 0; }
 .fig-thumb img {
   display: block;
   width: 100%;

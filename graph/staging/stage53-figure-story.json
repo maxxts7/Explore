@@ -1,0 +1,320 @@
+{
+ "paper": "sparse-autoencoders",
+ "story": {
+  "id": "sparse-autoencoders-experiments",
+  "tab": "The experiments",
+  "name": "How the sparse-autoencoder experiments build the paper's case",
+  "intro": "Cunningham, Ewart, Riggs, Huben and Sharkey (2023) train sparse autoencoders on the residual-stream activations of Pythia-70M and Pythia-410M, asking whether the resulting dictionary features decompose a language model's activations better than neurons, PCA, or ICA.\n\nThis telling follows the experiments in build order: training and tuning, the headline interpretability comparison and its robustness checks, a causal-patching test, and the case studies that ground the argument in individual features, with figures attached as supporting evidence throughout.",
+  "narrative": "The paper's results form one connected argument. Section 2 defines the sparse autoencoder and its training loss; Appendices B, C.1 and E fix the hyperparameters used everywhere else; Section 3 shows the resulting features score higher on automated interpretability than neuron, PCA, ICA, and random baselines, and Appendix C stress-tests that comparison four separate ways; Section 4 shows the same features causally localize a known behavior more precisely than PCA; and Section 5 examines individual features by hand to show they are monosemantic and can be traced into a multi-layer circuit.",
+  "ref": null,
+  "children": [
+   {
+    "id": "sae-exp-method",
+    "name": "The method: training a sparse autoencoder on frozen activations",
+    "narrative": "Every experiment in this telling operates on the same object: rows of a sparse autoencoder's weight matrix, trained on a frozen language model's activations, aimed at recovering the directions that [[superposition]] hides behind [[polysemanticity|polysemantic]] neurons. This chapter defines that autoencoder, its loss, and the tied-weight design choice, before later chapters tune it, score its features, patch with them, and inspect them by hand.",
+    "ref": null,
+    "figures": [
+     {
+      "figure": "fig-1",
+      "note": "Figure 1 lays out this exact three-stage pipeline, sample activations, train the autoencoder, interpret the resulting dictionary, and every later experiment in this telling tests one of its three stages."
+     }
+    ],
+    "children": [
+     {
+      "id": "sae-exp-sae-architecture",
+      "name": "Sampling activations, training the autoencoder, reading off features",
+      "narrative": "The autoencoder takes a language model's cached activation vector x and produces hidden coefficients c = ReLU(Mx + b), then reconstructs x-hat = M^T c using the same matrix M, [[tied-weights-sae|tied]] between encoder and decoder. M's rows are read off afterward as the [[dictionary-feature|dictionary features]] under study. Training minimizes reconstruction error plus an [[sparsity-loss|L1 sparsity penalty]] on c (Equation 4). The method is applied mainly to residual-stream activations from the [[pythia]] suite: Pythia-70M (dimension 512) and Pythia-410M (dimension 1024). Because training happens after the fact on frozen, cached activations, the approach stays unsupervised and never touches the underlying language model's own weights or training.",
+      "ref": {"kind": "concept", "id": "sparse-autoencoders"},
+      "children": []
+     },
+     {
+      "id": "sae-exp-feature-unit",
+      "name": "The dictionary feature as the unit of analysis",
+      "narrative": "Each row of the trained matrix M is a single dictionary feature: a direction in activation space that contributes to the reconstruction whenever its coefficient is nonzero. Because the [[sparsity-loss|sparsity penalty]] forces M's rows to unit norm, a feature's row is fixed as a direction, and its activation strength alone determines how much it contributes on a given input. Every later result in the paper, interpretability scores, causal patching, and the case studies, is a claim about properties of these individual rows, not about the autoencoder as a whole.",
+      "ref": {"kind": "concept", "id": "dictionary-feature"},
+      "children": []
+     },
+     {
+      "id": "sae-exp-sparsity-penalty",
+      "name": "The sparsity penalty and its trade-off partner",
+      "narrative": "The training objective (Equation 4) adds alpha times the L1 norm of c to the squared [[reconstruction-loss|reconstruction error]], penalizing how many features fire at once rather than the size of the reconstruction error directly. Alpha is the paper's central knob: raising it produces sparser, more feature-like activations at the cost of reconstruction accuracy, and its value is set separately for the residual stream (8.6e-4) and the MLP sublayer (3.2e-4), based on the active-feature sweeps in the next chapter.",
+      "ref": {"kind": "concept", "id": "sparsity-loss"},
+      "children": []
+     },
+     {
+      "id": "sae-exp-tied-weights",
+      "name": "Why the encoder and decoder share weights",
+      "narrative": "Tying the decoder to the encoder's transpose halves the parameter count and encodes the assumption that the direction which detects a [[dictionary-feature|feature]] and the direction that defines its effect on the reconstruction should coincide. The paper reports tied weights do not hurt performance when training on residual-stream activations, but do reduce performance on MLP activations, motivating an untied variant with separate encoder and decoder matrices used specifically for MLP-sublayer training.",
+      "ref": {"kind": "concept", "id": "tied-weights-sae"},
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "sae-exp-tuning",
+    "name": "Tuning the autoencoders before trusting the results",
+    "narrative": "Before the main comparisons can be trusted, the paper has to fix how large a dictionary to train, how much sparsity pressure to apply, and confirm the reconstruction is faithful enough to be worth interpreting. These sweeps, run mostly in Appendices B, C.1 and E, are not a side note: the alpha and R values fixed here are the exact ones used in every interpretability and causal-patching result that follows.",
+    "ref": null,
+    "children": [
+     {
+      "id": "sae-exp-dictionary-size",
+      "name": "How big a dictionary: the expansion factor R",
+      "narrative": "R sets the autoencoder's hidden size as dhid = R times din, controlling how overcomplete the learned dictionary is relative to the model's own activation dimension. The paper sweeps R from 0.5 (undercomplete) to 32 (far overcomplete) and finds average per-feature interpretability depends far more on layer than on R, the smallest dictionary tested scores comparably to ones dozens of times larger, while a separate quantity, the share of a layer's activation variance the dictionary explains overall, does keep rising with R. A bigger dictionary explains more of the layer without any single feature in it becoming more interpretable.",
+      "ref": {"kind": "concept", "id": "expansion-factor-r"},
+      "figures": [
+       {
+        "figure": "fig-8",
+        "note": "This is the layer-by-R sweep behind that claim: all seven ratios decline over roughly the same range across layers 0-5, about 0.27-0.31 at layer 0 down to 0.11-0.24 at layer 5, with no consistent size ranking among them."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-tradeoff-shape",
+      "name": "No knee: sparsity trades smoothly against reconstruction accuracy",
+      "narrative": "Sweeping alpha produces a smooth curve trading the number of simultaneously active features against unexplained reconstruction variance, with no distinct bend separating a correct operating point from an incorrect one. The paper reads this absence of a knee as weak evidence against there being one single, objectively correct sparse decomposition of a given layer's activations, a caveat that applies to every dictionary used elsewhere in the paper, since none of them is picked out as uniquely privileged by the data.",
+      "ref": {"kind": "concept", "id": "sparsity-reconstruction-tradeoff"},
+      "figures": [
+       {
+        "figure": "fig-6",
+        "note": "This MLP-layer-0 sweep across seven dictionary sizes is the source of that reading: every size traces the same knee-free curve, with one extreme point near zero active features collapsing to an unexplained variance near 1.4."
+       },
+       {
+        "figure": "fig-7",
+        "note": "This companion sweep colors by training epoch instead of dictionary size, showing the tradeoff curve converges after relatively few epochs; the lowest-epoch series is visibly worse, but the rest collapse onto nearly the same curve."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-dead-features",
+      "name": "Feature survival: how many dictionary rows actually fire",
+      "narrative": "A dictionary feature that never activates across the training corpus is dead, wasted capacity that never gets read as a feature. The paper finds residual-stream dictionaries stay almost fully alive up to roughly a 4x expansion factor before features start dropping out, which is what let it pick the alpha values used throughout, 8.6e-4 for the residual stream and 3.2e-4 for the MLP. MLP-sublayer dictionaries fare much worse: because the MLP's nonlinearity leaves large regions of input space unused, many features get stuck barely ever firing even with no sparsity penalty at all, in some cases leaving less than half a dictionary usably alive.",
+      "ref": {"kind": "concept", "id": "dead-features"},
+      "figures": [
+       {
+        "figure": "fig-16",
+        "note": "This eighteen-panel grid is the underlying sweep: residual-stream curves (top row) stay near a fraction of 1.0 at low alpha across most ratios, while both MLP rows (tied and untied weights) start well below 1.0 even at the smallest alpha tested."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-reconstruction-gap",
+      "name": "The reconstruction is never perfect",
+      "narrative": "The squared-error term in Equation 4 is never driven to zero in any of the paper's trained autoencoders, meaning the dictionary always fails to capture some information present in the original activation. The paper quantifies this gap independently with a [[reconstruction-perplexity-metric|perplexity check]]: substituting Pythia-70M's layer-2 residual stream with its autoencoder reconstruction raises the model's perplexity on the Pile from 25 to 40, confirming that reconstruction loss reflects a real, measurable loss of information rather than a training artifact.",
+      "ref": {"kind": "concept", "id": "reconstruction-loss"},
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "sae-exp-headline",
+    "name": "The headline result: learned features score as more interpretable",
+    "narrative": "With training hyperparameters fixed, the paper turns to its central empirical claim: that individual dictionary features are more interpretable, by an automated measure, than directions found by the default neuron basis, random directions, PCA, and ICA. The comparison is run per layer of the residual stream, and the gap it finds, large in early layers, narrowing by the final layers plotted, is the result the next chapter spends four separate checks trying to break.",
+    "ref": null,
+    "figures": [
+     {
+      "figure": "fig-2",
+      "note": "This is the comparison itself: mean autointerpretability score across 150 features per method at each of residual-stream layers 0-5, with 95% confidence intervals. Sparse coding leads clearly at layer 0, converges toward ICA's score by layer 4, and shows minimal further gain over ICA at the final layer plotted."
+     }
+    ],
+    "children": [
+     {
+      "id": "sae-exp-scoring-procedure",
+      "name": "How the interpretability score is computed",
+      "narrative": "The score (Bills et al., 2023) is produced in three steps: sample text fragments from the first 50,000 lines of [[openwebtext|OpenWebText]] where a feature activates, have [[gpt-4]] write a natural-language explanation from a handful of those fragments and their per-token activations, then have [[gpt-3-5]] use that explanation to predict the feature's activation on held-out fragments, GPT-3.5 stands in for GPT-4 as the simulator only because its public API exposed the log-probabilities the simulation step needs. The correlation between predicted and true activations is the feature's score, so a score can run negative when the written explanation performs worse than no explanation at all.",
+      "ref": {"kind": "concept", "id": "autointerpretability-score"},
+      "figures": [
+       {
+        "figure": "table-1",
+        "note": "Table 1 previews what this pipeline outputs on five layer-1 features taken in arbitrary dictionary order: four get specific, positive-scoring descriptions (0.19 to 0.57), while one gets a vague description and a negative score of -0.11."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-pca-baseline",
+      "name": "PCA as the main matrix-decomposition baseline",
+      "narrative": "PCA projects the same activation dataset onto directions of maximal variance, computed with an online estimator over the same quantity of data used to train the autoencoders. It is one of four baselines run against sparse coding in the headline comparison, alongside [[ica]], the [[default-basis-baseline|default neuron basis]], and [[random-directions-baseline|random directions]], and it is the baseline the paper carries forward into the causal-patching chapter below. PCA trails sparse coding on both measures: it scores lower on autointerpretability at every layer, and later requires more patched directions and larger edit magnitudes to reach the same causal effect on the indirect-object-identification task.",
+      "ref": {"kind": "concept", "id": "pca"},
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "sae-exp-robustness",
+    "name": "Stress-testing the interpretability advantage",
+    "narrative": "Because the headline gap could in principle be an artifact of an easy scoring protocol, a failure to transfer beyond the residual stream, an accident of what makes some directions heavy-tailed, or an uneven comparison between methods, the paper runs four separate checks against it. Each removes one candidate confound in turn, and each finds the same qualitative result survives, though not always at full strength.",
+    "ref": null,
+    "children": [
+     {
+      "id": "sae-exp-random-only-check",
+      "name": "A harsher test: scoring only on random fragments",
+      "narrative": "The default scoring mixes high-activating fragments with random ones, top-and-random scoring, which could make [[autointerpretability-score|scoring]] artificially easy. Rerunning with random-only scoring, fragments drawn with no regard to where a feature activates, drives every method's absolute score down, since a small random sample of a sparse feature's activations often contains no strongly-activating example at all. Sparse coding still sits clearly above all four baselines under this harsher test, especially in the earlier layers, ruling out an artifact-of-easy-scoring explanation for the headline gap.",
+      "ref": {"kind": "concept", "id": "top-random-scoring"},
+      "figures": [
+       {
+        "figure": "fig-9",
+        "note": "This is the random-only rerun of the headline comparison: sparse coding scores roughly 0.10-0.12 in layers 0-3 against baselines clustered around 0.02-0.06, though the gap narrows at layers 4-5 as several baselines drop near zero."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-mlp-transfer",
+      "name": "Does the advantage transfer to the MLP sublayer?",
+      "narrative": "Applying the same method to MLP sublayer activations instead of the residual stream gives mixed success: many learned features are still more interpretable than individual neurons, but the [[dead-features|large number of dead features]] MLP dictionaries accumulate means the living dictionary often fails to be genuinely overcomplete, and the training pipeline does not yet robustly learn overcomplete bases in the MLP's middle and later layers. Under the stricter random-only scoring, sparse coding's MLP advantage becomes inconsistent, at layer 3 it drops to about 0.03, below the Identity ReLU neuron baseline, where the residual-stream results hold up cleanly across layers.",
+      "ref": {"kind": "concept", "id": "mlp-sae-training"},
+      "figures": [
+       {
+        "figure": "fig-10",
+        "note": "Both panels plot MLP layer 0-5 against interpretability score, top-and-random scoring on the left and random-only on the right: sparse coding leads clearly at layer 0, about 0.33 top-and-random, but its lead narrows and becomes uneven through the middle layers."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-kurtosis-explanation",
+      "name": "Why ICA is the strongest baseline",
+      "narrative": "Correlating each feature's interpretability score against statistical moments of its activation distribution, pooled across all layers and five dictionary sizes, finds skew and kurtosis are the only two moments with a positive, non-negligible correlation, 0.20 and 0.15 in the table (the body text separately quotes 0.19 and 0.24), while mean and variance are essentially uncorrelated. Because [[ica|ICA]] explicitly searches for maximally non-Gaussian, heavy-tailed directions, a search that can itself be reformulated as maximizing the [[l4-norm-maximization|L4 norm]], this correlation is offered as the explanation for why ICA is consistently the strongest of the non-dictionary-learning baselines throughout the paper's comparisons.",
+      "ref": {"kind": "concept", "id": "kurtosis-skew-correlation-analysis"},
+      "figures": [
+       {
+        "figure": "table-2",
+        "note": "Table 2 is the correlation table itself: mean -0.09, variance 0.02, skew 0.20, kurtosis 0.15, computed over every scored residual-stream feature across all layers and expansion ratios 0.5x to 8x."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-topk-control",
+      "name": "Ruling out an unfair comparison: matching active directions",
+      "narrative": "A sparse dictionary feature activates on only a fraction of inputs, while a raw PCA or ICA direction is active across an entire half-space, so the interpretability gap could in principle just reflect these baselines being compared unfairly against a sparser method. The control restricts [[pca|PCA]] and [[ica|ICA]] to a fixed number K of simultaneously active directions per datapoint, matched to sparse coding's own average active-feature count. This adjustment does not close the gap: the Top-k variants track close to their unrestricted counterparts rather than rising toward sparse coding's score, so unequal activation density explains only a small part of the headline result.",
+      "ref": {"kind": "concept", "id": "top-k-baseline-control"},
+      "figures": [
+       {
+        "figure": "fig-18",
+        "note": "This is the fixed-K rerun: sparse coding still leads clearly in layers 0-3, starting near 0.30 at layer 0, and ICA Top-k even scores below plain ICA at layers 2 and 3 rather than closing the gap."
+       }
+      ],
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "sae-exp-causal",
+    "name": "Causal evidence: patching the indirect object identification task",
+    "narrative": "An interpretability score only measures whether a feature's activations can be described in words; it does not show the feature actually drives the model's behavior. This chapter tests that separately with activation patching on a previously-characterized task, asking whether editing along dictionary-feature directions reproduces a target behavior with fewer, smaller edits than editing along PCA directions, and, in an appendix check, whether the result holds beyond the one layer tested in the main text.",
+    "ref": null,
+    "figures": [
+     {
+      "figure": "fig-17",
+      "note": "This appendix figure reruns the same two KL-divergence measurements across six more residual-stream layers of Pythia-410M, layers 3, 7, 11, 15, 19, 23: sparse-dictionary curves sit below and to the left of PCA's in the patched-feature-count plots at every layer tested, so the result is not specific to layer 11."
+     }
+    ],
+    "children": [
+     {
+      "id": "sae-exp-patching-method",
+      "name": "Activation patching: editing toward a counterfactual",
+      "narrative": "Activation patching (Vig et al., 2020) edits a model's internal activations toward values observed on a counterfactual input and measures the resulting change in output, a way to test whether a proposed direction actually carries the causal information behind a behavior, not just a correlate of it. The paper adapts it to the [[ioi-task|Indirect Object Identification task]] (Wang et al., 2022), in which a model completes sentences like 'Then, Alice and Bob went to the store. Alice gave a snack to ___', chosen because the underlying mechanism was already characterized by prior work, letting the comparison isolate how precisely each decomposition's directions localize it rather than whether the mechanism exists at all.",
+      "ref": {"kind": "concept", "id": "activation-patching"},
+      "children": []
+     },
+     {
+      "id": "sae-exp-patching-result",
+      "name": "Patching dictionary features versus patching PCA",
+      "narrative": "The procedure, an application of [[activation-patching|activation patching]] to individual dictionary features, runs the model once on a counterfactual sentence to cache each feature's encoded activation, then re-runs it on the base sentence, adding the cached activation differences for a chosen feature subset into the residual stream at one layer, and measures the KL divergence between the patched output and the true counterfactual target. On layer 11 of Pythia-410M, sparse-dictionary features reach a given KL divergence with fewer patched directions and a smaller total edit magnitude than PCA components, and that advantage disappears for a non-sparse (alpha=0) dictionary, evidence that sparsity itself, not just being a learned dictionary, drives the improved localization.",
+      "ref": {"kind": "concept", "id": "dictionary-feature-patching"},
+      "figures": [
+       {
+        "figure": "fig-3",
+        "note": "Both panels start near a KL divergence of about 2.0 with nothing patched; the sparse-dictionary curves fall faster than PCA in the left panel, except the heaviest-sparsity dictionary (alpha=1e-3), whose curve flattens around 0.4 and never approaches zero."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-feature-selection",
+      "name": "Choosing which features to patch",
+      "narrative": "Rather than patching an arbitrary or fixed set of directions, the paper orders candidate features by individually-estimated causal importance using the ordering procedure from Automated Circuit Discovery (Conmy et al., 2023, Algorithm 4.1), treating each feature as an independent contributor to the KL-divergence metric averaged over 50 IOI test examples. The resulting ranking, computed separately for each decomposition, dictionary features and PCA alike, is what determines the order in which directions are added along the x-axis of the patching curves, so the comparison reflects each method's most causally important directions first, not a random subset.",
+      "ref": {"kind": "concept", "id": "automated-circuit-discovery"},
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "sae-exp-case-studies",
+    "name": "Case studies: one feature examined by hand, and one traced back",
+    "narrative": "Having shown that dictionary features are interpretable in aggregate and causally precise on a benchmark task, the paper closes by examining individual features directly: what text activates them, what happens to the model's output when they are ablated, and, for one feature, which earlier-layer features cause it to fire. These worked examples are where the abstract claim of monosemanticity becomes concrete.",
+    "ref": null,
+    "children": [
+     {
+      "id": "sae-exp-apostrophe-case",
+      "name": "The apostrophe feature, and its narrower relatives",
+      "narrative": "Dictionary feature 556 activates almost exclusively on the apostrophe token, and using [[less-than-rank-one-ablation|less-than-rank-one ablation]], lowering the residual stream's component along the feature's direction only until the feature stops firing, to remove it from the residual stream mainly suppresses the model's predicted logit for the following 's' token, matching how apostrophes precede 's' in contractions and possessives like 'let's'. The feature does not fire on every apostrophe: two further dictionary features fire on apostrophes only in specific contraction families, one for pronoun contractions like 'I'll' and 'you'll' (ablation suppresses a broader family of endings), and one for negation contractions like 'don't' and 'won't' (ablation narrowly suppresses mainly the 't' that closes '-n't'). That the dictionary represents a single character with several distinct, narrowly-scoped features is itself evidence for fine-grained [[monosemanticity]].",
+      "ref": {"kind": "concept", "id": "apostrophe-feature"},
+      "figures": [
+       {
+        "figure": "fig-4",
+        "note": "This is the core apostrophe-feature evidence: the input histogram is almost entirely apostrophe-colored from the second activation bin upward, and the output histogram shows the 's' token dominating suppressed logits, of roughly 12,000 affected in total, once ablated."
+       },
+       {
+        "figure": "fig-14",
+        "note": "This is the pronoun-contraction variant: high activations are almost solid apostrophe, with 'I' and 'you' as minor low-activation tells, and ablation suppresses a spread of endings ('ve, 're, 'm, 's, 'll) rather than one."
+       },
+       {
+        "figure": "fig-15",
+        "note": "This is the negation-contraction variant: ablation is far more concentrated than the pronoun variant's, with the 't' token dominating suppressed logits in nearly every bin, consistent with closing out an '-n't' contraction."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-basis-contrast",
+      "name": "Contrast: the default-basis dimension is polysemantic",
+      "narrative": "The [[residual-stream|residual stream]]'s own coordinate basis has no particular reason to align with meaningful features, and the paper shows this concretely: the default-basis dimension that most resembles the [[apostrophe-feature|apostrophe feature]], the 10th-highest dimension the apostrophe feature itself reads from, looks like an apostrophe detector only in its highest activation bins. Across the fuller range it fires on many unrelated tokens ('and', 'one', 'part', 'number'), the textbook picture of polysemanticity, and the dimensions it draws on turn out to be [[outlier-dimensions|outlier dimensions]] rather than typical basis coordinates. The clean, single-token behavior of dictionary feature 556 is therefore a property of the learned feature, not of any one default-basis direction.",
+      "ref": {"kind": "concept", "id": "default-basis-baseline"},
+      "figures": [
+       {
+        "figure": "fig-11",
+        "note": "The two-panel histogram makes the contrast visible only at different y-scales: the zoomed lower panel shows middle activation bins holding thousands of non-apostrophe tokens, with apostrophes becoming a large share only once total counts fall to a few hundred or fewer."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-monosemanticity-examples",
+      "name": "Monosemanticity beyond the apostrophe: code syntax and sub-word morphology",
+      "narrative": "The property the case studies are built to demonstrate is monosemanticity: a feature activating for one coherent, human-interpretable pattern rather than several unrelated ones, the converse of the [[polysemanticity]] the paper's method targets. Two further worked examples show this pattern recurs outside apostrophes: a feature that fires on the word 'if' specifically in programming contexts, whose ablation suppresses code-syntax tokens that typically follow it ('(', '&&', 'then'), and a feature that fires on the 'Dis' prefix within specific bigrams, whose ablation suppresses the word-completions that follow it ('CLAIM', 'closed', 'ordered'). In both cases the input tokens that trigger the feature and the output tokens its removal suppresses tell a matching causal story.",
+      "ref": {"kind": "concept", "id": "monosemanticity"},
+      "figures": [
+       {
+        "figure": "fig-12",
+        "note": "The 'if' feature's input tokens are several tokenizations of 'if' plus code-specific tokens ('ifndef', 'define', 'when'); its output panel shows ablation most suppresses '(', '&&', 'then', and '!', tokens that typically follow 'if' in code."
+       },
+       {
+        "figure": "fig-13",
+        "note": "The 'Dis'-prefix feature's highest-activation bins are almost entirely prefix fragments ('Dis', 're', 'un', 'trans'); ablation most suppresses specific word-completions like 'CLAIM', 'closed', and 'ordered' that follow the prefix."
+       }
+      ],
+      "children": []
+     },
+     {
+      "id": "sae-exp-circuit-tracing",
+      "name": "Tracing a feature back through the layers that cause it",
+      "narrative": "Beyond a single feature's inputs and outputs, the paper traces causal dependencies across layers: given a target feature, sample contexts where it strongly activates, then for each feature in the previous layer, ablate it and measure how much the target's activation drops, ranking previous-layer features by that effect and optionally recursing. Applied to the [[closing-parenthesis-feature|layer-5 closing-parenthesis feature]], whose unembedding directly predicts closing-parenthesis tokens, this produces a multi-layer causal tree with two branches feeding the root, one tracking generic parenthetical context, one tracking acronyms specifically, that merge just before the final feature. The paper contrasts this success with a [[weight-based-connection-attempt|weight-based alternative]] tried between layers 4 and 5, multiplying a feature through the MLP weights and checking cosine similarity, which found no meaningful connections, likely because the resulting vector left the model's typical activation distribution.",
+      "ref": {"kind": "concept", "id": "feature-circuit-detection"},
+      "figures": [
+       {
+        "figure": "fig-5",
+        "note": "This is the causal tree itself: arrow thickness encodes how much a downstream feature's activation dropped when its upstream candidate was ablated, so the thickest paths are the dominant causes feeding the closing-parenthesis feature."
+       }
+      ],
+      "children": []
+     }
+    ]
+   }
+  ]
+ }
+}

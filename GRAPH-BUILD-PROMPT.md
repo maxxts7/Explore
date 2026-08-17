@@ -95,17 +95,18 @@ something up, follow a connection, keep digging?
   pages — concept pages stay prose
 
 **The experiments story**
-- a telling on each paper's page, beside the others: the paper's figures and
-  tables retold as ONE rooted story — not two flat sections, not a list of
-  independent entries
-- chapters follow the paper's own experimental logic, with connective
-  narrative at every branching node explaining how each experiment answers a
-  question the previous one raised; the apparatus (architecture, data, setup)
-  enters the arc where the experiments need it
-- every figure and table is placed exactly once; a figure node is a leaf —
-  thumbnail beside a few sentences saying what the figure shows and what it
-  answers or sets up in the arc, linking the figure's own page — depth lives
-  on the figure page, not in the story
+- a telling on each paper's page, beside the others: a self-contained account
+  of the paper's experiments and results — a reader who reads only it should
+  understand what each experiment did, why, and what it found
+- the spine is the explanation, never the figure inventory: chapters follow
+  the paper's experimental logic, and the nodes under them reference the
+  paper's CONCEPTS — each node's prose explaining that concept's role in this
+  experiment, what was measured, and what came out, with the paper's
+  documented numbers
+- the figures and tables attach to nodes as supporting evidence — thumbnail
+  plus a short note tying the figure to the claim it supports, linking the
+  figure's own page; every figure attached exactly once, and never as a node
+  of its own — depth lives on the figure page, not in the story
 - results figure pages take extra care: before stating what the paper concludes,
   they explain how the visualization itself works — what the axes and encodings
   mean, how to read what is shown, and where a naive reading goes wrong
@@ -207,10 +208,10 @@ start with three papers
                      locator, concept links; results figures also
                      taught as visualizations: how to read them,
                      where a naive reading goes wrong               (link the chart-form page, add the specifics)
-                     the experiments story — the paper's figures
-                     retold as one connected arc, every figure
-                     placed once, thumbnail plus prose per figure,
-                     linking the figure pages
+                     the experiments story — the experiments and
+                     results explained as one arc whose nodes are
+                     the paper's concepts, every figure attached
+                     once as evidence, linking the figure pages
 
 10 render          regenerate the static HTML site from the JSON —
                    rerun after any change to the data
@@ -395,18 +396,24 @@ which figure pages owe the reader the visualization teaching described below, an
 tells the story writer what is apparatus and what is outcome.
 
 On the paper's page the figures are met through the experiments story, a telling
-beside the others: the paper's figures and tables retold as one rooted tree, read
-the way the tellings are read, not browsed as a list. A section that lists each
-figure as an independent entry loses exactly what makes the figures worth reading
-together — experiment two exists because of what experiment one left open, the
-robustness checks exist because of what the headline result could be accused of. So
-the story's chapters follow the paper's own experimental logic, the connective
-narrative at every branching node says how each experiment answers a question the
-previous one raised, and the apparatus enters the arc where the experiments need it
-rather than in a section of its own. Every figure and table is placed exactly once;
-a figure node is a leaf — a thumbnail beside a few sentences saying what the figure
-shows and what it answers or sets up in the arc — linking the figure's own page.
-Depth lives on the figure page, so the story stays readable end to end.
+beside the others: a self-contained account of the paper's experiments and results,
+read the way the tellings are read, not browsed as a list. A section that lists
+each figure as an independent entry loses exactly what makes the experiments worth
+reading together — experiment two exists because of what experiment one left open,
+the robustness checks exist because of what the headline result could be accused
+of. And a story whose nodes are the figures themselves fails the same way from the
+other side: the prose degenerates into captions, and the explanation never
+happens. So the spine of the story is the explanation. Its chapters follow the
+paper's experimental logic, saying what question each experiment answers and what
+the answer was; the nodes under them reference the paper's concepts — the method,
+the measures, the baselines, the tasks — each node's prose explaining that
+concept's role in this experiment and what came out, with the paper's documented
+numbers, so the graph the reader has been walking is the same material the story
+is made of. The figures and tables attach to those nodes as supporting evidence: a
+thumbnail beside a short note tying the figure to the claim it supports, linking
+the figure's own page. Every figure is attached exactly once and never becomes a
+node of its own. Depth lives on the figure page, so the story stays readable end
+to end.
 
 A figure page carries the cropped image and fresh prose in the grounded register —
 what is going on in the figure — with the standard locator; the paper's original
