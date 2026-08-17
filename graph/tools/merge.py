@@ -21,7 +21,7 @@ Usage:
   python merge.py intros <staged.json>...
   python merge.py figures <staged.json>...
   python merge.py figure-pages <staged.json>...
-  python merge.py figure-sections <staged.json>...
+  python merge.py figure-story <staged.json>...
   python merge.py apply <manifest.json>
   python merge.py validate
 
@@ -58,11 +58,10 @@ EMPTY = {
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 FIGURE_CLASSIFICATIONS = ("data-and-experiments", "results-and-interpretation")
-FIGURE_DATA_LABELS = ("data", "experiments", "architecture")
 # Papers merged before the figure stage existed (stages 0-43). They are exempt
 # from the figures-required rule until their backfill lands; every paper added
 # after sparse-autoencoders MUST bring its figure inventory, pages, and
-# sections in the same apply transaction, or validation rejects the add.
+# experiments story in the same apply transaction, or validation rejects the add.
 FIGURE_BACKFILL_PENDING = {
     "concrete-problems", "instructgpt", "constitutional-ai",
     "deep-rl-human-prefs", "contrastive-activation-addition", "persona-vectors",
@@ -290,7 +289,7 @@ def validate(store):
 
     figures = store.get("figures") or {}
     for pid in paper_ids - set(figures) - FIGURE_BACKFILL_PENDING:
-        err(f"paper {pid}: no figure inventory (figures/pages/sections are "
+        err(f"paper {pid}: no figure inventory (figures/pages/story are "
             f"required for every new paper; land them in the same apply)")
     pending_dests = {dest for _src, dest in PENDING_IMAGE_COPIES}
     for pid, entry in figures.items():
@@ -327,30 +326,81 @@ def validate(store):
             for s in secs:
                 if not s.get("heading") or len(s.get("body", "").strip()) < 100:
                     err(f"figure {pid}/{fid}: section {s.get('heading')!r} empty or too thin")
-        for cls, key in (("data-and-experiments", "dataAndExperiments"),
-                         ("results-and-interpretation", "resultsAndInterpretation")):
-            bucket = {it["id"] for it in items if it.get("classification") == cls}
-            groups = entry.get(key) or []
-            covered = []
-            for g in groups:
-                if key == "dataAndExperiments":
-                    if g.get("label") not in FIGURE_DATA_LABELS:
-                        err(f"figures {pid}: bad subsection label {g.get('label')!r}")
-                else:
-                    if not g.get("title") or not (g.get("narrative") or "").strip():
-                        err(f"figures {pid}: group {g.get('id')!r} missing title or narrative")
-                for e in g.get("entries") or []:
-                    covered.append(e.get("figure"))
-                    if len((e.get("teaser") or "").strip()) < 60:
-                        err(f"figures {pid}: teaser for {e.get('figure')!r} missing or too thin")
-            if len(covered) != len(set(covered)):
-                err(f"figures {pid}: {key} lists a figure twice")
-            missing = bucket - set(covered)
-            extra = set(covered) - bucket
+        # The experiments story: the paper's figures retold as ONE rooted tree
+        # with connective narrative, every figure placed exactly once. Its node
+        # ids become DOM ids on the paper's story page, which also carries the
+        # paperStories node ids — so the two sets must be disjoint.
+        story = entry.get("story")
+        if not story:
+            err(f"figures {pid}: no experiments story (the figures must be "
+                f"told as one connected story; land it with the inventory)")
+        else:
+            item_ids = {it["id"] for it in items}
+            reserved = set()
+            for ps_entry in store.get("paperStories") or []:
+                if ps_entry.get("id") != pid:
+                    continue
+
+                def collect_ids(node):
+                    reserved.add(node.get("id"))
+                    for ch in node.get("children") or []:
+                        collect_ids(ch)
+
+                for s in ps_entry.get("stories") or []:
+                    collect_ids(s)
+            if story.get("id") != f"{pid}-experiments":
+                err(f"figures {pid}: story root id must be {pid}-experiments "
+                    f"(frozen deep-link anchor), got {story.get('id')!r}")
+            if not (story.get("tab") or "").strip():
+                err(f"figures {pid}: story needs a short 'tab' label")
+            if not (story.get("intro") or "").strip():
+                err(f"figures {pid}: story missing intro")
+            placed = []
+            seen_nodes = set()
+
+            def walk_fs(node):
+                nid = node.get("id", "")
+                if not KEBAB.match(nid):
+                    err(f"figures {pid} story: node id not kebab-case: {nid!r}")
+                if nid in seen_nodes:
+                    err(f"figures {pid} story: duplicate node id {nid!r}")
+                seen_nodes.add(nid)
+                if nid in reserved:
+                    err(f"figures {pid} story: node id {nid!r} collides with "
+                        f"a telling's node id on the same page")
+                if not node.get("name"):
+                    err(f"figures {pid} story node {nid}: missing name")
+                ref = node.get("ref")
+                children = node.get("children") or []
+                if ref:
+                    if ref.get("kind") != "figure":
+                        err(f"figures {pid} story node {nid}: refs must be "
+                            f"figures, got {ref.get('kind')!r}")
+                    elif ref.get("id") not in item_ids:
+                        err(f"figures {pid} story node {nid}: unknown figure "
+                            f"{ref.get('id')!r}")
+                    else:
+                        placed.append(ref["id"])
+                    if children:
+                        err(f"figures {pid} story node {nid}: figure nodes "
+                            f"must be leaves")
+                    if len((node.get("narrative") or "").strip()) < 60:
+                        err(f"figures {pid} story node {nid}: figure node "
+                            f"needs prose placing it in the arc")
+                elif len((node.get("narrative") or "").strip()) < 50:
+                    err(f"figures {pid} story node {nid}: connective node "
+                        f"needs a narrative")
+                for ch in children:
+                    walk_fs(ch)
+
+            walk_fs(story)
+            if len(placed) != len(set(placed)):
+                dupes = sorted({x for x in placed if placed.count(x) > 1})
+                err(f"figures {pid}: story places {dupes} more than once")
+            missing = item_ids - set(placed)
             if missing:
-                err(f"figures {pid}: {key} misses {sorted(missing)} (coverage must be total)")
-            if extra:
-                err(f"figures {pid}: {key} lists non-{cls} items {sorted(extra)}")
+                err(f"figures {pid}: story misses {sorted(missing)} "
+                    f"(coverage must be total)")
 
     pages_done = [c for c in store["concepts"] if c.get("sections")]
     for c in pages_done:
@@ -377,6 +427,10 @@ def validate(store):
         for s in entry.get("stories") or []:
             if s.get("intro"):
                 check_intro(f"paper story {s['id']}", s["intro"])
+    for pid, entry in figures.items():
+        s = entry.get("story") or {}
+        if s.get("intro"):
+            check_intro(f"figures story {pid}", s["intro"])
 
     return errors
 
@@ -463,8 +517,7 @@ def merge_figures(store, staged_files):
     for f in staged_files:
         data = json.loads(Path(f).read_text(encoding="utf-8"))
         pid = data["paper"]
-        entry = store["figures"].setdefault(
-            pid, {"items": [], "dataAndExperiments": [], "resultsAndInterpretation": []})
+        entry = store["figures"].setdefault(pid, {"items": [], "story": None})
         by_id = {it["id"]: it for it in entry["items"]}
         for it in data["figures"]:
             src = ROOT / it["image"]
@@ -495,16 +548,18 @@ def merge_figure_pages(store, staged_files):
             by_id[page["id"]]["sections"] = page["sections"]
 
 
-def merge_figure_sections(store, staged_files):
+def merge_figure_story(store, staged_files):
     figures = store.get("figures") or {}
     for f in staged_files:
         data = json.loads(Path(f).read_text(encoding="utf-8"))
         entry = figures.get(data["paper"])
         if entry is None:
-            raise SystemExit(f"figure-sections: paper {data['paper']!r} has no figure "
+            raise SystemExit(f"figure-story: paper {data['paper']!r} has no figure "
                              f"inventory (run figures first) in {f}")
-        entry["dataAndExperiments"] = data["dataAndExperiments"]
-        entry["resultsAndInterpretation"] = data["resultsAndInterpretation"]
+        entry["story"] = data["story"]
+        # The story replaces the retired flat two-section form.
+        entry.pop("dataAndExperiments", None)
+        entry.pop("resultsAndInterpretation", None)
 
 
 def run_step(store, cmd, files, aliases):
@@ -547,8 +602,8 @@ def run_step(store, cmd, files, aliases):
         merge_figures(store, files)
     elif cmd == "figure-pages":
         merge_figure_pages(store, files)
-    elif cmd == "figure-sections":
-        merge_figure_sections(store, files)
+    elif cmd == "figure-story":
+        merge_figure_story(store, files)
     else:
         raise SystemExit(f"unknown command {cmd!r}")
 

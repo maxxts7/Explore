@@ -1,0 +1,731 @@
+{
+ "paper": "sparse-autoencoders",
+ "items": [
+  {
+   "id": "fig-1",
+   "kind": "figure",
+   "label": "Figure 1",
+   "page": 2,
+   "section": "1 INTRODUCTION",
+   "classification": "data-and-experiments",
+   "image": "figures/sparse-autoencoders/fig-1.png",
+   "note": "Diagram of the three-stage method: sampling a language model's internal activations, training a sparse autoencoder on them, and interpreting the resulting feature dictionary.",
+   "name": "Sample, train, interpret: the SAE pipeline",
+   "sections": [
+    {
+     "heading": "Three stages: sample, train, interpret",
+     "body": "The diagram lays out the paper's method as a left-to-right pipeline. In stage (a), a language model runs over a text corpus, and its internal activations are tapped after some number of transformer blocks (labeled \"0 < k ≤ N Transformer Blocks\") — a chosen intermediate depth, not the model's final output — producing a stream of activation vectors. In stage (b), those vectors feed a sparse autoencoder: an encoder matrix (tied to the decoder) maps the activation vector to a hidden layer, a learned bias is added and a ReLU applied, and the result is a vector of sparse feature coefficients; a decoder matrix — the feature dictionary itself — maps these coefficients back to a reconstructed activation vector. Formally, $c=\\mathrm{ReLU}(Mx+b)$ and $\\hat{x}=M^Tc$, trained to minimize $$L(x) = \\|x-\\hat{x}\\|_2^2 + \\alpha\\|c\\|_1$$ In stage (c), each row of the dictionary matrix becomes an addressable feature, assigned a plain-language meaning and an interpretability score, populating a table like the one shown (sparse-autoencoders, §\"1 INTRODUCTION\", p. 2; §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 3)."
+    },
+    {
+     "heading": "Why the pipeline is built this way",
+     "body": "The autoencoder is trained entirely after the fact, on cached, frozen activations from an already-trained model, rather than by changing the model's own architecture or training objective. This keeps the method unsupervised and cheap, and decouples interpretability work from the difficulty of training a state-of-the-art model under added constraints. The encoder and decoder matrices are tied (the decoder is the encoder's transpose) because this halves the parameter count, and because it encodes the assumption that the direction which detects a feature and the direction that defines its effect on the reconstruction should coincide, removing an otherwise-ambiguous choice between encoder and decoder directions (sparse-autoencoders, §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 2)."
+    },
+    {
+     "heading": "What the pipeline sets up",
+     "body": "This three-stage flow is the scaffolding for every later result in the paper: the dictionary produced in stage (b) supplies the [[dictionary-feature]] units whose interpretability is scored in stage (c) and benchmarked against baselines, whose causal precision is tested with [[activation-patching]], and whose [[monosemanticity]] is examined in case studies. It operationalizes the idea that [[polysemanticity]] arises from [[superposition]] and can be undone by [[sparse-dictionary-learning]], building on [[sharkey-interim-report]] and applied here to [[pythia]] residual streams, in service of the broader [[mechanistic-interpretability]] agenda."
+    }
+   ]
+  },
+  {
+   "id": "table-1",
+   "kind": "table",
+   "label": "Table 1",
+   "page": 4,
+   "section": "3.1 INTERPRETABILITY AT SCALE",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/table-1.png",
+   "note": "Five example dictionary features from the layer-1 residual stream with GPT-4-generated descriptions and their autointerpretability scores.",
+   "name": "Layer-1 feature descriptions and interpretability scores",
+   "sections": [
+    {
+     "heading": "How to read this table",
+     "body": "Each row is one dictionary feature from the layer-1 residual stream, identified by an index like \"1-0000\" (layer 1, feature 0). The \"Description\" column is not written by the paper's authors — it is the natural-language explanation GPT-4 generated after seeing text where that feature activates, under the [[autointerpretability-score]] procedure. The \"Interpretability Score\" is not a percentage or accuracy: it is a correlation between the activations that description predicts and the feature's true activations on held-out text, so it can run negative, as it does for feature 1-0001 (-0.11), meaning the description performed worse than no explanation at all. A high score means the description reliably predicts when the feature fires; it does not by itself mean the underlying concept is important or common. These five rows are not cherry-picked highlights — the paper states they are simply \"the first five under the (arbitrary) ordering in the dictionary\" (sparse-autoencoders, §\"3.1 INTERPRETABILITY AT SCALE\", p. 4), i.e., an unbiased sample of what a typical stretch of the dictionary looks like."
+    },
+    {
+     "heading": "What the sample shows",
+     "body": "Of the five features, most get a specific description and a positive score: parts of names (0.33), words starting with \"w\" (0.55), the digit \"5\" plus some names and nouns (0.57), and legal terms (0.19). One, feature 1-0001, gets a vague description (\"actions performed by a subject or object\") and a negative score, illustrating that even in a method whose average scores beat every baseline, individual features vary widely in how cleanly they can be captured by an automated explanation."
+    },
+    {
+     "heading": "Role in the paper",
+     "body": "Table 1 is a concrete, readable preview of the raw material behind the aggregate statistics presented next: the same [[autointerpretability-score]] procedure, applied here to five individual [[dictionary-feature]]s, is later averaged over hundreds of features per layer and compared against [[pca]], [[ica]], and other baselines. The explanations come from [[gpt-4]] and are scored by simulating each feature's activations with [[gpt-3-5]]."
+    }
+   ]
+  },
+  {
+   "id": "fig-2",
+   "kind": "figure",
+   "label": "Figure 2",
+   "page": 4,
+   "section": "3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-2.png",
+   "note": "Mean autointerpretability score of sparse-coding features versus ICA, PCA, random, and identity-ReLU baselines across residual-stream layers 0-5.",
+   "name": "Interpretability score by layer: sparse coding vs. baselines",
+   "sections": [
+    {
+     "heading": "How to read this plot",
+     "body": "Each point is the mean autointerpretability score for one decomposition method, computed over 150 features, at one residual-stream layer of the model; the vertical bar through each point is a 95% confidence interval around that mean, not a range of individual scores (individual feature scores, as table-1 shows, can be negative and vary widely even within one method). The x-axis is depth into the model (layers 0-5), and the y-axis is the same correlation-based [[autointerpretability-score]] used in table-1, so higher is better. Five methods are plotted at each layer: sparse coding (red), the paper's method; [[ica]], [[pca]], and Identity ReLU — the [[default-basis-baseline]] with negative activations zeroed — as fixed matrix-decomposition or neuron-basis baselines; and the [[random-directions-baseline]] as a floor. A natural misreading is to treat the x-axis as tracking overall model capability or accuracy — it does not; it only tracks how interpretable each layer's chosen decomposition is."
+    },
+    {
+     "heading": "What the plot shows",
+     "body": "At layer 0, sparse coding scores clearly highest, well above ICA, which is itself well above PCA, Identity ReLU, and random, which cluster close together near the bottom. This gap between sparse coding and every baseline persists through the early-to-middle layers, but it is not constant: the paper reports that it narrows moving through the model, becoming comparable to ICA by layer 4, and showing minimal further improvement over ICA by the final layer plotted (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5). Visually, by layer 5 the sparse-coding and ICA points sit close together, with PCA also having risen substantially from its layer-0 value, while random and Identity ReLU remain the weakest methods throughout."
+    },
+    {
+     "heading": "Why the gap narrows",
+     "body": "The paper offers two explanations for the shrinking advantage at later layers: later-layer features may be more complex because they build on everything before them, and are often best explained by their effect on the model's output rather than by the text that activates them — information the autointerpretability pipeline does not currently use. ICA's relative strength across layers is attributed separately to its optimizing directly for non-Gaussian, heavy-tailed activations, a property later shown to correlate with interpretability (see [[kurtosis-skew-correlation-analysis]])."
+    }
+   ]
+  },
+  {
+   "id": "fig-3",
+   "kind": "figure",
+   "label": "Figure 3",
+   "page": 5,
+   "section": "4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-3.png",
+   "note": "KL divergence from the IOI target as a function of number of patched features (left) and mean edit magnitude (right), comparing sparse dictionaries to PCA decompositions.",
+   "name": "IOI patching efficiency: dictionary features vs. PCA",
+   "sections": [
+    {
+     "heading": "How to read these curves",
+     "body": "Both panels share the same y-axis: KL divergence between the model's output when its activations are edited (\"patched\") and its output on a genuine counterfactual sentence — lower means the edit reproduced the counterfactual behavior more faithfully, zero would mean a perfect match. Each curve is one activation decomposition (four sparse dictionaries at different sparsity coefficients α, plus PCA and a non-negative variant of PCA), and each point on a curve corresponds to patching some number of that decomposition's directions, chosen in order of individually-estimated causal importance via [[automated-circuit-discovery]]'s ranking procedure — not an arbitrary or random order. The left panel plots KL divergence against how many directions were patched; the right panel plots the same KL divergence against the total magnitude of the edit those directions required. A curve that drops toward zero quickly, using few features or small magnitude, localizes the behavior more tightly than one that drops slowly or plateaus above zero. A plateau above zero reflects a decomposition whose reconstructions are simply less accurate, not a fundamentally different task."
+    },
+    {
+     "heading": "What the curves show",
+     "body": "All curves start near a KL divergence of about 2.0 with nothing patched. In the left panel, the sparse-dictionary curves fall faster than both PCA variants over most of the range shown, reaching a low KL divergence with substantially fewer patched features; the exception is the dictionary trained with the largest sparsity coefficient (α=1e-03), whose curve flattens out around 0.4 and never approaches zero, since heavier sparsity trades away reconstruction accuracy. The non-sparse dictionary (α=0) falls more slowly than the sparsity-penalized dictionaries, showing that sparsity itself, not just being a learned dictionary, drives the improved localization. The right panel tells a similar story in terms of edit size: the sparse-dictionary curves sit below and to the left of the PCA curves for most of the range, meaning a given reduction in KL divergence is achieved with a smaller total edit magnitude — the paper describes this as an improved Pareto frontier of edit magnitude versus thoroughness (sparse-autoencoders, §\"4.2 PRECISE LOCALISATION OF IOI DICTIONARY FEATURES\", p. 6)."
+    },
+    {
+     "heading": "What this establishes",
+     "body": "The experiment uses the [[ioi-task]], a previously-characterized behavior, specifically because ground truth about what the model is doing is already established, letting the comparison isolate how precisely each decomposition's directions align with the mechanism rather than whether it exists. Because the [[dictionary-feature]]s were trained with no reference to IOI or any other downstream task, their ability to localize this behavior with fewer, smaller edits than [[pca]] via [[dictionary-feature-patching]] is offered as evidence that sparsity recovers directions with genuine causal structure, not directions fit to this task."
+    }
+   ]
+  },
+  {
+   "id": "fig-4",
+   "kind": "figure",
+   "label": "Figure 4",
+   "page": 7,
+   "section": "5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-4.png",
+   "note": "Histograms of token activations (left) and ablation-induced logit changes (right) for the apostrophe-detecting dictionary feature 556.",
+   "name": "Token histograms for the apostrophe feature (feature 556)",
+   "sections": [
+    {
+     "heading": "How to read these histograms",
+     "body": "Both panels are stacked bar histograms built from many individual (token, context) instances, binned along the x-axis and colored by which specific token each instance is; a handful of the most frequent tokens get their own color, and everything else is grouped into \"[All Other Tokens]\". The left panel, \"Input Token Activations,\" only includes instances where dictionary feature 556 activates at all, binned by how strongly it activates; bar height is a count of instances, not a probability. The right panel, \"Output Logits Difference,\" only includes tokens whose predicted logit dropped when feature 556 is ablated from the residual stream via [[less-than-rank-one-ablation]], binned by the size of that drop; the paper plots only effects above a threshold for legibility, even though roughly 12,000 logits were affected in total, so the true tail of small effects is larger than what is drawn (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7). A naive read of total bar height as \"everything the feature does\" would understate the input panel's coverage of low-activation cases and overstate how exhaustive the output panel is."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "In the input panel, the lowest activation bin contains many tokens other than the apostrophe (\"[All Other Tokens]\", plus some \"s\" and other punctuation) alongside apostrophes, but from the second bin upward the bars become almost entirely apostrophe-colored, so the feature's strongest, most confident firings are overwhelmingly on the apostrophe token itself, while its weak firings pick up conceptually related but distinct tokens. In the output panel, the tallest bar (smallest logit changes) is dominated by \"[All Other Tokens]\" — many tokens are suppressed slightly — but from the second bin outward the \"s\" token dominates almost every bar, meaning that among tokens whose prediction drops substantially when feature 556 is removed, \"s\" is suppressed far more than any other single token. This matches the feature being used by the model to predict the \"s\" that follows an apostrophe in contractions and possessives like \"let's\" (sparse-autoencoders, §\"5.2 OUTPUT: DICTIONARY FEATURES HAVE INTUITIVE EFFECTS ON THE LOGITS\", p. 7)."
+    },
+    {
+     "heading": "Why this is the paper's monosemanticity case study",
+     "body": "The [[apostrophe-feature]] is used as the central worked example of [[monosemanticity]]: it activates on essentially one input token and, when removed, has one predictable, semantically coherent effect on the output, in contrast to the [[polysemanticity]] and [[superposition]] the paper is built around. The corresponding [[default-basis-baseline]] dimension for the residual stream activates on a wider and less coherent mix of tokens at similar magnitudes, underscoring that this clean behavior is a property of the learned [[dictionary-feature]] rather than of the direction simply being an apostrophe detector."
+    }
+   ]
+  },
+  {
+   "id": "fig-5",
+   "kind": "figure",
+   "label": "Figure 5",
+   "page": 8,
+   "section": "5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-5.png",
+   "note": "Causal-tree diagram showing which upstream dictionary features, across residual-stream layers, feed the closing-parenthesis feature.",
+   "name": "Causal-tree circuit for the closing-parenthesis feature",
+   "sections": [
+    {
+     "heading": "Reading the causal tree",
+     "body": "Each box is a single dictionary feature, identified by its layer number and feature index, with a short human-written gloss of what real-world pattern it seems to detect. Layer-0 features sit at the top, later layers below, and every path converges on one layer-5 feature at the bottom: the target whose unembedding predicts closing-parenthesis tokens. An arrow from an upstream feature to a downstream one is not a correlation; it records a specific test in which that upstream feature was ablated and the downstream feature's activation dropped, so it encodes a measured causal contribution. Arrow thickness scales with how much the downstream activation fell under ablation, so the thickest paths are the dominant causes and thin ones are minor. It is easy to over-read this as the model's complete wiring diagram for the behavior. It is not: at each node only the previous layer's features were tested as candidate parents, one layer at a time, so an absent arrow means untested or below threshold, not proven unrelated, and the tree only ever traces one hop per layer transition."
+    },
+    {
+     "heading": "What the circuit shows",
+     "body": "Two branches feed the root. One tracks generic parenthetical context: features for an open bracket itself, for the first token after it, and for words continuing inside the parenthesis, chained up through the middle layers into features that fire on text after an open parenthesis and predict a close. A second, parallel branch tracks acronyms specifically, with layer-0 and layer-1 features for acronyms in general converging through mid-layer features for acronyms following an open bracket. The two branches merge just before the root. The paper reports that unembedding this final feature yields closing-parenthesis token variants as its top predicted outputs, and frames earlier layers as detecting the range of contexts -- dates, acronyms, and other phrases -- that tend to precede a closing parenthesis (sparse-autoencoders, §\"5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION\", p. 8)."
+    },
+    {
+     "heading": "Why this matters",
+     "body": "This is [[feature-circuit-detection]] applied to a worked example, the [[closing-parenthesis-feature]]: rather than ranking a whole set of features against one behavior, it recursively chains single-hop ablation tests across depth to build an interpretable multi-layer circuit out of individual [[dictionary-feature]] units. The paper contrasts this success with a [[weight-based-connection-attempt]] at connecting features across layers by multiplying through the MLP weights, which found no meaningful matches -- ablation-based tracing succeeded where a purely weight-based method failed."
+    }
+   ]
+  },
+  {
+   "id": "fig-6",
+   "kind": "figure",
+   "label": "Figure 6",
+   "page": 12,
+   "section": "B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-6.png",
+   "note": "Tradeoff between the average number of active features and the proportion of unexplained variance for the MLP-layer-0 autoencoder, swept across dictionary size ratios.",
+   "name": "Active-feature count vs. unexplained variance, by dictionary size",
+   "sections": [
+    {
+     "heading": "Reading the scatter plot",
+     "body": "Each point is one trained sparse autoencoder. Its x-position is the mean number of dictionary features simultaneously active on a given input -- lower means a sparser reconstruction. Its y-position is the proportion of the original activation vector's variance the reconstruction fails to capture (unexplained variance): 0 is perfect reconstruction, values near 1 mean almost nothing was captured. Color encodes the dictionary's expansion factor $R$, its hidden size relative to the underlying activation dimension, swept across seven ratios. It is tempting to read this as one model's training trajectory. It is not: each point is a separately trained autoencoder at a different value of the sparsity coefficient $\\alpha$ (larger $\\alpha$ pushes a point up and to the left, toward fewer active features and worse reconstruction), and each color is a different dictionary size entirely, not a later stage of the same run."
+    },
+    {
+     "heading": "What the sweep shows",
+     "body": "Every dictionary size traces the same qualitative shape: unexplained variance drops steeply as active-feature count rises from near zero, then flattens toward a low floor once several hundred features are active, with no sharp bend separating a distinctly 'good' region from a 'bad' one. One extreme point, at essentially zero active features, has unexplained variance near 1.4 -- reconstruction has almost completely collapsed. The paper reads the absence of a knee anywhere along this curve as evidence against there being one single objectively correct sparsity level for decomposing this layer's activations (sparse-autoencoders, §\"B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION\", p. 12)."
+    },
+    {
+     "heading": "Context",
+     "body": "This sweep is run on an MLP-sublayer autoencoder, an application the paper elsewhere reports as only partly successful because of many [[dead-features]] (see [[mlp-sae-training]]). The tradeoff itself is the basis for the paper's [[sparsity-reconstruction-tradeoff]] argument, driven by the [[sparsity-loss]] and [[reconstruction-loss]] terms competing in training and shaped by the [[expansion-factor-r]] choice."
+    }
+   ]
+  },
+  {
+   "id": "fig-7",
+   "kind": "figure",
+   "label": "Figure 7",
+   "page": 13,
+   "section": "B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-7.png",
+   "note": "Sparsity versus unexplained-variance tradeoff for autoencoders swept over the sparsity coefficient alpha, one series per number of training epochs.",
+   "name": "Sparsity/variance tradeoff across training epochs",
+   "sections": [
+    {
+     "heading": "Reading the scatter plot",
+     "body": "The axes match the previous figure -- mean active-feature count (here labeled 'Sparsity') against unexplained variance -- but color now encodes the number of training epochs completed, from the legend's lowest value up to 20, rather than dictionary size. Each colored curve is itself a full sweep over the sparsity coefficient $\\alpha$, with every point a separately trained autoencoder at that epoch count. It is easy to misread a single color as one model getting trained progressively longer along that curve. It is not: a point's horizontal position comes entirely from its $\\alpha$ value, not from training time, so the effect of training duration only shows up when comparing across colors, not by following one color left to right."
+    },
+    {
+     "heading": "What the sweep shows",
+     "body": "The series with the fewest training epochs sits visibly above and to the right of every other epoch count across most of the range: for the same number of active features, its unexplained variance is markedly worse. The remaining epoch counts collapse onto nearly the same curve, largely overlapping one another. This indicates the sparsity/reconstruction tradeoff for a given $\\alpha$ converges after relatively little training, with additional epochs beyond that point producing little further change in the achievable tradeoff (sparse-autoencoders, §\"B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION\", p. 12)."
+    },
+    {
+     "heading": "Context",
+     "body": "Together with the dictionary-size sweep, this figure supports the paper's [[sparsity-reconstruction-tradeoff]] claim: the smooth, knee-free curve traced here by the $\\alpha$ sweep, and its stability once training has converged, is offered as evidence against a single objectively correct sparse decomposition, arising from the competing [[sparsity-loss]] and [[reconstruction-loss]] terms in the training objective."
+    }
+   ]
+  },
+  {
+   "id": "fig-8",
+   "kind": "figure",
+   "label": "Figure 8",
+   "page": 14,
+   "section": "C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-8.png",
+   "note": "Mean interpretability score by residual-stream layer for seven dictionary-size ratios ranging from 0.5x to 32x overcomplete.",
+   "name": "Interpretability by layer across seven dictionary sizes",
+   "sections": [
+    {
+     "heading": "Reading the plot",
+     "body": "The x-axis is the residual-stream layer (0 through 5) an autoencoder was trained on; the y-axis is its mean autointerpretability score, averaged over many features, with a vertical bar showing the uncertainty around that mean. Color and marker shape encode the dictionary's expansion factor $R$, swept across seven values from 0.5, which is smaller than the underlying activation dimension, up to 32, far overcomplete. Each point is one (layer, $R$) combination's mean score. It is tempting to expect the largest dictionaries, with the most feature capacity, to score best throughout. The plot does not show that ranking: score depends far more on layer than on dictionary size, and the smallest dictionary tested scores comparably to, and at some layers above, dictionaries dozens of times larger."
+    },
+    {
+     "heading": "What the plot shows",
+     "body": "All seven ratios decline over roughly the same range, from about 0.27-0.31 at layer 0 down to about 0.11-0.24 at layer 5, echoing a layer-wise decline the paper documents elsewhere. The ratios spread out most at layer 5: the two largest dictionaries hold up best there, while two of the mid-sized ratios fall furthest. The point of the sweep is that this is not a size effect: even the smallest, undercomplete dictionary reaches interpretability scores in the same range as dictionaries far larger, showing the interpretability gain is not confined to overcomplete dictionaries (sparse-autoencoders, §\"C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES\", p. 13)."
+    },
+    {
+     "heading": "Context",
+     "body": "A separate quantity, how much of a layer's total activation variance the dictionary reconstructs, does scale with [[expansion-factor-r]] -- larger dictionaries explain more of the whole, even though, per this plot, no single [[dictionary-feature]] is on average more interpretable in a larger dictionary than a smaller one. The underlying metric is the [[autointerpretability-score]]."
+    }
+   ]
+  },
+  {
+   "id": "fig-9",
+   "kind": "figure",
+   "label": "Figure 9",
+   "page": 14,
+   "section": "C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-9.png",
+   "note": "Random-only interpretability scores by layer, comparing sparse coding to ICA, PCA, identity-ReLU, and random-direction baselines.",
+   "name": "Random-only interpretability scores vs. baselines by layer",
+   "sections": [
+    {
+     "heading": "Reading the plot",
+     "body": "Axes match the dictionary-size sweep -- layer 0-5 against mean autointerpretability score with uncertainty bars -- but here color distinguishes the decomposition method rather than dictionary size: Sparse Coding, the paper's learned features, against four baselines (ICA, PCA, Random directions, and Identity ReLU, the model's own default basis with negative activations zeroed out). Crucially, every score here uses the stricter random-only scoring variant, where text fragments are drawn purely at random rather than mixed with fragments chosen because a feature strongly activated there ([[top-random-scoring]]). Because features are sparse, a small random sample often contains no strongly activating example at all, compressing scores for every method toward zero relative to the top-and-random scores used elsewhere in the paper. The low absolute values here are an artifact of the harsher test, not evidence sparse coding got worse; the meaningful comparison is the gap between methods within this plot."
+    },
+    {
+     "heading": "What the plot shows",
+     "body": "Sparse Coding sits clearly above all four baselines at every layer, most visibly in layers 0-3, where it scores roughly 0.10-0.12 against baselines clustered around 0.02-0.06. The gap narrows at layers 4 and 5, where sparse coding falls to roughly 0.03-0.05 and several baselines drop close to zero. The four baselines are difficult to distinguish from each other anywhere in the plot, their uncertainty bars overlapping heavily. This is the paper's check against an artifact-of-top-scoring explanation for its results: even under this harsher, random-only test, learned features remain more interpretable than the baselines, especially in earlier layers (sparse-autoencoders, §\"C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING\", p. 13)."
+    },
+    {
+     "heading": "Context",
+     "body": "The paper follows this check with a further control restricting baselines to the same number of simultaneously active directions as sparse coding, to rule out an alternative explanation for the gap ([[top-k-baseline-control]]). The baselines compared here are [[ica]], [[pca]], [[default-basis-baseline]], and [[random-directions-baseline]], scored with the same underlying [[autointerpretability-score]] used throughout the paper."
+    }
+   ]
+  },
+  {
+   "id": "fig-10",
+   "kind": "figure",
+   "label": "Figure 10",
+   "page": 15,
+   "section": "C.3 INTERPRETING THE MLP SUBLAYER",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-10.png",
+   "note": "Top-and-random (left) and random-only (right) interpretability scores by MLP layer, comparing sparse coding to the same baselines.",
+   "name": "MLP-layer interpretability scores vs. baselines",
+   "sections": [
+    {
+     "heading": "Reading the two panels",
+     "body": "Each panel plots mean automated interpretability score (y-axis) against MLP layer (x-axis, layers 0-5 of Pythia-70M), one point per method: sparse coding, ICA, PCA, the 'Identity ReLU' baseline (treating individual MLP neurons, after their nonlinearity, as the units of analysis), and random directions. Each point is a mean over many features or baseline directions at that layer, with an error bar; two points whose bars overlap should not be read as reliably different. The left panel uses 'top-and-random' scoring, which mixes a feature's highest-activating text fragments with random ones and so tends to read the feature's best case; the right panel uses the stricter 'random-only' scoring, built entirely from randomly sampled fragments, a harder test that yields lower scores across the board ([[top-random-scoring]], [[autointerpretability-score]])."
+    },
+    {
+     "heading": "What the scores show",
+     "body": "Sparse coding leads clearly at layer 0 in both panels (about 0.33 top-and-random, about 0.15 random-only), well above every baseline. Its advantage narrows through the middle layers, and under random-only scoring it becomes inconsistent: at layer 3 the sparse-coding point drops to about 0.03, below Identity ReLU and within the same range as PCA and random directions, before recovering somewhat at layers 4-5. This differs from the residual-stream results (Figures 2, 8, 9), where sparse coding's lead holds up cleanly across layers."
+    },
+    {
+     "heading": "Why MLP dictionaries are noisier",
+     "body": "The paper attributes this weaker, less consistent margin to 'mixed success' training dictionaries on MLP activations ([[mlp-sae-training]]): many learned features are still more interpretable than individual neurons, but the MLP dictionaries also accumulate large numbers of [[dead-features]] that never fire, especially in middle and later layers, so the living dictionary can fail to be genuinely overcomplete. This motivated using an untied encoder/decoder ([[tied-weights-sae]]) for MLP autoencoders specifically. The [[default-basis-baseline]] here (Identity ReLU) sits close to sparse coding at several layers, echoing the paper's separate observation that the residual stream is not expected to have a [[privileged-basis]] (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15)."
+    }
+   ]
+  },
+  {
+   "id": "table-2",
+   "kind": "table",
+   "label": "Table 2",
+   "page": 16,
+   "section": "C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/table-2.png",
+   "note": "Correlation of interpretability score with the mean, variance, skew, and kurtosis of feature activation distributions.",
+   "name": "Interpretability correlated with activation moments",
+   "sections": [
+    {
+     "heading": "What is being correlated",
+     "body": "Each row correlates one summary statistic of a dictionary feature's activation distribution — its mean, variance, skew, or kurtosis, computed over the token dataset — against that same feature's top-and-random [[autointerpretability-score]] ([[kurtosis-skew-correlation-analysis]]). The population is every scored residual-stream feature pooled across all layers and five dictionary [[expansion-factor-r]] ratios (0.5x to 8x overcomplete), not one layer or one dictionary size. A correlation coefficient here just measures how strongly two per-feature numbers co-vary across that population: a value like 0.20 is weak (it accounts for roughly 4% of the variance) and says nothing about any individual feature, and none of the four rows implies that manipulating a feature's moments would causally change its interpretability."
+    },
+    {
+     "heading": "The four correlations",
+     "body": "Mean correlates weakly negatively with interpretability (-0.09) and variance is essentially uncorrelated (0.02). Skew (0.20) and kurtosis (0.15) are the two positive, comparatively larger correlations in the table — features whose activations are more heavy-tailed and asymmetric tend to score as somewhat more interpretable. (The body text of §C.4 quotes slightly different figures for these two, 0.19 for skew and 0.24 for kurtosis, than the table itself; the values above are the table's own numbers.)"
+    },
+    {
+     "heading": "Why this matters for the baselines",
+     "body": "The result is offered as an explanation for why [[ica]] is consistently the strongest non-dictionary-learning baseline in Figures 2, 8, 9, and 10: ICA explicitly searches for maximally non-Gaussian directions, closely related to maximizing kurtosis, and sparse dictionary learning can itself be reformulated as a search for directions of maximal L4 norm ([[l4-norm-maximization]]). Under a central-limit-theorem argument, interference from many other active features should be roughly Gaussian, so a feature that stands out as unusually heavy-tailed is more likely to reflect a real, cleanly separated cause rather than noise (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 16)."
+    }
+   ]
+  },
+  {
+   "id": "fig-11",
+   "kind": "figure",
+   "label": "Figure 11",
+   "page": 16,
+   "section": "D.1 RESIDUAL STREAM BASIS",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-11.png",
+   "note": "Token-activation histogram for the default-basis residual-stream dimension that most resembles the apostrophe feature, illustrating its polysemanticity.",
+   "name": "Default-basis dimension resembling the apostrophe feature",
+   "sections": [
+    {
+     "heading": "Reading the two-panel histogram",
+     "body": "Both panels bin the same quantity — how strongly a single coordinate of the residual stream's default (neuron) basis activates — over every token occurrence in the sample, with x-axis activation magnitude from 0 to about 12.8. Bar height is a token count; colored segments split each bin's count by the specific token responsible ('and', an apostrophe, 'one', 'part', 'number'), with '[All Other Tokens]' as a catch-all and a pale '[All Tokens For Scale]' bar repeating the bin's total for reference. The two panels share x-axis bins but use different y-scales: the top panel (0 to 200,000) shows how the low-activation bins dwarf everything else, while the bottom panel is a rescaled zoom (0 to about 2,700) that reveals the composition hidden by that scale. Reading only the top panel, or only the highest bins, misses the story."
+    },
+    {
+     "heading": "What the histogram shows",
+     "body": "In the zoomed bottom panel, the middle bins (roughly 5.1 to 6.4 activation) hold on the order of 2,500 tokens, composed mostly of the 'All Other Tokens' catch-all with only small slices of 'and', 'one', and other labeled tokens — not apostrophes. Only in the higher bins, where total counts have already fallen to a few hundred or fewer, does the apostrophe segment become a visually larger share of a shrinking bar. This dimension was chosen because, among the residual-stream coordinates the dictionary's apostrophe feature reads from most strongly, it was the highest-ranked one whose own top activations include apostrophes — the 10th-highest such coordinate by that ranking (sparse-autoencoders, §\"D.1 RESIDUAL STREAM BASIS\", p. 16)."
+    },
+    {
+     "heading": "Contrast with the dictionary feature",
+     "body": "The point of the figure is contrastive: this [[default-basis-baseline]] coordinate of the [[residual-stream]] looks like an apostrophe detector only if a reader looks solely at its highest-activation bin; across the fuller activation range it fires on many unrelated tokens, the textbook picture of [[polysemanticity]]. That is unlike dictionary feature 556, which activates on apostrophes almost exclusively and is the paper's case study in [[monosemanticity]] ([[apostrophe-feature]]); the top-weighted dimensions this basis draws on are themselves [[outlier-dimensions]], further complicating any claim that a single default-basis coordinate is meaningful on its own."
+    }
+   ]
+  },
+  {
+   "id": "fig-12",
+   "kind": "figure",
+   "label": "Figure 12",
+   "page": 17,
+   "section": "D.2 EXAMPLES OF LEARNED FEATURES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-12.png",
+   "note": "Input-activation and output-logit histograms for a dictionary feature that fires on 'if' in coding contexts.",
+   "name": "'If'-in-code feature: input and output histograms",
+   "sections": [
+    {
+     "heading": "Reading the input/output histograms",
+     "body": "The two panels use the same construction as the main-text apostrophe-feature figure. Left: for every token occurrence where this [[dictionary-feature]] activates at all, bin the activation strength (x-axis) and stack the resulting counts by which specific token produced them, with '[All Other Tokens]' catching everything not individually labeled. Right: after ablating the feature, bin the resulting drop in each downstream token's predicted logit (x-axis, 'Logit Difference') and again stack by which specific next-token prediction was suppressed. The two panels are built from different quantities on different samples — activation strength versus a causal logit change — so their bar heights are not comparable to each other; what carries the interpretation is which tokens appear in each panel's legend, not the raw counts."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "The input panel's labeled tokens are several tokenizations of 'if' (capitalized, uncapitalized, with and without a leading space) together with 'ifndef', 'define', '=', 'when', and 'function' — code-specific tokens, consistent with a feature tied to the word 'if' inside source code rather than prose. The output panel's most-suppressed tokens after ablation are '(', '&&', 'then', '!', '__', and similar — tokens that typically follow 'if' in code syntax (an opening parenthesis for the condition, a logical AND, a negation, a dunder identifier). The two lists tell a consistent causal story: what triggers the feature and what the model does with it line up."
+    },
+    {
+     "heading": "Where this fits",
+     "body": "This is one of the additional [[dictionary-feature]] case studies in Appendix D.2, alongside a similar 'Dis'-prefix feature and two more apostrophe-context features, extending the paper's [[monosemanticity]] argument beyond the single worked example in the main text (sparse-autoencoders, §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 17)."
+    }
+   ]
+  },
+  {
+   "id": "fig-13",
+   "kind": "figure",
+   "label": "Figure 13",
+   "page": 17,
+   "section": "D.2 EXAMPLES OF LEARNED FEATURES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-13.png",
+   "note": "Input-activation and output-logit histograms for a token-level feature detecting the 'Dis' bigram prefix (e.g. 'disCLAIM', 'disclosed').",
+   "name": "'Dis'-prefix feature: input and output histograms",
+   "sections": [
+    {
+     "heading": "Reading the input/output histograms",
+     "body": "Same construction as the 'if' feature and the main-text apostrophe example: left bins the feature's activation strength over occurrences where it fires, stacking each bin's token count by the specific token responsible; right bins the drop in downstream logits after ablation, stacking by which next-token prediction is suppressed. Worth checking before accepting the paper's label: the left panel's labeled tokens are not only 'Dis' but several related prefix fragments ('Re', 'un', 'is', 're', 'dis', 'des', 'trans', 'en'), so the histogram alone leaves open whether the feature is specific to the capitalized bigram 'Dis' or responds more broadly to prefix-like subword tokens; as with the other feature pages, the two panels' bars are not on comparable scales to each other."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "In the input panel almost all activating occurrences sit near zero (an 'All Other Tokens' bar of roughly 1,150 in the first bin), but as activation strength increases the composition narrows toward the small labeled set of prefix tokens, and the highest bins (activation roughly 7.8-9.7) are made up almost entirely of them rather than 'All Other Tokens'. The output panel shows ablation most suppresses logits for tokens that complete words beginning 'Dis': 'CLAIM' (disCLAIM), 'closed' (disclosed), 'ordered' (disordered), 'perse' (disperse), 'plays' (displays), 'position' (disposition), and 'par' (dispar-). That word-completion pattern is what grounds the paper's more specific 'Dis'-bigram-prefix reading, rather than the input histogram on its own (sparse-autoencoders, §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 17)."
+    },
+    {
+     "heading": "Where this fits",
+     "body": "Alongside the 'if'-in-code feature and two apostrophe-context features, this is one of Appendix D.2's additional [[dictionary-feature]] examples illustrating the range of a trained sparse-coding dictionary: from programming-language syntax to sub-word morphology, each showing input and output evidence pointing at the same interpretation, part of the paper's broader case for [[monosemanticity]]."
+    }
+   ]
+  },
+  {
+   "id": "fig-14",
+   "kind": "figure",
+   "label": "Figure 14",
+   "page": 18,
+   "section": "D.2 EXAMPLES OF LEARNED FEATURES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-14.png",
+   "note": "Input-activation and output-logit histograms for an apostrophe feature specific to \"I'll\"-like contractions.",
+   "name": "Apostrophe feature for pronoun contractions (\"I'll\", \"you'll\")",
+   "sections": [
+    {
+     "heading": "Reading the two-panel histogram",
+     "body": "Each panel pair repeats the input/output histogram layout used for the general apostrophe feature and the 'if' and 'Dis' features: the left plot, 'Input Token Activations,' bins every dataset token that activates this feature by activation strength (x-axis, running to roughly 9.5) and stacks each bin by which token produced it, with the five most common tokens given their own color and everything else lumped into '[All Other Tokens].' The right plot, 'Output Logits Difference,' instead bins by how much a token's predicted logit drops when the feature is ablated from the residual stream, again stacked and colored by token identity. A naive read of the tallest bar in the left panel is misleading: that bar sits at the lowest activation strengths and is mostly the tan '[All Other Tokens]' color, a grab-bag of weakly-activating, unrelated tokens. The feature's real identity only becomes visible in the higher-activation bins further right, which are almost solid blue: the apostrophe token. The right panel should likewise be read as a distribution over several suppressed tokens, not one."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "At higher activation strengths the input histogram is almost entirely the apostrophe token, with 'I,' 'l,' 'you,' and a quotation mark appearing only as minor slivers at low activation. That secondary presence of 'I' and 'you' is the tell: this feature fires on apostrophes specifically in pronoun-contraction contexts such as \"I'll\" and \"you'll,\" not on apostrophes in general. Ablating the feature suppresses several different next-token predictions rather than one: 've,' 're,' 'm,' 's,' and 'll' all appear as sizeable colored segments across the logit-difference bins. So although the feature's most common trigger context looks like \"'ll,\" its causal downstream effect covers a family of pronoun-contraction endings (I've, you're, I'm, it's, I'll), not just the ending it happens to fire most on."
+    },
+    {
+     "heading": "Why two apostrophe features matter",
+     "body": "This feature is one of two contraction-specific apostrophe features documented alongside the general-purpose apostrophe feature 556; its sibling in Figure 15 fires on a different contraction family (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7; §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 16). That the dictionary-learning process splits \"apostrophe\" into multiple narrower, context-specific [[dictionary-feature]]s -- rather than one broad apostrophe feature -- is direct evidence for [[monosemanticity]]: each feature corresponds to one coherent linguistic pattern with a distinct causal footprint on the model's output, the opposite of the [[polysemanticity]] that motivates the paper's approach to [[superposition]]. See also the general case study, [[apostrophe-feature]]."
+    }
+   ]
+  },
+  {
+   "id": "fig-15",
+   "kind": "figure",
+   "label": "Figure 15",
+   "page": 18,
+   "section": "D.2 EXAMPLES OF LEARNED FEATURES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-15.png",
+   "note": "Input-activation and output-logit histograms for an apostrophe feature specific to \"don't\"-like contractions.",
+   "name": "Apostrophe feature for negation contractions (\"don't\", \"won't\")",
+   "sections": [
+    {
+     "heading": "Reading the histogram pair",
+     "body": "This uses the same input/output histogram format as the other feature case studies: left shows which tokens activate the feature and how strongly (x-axis, capped around 7.6 here), stacked and colored by token identity with a catch-all '[All Other Tokens]' category; right shows which next-token predictions drop, and by how much, when the feature is ablated from the residual stream. As with the sibling feature in Figure 14, the leftmost, near-zero bin is dominated by the tan 'other tokens' color rather than the feature's true target -- a mix of weakly-activating unrelated tokens a naive reader might mistake for the feature's main identity. The informative region is the string of smaller bars at higher activation, which here are consistently the blue apostrophe token, with almost no other color competing at high activation strength."
+    },
+    {
+     "heading": "What it shows",
+     "body": "Beyond low activation, the input histogram is essentially pure apostrophe; the low-activation ticks include period, hyphen, and asterisk rather than the pronoun tokens seen in Figure 14, consistent with this feature triggering in negation-contraction contexts (\"don't,\" \"won't,\" \"wouldn't\") rather than pronoun-plus-'ll contractions. The output panel is far more concentrated than Figure 14's: the token 't' dominates the suppressed-logit count in essentially every activation-difference bin, with 's,' 'll,' 'y,' and 'T' contributing only minor slivers. Ablating this feature therefore has a narrow, predictable causal effect -- mainly removing the model's prediction of the 't' that closes an \"n't\" contraction -- in contrast to the broader spread of suppressed endings ('ve, 're, 'm, 's, 'll) seen for the \"I'll\"-type feature."
+    },
+    {
+     "heading": "Two features, two contraction families",
+     "body": "The contrast with Figure 14 is itself the point: the paper singles out these two features specifically because they show that even a single character, the apostrophe, is represented by multiple distinct [[dictionary-feature]]s rather than one, each tied to its own contraction family and each with its own tight causal effect on next-token logits (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7; §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 16). The narrower output distribution here versus Figure 14's broader one shows [[monosemanticity]] is a matter of degree across learned features, not all-or-nothing. Compare the general-purpose [[apostrophe-feature]] case study."
+    }
+   ]
+  },
+  {
+   "id": "fig-16",
+   "kind": "figure",
+   "label": "Figure 16",
+   "page": 19,
+   "section": "E NUMBER OF ACTIVE FEATURES",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-16.png",
+   "note": "Fraction of features that remain active versus the L1 sparsity coefficient, across layers and dictionary-size ratios, for residual-stream and MLP (tied and untied) autoencoders.",
+   "name": "Active-feature fraction vs. L1 sparsity across layers and architectures",
+   "sections": [
+    {
+     "heading": "How the 3x6 grid is organized",
+     "body": "Eighteen small panels arranged three rows by six columns. Columns are layers 0 through 5, held consistent across all three rows. Rows are three different autoencoder configurations: residual-stream with tied encoder/decoder weights (top), MLP sublayer with tied weights (middle), and MLP sublayer with untied, separate encoder/decoder weights (bottom). Inside each panel, the x-axis is the L1 sparsity coefficient alpha on a log scale, the y-axis is the fraction of dictionary features that remain 'active' (defined as firing more than ten times across ten million datapoints), and each colored curve is one dictionary expansion ratio swept across alpha, per that panel's own legend. A naive cross-row comparison is misleading: the residual row's alpha axis spans a different numeric range than the two MLP rows', so a curve's horizontal position cannot be compared straight across rows. In several later-layer residual panels the curves stop decaying smoothly and instead cross and fluctuate; small-print legend values and exact curve identities in these panels are not reliably legible at this crop size and are not read off here."
+    },
+    {
+     "heading": "What the sweep shows",
+     "body": "In the residual-stream row, every curve starts near a fraction of 1.0 at low alpha and falls toward 0 as alpha increases, with larger dictionary ratios falling off at smaller alpha than smaller ratios -- bigger dictionaries need less sparsity pressure before some features go quiet. This sweep is what let the paper pick its main-text hyperparameters, alpha = 8.6e-4 for the residual stream and alpha = 3.2e-4 for the MLP, and supports the claim that residual dictionaries stay close to fully alive up to roughly 4x overcomplete (sparse-autoencoders, §\"E NUMBER OF ACTIVE FEATURES\", p. 17). Both MLP rows look qualitatively different: many curves start well below 1.0 even at the smallest alpha tested, meaning a large fraction of MLP dictionary features are dead before any sparsity penalty is applied at all, and this dead fraction again grows with the dictionary ratio."
+    },
+    {
+     "heading": "Why the residual stream and MLP differ",
+     "body": "This sweep is the evidence behind the paper's account of [[dead-features]] and its mixed success applying [[sparse-autoencoders]] to the [[mlp-sae-training]] setting: the [[expansion-factor-r]] and the [[sparsity-loss]] coefficient jointly determine how much of a dictionary stays usable, and the MLP sublayer's non-linearity leaves large regions of input space unused, stranding features there regardless of alpha. This is also part of the motivation for comparing [[tied-weights-sae]] against untied weights specifically on the MLP sublayer, shown directly in the bottom two rows."
+    }
+   ]
+  },
+  {
+   "id": "fig-17",
+   "kind": "figure",
+   "label": "Figure 17",
+   "page": 19,
+   "section": "F EDITING IOI BEHAVIOUR ON OTHER LAYERS",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-17.png",
+   "note": "KL divergence from target versus number of patched features and mean edit magnitude, repeated for residual-stream layers 3, 7, 11, 15, 19, and 23 of Pythia-410M.",
+   "name": "IOI feature-patching precision across six more Pythia-410M layers",
+   "sections": [
+    {
+     "heading": "How the six layer-panels are built",
+     "body": "Six panels, one per residual-stream layer of Pythia-410M (layers 3, 7, 11, 15, 19, and 23 of its 24 total layers, indexed 0-23), arranged three rows by two columns. Each layer-panel is itself a pair of plots reproducing the two-plot format used for layer 11 in the main text: the left plot is KL divergence from the target output (y-axis) against the number of patched components (x-axis); the right plot is the same KL divergence against the mean magnitude of the edit made to the residual stream (x-axis) as more components are added. Lines are different decompositions: several sparse dictionaries (different L1 alpha values at expansion ratio R=4, plus an unpenalized alpha=0 dictionary) and two PCA baselines, ordinary PCA and a non-negative variant. A naive pitfall: axis ranges differ across layers -- the edit-magnitude axis tops out near 2.5 for layer 3 but near 7 for layer 23 -- so absolute KL or magnitude values are not comparable panel to panel; only the relative ordering of curves within a panel is (sparse-autoencoders, §\"F EDITING IOI BEHAVIOUR ON OTHER LAYERS\", p. 19). Small legend and tick text in these twelve sub-plots is not reliably legible at this crop size beyond the axis ranges and curve groupings described here."
+    },
+    {
+     "heading": "What it shows",
+     "body": "Across all six layers, the sparse-dictionary curves sit below and to the left of the PCA curves in the number-of-patched-features plots, meaning dictionary features reach a given KL divergence from the target with fewer patched components than PCA does at every layer tested, not just layer 11. In the edit-magnitude plots the separation is smaller and the curve families overlap more, though the most heavily-penalized dictionary (highest alpha) tends to plateau at a higher minimum KL divergence than the others, echoing the sparsity/reconstruction-accuracy tradeoff already seen in the main-text result."
+    },
+    {
+     "heading": "Generalizing the IOI result",
+     "body": "This appendix checks that the main-text finding for layer 11 is not a one-layer coincidence (sparse-autoencoders, §\"F EDITING IOI BEHAVIOUR ON OTHER LAYERS\", p. 19). Repeating the [[dictionary-feature-patching]] procedure, built on [[activation-patching]], across six more layers of [[pythia]]'s 410M model on the [[ioi-task]] shows the same qualitative pattern holds throughout the network's depth: dictionary features localize the behavior more tightly than [[pca]] components."
+    }
+   ]
+  },
+  {
+   "id": "fig-18",
+   "kind": "figure",
+   "label": "Figure 18",
+   "page": 20,
+   "section": "G TOP K COMPARISONS",
+   "classification": "results-and-interpretation",
+   "image": "figures/sparse-autoencoders/fig-18.png",
+   "note": "Autointerpretation scores across layers including fixed-K variants of ICA and PCA as additional baselines, testing whether unequal comparison directions explain sparse coding's advantage.",
+   "name": "Autointerpretation scores with fixed-K PCA and ICA baselines",
+   "sections": [
+    {
+     "heading": "Reading the added Top-k markers",
+     "body": "A single scatter plot: x-axis is residual-stream layer (0 through 5), y-axis is mean automated interpretability score under top-and-random scoring (named in the plot's own title), with error bars per point. Six methods are plotted per layer: sparse coding (the paper's method), plus five baselines -- ICA, PCA, and Identity ReLU (individual neurons), as already seen in the main comparison, and two new ones introduced for this appendix, 'ICA Top-k' and 'PCA Top-k.' The Top-k variants restrict PCA/ICA to a fixed number K of directions allowed to be simultaneously 'active' per datapoint, matched to the sparse dictionary's own average active-feature count, rather than PCA/ICA's default of always having every direction active. The point of the plot is not sparse coding versus everything else, but each ordinary baseline versus its own Top-k version: if unequal numbers of active comparison directions explained sparse coding's advantage, ICA Top-k and PCA Top-k should jump much closer to sparse coding's score than plain ICA and PCA do."
+    },
+    {
+     "heading": "What it shows",
+     "body": "In layers 0 through 3, sparse coding scores clearly highest of the six methods (starting near 0.30 at layer 0 and declining through the low-to-mid 0.20s by layer 3), and the Top-k variants do not close the gap: ICA Top-k and PCA Top-k track close to their unrestricted counterparts rather than rising toward sparse coding, and ICA Top-k even scores below plain ICA at layers 2 and 3. By layer 5, sparse coding's earlier lead has largely disappeared -- ICA and ICA Top-k both sit at or above sparse coding's score there, continuing the late-layer decline already visible in the main comparison."
+    },
+    {
+     "heading": "Ruling out an activation-count confound",
+     "body": "This is the paper's [[top-k-baseline-control]] experiment, checking that the [[autointerpretability-score]] advantage of sparse coding over [[ica]] and [[pca]] is not merely an artifact of a dictionary feature activating on a small subset of inputs while a raw PCA or ICA direction is active across an entire half-space (sparse-autoencoders, §\"G TOP K COMPARISONS\", p. 18). Matching the number of simultaneously active directions closes only a small part of the gap in early layers, so the interpretability advantage documented under [[top-random-scoring]] survives this control."
+    }
+   ]
+  }
+ ],
+ "old_dataAndExperiments": [
+  {
+   "label": "architecture",
+   "entries": [
+    {
+     "figure": "fig-1",
+     "teaser": "This diagram lays out the paper's three-stage method: sample a language model's internal activations (residual stream, MLP, or attention sublayer) while it runs over a text corpus; train a sparse autoencoder with tied encoder and decoder weights and a ReLU bottleneck to reconstruct those activations as a sparse combination of learned directions; then interpret the resulting dictionary features, for instance by scoring them with an automated interpretability procedure. It is the map for the whole paper, since every later experiment probes one of these three stages."
+    }
+   ]
+  }
+ ],
+ "old_resultsAndInterpretation": [
+  {
+   "id": "autointerp",
+   "title": "Dictionary features score higher on automated interpretability than baselines",
+   "narrative": "This experiment asks whether the learned dictionary features are individually more interpretable than directions found by neurons, PCA, ICA, and random baselines, using an automated procedure that has a language model describe a feature from its activating text and then predict its activation elsewhere. Table 1 and Figure 2 give the headline comparison, and the remaining figures and Table 2 in this group stress-test that result against dictionary size, scoring method, the MLP sublayer, and possible statistical confounds.",
+   "entries": [
+    {
+     "figure": "table-1",
+     "teaser": "Five dictionary features from the layer-1 residual stream, picked in the arbitrary order they appear in the dictionary, each paired with a GPT-4-written description and its autointerpretability score. It gives a concrete, worked example of what the automated interpretation pipeline outputs before the paper moves to aggregate comparisons, ranging from a fairly clean 'letter W' feature to a barely interpretable 'actions' feature."
+    },
+    {
+     "figure": "fig-2",
+     "teaser": "This chart compares the mean autointerpretability score of the learned dictionary features against four baselines (ICA, PCA, random directions, and the untransformed neuron basis) across residual-stream layers 0 through 5. It is the paper's headline result: dictionary features score noticeably higher in early layers, though the gap narrows through the model and becomes comparable to ICA by the later layers shown."
+    },
+    {
+     "figure": "fig-8",
+     "teaser": "This figure repeats the interpretability-by-layer comparison for seven different dictionary-size ratios, from half the model's dimension up to 32 times overcomplete. It shows that the interpretability advantage of sparse coding is not limited to large, overcomplete dictionaries but also holds for smaller ones, which just explain less of the overall activation variance."
+    },
+    {
+     "figure": "fig-9",
+     "teaser": "This plot recomputes interpretability scores using only randomly sampled text fragments, dropping the top-activating fragments that make scoring easier. It addresses the worry that mixing high-activation examples with random ones inflates the scores, and finds that although absolute scores drop for every method, dictionary features still outperform the baselines, especially in early layers."
+    },
+    {
+     "figure": "fig-10",
+     "teaser": "This pair of plots repeats the top-and-random and random-only interpretability comparisons for the MLP sublayer instead of the residual stream. It shows the approach transfers to the MLP with mixed success: many features are still more interpretable than neurons, but the paper notes elsewhere that MLP dictionaries also produce a large number of features that never activate."
+    },
+    {
+     "figure": "table-2",
+     "teaser": "This table reports the correlation between a feature's interpretability score and four statistical moments of its activation distribution: mean, variance, skew, and kurtosis. Skew and kurtosis show the strongest positive correlations, supporting the idea that interpretable features have heavy-tailed activations, which also explains why ICA, which maximizes non-Gaussianity, is the strongest of the baseline methods."
+    },
+    {
+     "figure": "fig-18",
+     "teaser": "This chart adds fixed-K variants of ICA and PCA as further baselines, matching the number of directions active per token to the average number of active dictionary features. It checks whether the sparse coding advantage in Figure 2 is just an artifact of comparing directions active over an unequal share of activation space, and finds this accounts for only a small part of the difference."
+    }
+   ]
+  },
+  {
+   "id": "causal",
+   "title": "Dictionary features localize a causal behavior with fewer, smaller edits than PCA",
+   "narrative": "Using activation patching on the indirect object identification task, this experiment tests whether editing the model along dictionary-feature directions can reproduce a target behavior with fewer interventions and smaller edits than editing along PCA directions. Figure 3 gives the main result on one layer of Pythia-410M and Figure 17 repeats the same measurement across five additional layers.",
+   "entries": [
+    {
+     "figure": "fig-3",
+     "teaser": "These two plots track KL divergence from a target output as more features are patched (left) and as edit magnitude grows (right), comparing sparse dictionary features to PCA components and to a non-sparse dictionary on layer 11 of Pythia-410M. Dictionary features reach a given KL divergence with fewer patches and smaller edits than PCA, and that advantage disappears for the non-sparse dictionary, indicating sparsity itself drives the improvement."
+    },
+    {
+     "figure": "fig-17",
+     "teaser": "This figure reruns the same two KL-divergence measurements from Figure 3 across six residual-stream layers of Pythia-410M (layers 3, 7, 11, 15, 19, and 23) instead of just layer 11. It shows the causal-localization advantage of dictionary features over PCA is not specific to one layer but holds fairly consistently across the depth of the model."
+    }
+   ]
+  },
+  {
+   "id": "case-studies",
+   "title": "Individual features are monosemantic, predictable, and chainable into circuits",
+   "narrative": "This set of case studies zooms into a handful of hand-picked dictionary features to check three properties of a genuine feature: it fires on a single human-understandable input pattern, it has a sensible effect on output logits when removed, and its activation can be traced back through features in earlier layers. Figures 4, 11 through 15 build and stress-test the input and output story around an apostrophe feature, while Figure 5 assembles a multi-layer causal tree for a closing-parenthesis feature.",
+   "entries": [
+    {
+     "figure": "fig-4",
+     "teaser": "This pair of histograms shows which tokens activate dictionary feature 556 (left) and which output tokens lose the most predicted probability when the feature is ablated (right). The feature fires almost exclusively on apostrophes, and removing it most strongly suppresses the model's prediction of a following 's', matching how apostrophes precede 's' in possessives and contractions like 'let's'."
+    },
+    {
+     "figure": "fig-5",
+     "teaser": "This causal tree traces a layer-5 feature that fires on tokens inside parentheses and predicts a closing parenthesis, tracking backward through four earlier layers via ablation experiments to find which upstream features feed it. The resulting tree of interpretable upstream features, such as ones detecting acronyms or tokens right after an open parenthesis, demonstrates that circuit detection can be automated using dictionary features instead of individual neurons."
+    },
+    {
+     "figure": "fig-11",
+     "teaser": "This histogram shows token activations for the default-basis residual-stream dimension that most resembles the apostrophe feature from Figure 4. Unlike that clean dictionary feature, this raw dimension only clusters around apostrophes at its highest activations and represents unrelated information at lower activations, illustrating the polysemanticity that sparse coding is meant to remove."
+    },
+    {
+     "figure": "fig-12",
+     "teaser": "This pair of histograms shows the input activations and output-logit effects of a dictionary feature that fires on the word 'if' specifically in coding-like contexts. It is one of several worked examples used to show that individually interpretable, narrowly-scoped features recur across the learned dictionary, not just for the apostrophe case."
+    },
+    {
+     "figure": "fig-13",
+     "teaser": "This pair of histograms documents a feature that fires on the 'Dis' prefix as part of specific word bigrams, such as 'disCLAIM', 'disclosed', and 'disordered'. It shows that some dictionary features track sub-word token patterns rather than whole semantic concepts, broadening the kinds of monosemantic structure the method can recover."
+    },
+    {
+     "figure": "fig-14",
+     "teaser": "This pair of histograms shows a second apostrophe-related feature, one that activates specifically in 'I'll'-like contraction contexts rather than apostrophes generally. Alongside Figure 15, it shows the model uses several distinct apostrophe features tied to different families of contractions rather than one catch-all apostrophe feature."
+    },
+    {
+     "figure": "fig-15",
+     "teaser": "This pair of histograms shows a third apostrophe-related feature, specific to 'don't'-like contraction contexts. Together with Figure 14, it reinforces that the single apostrophe feature highlighted in Figure 4 is only one member of a family of narrowly-scoped apostrophe features."
+    }
+   ]
+  },
+  {
+   "id": "training",
+   "title": "Sparsity-accuracy tradeoffs that shaped the training setup",
+   "narrative": "These sweeps characterize how the autoencoders' training hyperparameters, chiefly the sparsity coefficient alpha and the dictionary-size ratio R, trade sparsity against reconstruction accuracy and against the number of features that stay active, providing the basis for the hyperparameter choices used in the main experiments.",
+   "entries": [
+    {
+     "figure": "fig-6",
+     "teaser": "This plot sweeps the dictionary-size ratio for an MLP-layer-0 autoencoder and charts the tradeoff between the average number of active features and the proportion of unexplained reconstruction variance. The curve is smooth with no sharp knee, which the authors take as evidence there is no single obviously correct sparsity level to aim for."
+    },
+    {
+     "figure": "fig-7",
+     "teaser": "This plot sweeps the sparsity coefficient alpha for autoencoders trained for different numbers of epochs, tracking how the sparsity-versus-unexplained-variance tradeoff shifts with more training. It shows how training length changes the achievable tradeoff curve, informing how long the dictionaries used elsewhere in the paper were trained."
+    },
+    {
+     "figure": "fig-16",
+     "teaser": "This plot tracks what fraction of a dictionary's features remain active as the sparsity coefficient alpha increases, across layers and dictionary-size ratios, for both residual-stream and MLP autoencoders. It shows residual-stream dictionaries can be pushed to at least four times overcomplete before features start dying off, a finding that directly guided the alpha values used in the main interpretability experiments."
+    }
+   ]
+  }
+ ],
+ "reserved_node_ids": [
+  "sparse-autoencoders-inside",
+  "sae-in-ch1-obstacle",
+  "sae-in-polysemanticity",
+  "sae-in-superposition",
+  "sae-in-monosemanticity",
+  "sae-in-mech-interp",
+  "sae-in-sparse-dict-learning",
+  "sae-in-sharkey",
+  "sae-in-lineage-theme",
+  "sae-in-ch2-method",
+  "sae-in-object",
+  "sae-in-unmixing-theme",
+  "sae-in-dict-feature",
+  "sae-in-sparsity-loss",
+  "sae-in-recon-loss",
+  "sae-in-expansion",
+  "sae-in-tied",
+  "sae-in-tradeoff",
+  "sae-in-ch3-scoring",
+  "sae-in-autointerp",
+  "sae-in-gpt4",
+  "sae-in-gpt35",
+  "sae-in-pca",
+  "sae-in-ica",
+  "sae-in-score-audit-tissue",
+  "sae-in-ch4-ioi",
+  "sae-in-actpatch",
+  "sae-in-dictpatch",
+  "sae-in-acdc",
+  "sae-in-ioi",
+  "sae-in-ch5-casestudies",
+  "sae-in-apostrophe",
+  "sae-in-rankone",
+  "sae-in-closepar",
+  "sae-in-circuitdetect",
+  "sae-in-weightfail",
+  "sae-in-ch6-basis",
+  "sae-in-defaultbasis",
+  "sae-in-residstream",
+  "sae-in-privbasis",
+  "sae-in-outlierdim",
+  "sae-in-ch7-limits",
+  "sae-in-mlp",
+  "sae-in-perplexity",
+  "sae-in-audit-tissue",
+  "sparse-autoencoders-across",
+  "sae-ac-ch1-reading",
+  "sae-ac-reading-theme",
+  "sae-ac-superedge-reading",
+  "sae-ac-decomp-edge",
+  "sae-ac-residstream-concept",
+  "sae-ac-ch2-audit",
+  "sae-ac-steering-audit-theme",
+  "sae-ac-superedge-audit",
+  "sae-ac-enumsafety-concept",
+  "sae-ac-mechinterp-concept",
+  "sae-ac-ch3-judge",
+  "sae-ac-hindsight-judge",
+  "sae-ac-aisub-tissue",
+  "sae-ac-gpt4-concept",
+  "sae-ac-autointerp-concept",
+  "sae-ac-ch4-unsupervised",
+  "sae-ac-hindsight-altvector",
+  "sae-ac-mirror-tissue",
+  "sae-ac-saeobject-concept",
+  "sae-ac-dictfeature-concept",
+  "sae-ac-ch5-depth",
+  "sae-ac-hindsight-depth",
+  "sae-ac-behavclustering-edge",
+  "sae-ac-pca-viz-edge",
+  "sae-ac-pca-concept",
+  "sae-ac-ch6-patterns",
+  "sae-ac-scaleasym-tissue",
+  "sae-ac-ablations-tissue",
+  "sae-ac-goodhart-tissue",
+  "sae-ac-precursors-tissue",
+  "sparse-autoencoders-big-picture",
+  "sae-bp-ch1-thesis",
+  "sae-bp-superposition",
+  "sae-bp-polysemanticity",
+  "sae-bp-monosemanticity",
+  "sae-bp-mechinterp",
+  "sae-bp-saeobject",
+  "sae-bp-ch2-method",
+  "sae-bp-dictfeature",
+  "sae-bp-sparsityloss",
+  "sae-bp-reconloss",
+  "sae-bp-expansionr",
+  "sae-bp-ch3-evidence",
+  "sae-bp-autointerp",
+  "sae-bp-pca",
+  "sae-bp-defaultbasis",
+  "sae-bp-dictpatch",
+  "sae-bp-ioi",
+  "sae-bp-ch4-demo",
+  "sae-bp-apostrophe",
+  "sae-bp-closepar",
+  "sae-bp-circuitdetect",
+  "sae-bp-ch5-limits",
+  "sae-bp-perplexity",
+  "sae-bp-mlptraining",
+  "sae-bp-enumsafety"
+ ],
+ "existing_tabs": [
+  "Inside the paper",
+  "Across the corpus",
+  "The big picture"
+ ]
+}

@@ -79,34 +79,33 @@ something up, follow a connection, keep digging?
 - figures are their own node type, scoped to their paper — not concepts, and not
   extracted in the concept stage; a separate per-paper extraction stage crops
   and inventories them
-- each is classified into one of two sections: data and experiments
-  (architecture, data, experimental setup, setup-only tables) or results and
-  interpretation (results plots, results tables, heatmaps, anything showing or
-  interpreting outcomes); a figure mixing setup with results goes to results
-  and interpretation
+- each is classified as data-and-experiments (architecture, data,
+  experimental setup, setup-only tables) or results-and-interpretation
+  (results plots, results tables, heatmaps, anything showing or interpreting
+  outcomes); a figure mixing setup with results is results-and-interpretation;
+  the classification marks which figures get the results-page treatment and
+  informs the experiments story's shape — it creates no separate sections
 - a figure page carries the cropped image and fresh prose in the grounded
   register explaining what is going on in it, with the standard locator; the
   paper's original caption is not reproduced
 - figure pages link their paper's concepts in prose, and concept pages may link
   back — figures carry no typed edges and join no themes; their way outward is
   their paper and their concept links, so theme coverage does not apply to them
-- the images appear only in the paper's sections and on the figure pages —
-  concept pages stay prose
+- the images appear only in the paper's experiments story and on the figure
+  pages — concept pages stay prose
 
-**Data and experiments**
-- a section on each paper's page, beside the tellings: the paper's data,
-  experiment-setup, and architecture figures and its setup tables
-- grouped into three labeled subsections — data, experiments, architecture — in
-  reading order within each; a subsection with no qualifying figure is omitted
-- each entry is a thumbnail plus two or three sentences saying what it is and
-  why it matters, linking to the figure's own page — depth lives on the figure
-  page, not in the section
-
-**Results and interpretation**
-- a second section beside it: the paper's results figures and tables
-- organized by experiment, following the paper's own experimental structure,
-  with a line of connective narrative per group; entries are the same
-  thumbnail-plus-teaser form
+**The experiments story**
+- a telling on each paper's page, beside the others: the paper's figures and
+  tables retold as ONE rooted story — not two flat sections, not a list of
+  independent entries
+- chapters follow the paper's own experimental logic, with connective
+  narrative at every branching node explaining how each experiment answers a
+  question the previous one raised; the apparatus (architecture, data, setup)
+  enters the arc where the experiments need it
+- every figure and table is placed exactly once; a figure node is a leaf —
+  thumbnail beside a few sentences saying what the figure shows and what it
+  answers or sets up in the arc, linking the figure's own page — depth lives
+  on the figure page, not in the story
 - results figure pages take extra care: before stating what the paper concludes,
   they explain how the visualization itself works — what the axes and encodings
   mean, how to read what is shown, and where a naive reading goes wrong
@@ -126,7 +125,7 @@ something up, follow a connection, keep digging?
 - every name — concept, relation, theme, page section — is a plain descriptive label
 - pages get the sections they need; no fixed template
 - concept page content is written only after the themes, superthemes, and edges
-  exist; paper stories, figure pages, and the two figure sections are written
+  exist; paper stories, figure pages, and the experiments story are written
   after that, last of all
 - a concept page covers: how the concept fits the overall picture, what it enables
   downstream, and what it actually is
@@ -137,9 +136,9 @@ something up, follow a connection, keep digging?
 **Store and site**
 - the extracted data is stored as JSON — the single source of truth
 - the wiki is rendered from it as static HTML: a page per concept, per edge, per
-  lens, per figure, per chart form, and a page per paper (its stories, its two
-  figure sections, and its concepts in reading order) — the front page is a plain
-  list of paper cards, each a doorway to its paper's page
+  lens, per figure, per chart form, and a page per paper (its tellings, its
+  experiments story, and its concepts in reading order) — the front page is a
+  plain list of paper cards, each a doorway to its paper's page
 - screenshot images are files stored beside the JSON and referenced from it — the
   JSON stays the source of truth for their captions, locators, and grouping, and
   the render copies the files into the site
@@ -154,9 +153,9 @@ Rules that bind every stage:
 - agents do every step; workers never write the shared store — they stage, and a
   central merge applies the staged work sequentially
 - the merge validates before writing — everything referenced exists (staged image
-  files included), every concept has a theme, every figure has a classification and,
-  once written, a page, every edge has prose, every claim has its locator — and
-  writes nothing if any check fails
+  files included), every concept has a theme, every figure has a classification,
+  once written a page, and a place in its paper's experiments story, every edge
+  has prose, every claim has its locator — and writes nothing if any check fails
 - a human reviews at every stage boundary
 - worker prompts are self-sufficient — the rules, the register, where to stage — a
   fresh context cannot "follow conventions" it has never seen
@@ -208,9 +207,10 @@ start with three papers
                      locator, concept links; results figures also
                      taught as visualizations: how to read them,
                      where a naive reading goes wrong               (link the chart-form page, add the specifics)
-                     the two sections — data and experiments,
-                     results and interpretation — thumbnail plus
-                     teaser per entry, linking the figure pages
+                     the experiments story — the paper's figures
+                     retold as one connected arc, every figure
+                     placed once, thumbnail plus prose per figure,
+                     linking the figure pages
 
 10 render          regenerate the static HTML site from the JSON —
                    rerun after any change to the data
@@ -219,10 +219,10 @@ when a new paper joins:
                    run stages 1 and 2 for it, rebuild the lens layers over the
                    enlarged pool — the right lenses over three papers are not
                    the right lenses over twenty — then rerun the stages after
-                   them, the new paper's stories, figure pages, and sections
-                   included (coverage is total, so they land in the same merge
-                   as its concepts); revisit the chart-form shelf, since the
-                   new figures may repeat a form or bring a new one
+                   them, the new paper's stories, figure pages, and experiments
+                   story included (coverage is total, so they land in the same
+                   merge as its concepts); revisit the chart-form shelf, since
+                   the new figures may repeat a form or bring a new one
 ```
 
 Everything below is explanation.
@@ -364,7 +364,7 @@ under one claim per telling. They were removed: readers enter through papers, no
 through the corpus, and every corpus-wide telling had to be rebuilt each time a paper
 joined. Stories are per paper only.
 
-### Figures and tables, and their two sections
+### Figures and tables, and the experiments story
 
 The tellings retell a paper's argument in prose; the figures are the paper's own
 evidence, and they get the same treatment as everything else the reader might want to
@@ -378,28 +378,35 @@ own node type, extracted by their own per-paper stage rather than during concept
 extraction. A figure page links its paper's concepts in prose and concept pages may
 link back, but figures carry no typed edges and join no themes; their way outward is
 their paper and their concept links. The extraction stage mirrors the concept stage:
-one agent per paper crops every figure and table, classifies each into one of the two
-sections, and stages an inventory of crops that the human reviews before anything is
+one agent per paper crops every figure and table, classifies each as apparatus or
+outcome, and stages an inventory of crops that the human reviews before anything is
 built on it — the same cheapest-review-surface logic as the concept inventories. The
 crops are proposals; the review accepts or replaces them before the merge writes
 anything.
 
-The classification is a two-way split. Data and experiments takes the apparatus:
+The classification is a two-way split. Data-and-experiments takes the apparatus:
 architecture diagrams, data and data-collection figures, experimental-setup figures,
 setup-only tables — hyperparameters, dataset statistics, model configurations.
-Results and interpretation takes the outcomes: results plots, results tables,
+Results-and-interpretation takes the outcomes: results plots, results tables,
 heatmaps, anything that shows or interprets how the work came out. A figure that
-mixes setup with results goes to results and interpretation — every figure has a
-home, so nothing is dropped.
+mixes setup with results is results-and-interpretation — every figure has a home, so
+nothing is dropped. The classification creates no sections of its own; it marks
+which figure pages owe the reader the visualization teaching described below, and it
+tells the story writer what is apparatus and what is outcome.
 
-On the paper's page the two sections sit beside the tellings, and both are annotated
-tours, not archives: each entry is a thumbnail plus two or three sentences saying
-what it is and why it matters, linking to the figure's own page. Depth lives on the
-figure page. Data and experiments groups its entries under three labeled subsections
-— data, experiments, architecture — in reading order within each, omitting an empty
-subsection rather than padding it. Results and interpretation organizes by
-experiment, following the paper's own experimental structure with a line of
-connective narrative per group, so the section mirrors how the paper argues.
+On the paper's page the figures are met through the experiments story, a telling
+beside the others: the paper's figures and tables retold as one rooted tree, read
+the way the tellings are read, not browsed as a list. A section that lists each
+figure as an independent entry loses exactly what makes the figures worth reading
+together — experiment two exists because of what experiment one left open, the
+robustness checks exist because of what the headline result could be accused of. So
+the story's chapters follow the paper's own experimental logic, the connective
+narrative at every branching node says how each experiment answers a question the
+previous one raised, and the apparatus enters the arc where the experiments need it
+rather than in a section of its own. Every figure and table is placed exactly once;
+a figure node is a leaf — a thumbnail beside a few sentences saying what the figure
+shows and what it answers or sets up in the arc — linking the figure's own page.
+Depth lives on the figure page, so the story stays readable end to end.
 
 A figure page carries the cropped image and fresh prose in the grounded register —
 what is going on in the figure — with the standard locator; the paper's original
@@ -419,10 +426,10 @@ figure pool, before the figure pages are written.
 The timing follows from what each half needs. Cropping and classifying need only the
 paper, so the figure stage runs early, right after concept extraction. Writing needs
 the graph — the prose places figures against concepts, and the chart-form shelf needs
-the whole figure pool — so figure pages, the shelf, and both sections are written in
-the late batch alongside the stories.
+the whole figure pool — so figure pages, the shelf, and the experiments story are
+written in the late batch alongside the stories.
 
-The images appear only in the paper's sections and on the figure pages; concept pages
+The images appear only in the experiments story and on the figure pages; concept pages
 stay prose. The no-graph-visualization rule is untouched — these are the papers' own
 figures reproduced for reading, not diagrams drawn for the wiki.
 

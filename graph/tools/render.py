@@ -766,25 +766,24 @@ class SiteBuilder:
 
         return self.shell(pk, f"{t['name']} — Connective theme", "\n".join(parts))
 
-    FIGURE_SECTION_META = {
-        "data-and-experiments": ("paper-figures-data", "Data and experiments"),
-        "results-and-interpretation": ("paper-figures-results", "Results and interpretation"),
-    }
-
     def build_figure_page(self, pid: str, item: dict, items: list[dict]) -> str:
         pk = "figure"
         p = self.papers[pid]
         page_id = f"{pid}--{item['id']}"
-        panel_id, panel_label = self.FIGURE_SECTION_META[item["classification"]]
         story_href = self.href(pk, "story", pid)
         loc = {"paper": pid, "section": item["section"], "page": item["page"]}
 
+        fig_story = (self.figures.get(pid) or {}).get("story") or {}
+        story_seg = ""
+        if fig_story.get("id"):
+            story_seg = (f' &middot; in <a href="{story_href}#{esc(fig_story["id"])}">'
+                         f'{esc(fig_story.get("tab") or "The experiments")}</a>')
         parts = [f"<h1>{esc(item['name'])}</h1>"]
         parts.append(
             f'<p class="edge-meta">{esc(item["label"])} of '
             f'<a href="{story_href}">{esc(p["title"])}</a>'
             f' &middot; {self.cite_link(pk, loc)}'
-            f' &middot; in <a href="{story_href}#{panel_id}">{panel_label}</a></p>'
+            f'{story_seg}</p>'
         )
         img_src = self.asset_href(pk, item["image"])
         parts.append(
@@ -817,72 +816,20 @@ class SiteBuilder:
 
         return self.shell(pk, f"{item['name']} — Figure", "\n".join(parts))
 
-    def _figure_entry_html(self, pid: str, e: dict, by_id: dict, pk: str = "story") -> str:
-        """One thumbnail-plus-teaser row in a paper page's figure sections."""
-        it = by_id[e["figure"]]
-        href = self.href(pk, "figure", f"{pid}--{it['id']}")
-        img = self.asset_href(pk, it["image"])
-        return (
-            f'<div class="fig-entry">'
-            f'<a class="fig-thumb" href="{href}">'
-            f'<img src="{img}" alt="{esc(it["label"])}" loading="lazy"></a>'
-            f'<div class="fig-info">'
-            f'<p class="fig-title"><a href="{href}">{esc(it["label"])} &mdash; {esc(it["name"])}</a></p>'
-            f'<p class="fig-teaser">{esc(e["teaser"])}</p>'
-            f'</div></div>'
-        )
-
-    FIGURE_DATA_HEADS = {"data": "Data", "experiments": "Experiments",
-                         "architecture": "Architecture"}
-
-    def _paper_figures_data_panel(self, pid: str) -> str:
-        pk = "story"
-        entry = self.figures.get(pid) or {}
-        groups = entry.get("dataAndExperiments") or []
-        if not groups:
-            return ""
-        by_id = {it["id"]: it for it in entry["items"]}
-        parts = ['<p class="section-note">The paper&rsquo;s apparatus &mdash; its '
-                 'architecture, data, and experimental-setup figures. Each entry '
-                 'opens the figure&rsquo;s own page.</p>']
-        for g in groups:
-            parts.append(f'<section class="fig-group"><h2>'
-                         f'{esc(self.FIGURE_DATA_HEADS[g["label"]])}</h2>')
-            for e in g.get("entries") or []:
-                parts.append(self._figure_entry_html(pid, e, by_id, pk))
-            parts.append('</section>')
-        return "\n".join(parts)
-
-    def _paper_figures_results_panel(self, pid: str) -> str:
-        pk = "story"
-        entry = self.figures.get(pid) or {}
-        groups = entry.get("resultsAndInterpretation") or []
-        if not groups:
-            return ""
-        by_id = {it["id"]: it for it in entry["items"]}
-        parts = ['<p class="section-note">The paper&rsquo;s results figures and '
-                 'tables, grouped by experiment in the paper&rsquo;s own order. '
-                 'Each figure&rsquo;s page explains how to read it before what '
-                 'it concludes.</p>']
-        for g in groups:
-            parts.append(f'<section class="fig-group"><h2>{esc(g["title"])}</h2>')
-            narrative = (g.get("narrative") or "").strip()
-            if narrative:
-                parts.append(f'<div class="node-narrative">'
-                             f'{self.process_body(narrative, pk, f"{pid}-figures")}</div>')
-            for e in g.get("entries") or []:
-                parts.append(self._figure_entry_html(pid, e, by_id, pk))
-            parts.append('</section>')
-        return "\n".join(parts)
-
     def build_paper_story_page(self, entry: dict) -> str:
         pk = "story"
         pid = entry["id"]
         p = self.papers[pid]
         stories = entry["stories"]
+        # The experiments story (the paper's figures as one connected arc) is a
+        # story panel like the tellings, sourced from the figures collection.
+        fig_story = (self.figures.get(pid) or {}).get("story")
+        if fig_story:
+            stories = stories + [fig_story]
         # Presentation order (stable): the big-picture telling lands first and is
         # the default tab; store order is unchanged.
-        tab_rank = {"The big picture": 0, "Inside the paper": 1, "Across the corpus": 2}
+        tab_rank = {"The big picture": 0, "Inside the paper": 1,
+                    "Across the corpus": 2, "The experiments": 3}
         stories = sorted(stories, key=lambda s: tab_rank.get(s.get("tab"), len(tab_rank)))
 
         parts = []
@@ -895,9 +842,10 @@ class SiteBuilder:
             f' &middot; <a href="{self.href(pk, "index", None)}#tab-papers">its place among the papers</a></p>'
         )
         fig_note = (
-            ' <b>Data and experiments</b> and <b>Results and interpretation</b> '
-            'tour the paper&rsquo;s own figures and tables, each opening into a '
-            'page of its own.' if self.figures.get(pid) else '')
+            ' <b>The experiments</b> retells the paper&rsquo;s own figures and '
+            'tables as one connected arc &mdash; how each experiment sets up the '
+            'next &mdash; each figure opening into a page of its own.'
+            if fig_story else '')
         multi_note = (
             '<p class="section-note">One paper, several tellings. <b>The big '
             'picture</b> states the paper&rsquo;s own thesis and contributions in '
@@ -920,13 +868,8 @@ class SiteBuilder:
         concepts_body = self._paper_concepts_panel(pid)
         if concepts_body:
             extra.append(("paper-concepts", "The concepts", concepts_body))
-        data_body = self._paper_figures_data_panel(pid)
-        if data_body:
-            extra.append(("paper-figures-data", "Data and experiments", data_body))
-        results_body = self._paper_figures_results_panel(pid)
-        if results_body:
-            extra.append(("paper-figures-results", "Results and interpretation", results_body))
-        parts.append(self._story_tabs(stories, pk, multi_note, single_note, extra))
+        parts.append(self._story_tabs(stories, pk, multi_note, single_note, extra,
+                                      fig_pid=pid))
         parts.append(self.INDEX_TABS_JS)
         return self.shell(pk, f"{p['title']} — Stories", "\n".join(parts))
 
@@ -980,20 +923,25 @@ class SiteBuilder:
         )
 
     def _overlay_node(self, node: dict, depth: int, arc_num: int | None = None,
-                      pk: str = "index") -> str:
-        """Recursively render one overlay node as a collapsible tree node."""
+                      pk: str = "index", fig_pid: str | None = None) -> str:
+        """Recursively render one overlay node as a collapsible tree node.
+        `fig_pid` names the paper whose figures `figure` refs resolve against
+        (figure page ids are `<paper>--<figure>`)."""
         ref = node.get("ref")
         kind = ref["kind"] if ref else ("root" if depth == 0 else "arc")
         children = node.get("children", [])
 
         name_html = esc(node["name"])
-        if ref:
+        if ref and kind == "figure":
+            fig_href = self.href(pk, "figure", f"{fig_pid}--{ref['id']}")
+            name_html = f'<a href="{fig_href}">{name_html}</a>'
+        elif ref:
             name_html = f'<a href="{self.href(pk, ref["kind"], ref["id"])}">{name_html}</a>'
         if kind == "arc" and arc_num is not None:
             name_html = f'<span class="arc-num">Chapter {arc_num}</span>{name_html}'
 
         badge = ""
-        if kind in ("supertheme", "theme", "tissue", "concept", "edge"):
+        if kind in ("supertheme", "theme", "tissue", "concept", "edge", "figure"):
             badge = f' <span class="tree-kind kind-{kind}">{esc(KIND_LABEL[kind])}</span>'
         era = (node.get("era") or "").strip()
         if era:
@@ -1016,16 +964,36 @@ class SiteBuilder:
         elif kind == "concept":
             n = len(self.edges_of_concept.get(ref["id"], []))
             count = (f'{n} connection' + ("s" if n != 1 else "")) if n else ""
+        elif kind == "figure":
+            items = (self.figures.get(fig_pid) or {}).get("items") or []
+            count = next((it["label"] for it in items if it["id"] == ref["id"]), "")
         else:
             count = ""
         count_html = f' <span class="tree-count">({count})</span>' if count else ""
 
         body = []
         narrative = (node.get("narrative") or "").strip()
-        if narrative:
+        if kind == "figure":
+            # Thumbnail beside the node's prose; both lead to the figure's page.
+            items = (self.figures.get(fig_pid) or {}).get("items") or []
+            it = next((x for x in items if x["id"] == ref["id"]), None)
+            if it:
+                img = self.asset_href(pk, it["image"])
+                fig_href = self.href(pk, "figure", f"{fig_pid}--{it['id']}")
+                nar_html = (f'<div class="node-narrative">'
+                            f'{self.process_body(narrative, pk, "overlay")}</div>'
+                            if narrative else "")
+                body.append(
+                    f'<div class="fig-entry">'
+                    f'<a class="fig-thumb" href="{fig_href}">'
+                    f'<img src="{img}" alt="{esc(it["label"])} &mdash; {esc(it["name"])}" '
+                    f'loading="lazy"></a>'
+                    f'<div class="fig-info">{nar_html}</div></div>')
+        elif narrative:
             body.append(f'<div class="node-narrative">{self.process_body(narrative, pk, "overlay")}</div>')
         for i, ch in enumerate(children, start=1):
-            body.append(self._overlay_node(ch, depth + 1, arc_num=i if kind == "root" else None, pk=pk))
+            body.append(self._overlay_node(ch, depth + 1, arc_num=i if kind == "root" else None,
+                                           pk=pk, fig_pid=fig_pid))
         if kind == "theme":
             body.append(self._overlay_theme_members(ref["id"], pk))
         if kind == "supertheme":
@@ -1064,10 +1032,12 @@ class SiteBuilder:
 
     def _story_tabs(self, stories: list[dict], pk: str,
                     multi_note: str, single_note: str,
-                    extra: list[tuple[str, str, str]] = ()) -> str:
+                    extra: list[tuple[str, str, str]] = (),
+                    fig_pid: str | None = None) -> str:
         """The sub-tab row and its panels. `extra` adds non-story tabs after
         the tellings, as (panel_id, tab_label, body_html) triples — they share
-        the same tab/hash behaviour as the story panels."""
+        the same tab/hash behaviour as the story panels. `fig_pid` resolves any
+        figure refs (the experiments story) against that paper's figures."""
         parts = []
         if len(stories) + len(extra) > 1:
             parts.append(multi_note)
@@ -1089,10 +1059,14 @@ class SiteBuilder:
 
         for i, s in enumerate(stories):
             hidden = '' if i == 0 else ' hidden'
-            levels = [(0, "root claim"), (1, "chapters")]
-            if self._story_has_kind(s, "supertheme"):
-                levels.append((2, "superthemes"))
-            levels += [(3, "themes"), (4, "concepts"), (5, "everything")]
+            if self._story_has_kind(s, "figure"):
+                # The experiments story: chapters, then the figures themselves.
+                levels = [(0, "root claim"), (1, "chapters"), (5, "everything")]
+            else:
+                levels = [(0, "root claim"), (1, "chapters")]
+                if self._story_has_kind(s, "supertheme"):
+                    levels.append((2, "superthemes"))
+                levels += [(3, "themes"), (4, "concepts"), (5, "everything")]
             gran_buttons = "".join(
                 f'<button type="button" class="gran-chip" data-gran="{g}" '
                 f'data-scope="{esc(s["id"])}">{label}</button>'
@@ -1103,7 +1077,7 @@ class SiteBuilder:
                 f'aria-labelledby="subtabbtn-{esc(s["id"])}"{hidden}>\n'
                 f'{self.intro_block(pk, s)}\n'
                 f'<p class="tree-controls"><span class="controls-label">Read at</span>{gran_buttons}</p>\n'
-                f'<div class="overlay-tree">{self._overlay_node(s, 0, pk=pk)}</div>\n</div>'
+                f'<div class="overlay-tree">{self._overlay_node(s, 0, pk=pk, fig_pid=fig_pid)}</div>\n</div>'
             )
         for xid, _xlabel, body in extra:
             hidden = '' if not stories else ' hidden'
@@ -1422,8 +1396,9 @@ class SiteBuilder:
             f'by chapter, its ties to the other papers, and its thesis and contributions '
             f'in its own terms.</li>'
             f'<li><b>Figures</b> &mdash; a paper&rsquo;s own figures and tables, each with '
-            f'a page explaining how to read it and what it shows. (Rolling out paper by '
-            f'paper; not every paper has them yet.)</li>'
+            f'a page explaining how to read it and what it shows; the reader meets them '
+            f'in order inside the paper&rsquo;s <i>The experiments</i> telling. (Rolling '
+            f'out paper by paper; not every paper has them yet.)</li>'
             '</ul>'
         )
         parts.append("</section>")
@@ -1487,13 +1462,14 @@ class SiteBuilder:
             )
             if self.figures:
                 parts.append(
-                    "<p>Where a paper&rsquo;s figures have been processed, two more "
-                    "tabs join the row: <b>Data and experiments</b> tours the "
-                    "apparatus &mdash; architecture, data, and setup figures &mdash; "
-                    "and <b>Results and interpretation</b> tours the results, "
-                    "grouped by experiment. Every entry links to the figure&rsquo;s "
-                    "own page, which explains how to read the visualization before "
-                    "stating what the paper concludes.</p>"
+                    "<p>Where a paper&rsquo;s figures have been processed, one more "
+                    "telling joins the row: <b>The experiments</b> retells the "
+                    "paper&rsquo;s own figures and tables as one connected story "
+                    "&mdash; chapter by chapter, each experiment set up by the one "
+                    "before it, with every figure in its place in the arc. Each "
+                    "figure opens into a page of its own, which explains how to "
+                    "read the visualization before stating what the paper "
+                    "concludes.</p>"
                 )
             parts.append(self._help_figure(
                 "story-tree.png",
@@ -2454,25 +2430,14 @@ ol.walk .walk-prose { margin-left: 0; }
   box-sizing: border-box;
 }
 
-.fig-group { margin: 0 0 1.6rem; }
-.fig-group > h2 {
-  font-family: var(--sans);
-  font-size: 1.02rem;
-  text-transform: none;
-  letter-spacing: -0.01em;
-  color: var(--fg);
-  margin: 1.6rem 0 0.5rem;
-}
-
 .fig-entry {
   display: grid;
   grid-template-columns: 180px 1fr;
   gap: 1rem;
   align-items: start;
-  padding: 0.8rem 0.1rem;
-  border-bottom: 1px solid var(--stroke);
+  padding: 0.4rem 0.1rem 0.2rem;
 }
-.fig-entry:last-child { border-bottom: none; }
+.fig-entry .node-narrative { margin: 0; }
 .fig-thumb img {
   display: block;
   width: 100%;
@@ -2483,18 +2448,6 @@ ol.walk .walk-prose { margin-left: 0; }
   border-radius: 10px;
   padding: 0.3rem;
   box-sizing: border-box;
-}
-.fig-title {
-  font-family: var(--sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin: 0 0 0.3rem;
-}
-.fig-teaser {
-  font-size: 0.98rem;
-  line-height: 1.55;
-  color: var(--muted);
-  margin: 0;
 }
 
 @media (max-width: 640px) {
