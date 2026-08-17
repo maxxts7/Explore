@@ -1,0 +1,119 @@
+{
+ "intros": [
+  {
+   "kind": "concept",
+   "id": "autointerpretability-score",
+   "intro": "A sparse autoencoder can turn out thousands of learned features in a single layer, far more than any team could read through by hand, so a paper claiming its features are interpretable needs a way to check that claim at scale rather than by spot-checking a handful and hoping the rest look similar. The autointerpretability score is that stand-in: one model writes a plain-language explanation of what a feature detects, a second model tries to predict the feature's activations from that explanation alone, and the correlation between prediction and reality becomes the number.\n\nThis page walks through the pipeline behind that number, the sampling choices that shape what it can measure, and the claims it is used to defend alongside blind spots — like causal effects on a model's output — it was never built to catch."
+  },
+  {
+   "kind": "concept",
+   "id": "top-random-scoring",
+   "intro": "Scoring how well a description predicts a feature's behavior sounds like it should use a fair, random sample of text — except most features only fire on a sliver of any corpus, so a handful of random fragments would almost certainly contain nothing but zeroes, telling you nothing about whether the description is any good. Top-and-random scoring is the fix: mix in a few fragments where the feature is known to activate strongly alongside the random ones, trading a fully blind test for a sample that actually contains a signal worth predicting.\n\nThe page traces where this choice sits inside the scoring pipeline, why a purely random sample would be close to useless given how rarely most features fire, and the later robustness check that reruns the comparison the stricter way to see how much of the result the choice was responsible for."
+  },
+  {
+   "kind": "concept",
+   "id": "gpt-3-5",
+   "intro": "A model best known for holding conversations shows up here doing something much narrower: reading a short written explanation of what a feature detects and guessing, token by token, how strongly that feature would fire on a fresh piece of text. It isn't used for anything resembling its usual strengths, and it wasn't even the first choice for the role — an earlier version of this exact procedure used a more capable model instead, until an API limitation forced a swap.\n\nThis page covers what the model actually is, why it ends up filling this specific mechanical role instead of the more capable model that writes the explanations in the first place, and how its predictions get turned into a single interpretability score."
+  },
+  {
+   "kind": "concept",
+   "id": "kurtosis-skew-correlation-analysis",
+   "intro": "Some learned features consistently score higher on automated interpretability tests than others, and it would be easy to shrug that off as noise — except a statistical pattern explains a meaningful share of it. Features whose activations spike rarely and sharply, rather than varying smoothly, tend to score better, matching a theoretical prediction about what a real, cleanly-recovered feature should look like against interference from other overlapping ones.\n\nThe page works through what these two statistical measures capture, the correlations found across layers and dictionary sizes, and what this analysis is used to explain, from why one classical baseline outperforms its peers to why a particular way of sampling text for scoring was chosen in the first place."
+  },
+  {
+   "kind": "concept",
+   "id": "top-k-baseline-control",
+   "intro": "A newer method can be made to look better than an older one simply by comparing them on unequal terms, and one specific asymmetry threatens exactly that here: a couple of classical baseline techniques are structurally 'active' across half of all possible data, while the features they're being compared against fire far more sparingly by design. If sparser activation alone makes a feature look more interpretable, the headline comparison might be measuring the wrong thing entirely.\n\nThis page explains why the baselines start out less sparse for a structural, geometric reason, how the comparison gets redone with each baseline's activity artificially capped to match, and what survives — and what doesn't — once that adjustment is made."
+  },
+  {
+   "kind": "concept",
+   "id": "ica",
+   "intro": "Of several older techniques for finding structure in a network's internal activations, one keeps closing the gap against a newer method in a way the others don't — a decades-old signal-processing trick with no history in language models at all, originally built to separate overlapping voices in an audio recording. That it performs unusually well turns out not to be a coincidence: what it optimizes for and what makes a feature interpretable line up more closely than expected.\n\nThe page covers what this technique does mathematically, why maximizing non-Gaussianity tracks the same statistical signature that predicts interpretability elsewhere in the paper, and where its advantage holds up against the newer method — and where, deeper into the network, it closes the gap almost entirely."
+  },
+  {
+   "kind": "concept",
+   "id": "random-directions-baseline",
+   "intro": "Before you can say a learned feature is genuinely interpretable, you need some idea of what a completely meaningless direction in the same space would score — otherwise a modest-looking number has no way to be judged good or bad. Random directions supply that floor: vectors chosen with no reference to any data at all, projected onto a model's activations purely to see what an uninformed guess looks like next to the real thing.\n\nThis page covers how these directions are generated, the small accommodation made so they aren't unfairly penalized for a mismatch in how activations are typically shaped, and why the floor they set still comes out low even with that accommodation in their favor."
+  },
+  {
+   "kind": "concept",
+   "id": "default-basis-baseline",
+   "intro": "Before reaching for any decomposition technique at all, it's worth asking what interpretability looks like if you do nothing to the data — just take the individual coordinates a network already computes in and treat each one as a candidate feature. That's the default basis, and it matters as a baseline precisely because it's the option every more elaborate technique has to justify improving on, not a strawman built to lose easily.\n\nThe page covers why treating raw coordinates as meaningful units is a genuinely open question rather than an obvious mistake, and a worked comparison — a single coordinate against its closest learned-feature counterpart — that shows how much is lost by skipping decomposition altogether."
+  },
+  {
+   "kind": "concept",
+   "id": "activation-patching",
+   "intro": "A direction inside a network can look interpretable and still have nothing to do with what the model actually does — the only way to tell the difference is to intervene on it and watch whether the output moves. Activation patching is the technique built for that test: swap in activations from a counterfactual input and measure how far the model's behavior shifts toward it, a much harder bar to clear than simply looking suggestive.\n\nThe page traces the technique from its original use investigating bias in language models, through its adoption for reverse-engineering circuits component by component, to a later adaptation that patches individual learned features instead — and the precision that buys over an alternative decomposition."
+  },
+  {
+   "kind": "concept",
+   "id": "dictionary-feature-patching",
+   "intro": "Deciding to test causal importance by swapping in activations from a counterfactual input is one thing; deciding which of several thousand learned features to touch, and by how much, is another problem entirely. Dictionary-feature patching answers it: run the model twice, once on the real input and once on a counterfactual variant, then nudge only a chosen subset of features toward their counterfactual values and see how close the output gets.\n\nThis page walks through the patching procedure, how the subset of features to touch gets chosen rather than picked by hand, and the headline result — fewer patched features and smaller edits than an alternative decomposition needs to reach the same target — along with its caveats."
+  },
+  {
+   "kind": "concept",
+   "id": "less-than-rank-one-ablation",
+   "intro": "Removing a feature from a network's activations sounds like a simple subtraction, but a full-strength ablation edits further than it needs to, which weakens any claim that the resulting change in output is really about that one feature. Less-than-rank-one ablation is a more careful version: instead of zeroing a feature's contribution outright, it walks the activation back only as far as the exact point where the feature stops firing, and no further.\n\nThe page covers the geometric reasoning behind that stopping point, the case study — a feature tied to apostrophes — where this method shows a clean, predictable effect on what the model predicts next, and how the same geometric distinction shows up again in an unrelated fairness check elsewhere in the paper."
+  },
+  {
+   "kind": "concept",
+   "id": "ioi-task",
+   "intro": "Most claims about what a learned feature does can only be checked against themselves — an automatically generated explanation is judged self-consistent, never independently verified. Indirect Object Identification breaks that pattern: a template sentence-completion task whose underlying circuit inside a language model had already been mapped by earlier researchers, working head by head, well before this paper's methods were ever pointed at it.\n\nThis page covers the task itself and the circuit behind it, and why testing a new patching procedure against an already-published answer gives its results a kind of external check that most of the paper's other interpretability claims simply don't have."
+  },
+  {
+   "kind": "concept",
+   "id": "automated-circuit-discovery",
+   "intro": "An algorithm built to automate a job that used to take researchers weeks of manual, head-by-head detective work turns out to do real work twice over in a later paper — once with a citation attached, and once, quietly, as the same underlying logic reused without being named again. Both times, the point is the same: causal importance should be established by deliberately removing something and measuring the damage, not just by eyeballing what looks interpretable.\n\nThe page covers what the algorithm does in general, the specific step it supplies for ranking which learned features to intervene on first, and its unremarked second appearance later in the same paper, powering a different method under a different name."
+  },
+  {
+   "kind": "concept",
+   "id": "feature-circuit-detection",
+   "intro": "Showing that a single feature is interpretable is one thing; showing how a whole chain of features causes each other to fire is a different and harder claim, closer to what an actual map of a model's internal computation would need to look like. This method builds that chain by brute force: ablate every candidate feature in the previous layer one at a time, measure how much each removal weakens the target feature's own activation, and rank the results.\n\nThe page covers the ablate-and-rank procedure itself, the worked example it's demonstrated on, the cheaper weights-only method that was tried first and abandoned, and the larger ambition this kind of causal tracing is offered as one small step toward."
+  },
+  {
+   "kind": "concept",
+   "id": "weight-based-connection-attempt",
+   "intro": "Not every method in an interpretability paper works, and this one is reported precisely because it didn't: an attempt to find which downstream feature a given feature feeds into using nothing but the network's weights, no forward passes or real activations required, promising if it had worked because it would have been almost free to compute.\n\nThe page covers what was actually tried — multiplying a feature through a layer's weights and checking similarity against the next layer's dictionary — why the resulting vector turned out to be meaningless because it never landed back in the space the network actually operates in, and what the more expensive, ablation-based method that replaced it does differently."
+  },
+  {
+   "kind": "concept",
+   "id": "closing-parenthesis-feature",
+   "intro": "Testing a method that traces which features cause another feature to fire is only convincing if you can independently check whether the result makes sense — hard to do when the target feature's own meaning is itself uncertain. This case study sidesteps that by picking a target whose identity is about as unambiguous as it gets: a final-layer feature whose top tokens, read directly off the model's own output weights, are unmistakably variants of a closing parenthesis.\n\nThe page covers why this feature's position gives it that strong, weights-based confirmation before any tracing begins, what the ablation-based procedure finds sitting upstream of it, and why it was chosen to carry the paper's hardest analytical claim rather than the feature used elsewhere."
+  },
+  {
+   "kind": "concept",
+   "id": "apostrophe-feature",
+   "intro": "A single learned feature carries an outsized share of this paper's case for interpretability: it's examined from every angle available, what text makes it fire and what happens to the model's output when it's removed, rather than getting only half the treatment most examples do. It turns out to be reassuringly sensible on both counts — mostly triggered by apostrophes, mostly responsible for boosting the letter that follows them in contractions.\n\nThe page covers what activates the feature and what it causally does downstream, the finding that this single human concept actually splits across several narrower features rather than living in just one, and how the case study divides its labor with a second feature covering what causes a feature to fire in the first place."
+  },
+  {
+   "kind": "concept",
+   "id": "pythia",
+   "intro": "None of the interpretability claims in this paper are really about the language model they're demonstrated on — every learned feature, every automated interpretability score, every patching result belongs to a small, openly released model chosen specifically because its weights, training data, and training order are all public, not because it's the most capable model available.\n\nThe page covers what makes this model suite distinctive as a research tool, full parameter access and dense checkpointing across a range of sizes, what gets trained on it specifically in this paper, and why an open, reproducible substrate matters for a method whose entire premise is inspecting a model's internals rather than just its outputs."
+  },
+  {
+   "kind": "concept",
+   "id": "the-pile",
+   "intro": "Every claim this paper makes about interpretability, causal precision, or how cleanly a feature's meaning holds together ultimately traces back to the same pile of raw text: the corpus a small open language model was pretrained on, later reused to generate the very activations that get decomposed into learned features.\n\nThe page covers what this corpus is and why it was built, the two separate jobs it does here — supplying the raw material for feature training and setting the yardstick for a reconstruction-fidelity check — and why its role is kept deliberately distinct from a second corpus used only for evaluating whether the resulting features are interpretable, so training data and judging data never quietly overlap."
+  },
+  {
+   "kind": "concept",
+   "id": "openwebtext",
+   "intro": "Judging whether an already-trained feature is interpretable on the same text it was trained on risks a quiet kind of cheating, where the evaluation ends up re-testing familiar ground rather than checking for anything general. This corpus exists to avoid exactly that: a public dataset built from upvoted web links, originally assembled to stand in for a well-known model's private training data, reused here purely to supply fresh text for scoring, never for training anything.\n\nThe page covers where this corpus came from, how an automated scoring pipeline samples fragments of it and measures a feature's activation on every token, and why keeping it separate from the corpus features are trained on is a basic precaution against the evaluation quietly grading itself."
+  },
+  {
+   "kind": "concept",
+   "id": "enumerative-safety",
+   "intro": "A complete, human-readable list of everything a model's internals compute would be worth more than any amount of behavioral testing on a sample of inputs, because it could in principle rule out dangerous behavior rather than just fail to observe it in the cases checked. That's the ambition this paper closes on rather than opens with, so everything demonstrated beforehand can be read as a small piece of evidence toward it.\n\nThe page covers where the term comes from, how the paper positions its own techniques as one step toward that ambition, and the honest accounting of distance still to go — reconstruction that never reaches zero loss, features that stay silent, and results confirmed on only a couple of small models."
+  },
+  {
+   "kind": "concept",
+   "id": "pca",
+   "intro": "Reducing a pile of high-dimensional activations down to the handful of directions that capture the most variance in the data is a decades-old, general-purpose trick, and it doesn't care what kind of data you feed it or what you're trying to learn from the result. One paper points it at a contrastive dataset as a fast visual check for whether behavior-relevant activations separate cleanly; a later paper repurposes the same technique as a rival decomposition, competing head-to-head against learned dictionary features on the same interpretability and causal-precision tests.\n\nThis page follows Principal Component Analysis across both roles: the diagnostic plot that helps confirm a steering vector is measuring something real, and the full competing baseline that a later paper's dictionary features are measured against and consistently outperform."
+  },
+  {
+   "kind": "concept",
+   "id": "gpt-4",
+   "intro": "Building custom datasets by hand is slow, and scoring hundreds of open-ended generations by hand is slower still, so one paper leans on an outside model to do both — trading hand-labeling for a new question, how much to trust one language model's judgment about another's behavior. A later paper hands the same model a third, different job: not generating data or grading a response, but writing a plain-language explanation of what a single learned feature inside a different model detects.\n\nThis page follows GPT-4 across all three roles, dataset author and output judge in one paper and feature explainer in another, a documented multi-paper career built on being treated as a fixed, capable outside instrument rather than a subject of study."
+  }
+ ]
+}

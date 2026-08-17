@@ -1,0 +1,109 @@
+{
+ "intros": [
+  {
+   "kind": "concept",
+   "id": "dictionary-feature",
+   "intro": "A sparse autoencoder hands back thousands of learned directions after training, but the case for the method rests on what happens when just one is isolated: does it track a single idea, or stay as tangled as the neuron it was meant to replace? A dictionary feature is that isolated unit — one row of the trained matrix, standing in for one of the model's real, hidden features.\n\nFrom here, the entry unpacks its exact mathematical form, why isolating one feature at a time lets researchers test and trace it much like earlier work tested individual neurons, and what it means to earn a monosemantic label narrowly, with related features often splitting a concept a person would treat as just one."
+  },
+  {
+   "kind": "concept",
+   "id": "sparsity-loss",
+   "intro": "Nothing about reconstructing an activation well forces an autoencoder to use only a few of its directions at once, even when its hidden layer is far wider than the input feeding it. Sparsity loss is the term added specifically to demand that restraint, penalizing how many directions switch on rather than just how faithfully they reconstruct.\n\nWhat comes next picks apart the term's exact form, why penalizing outright magnitude rather than mere smallness matters, and how turning its strength up or down trades reconstruction accuracy against the causal precision that separates a sparse dictionary from an ordinary one."
+  },
+  {
+   "kind": "concept",
+   "id": "reconstruction-loss",
+   "intro": "Penalizing an autoencoder for using too many directions creates an easy way to cheat: switch nothing on, and the penalty disappears along with any real reconstruction work. Reconstruction loss is what keeps that cheat from paying off, rewarding an autoencoder only when its sparse code still manages to reproduce the activation it was given.\n\nThe rest of this entry walks through the loss in its exact form, the tug-of-war it wages against sparsity during training, and why the paper treats its own inability to drive this term to zero as the clearest sign that its method still leaves real information about the model unexplained."
+  },
+  {
+   "kind": "concept",
+   "id": "expansion-factor-r",
+   "intro": "If a model really does pack more features into a layer than it has dimensions for, recovering them means building a dictionary deliberately bigger than the layer itself — and how much bigger turns out to matter more than it might first seem.\n\nAhead is the ratio itself, how far it can be pushed before the extra capacity stops adding anything useful, and how it interacts with the sparsity setting to decide which balance of accuracy and interpretability a given trained dictionary ends up landing on."
+  },
+  {
+   "kind": "concept",
+   "id": "tied-weights-sae",
+   "intro": "Nothing forces an autoencoder's reading weights and writing weights to be the same matrix, yet a generic one keeps them separate: one set for reading a feature in, another for writing it back out. Tying them into a single shared matrix here is a deliberate choice, one that also settles an otherwise awkward question — which direction, the reading one or the writing one, actually counts as the feature.\n\nTaken up next is why that choice was made, what it costs to give up once results start slipping on a harder kind of activation, and why untying the two weight sets there sacrifices exactly the clean, single-direction bookkeeping that tying was meant to provide."
+  },
+  {
+   "kind": "concept",
+   "id": "dead-features",
+   "intro": "Building a dictionary wider than the layer it's meant to explain sounds like a free way to capture more of a model's hidden structure, but width bought this way isn't guaranteed to get used — some of those extra directions can simply sit there, never once switching on across an entire training run.\n\nThe entry turns next to how bad that waste becomes and where, how a feature earns the label 'dead' in the first place, and the fix proposed for reclaiming that stranded capacity rather than treating it as an unavoidable cost of building an overcomplete dictionary."
+  },
+  {
+   "kind": "concept",
+   "id": "sparsity-reconstruction-tradeoff",
+   "intro": "If a layer's activations decomposed into one uniquely correct set of features, pushing a dictionary to be sparser should eventually hit a wall — some point past which sparsity starts costing accuracy in a way that marks the true boundary. Sweeping that dial in practice finds no such wall, only a smooth curve of equally defensible tradeoffs.\n\nWhat follows works out what a curve without a knee implies about whether a model has one uniquely correct decomposition at all, why the paper reports results at several settings rather than tuning to one, and how two separate hyperparameters, one sliding a dictionary along the curve and the other redrawing it, together fix where a given dictionary lands."
+  },
+  {
+   "kind": "concept",
+   "id": "mlp-sae-training",
+   "intro": "A method validated on one part of a model doesn't automatically work on another, especially when that part comes with a complication the first didn't have: a coordinate system that might already be meaningful before any dictionary is trained on it. Pointing the same recipe at different activations was the paper's way of testing that assumption rather than assuming it.\n\nThis entry traces what changed once the target became a space competing against neurons with a genuine structural claim to interpretability, why the result reads as mixed success rather than a clean win, and which fixes the paper adopted, and left unfinished, against a far worse version of a familiar failure there."
+  },
+  {
+   "kind": "concept",
+   "id": "reconstruction-perplexity-metric",
+   "intro": "Squared-error units don't tell a reader much about a reconstruction on their own — is losing that much information a rounding error, or does it break something the model actually relies on? The only way to know is to make the model use the imperfect reconstruction and watch what happens to its real behavior.\n\nLaid out next is how that substitution is carried out, what a sizeable jump in prediction error from replacing just one layer's activations reveals about how much a dictionary still leaves out, and why this downstream check answers a different question than scoring how well one feature's own activation pattern can be explained in isolation."
+  },
+  {
+   "kind": "concept",
+   "id": "polysemanticity",
+   "intro": "A single neuron lighting up for several completely unrelated ideas sounds like a minor curiosity until it becomes the reason nobody can write down, in plain language, what that neuron is actually for. This mismatch between one unit and many meanings is named as the very first obstacle standing between researchers and a real understanding of what a network computes.\n\nThe rest of this entry traces where the term comes from, why relying on individual neurons as the basic unit of analysis breaks down once the mismatch is taken seriously, and what a polysemantic unit looks like mechanically: a single readout responding to several unrelated underlying signals at once."
+  },
+  {
+   "kind": "concept",
+   "id": "superposition",
+   "intro": "Packing thousands of distinct ideas into a network with only a few hundred dimensions to hold them sounds impossible, and the explanation isn't that most of those ideas are illusions. It's that the network squeezes more directions into the space than the space technically has room for, betting that they rarely interfere with each other.\n\nSet out next is the hypothesis in the form it gets adopted, how it dictates concrete choices in the shape and training of a dictionary meant to undo it, and the basic geometry of packing more directions into a space than that space can hold without any of them staying fully independent."
+  },
+  {
+   "kind": "concept",
+   "id": "monosemanticity",
+   "intro": "Getting a single unit inside a network to mean just one thing sounds like a modest ask, but it's the property individual neurons routinely fail at, and showing that a different kind of unit can actually achieve it, reliably and at scale, turns out to be surprisingly hard to pin down.\n\nThe entry then turns to how the attempt to measure this property at scale runs into a blind spot in its own scoring method, and what a convincingly monosemantic feature turns out to look like up close: often several narrower features quietly dividing up a concept a person would just call one thing."
+  },
+  {
+   "kind": "concept",
+   "id": "privileged-basis",
+   "intro": "Whether a network's raw coordinates mean anything, or are just one arbitrary rotation among infinitely many equally valid ones, isn't a philosophical question — it decides whether comparing a learned feature against the model's own neurons is a fair fight or one rigged from the start.\n\nSpelled out next is what makes a basis privileged in the first place, why one part of a network earns that status while another mostly doesn't, and a documented, partial exception that complicates an otherwise clean story about which coordinates in a model are worth treating as meaningful on their own."
+  },
+  {
+   "kind": "concept",
+   "id": "outlier-dimensions",
+   "intro": "A handful of coordinates in a model's internal representation can carry values wildly larger than all the others, disproportionate enough to complicate compressing the model down to lower precision — and it's tempting to assume anything that stands out numerically this much must also be unusually meaningful.\n\nFrom here the entry traces where these outsized coordinates come from, how a later paper independently rediscovers them while hunting for the dimensions behind one of its own case studies, and why carrying an outsized share of a layer's magnitude turns out not to make a coordinate any easier for a person to interpret."
+  },
+  {
+   "kind": "concept",
+   "id": "mechanistic-interpretability",
+   "intro": "A system can act competently while doing so for reasons nobody outside it can state in words, and that gap stops being a minor inconvenience once the system is capable enough that acting for the wrong reasons could matter, including, in the most unsettling version, deceiving the people watching it.\n\nWhat follows traces the field built to close that gap by reverse-engineering a network's computation into pieces small enough to actually understand, the ambitious endpoint that motivates the effort, and why the field's original default unit for that decomposition, the individual neuron, turned out to stall."
+  },
+  {
+   "kind": "concept",
+   "id": "sparse-dictionary-learning",
+   "intro": "Long before anyone was trying to interpret a neural network, researchers studying the visual cortex faced a related puzzle: how to explain a pile of signals using only a few active causes at a time, drawn from a much larger set of possible ones. That decades-old problem turns out to be exactly the one a modern interpretability method inherits wholesale.\n\nThe entry follows that lineage from its origins modeling neurons in the visual cortex, through the shift from solving the problem fresh for every example to training a single function that solves it in one pass, and into a piece of pure theory the paper leans on to explain why some learned directions score higher than others."
+  },
+  {
+   "kind": "concept",
+   "id": "l4-norm-maximization",
+   "intro": "Searching directly for a sparse, overcomplete dictionary is a combinatorial nightmare, but a piece of pure theory offers a shortcut: instead of searching over discrete sparsity patterns, search continuously for directions where the data spikes rarely and dramatically rather than varying smoothly around some average.\n\nPicked apart next is that reformulation and the statistical signature it predicts, and how the paper leans on it after the fact to make sense of two separate findings: why more heavy-tailed learned features tend to score as more interpretable, and why a technique built to chase that exact signature consistently beats simpler baselines."
+  },
+  {
+   "kind": "concept",
+   "id": "yun-dictionary-learning",
+   "intro": "Applying sparse dictionary learning to a transformer's internal representations wasn't a new idea when this paper did it — an earlier paper had already tried something close, decomposing token representations the same way, years before anyone asked whether the resulting directions were actually interpretable or causally meaningful.\n\nThis entry covers what that earlier work did differently, fitting one shared dictionary across every layer rather than training one dictionary per layer, what it never tested that gets added here, and how a single shared co-author threads a decades-old signal-processing idea through both projects."
+  },
+  {
+   "kind": "concept",
+   "id": "sharkey-interim-report",
+   "intro": "The core idea behind this whole method didn't debut in a peer-reviewed paper at all. It first appeared months earlier in an informal research report, tested only on toy problems with features whose ground truth was already known, posted by researchers betting the idea would scale further than that.\n\nWhat comes next covers what that earlier report actually showed and left untested, and how its relationship to this paper differs from an ordinary citation: the same lead researcher carried the idea from a toy demonstration through to validation on a real language model's activations."
+  },
+  {
+   "kind": "concept",
+   "id": "sparse-autoencoders",
+   "intro": "Understanding a language model's internals would be far simpler if each neuron tracked one clean idea, but a single neuron routinely fires for several unrelated concepts at once, and no amount of staring at it in isolation resolves which one it really means. Sparse autoencoders were introduced as a way past that impasse, decomposing a model's activations, without labels or any preconceived list of concepts, into a much larger set of directions each pushed toward standing for just one coherent idea.\n\nThe rest of this entry covers why the method takes the shape it does, what its case studies and causal experiments showed about individual learned features, and where its own limitations sit — gaps a later paper inherited, and partly worked around, by adopting the same architecture as an unsupervised route to its own trait directions."
+  },
+  {
+   "kind": "concept",
+   "id": "residual-stream",
+   "intro": "Every layer of a transformer reads from and writes back into the same running total of information as it flows through the network, a channel called the residual stream. Because that channel is built by simple addition rather than any operation that singles out a coordinate, it's not obvious the raw coordinates mean anything on their own — and different papers end up treating the stream in almost opposite ways.\n\nFrom here the entry covers whether its coordinates carry any privileged meaning versus being just one arbitrary rotation among many, and how it gets used two different ways across this corpus: as a fixed site to inject a steering vector into, and as raw material decomposed back into a dictionary of interpretable features."
+  }
+ ]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Dead features — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Dead features</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">Dictionary features that never activate across the training corpus, wasting dictionary capacity. The paper finds residual-stream dictionaries stay overcomplete (few dead features) up to roughly a 4x expansion factor, while MLP-sublayer dictionaries suffer many dead features even without a sparsity penalty, in some cases leaving less than half the dictionary usably &#x27;alive&#x27;.</p>
+<div class="page-intro"><p>Building a dictionary wider than the layer it's meant to explain sounds like a free way to capture more of a model's hidden structure, but width bought this way isn't guaranteed to get used — some of those extra directions can simply sit there, never once switching on across an entire training run.</p>
+<p>The entry turns next to how bad that waste becomes and where, how a feature earns the label 'dead' in the first place, and the fix proposed for reclaiming that stranded capacity rather than treating it as an unavoidable cost of building an overcomplete dictionary.</p></div>
+<section class="prose-section">
+<h2>The cost of pushing a dictionary too wide</h2>
+<p>Because the whole point of an overcomplete <a href="../concept/dictionary-feature.html">dictionary</a> is to give <a href="../concept/sparse-autoencoders.html">sparse autoencoder</a> training more candidate directions than the model has neurons, there is an obvious failure mode: rows of the weight matrix that the optimizer simply never uses. A dead feature is exactly this -- a dictionary feature that never activates across the entire training corpus, occupying capacity that the <a href="../concept/expansion-factor-r.html">expansion factor R</a> nominally counts but that contributes nothing to any reconstruction and is never scored for interpretability. Dead features are the concrete reason R cannot simply be pushed arbitrarily high in the hope of capturing more of a model's true feature set: past some point, added capacity stops translating into added live, useful directions (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"E NUMBER OF ACTIVE FEATURES", p. 17</a>).</p>
+</section>
+<section class="prose-section">
+<h2>How severe the problem gets, and where</h2>
+<p>On the residual stream, the paper finds the problem is mild within a wide operating range: raising R keeps essentially the whole dictionary alive up to roughly 4x overcompleteness, with dead features only beginning to appear past that point (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"E NUMBER OF ACTIVE FEATURES", p. 17</a>). On the MLP sublayer, the picture is much worse: dead features appear in large numbers even at alpha=0, with no sparsity pressure at all, so the failure is driven by the ReLU nonlinearity and MLP activation geometry rather than by <a href="../concept/sparsity-loss.html">the sparsity penalty</a> or R alone (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>). The gap between nominal and effective dictionary size can be severe there: in a dictionary with twice as many features as neurons, less than half might be active enough to perform automatic interpretability, except in early layers, where most features stay alive (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>). This is part of why <a href="../concept/mlp-sae-training.html">MLP-sublayer training</a> uses a different sparsity coefficient and untied encoder/decoder matrices -- both partial responses to the same underlying dead-feature problem.</p>
+</section>
+<section class="prose-section">
+<h2>How a dead feature is identified, and the proposed fix</h2>
+<p>The paper operationalizes activity with a concrete threshold: a feature counts as active if it fires more than 10 times across 10 million datapoints, and anything below that line is dead (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"E NUMBER OF ACTIVE FEATURES", p. 17</a>). Rather than leaving dead rows permanently inert, the paper proposes periodically reinitializing them during training so that wasted capacity can be recovered and put toward learning additional useful directions -- explicitly framed as future work rather than something implemented in the reported experiments (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"E NUMBER OF ACTIVE FEATURES", p. 17</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Dictionary expansion factor (R) — <a href="../edge/expansion-factor-r-governs-emergence-of-dead-features.html">governs emergence of</a> → <strong>Dead features</strong></li><li><strong>Dead features</strong> — <a href="../edge/dead-features-hollows-out-the-count-of-dictionary-feature.html">hollows out the count of</a> → Dictionary feature</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/unmixing-activations-with-sparsity.html">Unmixing activations with a sparsity penalty</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;C.3 INTERPRETING THE MLP SUBLAYER&rdquo;, p. 15</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">&sect;&ldquo;E NUMBER OF ACTIVE FEATURES&rdquo;, p. 17</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

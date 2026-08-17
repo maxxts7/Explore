@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Sample, train, interpret: the SAE pipeline — Figure</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-figure">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-figure">figure</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Sample, train, interpret: the SAE pipeline</h1>
+<p class="edge-meta">Figure 1 of <a href="../story/sparse-autoencoders.html">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> &middot; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 INTRODUCTION&rdquo;, p. 2</a> &middot; in <a href="../story/sparse-autoencoders.html#paper-figures-data">Data and experiments</a></p>
+<figure class="figure-plate"><a href="../assets/figures/sparse-autoencoders/fig-1.png" target="_blank" rel="noopener"><img src="../assets/figures/sparse-autoencoders/fig-1.png" alt="Figure 1 — Sample, train, interpret: the SAE pipeline" loading="lazy"></a></figure>
+<section class="prose-section">
+<h2>Three stages: sample, train, interpret</h2>
+<p>The diagram lays out the paper's method as a left-to-right pipeline. In stage (a), a language model runs over a text corpus, and its internal activations are tapped after some number of transformer blocks (labeled "0 &lt; k ≤ N Transformer Blocks") — a chosen intermediate depth, not the model's final output — producing a stream of activation vectors. In stage (b), those vectors feed a sparse autoencoder: an encoder matrix (tied to the decoder) maps the activation vector to a hidden layer, a learned bias is added and a ReLU applied, and the result is a vector of sparse feature coefficients; a decoder matrix — the feature dictionary itself — maps these coefficients back to a reconstructed activation vector. Formally, $c=\mathrm{ReLU}(Mx+b)$ and $\hat{x}=M^Tc$, trained to minimize $$L(x) = \|x-\hat{x}\|_2^2 + \alpha\|c\|_1$$ In stage (c), each row of the dictionary matrix becomes an addressable feature, assigned a plain-language meaning and an interpretability score, populating a table like the one shown (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">§"1 INTRODUCTION", p. 2</a>; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 3</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Why the pipeline is built this way</h2>
+<p>The autoencoder is trained entirely after the fact, on cached, frozen activations from an already-trained model, rather than by changing the model's own architecture or training objective. This keeps the method unsupervised and cheap, and decouples interpretability work from the difficulty of training a state-of-the-art model under added constraints. The encoder and decoder matrices are tied (the decoder is the encoder's transpose) because this halves the parameter count, and because it encodes the assumption that the direction which detects a feature and the direction that defines its effect on the reconstruction should coincide, removing an otherwise-ambiguous choice between encoder and decoder directions (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 2</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What the pipeline sets up</h2>
+<p>This three-stage flow is the scaffolding for every later result in the paper: the dictionary produced in stage (b) supplies the <a href="../concept/dictionary-feature.html">Dictionary feature</a> units whose interpretability is scored in stage (c) and benchmarked against baselines, whose causal precision is tested with <a href="../concept/activation-patching.html">Activation patching</a>, and whose <a href="../concept/monosemanticity.html">Monosemanticity</a> is examined in case studies. It operationalizes the idea that <a href="../concept/polysemanticity.html">Polysemanticity</a> arises from <a href="../concept/superposition.html">Superposition</a> and can be undone by <a href="../concept/sparse-dictionary-learning.html">Sparse dictionary learning / sparse coding</a>, building on <a href="../concept/sharkey-interim-report.html">Sharkey et al. (2023) interim research report</a> and applied here to <a href="../concept/pythia.html">Pythia (model suite)</a> residual streams, in service of the broader <a href="../concept/mechanistic-interpretability.html">Mechanistic interpretability</a> agenda.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>More figures from this paper</h2><ul><li>Next: <a href="../figure/sparse-autoencoders--table-1.html">Table 1 &mdash; Layer-1 feature descriptions and interpretability scores</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 INTRODUCTION&rdquo;, p. 2</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

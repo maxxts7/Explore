@@ -1,0 +1,48 @@
+{
+ "themes": [
+  {
+   "id": "single-features-under-the-microscope",
+   "name": "Single features under the microscope",
+   "members": [
+    "apostrophe-feature",
+    "closing-parenthesis-feature",
+    "dictionary-feature",
+    "monosemanticity",
+    "feature-circuit-detection"
+   ],
+   "narrative": "Cunningham et al. (2023) cash out the sparse autoencoder's promise not in aggregate scores but in a handful of individual dictionary features, examined from both ends. Reading from the input side, the apostrophe feature (feature 556) is shown to fire almost exclusively on apostrophe tokens, distinguishing it from the polysemantic residual-stream dimension that shares its top activations. Reading from the output side, ablating that feature selectively suppresses the logit for the following \"s\" token, the effect a monosemantic apostrophe detector should have on possessives and contractions like \"let's\". The closing-parenthesis feature, a layer-5 unit whose unembedding directly predicts closing-parenthesis tokens, extends the method into automatic feature-circuit detection, which ablates each upstream feature and ranks it by how much the ablation lowers the target's activation, tracing which earlier features -- detecting dates, acronyms, and other parenthesis-preceding phrases -- cause it to fire. Together the two case-study features make monosemanticity a demonstrated property, not just a scored one."
+  },
+  {
+   "id": "open-models-as-interpretability-testbeds",
+   "name": "Small open models as interpretability testbeds",
+   "members": [
+    "pythia",
+    "the-pile",
+    "openwebtext"
+   ],
+   "narrative": "Cunningham et al. (2023) train and evaluate their sparse autoencoders on modest, fully open infrastructure: Pythia-70M and Pythia-410M, an open, reproducible model suite with residual-stream dimensions of 512 and 1024 respectively, trained on the Pile, the public webtext corpus also used to measure reconstruction-substitution perplexity. Autointerpretability text fragments are drawn from OpenWebText, another public corpus, sampled from its first 50,000 lines. The choice keeps every stage of the pipeline small and open: a full training run completes in under an hour on a single A40 GPU, cheap enough that the paper can afford to sweep dictionary-size ratios and sparsity coefficients rather than report a single configuration. The scale is explicitly a proof of concept rather than a claim about frontier models, the same honesty about scope that the 2017 Deep RL from Human Preferences paper's own small testbed environments show for a different method."
+  },
+  {
+   "id": "dictionary-learning-lineage",
+   "name": "The dictionary-learning lineage",
+   "members": [
+    "sparse-dictionary-learning",
+    "l4-norm-maximization",
+    "yun-dictionary-learning",
+    "sharkey-interim-report"
+   ],
+   "narrative": "Cunningham et al. (2023) present their method as a scaling-up of existing ideas, not a new invention. Sparse dictionary learning itself is decades old, developed by Olshausen and Field (1997) and Lee et al. (2006) to model sparse coding in the visual cortex, expressing data as sparse linear combinations of an overcomplete learned basis. Two direct predecessors bring it to language models: Yun et al. (2021) apply sparse dictionary learning to residual-stream activations across all layers of a transformer simultaneously, and Sharkey et al.'s (2023) unpublished interim report first proposes training sparse autoencoders on language-model activations specifically to address superposition, credited as this paper's direct motivation. A separate theoretical result, Qu et al.'s (2019) reformulation of sparse overcomplete dictionary search as a search for directions maximizing the L4 norm, is invoked to explain why interpretability correlates with the heavy-tailedness of feature activations and why ICA, which optimizes non-Gaussianity directly, is the strongest non-dictionary-learning baseline."
+  },
+  {
+   "id": "enumerating-features-for-safety",
+   "name": "Feature enumeration as a safety audit",
+   "members": [
+    "enumerative-safety",
+    "mechanistic-interpretability",
+    "sparse-autoencoders",
+    "feature-circuit-detection"
+   ],
+   "narrative": "Cunningham et al. (2023) close by naming the ambition their method serves: enumerative safety, Elhage et al.'s (2022) proposal that a complete, human-understandable list of a model's features could guarantee it will not perform dangerous behaviors such as deception. Sparse autoencoders are offered as the tool for building that list -- a scalable, unsupervised way of enumerating features rather than guessing at them -- and feature-circuit-detection as a way of tracing how listed features causally depend on each other across layers, a step toward the paper's stated goal of an end-to-end account of how a model computes its outputs. Read against the rest of the corpus, this reframes the oversight problem: earlier papers audit a model by judging what it outputs -- reward modeling, red-teaming, revised responses -- while enumerative safety proposes auditing it by listing and inspecting its internal parts instead, with mechanistic interpretability named as the research agenda this project frames itself as advancing."
+  }
+ ]
+}

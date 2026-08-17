@@ -1,0 +1,95 @@
+{
+ "paper": "sparse-autoencoders",
+ "pages": [
+  {
+   "id": "fig-10",
+   "name": "MLP-layer interpretability scores vs. baselines",
+   "sections": [
+    {
+     "heading": "Reading the two panels",
+     "body": "Each panel plots mean automated interpretability score (y-axis) against MLP layer (x-axis, layers 0-5 of Pythia-70M), one point per method: sparse coding, ICA, PCA, the 'Identity ReLU' baseline (treating individual MLP neurons, after their nonlinearity, as the units of analysis), and random directions. Each point is a mean over many features or baseline directions at that layer, with an error bar; two points whose bars overlap should not be read as reliably different. The left panel uses 'top-and-random' scoring, which mixes a feature's highest-activating text fragments with random ones and so tends to read the feature's best case; the right panel uses the stricter 'random-only' scoring, built entirely from randomly sampled fragments, a harder test that yields lower scores across the board ([[top-random-scoring]], [[autointerpretability-score]])."
+    },
+    {
+     "heading": "What the scores show",
+     "body": "Sparse coding leads clearly at layer 0 in both panels (about 0.33 top-and-random, about 0.15 random-only), well above every baseline. Its advantage narrows through the middle layers, and under random-only scoring it becomes inconsistent: at layer 3 the sparse-coding point drops to about 0.03, below Identity ReLU and within the same range as PCA and random directions, before recovering somewhat at layers 4-5. This differs from the residual-stream results (Figures 2, 8, 9), where sparse coding's lead holds up cleanly across layers."
+    },
+    {
+     "heading": "Why MLP dictionaries are noisier",
+     "body": "The paper attributes this weaker, less consistent margin to 'mixed success' training dictionaries on MLP activations ([[mlp-sae-training]]): many learned features are still more interpretable than individual neurons, but the MLP dictionaries also accumulate large numbers of [[dead-features]] that never fire, especially in middle and later layers, so the living dictionary can fail to be genuinely overcomplete. This motivated using an untied encoder/decoder ([[tied-weights-sae]]) for MLP autoencoders specifically. The [[default-basis-baseline]] here (Identity ReLU) sits close to sparse coding at several layers, echoing the paper's separate observation that the residual stream is not expected to have a [[privileged-basis]] (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15)."
+    }
+   ]
+  },
+  {
+   "id": "table-2",
+   "name": "Interpretability correlated with activation moments",
+   "sections": [
+    {
+     "heading": "What is being correlated",
+     "body": "Each row correlates one summary statistic of a dictionary feature's activation distribution — its mean, variance, skew, or kurtosis, computed over the token dataset — against that same feature's top-and-random [[autointerpretability-score]] ([[kurtosis-skew-correlation-analysis]]). The population is every scored residual-stream feature pooled across all layers and five dictionary [[expansion-factor-r]] ratios (0.5x to 8x overcomplete), not one layer or one dictionary size. A correlation coefficient here just measures how strongly two per-feature numbers co-vary across that population: a value like 0.20 is weak (it accounts for roughly 4% of the variance) and says nothing about any individual feature, and none of the four rows implies that manipulating a feature's moments would causally change its interpretability."
+    },
+    {
+     "heading": "The four correlations",
+     "body": "Mean correlates weakly negatively with interpretability (-0.09) and variance is essentially uncorrelated (0.02). Skew (0.20) and kurtosis (0.15) are the two positive, comparatively larger correlations in the table — features whose activations are more heavy-tailed and asymmetric tend to score as somewhat more interpretable. (The body text of §C.4 quotes slightly different figures for these two, 0.19 for skew and 0.24 for kurtosis, than the table itself; the values above are the table's own numbers.)"
+    },
+    {
+     "heading": "Why this matters for the baselines",
+     "body": "The result is offered as an explanation for why [[ica]] is consistently the strongest non-dictionary-learning baseline in Figures 2, 8, 9, and 10: ICA explicitly searches for maximally non-Gaussian directions, closely related to maximizing kurtosis, and sparse dictionary learning can itself be reformulated as a search for directions of maximal L4 norm ([[l4-norm-maximization]]). Under a central-limit-theorem argument, interference from many other active features should be roughly Gaussian, so a feature that stands out as unusually heavy-tailed is more likely to reflect a real, cleanly separated cause rather than noise (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 16)."
+    }
+   ]
+  },
+  {
+   "id": "fig-11",
+   "name": "Default-basis dimension resembling the apostrophe feature",
+   "sections": [
+    {
+     "heading": "Reading the two-panel histogram",
+     "body": "Both panels bin the same quantity — how strongly a single coordinate of the residual stream's default (neuron) basis activates — over every token occurrence in the sample, with x-axis activation magnitude from 0 to about 12.8. Bar height is a token count; colored segments split each bin's count by the specific token responsible ('and', an apostrophe, 'one', 'part', 'number'), with '[All Other Tokens]' as a catch-all and a pale '[All Tokens For Scale]' bar repeating the bin's total for reference. The two panels share x-axis bins but use different y-scales: the top panel (0 to 200,000) shows how the low-activation bins dwarf everything else, while the bottom panel is a rescaled zoom (0 to about 2,700) that reveals the composition hidden by that scale. Reading only the top panel, or only the highest bins, misses the story."
+    },
+    {
+     "heading": "What the histogram shows",
+     "body": "In the zoomed bottom panel, the middle bins (roughly 5.1 to 6.4 activation) hold on the order of 2,500 tokens, composed mostly of the 'All Other Tokens' catch-all with only small slices of 'and', 'one', and other labeled tokens — not apostrophes. Only in the higher bins, where total counts have already fallen to a few hundred or fewer, does the apostrophe segment become a visually larger share of a shrinking bar. This dimension was chosen because, among the residual-stream coordinates the dictionary's apostrophe feature reads from most strongly, it was the highest-ranked one whose own top activations include apostrophes — the 10th-highest such coordinate by that ranking (sparse-autoencoders, §\"D.1 RESIDUAL STREAM BASIS\", p. 16)."
+    },
+    {
+     "heading": "Contrast with the dictionary feature",
+     "body": "The point of the figure is contrastive: this [[default-basis-baseline]] coordinate of the [[residual-stream]] looks like an apostrophe detector only if a reader looks solely at its highest-activation bin; across the fuller activation range it fires on many unrelated tokens, the textbook picture of [[polysemanticity]]. That is unlike dictionary feature 556, which activates on apostrophes almost exclusively and is the paper's case study in [[monosemanticity]] ([[apostrophe-feature]]); the top-weighted dimensions this basis draws on are themselves [[outlier-dimensions]], further complicating any claim that a single default-basis coordinate is meaningful on its own."
+    }
+   ]
+  },
+  {
+   "id": "fig-12",
+   "name": "'If'-in-code feature: input and output histograms",
+   "sections": [
+    {
+     "heading": "Reading the input/output histograms",
+     "body": "The two panels use the same construction as the main-text apostrophe-feature figure. Left: for every token occurrence where this [[dictionary-feature]] activates at all, bin the activation strength (x-axis) and stack the resulting counts by which specific token produced them, with '[All Other Tokens]' catching everything not individually labeled. Right: after ablating the feature, bin the resulting drop in each downstream token's predicted logit (x-axis, 'Logit Difference') and again stack by which specific next-token prediction was suppressed. The two panels are built from different quantities on different samples — activation strength versus a causal logit change — so their bar heights are not comparable to each other; what carries the interpretation is which tokens appear in each panel's legend, not the raw counts."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "The input panel's labeled tokens are several tokenizations of 'if' (capitalized, uncapitalized, with and without a leading space) together with 'ifndef', 'define', '=', 'when', and 'function' — code-specific tokens, consistent with a feature tied to the word 'if' inside source code rather than prose. The output panel's most-suppressed tokens after ablation are '(', '&&', 'then', '!', '__', and similar — tokens that typically follow 'if' in code syntax (an opening parenthesis for the condition, a logical AND, a negation, a dunder identifier). The two lists tell a consistent causal story: what triggers the feature and what the model does with it line up."
+    },
+    {
+     "heading": "Where this fits",
+     "body": "This is one of the additional [[dictionary-feature]] case studies in Appendix D.2, alongside a similar 'Dis'-prefix feature and two more apostrophe-context features, extending the paper's [[monosemanticity]] argument beyond the single worked example in the main text (sparse-autoencoders, §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 17)."
+    }
+   ]
+  },
+  {
+   "id": "fig-13",
+   "name": "'Dis'-prefix feature: input and output histograms",
+   "sections": [
+    {
+     "heading": "Reading the input/output histograms",
+     "body": "Same construction as the 'if' feature and the main-text apostrophe example: left bins the feature's activation strength over occurrences where it fires, stacking each bin's token count by the specific token responsible; right bins the drop in downstream logits after ablation, stacking by which next-token prediction is suppressed. Worth checking before accepting the paper's label: the left panel's labeled tokens are not only 'Dis' but several related prefix fragments ('Re', 'un', 'is', 're', 'dis', 'des', 'trans', 'en'), so the histogram alone leaves open whether the feature is specific to the capitalized bigram 'Dis' or responds more broadly to prefix-like subword tokens; as with the other feature pages, the two panels' bars are not on comparable scales to each other."
+    },
+    {
+     "heading": "What the histograms show",
+     "body": "In the input panel almost all activating occurrences sit near zero (an 'All Other Tokens' bar of roughly 1,150 in the first bin), but as activation strength increases the composition narrows toward the small labeled set of prefix tokens, and the highest bins (activation roughly 7.8-9.7) are made up almost entirely of them rather than 'All Other Tokens'. The output panel shows ablation most suppresses logits for tokens that complete words beginning 'Dis': 'CLAIM' (disCLAIM), 'closed' (disclosed), 'ordered' (disordered), 'perse' (disperse), 'plays' (displays), 'position' (disposition), and 'par' (dispar-). That word-completion pattern is what grounds the paper's more specific 'Dis'-bigram-prefix reading, rather than the input histogram on its own (sparse-autoencoders, §\"D.2 EXAMPLES OF LEARNED FEATURES\", p. 17)."
+    },
+    {
+     "heading": "Where this fits",
+     "body": "Alongside the 'if'-in-code feature and two apostrophe-context features, this is one of Appendix D.2's additional [[dictionary-feature]] examples illustrating the range of a trained sparse-coding dictionary: from programming-language syntax to sub-word morphology, each showing input and output evidence pointing at the same interpretation, part of the paper's broader case for [[monosemanticity]]."
+    }
+   ]
+  }
+ ]
+}

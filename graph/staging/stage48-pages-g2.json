@@ -1,0 +1,199 @@
+{
+ "pages": [
+  {
+   "id": "polysemanticity",
+   "sections": [
+    {
+     "heading": "The roadblock the paper opens with",
+     "body": "Polysemanticity is the phenomenon in which a single neuron, or any other individual unit of analysis inside a neural network, activates across several unrelated concepts rather than tracking one coherent idea. The term comes from the Anthropic interpretability line of work: Olah et al. (2020) first documented individual units firing for conceptually unrelated stimuli during manual circuit analysis, and Elhage et al. (2022b) later proposed superposition as its structural explanation. This paper names polysemanticity as its chosen problem statement from the first line of its abstract: 'One of the roadblocks to a better understanding of neural networks' internals is polysemanticity' (sparse-autoencoders, §\"ABSTRACT\", p. 1). Framed this way, polysemanticity is not a side observation but the obstacle the entire sparse-autoencoder method is built to remove."
+    },
+    {
+     "heading": "Why a broken unit of analysis blocks the whole research program",
+     "body": "[[mechanistic-interpretability]] proceeds by decomposing a network into small units that can be studied one at a time; the paper notes that using individual neurons as those units 'has had some success' (Olah et al., 2020; Bills et al., 2023) (sparse-autoencoders, §\"1 INTRODUCTION\", p. 1), which is why neurons were the default unit before this paper's method existed. Polysemanticity undercuts exactly that method: a neuron firing for several unrelated concepts cannot be assigned a single human-readable role no matter how carefully it is probed in isolation. [[superposition]] is the paper's inherited hypothesis for why polysemanticity arises at all, and resolving it, by finding a better unit of analysis than the neuron, is the explicit goal behind training [[sparse-autoencoders]]."
+    },
+    {
+     "heading": "What a polysemantic unit looks like mechanically",
+     "body": "Concretely, a neuron's activation is a linear readout of the layer's representation, $z = w \\cdot x$ for some weight vector $w$ and activation vector $x$. If $x$ actually encodes several features additively, $x = \\sum_i a_i g_i$, where each $a_i$ indicates the presence of feature $g_i$, then $z = \\sum_i a_i (w \\cdot g_i)$. Whenever $w$ has a substantial dot product with more than one $g_i$, the neuron's activation rises whenever any of those features is present, regardless of whether the underlying concepts have anything in common. This is exactly what the paper's case studies document at the level of individual [[residual-stream]] coordinates: a single scalar that lights up for several unrelated tokens or contexts (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7), the mirror image of the [[monosemanticity]] the paper's dictionary features are shown to approximate more closely."
+    }
+   ]
+  },
+  {
+   "id": "superposition",
+   "sections": [
+    {
+     "heading": "A hypothesis that turns a symptom into a structural claim",
+     "body": "Superposition is the hypothesis, proposed by Elhage et al. (2022b) in the Anthropic 'Toy Models of Superposition' line of work, that a network represents more distinct features than it has neurons or activation dimensions by packing those features into an overcomplete set of non-orthogonal directions rather than giving each one its own coordinate. It is offered as the structural cause of [[polysemanticity]]: when several features share a direction, the neuron reading out that direction fires for all of them. This paper adopts the hypothesis directly, describing superposition as a 'hypothesised cause of polysemanticity' and setting its own explicit goal as showing 'it is possible to resolve superposition in language models using a scalable, unsupervised method' (sparse-autoencoders, §\"ABSTRACT\", p. 1)."
+    },
+    {
+     "heading": "Superposition mandates the sparse-autoencoder's shape",
+     "body": "Because superposition is a specific structural claim, more features than dimensions, sharing directions, rather than a vague call to 'improve interpretability,' it dictates concrete design choices in the paper's [[sparse-autoencoders]]. The hidden layer must be able to represent an overcomplete basis, so its size is set to $d_{hid} = R \\cdot d_{in}$ with $R$ a tunable expansion factor (sparse-autoencoders, §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 2), and recovering directions that were only ever sparsely active requires an $\\ell_1$ penalty on the hidden coefficients rather than on the weights. The paper states plainly that 'without high sparsity, interference between non-orthogonal features prevents any performance gain from superposition' (sparse-autoencoders, §\"1 INTRODUCTION\", p. 1), which is why activation sparsity, not just the dimension count, is the assumption connecting the hypothesis to the method built on top of it."
+    },
+    {
+     "heading": "Packing more features than there are dimensions",
+     "body": "Geometrically, an orthogonal basis for a $d$-dimensional vector space can hold at most $d$ mutually non-interfering directions. Superposition proposes that a network sidesteps this limit by writing each activation vector as a sparse linear combination of many more directions than $d$: $$x_i = \\sum_j a_{i,j} g_j$$ where the ground-truth features $g_j$ outnumber the dimensions of $x_i$ and the coefficients $a_i$ are mostly zero for any given input. Because the $g_j$ cannot all be mutually orthogonal once there are more of them than dimensions, two features sharing a component of the same direction interfere whenever both are active at once, which is precisely why sparsity is required for the scheme to pay off. The paper's entire method (Section 2) is aimed at inverting this equation: recovering the $g_j$ given only samples of $x_i$."
+    }
+   ]
+  },
+  {
+   "id": "monosemanticity",
+   "sections": [
+    {
+     "heading": "The target property superposition prevents",
+     "body": "Monosemanticity is the converse of [[polysemanticity]]: a feature or direction is monosemantic if it activates for one coherent, human-nameable concept rather than several unrelated ones. As a target property it belongs to the same Anthropic interpretability line that named polysemanticity and superposition as its diagnosis (Elhage et al., 2022b), and this paper is one of two concurrent 2023 empirical demonstrations, alongside Anthropic's own 'Towards Monosemanticity' work, that training a sparse dictionary over a language model's activations yields directions measurably closer to this ideal than neurons or generic matrix decompositions. The paper's own case studies, the apostrophe feature and the layer-5 closing-parenthesis feature, are framed explicitly as evidence that [[dictionary-feature]]s achieve reduced polysemanticity relative to the baselines it tests."
+    },
+    {
+     "heading": "How the paper measures it, and where the measurement breaks down",
+     "body": "Because monosemanticity cannot be checked by hand across thousands of features, the paper relies on the [[autointerpretability-score]] as a scalable stand-in: a feature earns a high score only if its activations follow a pattern a language model can state and then use to predict held-out activations, something difficult for a feature that fires on more than one unrelated concept. The proxy has a structural blind spot the paper acknowledges directly: current interpretability protocols 'are unable to verify outputs by looking at changes in output or other data' (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5). So the paper's most direct monosemanticity evidence instead comes from hand-run case studies: an activation histogram technique that plots which tokens cause a feature to fire, which 'only works for dictionary features that activate for a small set of tokens' (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7), together with directly measuring a feature's causal effect on output logits."
+    },
+    {
+     "heading": "What monosemanticity looks like up close: the apostrophe feature",
+     "body": "The paper's central worked example, dictionary feature 556, activates almost exclusively on apostrophe tokens (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7), in sharp contrast to the corresponding [[residual-stream]] default-basis dimension, which the paper shows encodes different information at different activation ranges and is therefore polysemantic. Yet even this feature 'does not activate on all apostrophes' (sparse-autoencoders, §\"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC\", p. 7): two further features cover apostrophes in contraction contexts like '[I/We/They]'ll' and negation contexts like '[don/won/wouldn]'t' respectively. The dictionary does not resolve polysemanticity by mapping one feature onto one human-level word category; it does so by learning several narrower, context-specific monosemantic features that jointly cover what a person would casually call a single concept."
+    }
+   ]
+  },
+  {
+   "id": "privileged-basis",
+   "sections": [
+    {
+     "heading": "A basis that means something, and one that doesn't",
+     "body": "A privileged basis is a coordinate system for a vector space that carries genuine meaning, as opposed to being one arbitrary choice among infinitely many equivalent rotations. Whether a basis is privileged is a property of the operations applied to the space, not of the space itself: a generic linear layer treats all directions symmetrically, so no basis is singled out, but an elementwise nonlinearity like ReLU is not rotation-invariant, since it is defined coordinate by coordinate. The paper's own working definition is a basis 'in which we would expect changes to be unusually meaningful, such as the standard basis after a non-linearity in an MLP' (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15). The framing was developed for transformers specifically by Elhage et al. (2023), which this paper cites directly."
+    },
+    {
+     "heading": "Why this matters for choosing a baseline",
+     "body": "Whether a space has a privileged basis determines whether treating its raw coordinates as the unit of analysis is a principled choice or an arbitrary one. Because the paper finds the [[residual-stream]] lacks a privileged basis in general, individual residual-stream coordinates, the [[default-basis-baseline]] the paper compares its [[dictionary-feature]]s against, have no special claim to interpretability over any other direction, including a randomly sampled one, and the paper tests this directly. The concept plays the opposite role for the MLP sublayer, where the standard basis genuinely is privileged by the nonlinearity that immediately precedes it, so training a dictionary there means competing against neurons that already have some architectural claim to meaningfulness, unlike in the residual stream."
+    },
+    {
+     "heading": "Where the neuron basis is privileged, and where it partially isn't",
+     "body": "Mechanically, a linear operation such as the residual stream's running sum of layer outputs commutes with any rotation of coordinates: rotate the inputs and the output rotates the same way, so no coordinate axis is distinguished from any other. An elementwise nonlinearity breaks this symmetry, since $\\mathrm{ReLU}(z)_i = \\max(z_i, 0)$ depends on the value in coordinate $i$ specifically, which is what makes the post-nonlinearity standard basis privileged. By that logic the residual stream, being additive rather than the output of a nonlinearity, should have no privileged basis at all, yet the paper reports a documented, partial exception: transformers show 'a tendency ... to store information in the residual stream basis' (Dettmers et al., 2022), attributed to the Adam optimiser's finite-precision gradient storage in that basis, concentrated specifically in [[outlier-dimensions]] rather than restored uniformly across all coordinates."
+    }
+   ]
+  },
+  {
+   "id": "outlier-dimensions",
+   "sections": [
+    {
+     "heading": "A documented exception to 'no privileged basis'",
+     "body": "Outlier dimensions are the handful of coordinates in a transformer's activations that reliably carry disproportionately large-magnitude values relative to typical coordinates. The phenomenon was characterized at scale by Dettmers et al. (2022), who found it complicated low-precision quantization of large language models because a few outlier features dominate a layer's dynamic range; the proposed mechanism, cited by this paper, is that the Adam optimiser stores gradients with finite precision specifically in the residual-stream basis (Elhage et al., 2023). This paper inherits the concept to interpret its own [[default-basis-baseline]]: when it searches the residual stream's raw coordinates for the dimensions most associated with its apostrophe example, the results are dominated by outlier dimensions rather than typical ones (sparse-autoencoders, §\"D.3 FEATURE SEARCH DETAILS\", p. 17)."
+    },
+    {
+     "heading": "What they explain, and what they don't",
+     "body": "Outlier dimensions sit in tension with the paper's broader finding that the [[residual-stream]] mostly lacks a [[privileged-basis]]: because Adam's optimisation dynamics single out these specific coordinates as unusually information-bearing, they are a partial, localized counterexample rather than a wholesale one. But carrying real information is not the same as being individually legible: despite the outlier dimensions' outsized share of the residual stream's dynamic range, the paper directly tests whether default-basis directions score better than chance on interpretability and reports the opposite, 'we do not find residual stream basis directions to be any more interpretable than random directions' (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15). The information these coordinates carry appears to remain spread thinly across many overlapping instances of [[polysemanticity]] rather than concentrated into a form a human explainer can read off directly."
+    },
+    {
+     "heading": "How the paper found them",
+     "body": "The paper located its outlier dimensions by direct search rather than by reusing Dettmers et al.'s original quantization diagnostic: given a sentence ending in an apostrophe, it looked for which residual-stream coordinates activate most strongly, in both directions, on that final token, then checked how many of the extreme coordinates matched already-known outlier dimensions. It found that 'the top two most positive dimensions were outlier dimensions, the top two negative dimensions were our displayed one and another outlier dimension, respectively' (sparse-autoencoders, §\"D.3 FEATURE SEARCH DETAILS\", p. 17). Three of the four most extreme coordinates in either direction turning out to be previously-identified outlier dimensions is the paper's own direct evidence that these coordinates are non-generic, even though it does not by itself make them interpretable."
+    }
+   ]
+  },
+  {
+   "id": "mechanistic-interpretability",
+   "sections": [
+    {
+     "heading": "The field this paper positions itself within",
+     "body": "Mechanistic interpretability is the research agenda of understanding a neural network by reverse-engineering its internal computation into smaller, human-understandable parts rather than treating it as an opaque function. The name and program grew out of Anthropic's circuits-style analysis of vision models (Olah et al., 2020) and were extended to transformer language models (Elhage et al., 2021; Cammarata et al., 2021). This paper situates its contribution inside that agenda explicitly, opening by naming the field as a response to the risk that capable AI systems 'make decisions for reasons we do not understand,' including the possibility that they 'deceive humans in order to accomplish undesirable goals' (Ngo et al., 2022) (sparse-autoencoders, §\"1 INTRODUCTION\", p. 1), and closing by offering its method 'as a foundation for future mechanistic interpretability work' (sparse-autoencoders, §\"ABSTRACT\", p. 1)."
+    },
+    {
+     "heading": "The field's most ambitious version of success",
+     "body": "What achieving mechanistic interpretability is meant to enable, according to the paper's own framing, is the ability to 'reverse engineer parts of [a network's] internal processes and make targeted changes to them' (sparse-autoencoders, §\"1 INTRODUCTION\", p. 1). Pushed to its logical completion, that ambition becomes [[enumerative-safety]]: a complete, human-understandable list of a model's features precise enough to guarantee it will not perform dangerous behaviours such as deception (sparse-autoencoders, §\"6.3 CONCLUSION\", p. 9). The paper frames its own contribution as a step toward that goal without claiming to reach it, since its dictionaries still leave reconstruction error, and therefore some of the model's computation, unexplained."
+    },
+    {
+     "heading": "Why the neuron-level version of the program stalls",
+     "body": "The field's basic method requires breaking a network down into units small enough to study one at a time; the paper notes that using individual neurons this way 'has had some success' (Olah et al., 2020; Bills et al., 2023) (sparse-autoencoders, §\"1 INTRODUCTION\", p. 1), which made neurons the default unit before this paper's method existed. [[polysemanticity]] undercuts that default directly, since a neuron firing for several unrelated concepts resists being assigned a single human-readable role no matter how carefully it is studied. The paper's [[sparse-autoencoders]] are offered as a substitute unit of analysis, whose [[dictionary-feature]]s are shown across Sections 3 through 5 to be more interpretable, more causally precise, and closer to [[monosemanticity]] than the neuron basis they aim to replace."
+    }
+   ]
+  },
+  {
+   "id": "sparse-dictionary-learning",
+   "sections": [
+    {
+     "heading": "A decades-old signal-processing idea inherited wholesale",
+     "body": "Sparse dictionary learning, also called sparse coding, is the problem of expressing a set of data vectors as sparse linear combinations of an overcomplete set of learned basis vectors, or dictionary atoms. It originates in Olshausen & Field's (1997) model of simple-cell receptive fields in the visual cortex, later given efficient general algorithms by Lee et al. (2006), and predates and exists entirely independently of language models or interpretability research. This paper inherits the framework directly as its stated technique, titling its method section 'Taking features out of superposition with sparse dictionary learning' and noting that recovering a network's true, superposed features 'is equivalent to the well-known problem of sparse dictionary learning (Olshausen & Field, 1997)' (sparse-autoencoders, §\"1 INTRODUCTION\", p. 2)."
+    },
+    {
+     "heading": "From alternating optimization to a single learned function",
+     "body": "Classical sparse coding solves for the dictionary and per-example codes together via alternating optimization, resolving a fresh sparse-coding problem for every new data point. This paper's [[sparse-autoencoders]] instead amortize that per-example search into a single trained encoder function, trading the guaranteed-per-example optimum of classical sparse coding for scalability to a language model's full activation dataset. The lineage extends past the empirical technique into pure theory: Qu et al. (2019) prove that sparse dictionary search can be reformulated as [[l4-norm-maximization]], and this paper treats that reformulation as a testable prediction about its own learned features, finding a modest but consistent positive correlation between how heavy-tailed a feature's activations are and how interpretable it scores (see [[kurtosis-skew-correlation-analysis]])."
+    },
+    {
+     "heading": "The math: recovering a sparse code from an overcomplete dictionary",
+     "body": "Formally, classical sparse coding seeks a dictionary $D$ and, for each data vector $x_i$, a sparse code $a_i$ minimizing a reconstruction-plus-sparsity objective: $$\\min_{D,\\, a_1,\\ldots,a_n} \\sum_i \\|x_i - D a_i\\|_2^2 + \\lambda \\|a_i\\|_1$$ typically subject to bounding each dictionary atom's norm so the penalty cannot be satisfied merely by shrinking the atoms instead of the codes. The paper's [[sparse-autoencoders]] loss (Equation 4) is the same objective in different clothing: reconstruction error plus an $\\ell_1$ penalty on the code, with the dictionary rows normalised for the same reason (sparse-autoencoders, §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 3). What changes between the classical and neural-network versions is only how the code (called $c$ in the paper) is produced: an optimization loop in classical sparse coding, a single forward pass through a ReLU encoder here."
+    }
+   ]
+  },
+  {
+   "id": "l4-norm-maximization",
+   "sections": [
+    {
+     "heading": "A pure theory result the paper leans on",
+     "body": "L4-norm maximization refers to a prior, purely theoretical result of Qu et al. (2019) showing that the combinatorial search for a sparse, overcomplete dictionary can be recast as a continuous optimization problem: searching, among unit-norm directions, for the one that maximizes the fourth moment of its projections onto the data. It belongs to the broader optimization-landscape literature on overcomplete representation learning rather than to interpretability research specifically, and this paper cites it only in an appendix, to interpret results it did not design the study to produce (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 15)."
+    },
+    {
+     "heading": "What it buys the paper: an explanation for two separate findings",
+     "body": "The paper leans on this reformulation to explain two otherwise-separate empirical observations. First, it predicts that dictionary features closer to the 'true' sparse-coding directions should show up as more heavy-tailed, so the paper checks whether its own trained [[dictionary-feature]]s bear this signature by correlating each feature's [[autointerpretability-score]] with its activation distribution's skew and kurtosis (see [[kurtosis-skew-correlation-analysis]]). Second, it supplies a reason why [[ica]], a technique built to explicitly maximize the non-Gaussianity of its found directions, consistently outperforms [[pca]] and the [[default-basis-baseline]] and [[random-directions-baseline]] as the strongest non-dictionary-learning baseline the paper tests."
+    },
+    {
+     "heading": "Why heavy tails, not variance, mark a sparse direction",
+     "body": "Where an $\\ell_2$-based method like PCA finds directions that maximize the variance of projected data, $\\ell_4$-norm maximization finds directions maximizing $\\mathbb{E}[(w \\cdot x)^4]$ over unit vectors $w$. A direction whose projected values are mostly near zero with occasional large spikes, exactly the profile produced by a sparse generative code where a feature is usually absent and occasionally strongly present, scores far higher on this criterion than a direction whose projected values are smoothly, normally distributed, because the fourth power disproportionately rewards rare extreme values over many small ones. This is the same intuition captured by kurtosis, $$\\mathrm{Kurt}(z) = \\frac{\\mathbb{E}[(z-\\mu)^4]}{\\sigma^4}$$ which is large exactly when a distribution is heavy-tailed and peaked rather than Gaussian; $\\ell_4$-norm maximization is, in effect, searching directly for high-kurtosis directions, which is why the paper treats measured kurtosis and skew as the observable trace of the property Qu et al. (2019) characterize in closed form."
+    }
+   ]
+  },
+  {
+   "id": "yun-dictionary-learning",
+   "sections": [
+    {
+     "heading": "Direct prior work, cited by name",
+     "body": "This concept names a specific prior paper, Yun, Chen, Olshausen & LeCun (2021), 'Transformer visualization via dictionary learning,' rather than a general technique. It applies sparse dictionary learning, the same Olshausen & Field (1997) framework this paper also inherits, to a transformer's token representations, treating each token's representation as a linear superposition of a shared set of learned 'transformer factors.' The paper cites it directly alongside [[sharkey-interim-report]] as the closest prior work to its own approach: 'Our approach is also similar to Yun et al. (2021), who apply sparse dictionary learning to all residual stream layers in a language model simultaneously' (sparse-autoencoders, §\"1 INTRODUCTION\", p. 2)."
+    },
+    {
+     "heading": "What differs: granularity and evaluation",
+     "body": "The key difference from this paper is granularity, not method: Yun et al. (2021) fit one shared dictionary across every layer of the [[residual-stream]] simultaneously, while this paper trains a separate [[sparse-autoencoders]] instance per layer, and separately again for the MLP sublayer in Appendix C.3, which is what makes it possible to track interpretability and dead-feature rates layer by layer rather than only at the level of the whole model. A larger gap is evaluative: Yun et al. never test whether their learned factors are more interpretable than baselines, more monosemantic than neurons, or more causally precise on a behavioral task, which is exactly the [[autointerpretability-score]], case-study, and [[ioi-task]]-patching apparatus this paper layers on top of essentially the same underlying idea."
+    },
+    {
+     "heading": "A continuity link in the dictionary-learning lineage",
+     "body": "Concretely, Yun et al. (2021) express each token's representation at every depth as a combination of a common set of 'transformer factors,' a visualization tool for how a token's meaning is built up through the network rather than an interpretability-scoring framework. Because Bruno Olshausen, co-author of the 1997 paper that originated sparse coding, is also a co-author here, the work functions as a continuity link running through this corpus's lineage: the same mathematical framework moves from modeling receptive fields in the visual cortex, to visualizing transformer representations as superposed factors, to this paper's per-layer, per-feature interpretability and causal analysis of language model activations. The paper's related-work section places both Yun et al. (2021) and the [[sharkey-interim-report]] together as the limited set of prior works that 'have learned dictionaries of sparsely-activating features in pretrained models' (sparse-autoencoders, §\"6.1 RELATED WORK\", p. 8)."
+    }
+   ]
+  },
+  {
+   "id": "sharkey-interim-report",
+   "sections": [
+    {
+     "heading": "The unpublished report that started this paper",
+     "body": "This concept names a specific piece of literature: Sharkey, Braun & Millidge's 2023 interim research report, posted to the AlignmentForum under the title 'Taking features out of superposition with sparse autoencoders,' the exact phrase this paper's own Section 2 heading borrows. It was the first work to propose training sparse autoencoders on language model activations specifically to address [[superposition]], predating this paper by several months and appearing outside the peer-reviewed venues typical of the wider machine-learning literature. The paper names it as its direct point of departure: 'Building on Sharkey et al. (2023), we train sparse autoencoders to learn these sets of directions' (sparse-autoencoders, §\"1 INTRODUCTION\", p. 2)."
+    },
+    {
+     "heading": "From toy demonstration to validated method",
+     "body": "The interim report's original contribution was narrower than this paper's: it demonstrated, in toy settings with known ground-truth features, that $\\ell_1$-penalized reconstruction could recover those features empirically, evidence this paper cites directly when justifying its own sparsity penalty (sparse-autoencoders, §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 3). It did not run the method on a real language model's activations at scale, nor test the results with [[autointerpretability-score]], causal [[activation-patching]] against a task like [[ioi-task]], or the hand-run monosemanticity case studies this paper contributes. Lee Sharkey, the interim report's lead author, is also a co-author of this paper, making the relationship one of direct continuation by the same researcher rather than independent replication."
+    },
+    {
+     "heading": "Two kinds of prior-work relationship in the same paper",
+     "body": "Both the related-work section and the introduction single this report out, alongside [[yun-dictionary-learning]], as the closest prior work, but the paper frames the interim report specifically as having 'motivated this work' (sparse-autoencoders, §\"6.1 RELATED WORK\", p. 8), a stronger relationship than the parallel citation to Yun et al. (2021), whose granularity and evaluation differ more substantially. The dictionary-learning lineage running through this corpus therefore converges two distinct kinds of prior-work relationship in this one paper: a classical mathematical framework, [[sparse-dictionary-learning]], inherited from outside interpretability entirely, and an unpublished but methodologically identical alignment-community report scaled up by its own original author."
+    }
+   ]
+  },
+  {
+   "id": "residual-stream",
+   "sections": [
+    {
+     "heading": "The running total every layer writes into",
+     "body": "In a transformer, the residual stream is the vector that carries information from one layer to the next by simple addition: each attention block and each MLP block reads the current stream, computes some update, and adds that update back in, rather than replacing the stream outright. A token's representation at layer $L$ is literally a running sum of every block's output from layer 1 through $L$, plus the original embedding — nothing already written is overwritten, only added to. That additive structure is what makes the stream a natural place to intervene: adding an external vector to it is the same operation every layer already performs. It is also why the stream's norm tends to grow deeper into the network, accumulating rather than resetting, a pattern the paper cites directly (Heimersheim and Turner, 2023) (contrastive-activation-addition, §\"Vector normalization choices\", p. 10)."
+    },
+    {
+     "heading": "Whether this running sum has a privileged basis",
+     "body": "Because the residual stream accumulates layer outputs by simple addition rather than through an elementwise nonlinearity, no single coordinate system is architecturally singled out the way the standard basis is after a ReLU inside an MLP: rotate the stream's coordinates and a linear sum rotates along with them, unaffected. The 2023 sparse-autoencoder paper investigating this stream states the default expectation directly: the residual stream 'can usually be treated as a vector space with no privileged basis' (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15), which licenses treating any individual coordinate, the paper's default-basis baseline, as no more principled a unit of analysis than a random direction. The one documented exception is a cluster of [[outlier-dimensions]], coordinates transformers write disproportionately large values to, attributed to the Adam optimiser's finite-precision gradient storage; even so, the paper finds these coordinates no more interpretable than chance, so the exception restores information-bearing status to a few coordinates without restoring legibility."
+    },
+    {
+     "heading": "Where CAA writes, and why that has consequences",
+     "body": "[[contrastive-activation-addition]] commits to injecting its steering vector into the residual stream at one chosen layer, rather than into attention activations at every layer, as [[in-context-vectors]] does, or a sparse set of attention heads, as [[inference-time-intervention]] does. Because the stream's norm grows with depth, and [[steering-vector-normalization]] standardizes vector magnitude across behaviors but deliberately not across layers, a fixed [[steering-multiplier]] represents a different relative perturbation depending on which layer it is added at (contrastive-activation-addition, §\"Vector normalization choices\", p. 10) — the residual stream is not a neutral injection site, its own scale shapes how the paper's layer-optimality results should be read."
+    },
+    {
+     "heading": "Uninformative, then abruptly not",
+     "body": "The stream is not uniformly informative about behavior across depth. [[activation-pca-visualization]] shows [[behavioral-clustering]] is largely absent for roughly the first third of the model's layers, then appears abruptly within a single layer: at layer 9 of Llama 2 7B Chat there is no separation on the refusal dataset, while at layer 10 there is a clean split (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). [[steering-outside-residual-stream]] is the paper's own proposed alternative to injecting into this accumulating sum — intervening at a sub-component's output, such as after the MLP but before it merges into the stream, to localize effects the summed stream currently blurs together."
+    },
+    {
+     "heading": "An object to decompose, not just an object to inject into",
+     "body": "Where [[contrastive-activation-addition]] and [[persona-vectors]] both treat the residual stream chiefly as a site to write a direction into, the 2023 sparse-autoencoder paper (Cunningham et al.) treats it chiefly as an object to read: it trains sparse autoencoders mainly on residual-stream activations from Pythia-70M and Pythia-410M (sparse-autoencoders, §\"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING\", p. 2), aiming to recover the overcomplete set of features [[superposition]] hypothesises the stream packs into its comparatively few dimensions. This shift in role also surfaces an opposite depth pattern from CAA's: the sparse-autoencoder paper's interpretability advantage over baselines is largest in early layers and 'comparable to ICA' by layer 4, showing 'minimal improvement in the final layer' (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5), while CAA finds behaviorally relevant structure appears late, with clustering by behavior largely absent for roughly the first third of the network's depth before appearing abruptly around layer 9-10 of Llama 2 7B Chat. A dictionary's best claim to monosemanticity and a behavior's best claim to linear separability therefore sit at opposite ends of the same stack of layers, a contrast only visible because this later paper supplied the second curve."
+    }
+   ]
+  }
+ ]
+}

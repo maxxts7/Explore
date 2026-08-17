@@ -1,0 +1,278 @@
+{
+ "newSupertheme": {
+  "id": "decomposing-the-model-into-features",
+  "name": "Decomposing the model into features",
+  "members": [
+   "unmixing-activations-with-sparsity",
+   "superposition-vs-the-neuron-basis",
+   "automated-interpretability-scoring",
+   "decomposition-baselines",
+   "causal-proof-by-patching",
+   "single-features-under-the-microscope",
+   "open-models-as-interpretability-testbeds",
+   "dictionary-learning-lineage",
+   "enumerating-features-for-safety",
+   "reading-the-residual-stream",
+   "steering-as-audit"
+  ],
+  "narrative": "This supertheme reads eleven themes from Cunningham et al. (2023) as one program moving from diagnosis to instrument to measurement to causal proof to safety ambition, sharing internals-reading machinery with the corpus's steering papers. Superposition and the case against the neuron basis supplies the diagnosis: models pack more features than they have dimensions, so neurons and default-basis coordinates are the wrong unit of analysis. Unmixing activations with a sparsity penalty supplies the instrument, a small autoencoder trading sparsity against reconstruction; the dictionary-learning lineage traces its descent from Yun et al. and Sharkey et al.; open models as interpretability testbeds names the small, open Pythia/Pile/OpenWebText infrastructure it is tested on. Automated interpretability scoring and the ladder of decomposition baselines supply the measurement, judging features against PCA, ICA, random directions, and the default basis. Causal proof by patching, and its companion single features under the microscope, supply the causal proof, editing features and reading two case-study features from both ends. Feature enumeration as a safety audit supplies the ambition: the resulting catalogue as a route to model audit. Reading the residual stream and steering as audit, the last two members, share that internals-reading machinery, also belonging to the steering-and-model-internals supertheme."
+ },
+ "memberThemes": [
+  {
+   "id": "unmixing-activations-with-sparsity",
+   "name": "Unmixing activations with a sparsity penalty",
+   "members": [
+    "sparse-autoencoders",
+    "dictionary-feature",
+    "sparsity-loss",
+    "reconstruction-loss",
+    "expansion-factor-r",
+    "tied-weights-sae",
+    "dead-features",
+    "sparsity-reconstruction-tradeoff",
+    "mlp-sae-training",
+    "reconstruction-perplexity-metric",
+    "sparse-dictionary-learning"
+   ],
+   "narrative": "Cunningham et al. 2023's method is a single small autoencoder, a sparse autoencoder, and nearly every design choice in it is a position on one tradeoff. Each row of its weight matrix is a dictionary feature, and training minimizes a reconstruction loss (squared error between input and output) plus a sparsity loss, an L1 penalty on hidden-layer coefficients weighted by a coefficient alpha. The dictionary expansion factor (R) sets how overcomplete the hidden layer is; tied encoder/decoder weights halve the parameter count by forcing the two matrices to share values, though this hurts performance enough to motivate an untied variant for SAE training on the MLP sublayer, a setting where dead features, dictionary rows that never fire, become common. Reconstruction never reaches zero: the reconstruction-substitution perplexity metric shows swapping in Pythia-70M's reconstructed layer-2 activations raises Pile perplexity from 25 to 40. Sweeping alpha traces a smooth sparsity-reconstruction tradeoff with no knee, weak evidence against there being one correct decomposition, only points along a curve. The whole apparatus scales up sparse dictionary learning, the sparse-coding framework borrowed from vision and neuroscience."
+  },
+  {
+   "id": "superposition-vs-the-neuron-basis",
+   "name": "Superposition and the case against the neuron basis",
+   "members": [
+    "polysemanticity",
+    "superposition",
+    "monosemanticity",
+    "privileged-basis",
+    "outlier-dimensions",
+    "residual-stream",
+    "default-basis-baseline",
+    "mechanistic-interpretability"
+   ],
+   "narrative": "This theme's claim is that neurons, and basis coordinates generally, are the wrong unit of analysis for reading a language model, and the paper demonstrates this twice over. The premise is theoretical: polysemanticity, individual units activating for unrelated concepts, is hypothesized to arise from superposition, models packing more features than they have dimensions into an overcomplete set of non-orthogonal directions. The residual stream, the transformer's running sum of layer outputs and the paper's main object of study, is not expected to have a privileged basis, no coordinate system more inherently meaningful than any rotation of it, though the paper documents outlier dimensions, specific coordinates carrying disproportionately large values, as a partial exception. The empirical half of the same fact follows: the default basis baseline, scoring individual neurons or residual-stream coordinates directly, is shown polysemantic exactly where the corresponding learned feature is monosemantic, activating for one coherent concept. Together these findings back mechanistic interpretability's premise that meaningful analysis units must be discovered, not assumed to be neurons or coordinates."
+  },
+  {
+   "id": "automated-interpretability-scoring",
+   "name": "Interpretability itself becomes a benchmark",
+   "members": [
+    "autointerpretability-score",
+    "top-random-scoring",
+    "gpt-4",
+    "gpt-3-5",
+    "kurtosis-skew-correlation-analysis",
+    "top-k-baseline-control"
+   ],
+   "narrative": "The paper's headline comparison rests on language models grading language-model features. In the autointerpretability score, adapted from Bills et al. 2023, GPT-4 is shown text fragments where a dictionary feature activates and writes a natural-language explanation; GPT-3.5 then simulates the feature by predicting its per-token activations from that explanation alone, and the correlation between predicted and true activations is the score (GPT-3.5 stands in for GPT-4 as simulator only because its API exposed the logprobs the protocol needs). Three controls keep that score honest. Top-and-random vs. random-only interpretability scoring names the choice of which text fragments to grade on: mixing highly-activating fragments with random ones is the default, rerun with random fragments alone in Appendix C.2 to confirm the ranking holds. The top-K-active baseline control restricts PCA and ICA to the same number of simultaneously active directions as the SAE and finds this explains only a small fraction of its advantage. And the interpretability-vs-kurtosis/skew correlation analysis finds interpretability correlates weakly, 0.19 and 0.24, with a feature's skew and kurtosis, explaining why ICA, which directly maximizes non-Gaussianity, is the strongest non-SAE baseline."
+  },
+  {
+   "id": "decomposition-baselines",
+   "name": "The ladder of decomposition baselines",
+   "members": [
+    "pca",
+    "ica",
+    "random-directions-baseline",
+    "default-basis-baseline",
+    "top-k-baseline-control",
+    "sparse-autoencoders"
+   ],
+   "narrative": "Sparse autoencoders are only shown to win by being run against a ladder of alternatives, each embodying its own hypothesis about where a model's features live. The default basis baseline takes the hypothesis literally: features are neurons, or for the residual stream, individual coordinates. The random directions baseline tests the null hypothesis that features are nowhere in particular, one direction as good as any other. Principal Component Analysis finds directions of maximal variance, and Independent Component Analysis finds statistically independent, maximally non-Gaussian directions, the strongest of the four baselines, and the one the paper's kurtosis and skew findings help explain. Every comparison in the paper, autointerpretability score and IOI-patching precision alike, runs the learned dictionary against this same ladder, and the top-K-active baseline control tightens it further by capping PCA and ICA to the SAE's own average number of active directions per datapoint, checking that the advantage survives even when the baselines are handicapped to match its sparsity."
+  },
+  {
+   "id": "causal-proof-by-patching",
+   "name": "Features proved by intervention",
+   "members": [
+    "activation-patching",
+    "dictionary-feature-patching",
+    "less-than-rank-one-ablation",
+    "ioi-task",
+    "automated-circuit-discovery",
+    "feature-circuit-detection",
+    "weight-based-connection-attempt",
+    "closing-parenthesis-feature"
+   ],
+   "narrative": "This theme's claim is that an interpretable-looking feature earns trust only once editing it is shown to change the model's behavior predictably. Activation patching, a causal mediation technique, supplies the method: the dictionary-feature patching procedure caches a feature's encoded activation on a counterfactual sentence and adds the difference back into the base sentence's residual stream, measuring the resulting KL divergence from a target output. On the Indirect Object Identification (IOI) task, naming the correct recipient in a sentence, this reaches a given KL divergence with fewer patched features and smaller edit magnitude than patching PCA components, using Automated Circuit Discovery's ordering algorithm to rank features by causal contribution. At finer grain, less-than-rank-one ablation lowers an activation only as far as one feature's own activation threshold, precise enough to isolate its causal effect on next-token logits. Automatic feature circuit detection extends the same logic across layers, ablating upstream features to trace what causes the closing-parenthesis dictionary feature to fire; the paper also records a weight-based feature connection attempt at the same task that found no meaningful connections, a negative result kept alongside the method that worked."
+  },
+  {
+   "id": "single-features-under-the-microscope",
+   "name": "Single features under the microscope",
+   "members": [
+    "apostrophe-feature",
+    "closing-parenthesis-feature",
+    "dictionary-feature",
+    "monosemanticity",
+    "feature-circuit-detection"
+   ],
+   "narrative": "Cunningham et al. (2023) cash out the sparse autoencoder's promise not in aggregate scores but in a handful of individual dictionary features, examined from both ends. Reading from the input side, the apostrophe feature (feature 556) is shown to fire almost exclusively on apostrophe tokens, distinguishing it from the polysemantic residual-stream dimension that shares its top activations. Reading from the output side, ablating that feature selectively suppresses the logit for the following \"s\" token, the effect a monosemantic apostrophe detector should have on possessives and contractions like \"let's\". The closing-parenthesis feature, a layer-5 unit whose unembedding directly predicts closing-parenthesis tokens, extends the method into automatic feature-circuit detection, which ablates each upstream feature and ranks it by how much the ablation lowers the target's activation, tracing which earlier features -- detecting dates, acronyms, and other parenthesis-preceding phrases -- cause it to fire. Together the two case-study features make monosemanticity a demonstrated property, not just a scored one."
+  },
+  {
+   "id": "open-models-as-interpretability-testbeds",
+   "name": "Small open models as interpretability testbeds",
+   "members": [
+    "pythia",
+    "the-pile",
+    "openwebtext"
+   ],
+   "narrative": "Cunningham et al. (2023) train and evaluate their sparse autoencoders on modest, fully open infrastructure: Pythia-70M and Pythia-410M, an open, reproducible model suite with residual-stream dimensions of 512 and 1024 respectively, trained on the Pile, the public webtext corpus also used to measure reconstruction-substitution perplexity. Autointerpretability text fragments are drawn from OpenWebText, another public corpus, sampled from its first 50,000 lines. The choice keeps every stage of the pipeline small and open: a full training run completes in under an hour on a single A40 GPU, cheap enough that the paper can afford to sweep dictionary-size ratios and sparsity coefficients rather than report a single configuration. The scale is explicitly a proof of concept rather than a claim about frontier models, the same honesty about scope that the 2017 Deep RL from Human Preferences paper's own small testbed environments show for a different method."
+  },
+  {
+   "id": "dictionary-learning-lineage",
+   "name": "The dictionary-learning lineage",
+   "members": [
+    "sparse-dictionary-learning",
+    "l4-norm-maximization",
+    "yun-dictionary-learning",
+    "sharkey-interim-report"
+   ],
+   "narrative": "Cunningham et al. (2023) present their method as a scaling-up of existing ideas, not a new invention. Sparse dictionary learning itself is decades old, developed by Olshausen and Field (1997) and Lee et al. (2006) to model sparse coding in the visual cortex, expressing data as sparse linear combinations of an overcomplete learned basis. Two direct predecessors bring it to language models: Yun et al. (2021) apply sparse dictionary learning to residual-stream activations across all layers of a transformer simultaneously, and Sharkey et al.'s (2023) unpublished interim report first proposes training sparse autoencoders on language-model activations specifically to address superposition, credited as this paper's direct motivation. A separate theoretical result, Qu et al.'s (2019) reformulation of sparse overcomplete dictionary search as a search for directions maximizing the L4 norm, is invoked to explain why interpretability correlates with the heavy-tailedness of feature activations and why ICA, which optimizes non-Gaussianity directly, is the strongest non-dictionary-learning baseline."
+  },
+  {
+   "id": "enumerating-features-for-safety",
+   "name": "Feature enumeration as a safety audit",
+   "members": [
+    "enumerative-safety",
+    "mechanistic-interpretability",
+    "sparse-autoencoders",
+    "feature-circuit-detection"
+   ],
+   "narrative": "Cunningham et al. (2023) close by naming the ambition their method serves: enumerative safety, Elhage et al.'s (2022) proposal that a complete, human-understandable list of a model's features could guarantee it will not perform dangerous behaviors such as deception. Sparse autoencoders are offered as the tool for building that list -- a scalable, unsupervised way of enumerating features rather than guessing at them -- and feature-circuit-detection as a way of tracing how listed features causally depend on each other across layers, a step toward the paper's stated goal of an end-to-end account of how a model computes its outputs. Read against the rest of the corpus, this reframes the oversight problem: earlier papers audit a model by judging what it outputs -- reward modeling, red-teaming, revised responses -- while enumerative safety proposes auditing it by listing and inspecting its internal parts instead, with mechanistic interpretability named as the research agenda this project frames itself as advancing."
+  },
+  {
+   "id": "reading-the-residual-stream",
+   "name": "Steering doubles as interpretability",
+   "members": [
+    "activation-pca-visualization",
+    "behavioral-clustering",
+    "letter-clustering",
+    "pca",
+    "token-level-cosine-similarity-analysis",
+    "inter-layer-similarity-and-transfer",
+    "linear-representation-hypothesis",
+    "linear-representations-of-sentiment",
+    "residual-stream",
+    "sae-decomposition-of-persona-vectors",
+    "sparse-autoencoders",
+    "privileged-basis",
+    "outlier-dimensions"
+   ],
+   "narrative": "Three papers meet in this theme, each treating the residual stream -- the transformer's running sum of layer outputs -- as an object to be read, not just a channel for computation. CAA (2023) contributes a battery of techniques that double as diagnostics: PCA visualization of contrastive activations checks whether a behavior's activations separate at all, revealing behavioral clustering, a sudden separation by target behavior emerging around one-third of the way through the network's layers, distinct from the trivial letter clustering produced by prompt format alone. Token-level cosine similarity analysis and inter-layer similarity and transfer read steering vectors as feature detectors and track how much of their meaning survives across depth, against the backdrop of the linear representation hypothesis and prior evidence that sentiment is linearly represented. Persona Vectors (2025) decomposes a direction rather than only reading it whole: SAE decomposition of persona vectors ranks a sparse autoencoder's decoder directions by cosine similarity to a persona vector, pulling out interpretable sub-features for traits like evil, sycophancy, and hallucination, each checked causally by steering with it. Sparse autoencoders are no longer background for that technique alone: Cunningham et al. (2023) is now itself a corpus paper, contributing its own study of the residual stream and the fine print on its basis -- not usually expected to be privileged, but partially so because of outlier dimensions, the disproportionately large residual-stream coordinates the paper finds sitting under its own apostrophe-feature case study."
+  },
+  {
+   "id": "steering-as-audit",
+   "name": "Elicitation as audit: steering for red-teaming",
+   "members": [
+    "caa-red-teaming-application",
+    "jailbreaks",
+    "red-teaming",
+    "enumerative-safety"
+   ],
+   "narrative": "Validating that finetuning and RLHF have made a model robustly safe is difficult, because unwanted behaviors that survive training can still be hard to find. The theme now holds two distinct routes to that audit. CAA's route is behavioral elicitation: jailbreaks, the adversarial or unusual inputs users find by manual search to make a model output content its safety training was meant to prevent, motivate red teaming, the broader practice -- elsewhere in the corpus a crowdworker-driven activity -- of probing a model for unwanted behavior. CAA proposes turning steering itself into that probe: deliberately push a model's internal activations toward an unwanted behavior to see how easily it can be triggered, on the premise that a behavior easily elicited by a small internal perturbation is plausibly also reachable by some input in deployment, so failure to elicit it becomes a stronger guarantee than failure to find it by sampling outputs. Cunningham et al.'s (2023) sparse-autoencoder paper proposes a second, structural route: enumerative safety, the aspiration that a complete, human-understandable list of a model's features could itself guarantee it will not perform dangerous behaviors such as deception -- audit not by eliciting behavior but by enumerating and inspecting the parts that could produce it."
+  }
+ ],
+ "existingSuperedgesTouchingSharedThemes": [
+  {
+   "source": "reading-the-residual-stream",
+   "target": "behavior-as-a-direction",
+   "type": "explains-the-one-hyperparameter-in"
+  },
+  {
+   "source": "what-rlhf-leaves-behind",
+   "target": "reading-the-residual-stream",
+   "type": "repurposes-the-instruments-of"
+  },
+  {
+   "source": "steering-as-audit",
+   "target": "behavior-as-a-direction",
+   "type": "inverts-the-control-mechanism-of"
+  },
+  {
+   "source": "reading-the-residual-stream",
+   "target": "projection-as-early-warning",
+   "type": "becomes-an-operational-monitor-in"
+  }
+ ],
+ "formatExamples": [
+  {
+   "id": "exploration-bounding-reaches-same-envelope-as-impact-regularization",
+   "type": "reaches-the-same-safety-envelope-by-a-different-route-than",
+   "source": "constraining-exploration-to-safe-regions",
+   "target": "impact-regularization-and-baselines",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "bounding-impact-and-exploration",
+   "prose": "Bounded exploration and impact regularization are built for different failure modes, exploration risk versus side effects, yet both cash out as the same control-theoretic move borrowed from prior work: bound the worst case rather than model consequences exactly. Impact regularizers measure distance from a baseline policy built via reachability analysis and robust policy improvement (concrete-problems, §\"Define an Impact Regularizer:\", p. 5); bounded exploration checks whether a candidate action would exit a safe region, a check related to H-infinity control's minimization of worst-case response to bounded disturbance (concrete-problems, §\"Bounded Exploration:\", p. 15). Neither theme's own account states the parallel directly: impact regularization treats reachability analysis as a specification aid for penalizing change already made, while bounded exploration treats H-infinity control as a fence against action not yet taken. The convergence is structural, not causal, two independently motivated bounding strategies reaching the same robust-control guarantee from opposite temporal directions."
+  },
+  {
+   "id": "cirl-interactive-counterpart-to-demonstration-bounded-exploration",
+   "type": "is-the-interactive-counterpart-to",
+   "source": "side-effects-as-relationship",
+   "target": "constraining-exploration-to-safe-regions",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "bounding-impact-and-exploration",
+   "prose": "Cooperative Inverse Reinforcement Learning, this theme's central mechanism for treating safety as a relationship rather than a penalty term, is explicitly named the interactive counterpart of use-demonstrations, the mechanism the other theme relies on to learn an offline baseline policy and bound further exploration around it (concrete-problems, §\"Multi-Agent Approaches:\", p. 6; §\"Use Demonstrations:\", p. 15). Both avoid hand-specifying a reward by grounding the agent's behavior in a human's goals rather than an objective function. But CIRL keeps the human in the loop continuously, the agent queries and updates its model of the human's goal throughout the interaction, while demonstration-bounded exploration front-loads all human involvement into a fixed set of trajectories collected once, before exploration begins, and then only mechanically checks new actions against that static reference. The tradeoff neither narrative names on its own: continuous interactive correction versus one-time specification with cheap enforcement afterward."
+  },
+  {
+   "id": "cirl-relational-half-left-behind-by-sft-genealogy",
+   "type": "passes-on-only-its-demonstration-half-to",
+   "source": "side-effects-as-relationship",
+   "target": "demonstrations-not-specification",
+   "hindsight": true,
+   "groundedIn": "instructgpt",
+   "supertheme": "bounding-impact-and-exploration",
+   "prose": "CIRL belongs to both themes because it does two things at once: it is a demonstration-adjacent technique for avoiding hand-specified rewards, and it is a relational framing in which safety depends on modeling another agent's goals and interests, a framing this theme also applies to the shutdown problem and to the reward autoencoder's legibility proposal. InstructGPT's supervised fine-tuning stage, the concrete descendant the other theme traces from demonstration-learning, inherits only the first half. It clones behavior from roughly 13,000 static human demonstrations offline (instructgpt, §\"3.1 High-level methodology\", p. 6); it does not query a human interactively, infer a latent goal, or carry any analogue of the shutdown problem or reward-autoencoder legibility that CIRL's relational half was meant to address. The genealogy from demonstration-learning to SFT is real but partial: the collaborative, human-modeling character this theme built around CIRL has no realized counterpart in the pipeline the other theme documents."
+  }
+ ],
+ "otherSuperthemesForContext": [
+  {
+   "id": "scalable-oversight-to-rlhf-pipeline",
+   "name": "Scalable oversight made real: from 2016 proposals to InstructGPT's RLHF pipeline",
+   "members": [
+    "demonstrations-not-specification",
+    "semi-supervised-reward-learning-proposals",
+    "distant-supervision-and-hierarchical-decomposition",
+    "learning-rewards-from-comparisons",
+    "keeping-reward-models-on-distribution",
+    "economics-of-human-feedback",
+    "scalable-oversight-lineage",
+    "rlhf-three-step-pipeline",
+    "ppo-optimization-mechanics",
+    "human-feedback-data-infrastructure",
+    "rlhf-failure-modes",
+    "steering-vs-training-levers",
+    "what-rlhf-leaves-behind",
+    "finetuning-moves-the-persona"
+   ]
+  },
+  {
+   "id": "steering-and-model-internals",
+   "name": "Steering the model from inside: activation engineering and what it reveals",
+   "members": [
+    "behavior-as-a-direction",
+    "activation-engineering-family",
+    "alignment-behaviors-made-dials",
+    "behavioral-contrast-datasets",
+    "steering-vs-training-levers",
+    "judging-steered-outputs",
+    "reading-the-residual-stream",
+    "what-rlhf-leaves-behind",
+    "steering-as-audit",
+    "steering-becomes-a-training-tool",
+    "projection-as-early-warning"
+   ]
+  },
+  {
+   "id": "managing-the-persona-lifecycle",
+   "name": "The persona under management: deployment, training, and the data before it",
+   "members": [
+    "trait-to-vector-pipeline",
+    "the-assistant-persona-in-parts",
+    "projection-as-early-warning",
+    "finetuning-moves-the-persona",
+    "steering-becomes-a-training-tool",
+    "screening-data-before-training",
+    "open-subjects-frontier-instruments",
+    "engineered-misbehavior-datasets"
+   ]
+  }
+ ]
+}

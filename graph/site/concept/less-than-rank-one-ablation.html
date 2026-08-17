@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Less-than-rank-one ablation — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Less-than-rank-one ablation</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A specific ablation technique that lowers a residual-stream activation&#x27;s component along a feature&#x27;s direction only up to the point where that feature is no longer active, rather than a full-magnitude subtraction. Used to measure a dictionary feature&#x27;s causal effect on next-token logits in the apostrophe-feature case study.</p>
+<div class="page-intro"><p>Removing a feature from a network's activations sounds like a simple subtraction, but a full-strength ablation edits further than it needs to, which weakens any claim that the resulting change in output is really about that one feature. Less-than-rank-one ablation is a more careful version: instead of zeroing a feature's contribution outright, it walks the activation back only as far as the exact point where the feature stops firing, and no further.</p>
+<p>The page covers the geometric reasoning behind that stopping point, the case study — a feature tied to apostrophes — where this method shows a clean, predictable effect on what the model predicts next, and how the same geometric distinction shows up again in an unrelated fairness check elsewhere in the paper.</p></div>
+<section class="prose-section">
+<h2>The causal-proof theme&#x27;s second surgical tool</h2>
+<p>Where <a href="../concept/dictionary-feature-patching.html">dictionary-feature patching</a> proves causal importance by transplanting activations from a counterfactual run, less-than-rank-one ablation proves it by subtraction within a single run: it is the technique behind the <a href="../concept/apostrophe-feature.html">apostrophe feature</a>'s output analysis, the piece of evidence that a monosemantic-looking feature also has an intuitive, predictable causal effect on what the model predicts next.</p>
+</section>
+<section class="prose-section">
+<h2>Lowering an activation to its own boundary, not past it</h2>
+<p>The intuition is a stopping rule rather than a fixed subtraction. A standard ablation of a feature would zero out its entire encoded coefficient; less-than-rank-one ablation instead lowers the residual-stream activation along the feature's direction only as far as the point where the feature stops being active, and no further (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.2 Output: dictionary features have intuitive effects on the logits", p. 7</a>). The name reflects the geometry: because a <a href="../concept/dictionary-feature.html">dictionary feature</a> fires only after $c = \mathrm{ReLU}(Mx+b)$ clears zero, feature $i$ is active only when $(Mx)_i &gt; -b_i$, and the learned bias $b_i$ is in practice always negative -- so a feature's "on" region is a half-space bounded by a hyperplane that does not pass through the origin, unlike a <a href="../concept/pca.html">PCA</a> or <a href="../concept/ica.html">ICA</a> direction's full-space split. Removing a feature therefore means walking back to that boundary, which is strictly less editing than subtracting a full-magnitude direction would be.</p>
+</section>
+<section class="prose-section">
+<h2>What it found on the apostrophe feature</h2>
+<p>Applied to the <a href="../concept/apostrophe-feature.html">apostrophe feature</a> (feature 556), less-than-rank-one ablation shows that removing the feature mainly reduces the logit for the following "s" token, matching the story that this feature detects apostrophes and is used to predict the "s" that follows in possessives and contractions such as "let's" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.2 Output: dictionary features have intuitive effects on the logits", p. 7</a>). Out of roughly 12,000 logits negatively affected in total, this single downstream token shows the largest drop -- evidence that the feature's causal role lines up with its input-side interpretation rather than diverging from it.</p>
+</section>
+<section class="prose-section">
+<h2>A finer edit than patching, for a reason grounded in fairness</h2>
+<p>Compared to <a href="../concept/dictionary-feature-patching.html">Dictionary-feature patching procedure</a>, which pushes a feature's activation the full distance from a base value to a counterfactual target, less-than-rank-one ablation only ever edits down to a feature's own activation boundary. That asymmetry is not incidental: the paper's fairness check in Appendix G, comparing dictionary features against fixed-K-active variants of PCA and ICA, is built around exactly this observation -- that a sparse-coding feature is active on less than a full direction while baseline directions like PCA split the whole space through the origin, a consequence of the bias term applied before the ReLU always being negative in practice (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=18" target="_blank" rel="noopener">§"G Top K comparisons", p. 18</a>). Ablating exactly to a feature's own boundary keeps the intervention consistent with that same geometric distinction.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Less-than-rank-one ablation</strong> — <a href="../edge/less-than-rank-one-ablation-edits-with-finer-granularity-than-dictionary-feature-patching.html">edits with finer granularity than</a> → Dictionary-feature patching procedure</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/causal-proof-by-patching.html">Features proved by intervention</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5.2 OUTPUT: DICTIONARY FEATURES HAVE INTUITIVE EFFECTS ON THE LOGITS&rdquo;, p. 7</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

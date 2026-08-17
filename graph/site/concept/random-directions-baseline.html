@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Random directions baseline — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Random directions baseline</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">Randomly sampled directions in activation space, used as a lower-bound baseline for autointerpretability comparisons alongside the default basis, PCA, and ICA.</p>
+<div class="page-intro"><p>Before you can say a learned feature is genuinely interpretable, you need some idea of what a completely meaningless direction in the same space would score — otherwise a modest-looking number has no way to be judged good or bad. Random directions supply that floor: vectors chosen with no reference to any data at all, projected onto a model's activations purely to see what an uninformed guess looks like next to the real thing.</p>
+<p>This page covers how these directions are generated, the small accommodation made so they aren't unfairly penalized for a mismatch in how activations are typically shaped, and why the floor they set still comes out low even with that accommodation in their favor.</p></div>
+<section class="prose-section">
+<h2>The floor the other results are measured against</h2>
+<p>Of the four baselines this paper compares against its learned dictionaries, randomly sampled directions in activation space are the deliberately unstructured one: no data, no optimization, nothing about the model informs their choice. That is exactly the point -- they exist to define the bottom of the <a href="../concept/autointerpretability-score.html">Autointerpretability score</a>'s usable range, so that <a href="../concept/pca.html">Principal Component Analysis (PCA)</a>, <a href="../concept/ica.html">Independent Component Analysis (ICA)</a>, and the <a href="../concept/default-basis-baseline.html">Default (neuron/residual-stream) basis baseline</a> can be judged not just against the <a href="../concept/sparse-autoencoders.html">sparse dictionary</a> but against a baseline with no claim to meaning anything at all (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES", p. 3</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What &#x27;random&#x27; means here</h2>
+<p>A random direction is simply a vector drawn without reference to any activation data -- intuitively, a point sampled uniformly on the unit hypersphere in the model's activation space, $u \sim \mathrm{Unif}(\mathbb{S}^{d-1})$, with no preference for any particular orientation. Projecting a language model's activations onto such a direction and reading off the result is the null hypothesis for feature-finding: whatever pattern of activation shows up is, by construction, not the product of the direction having been chosen for anything, so any interpretability it exhibits has to come from the activations themselves rather than the projection.</p>
+</section>
+<section class="prose-section">
+<h2>Given the benefit of the doubt, and still losing</h2>
+<p>The comparison is not run against random directions in the rawest possible form: because the <a href="../concept/autointerpretability-score.html">Autointerpretability score</a> and the dictionary features it evaluates both assume nonnegative, ReLU-shaped activations, the paper applies the same accommodation to this baseline that it gives the <a href="../concept/default-basis-baseline.html">Default (neuron/residual-stream) basis baseline</a> -- "for the random directions and for the default basis in the residual stream, we replace negative activations with zeros so that all feature activations are nonnegative" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES", p. 3</a>). Random directions are therefore scored on a version of themselves already reshaped to look more like a genuine feature, which if anything should inflate their apparent interpretability. That the floor still sits low despite this handicap in its favor is what gives the score room to distinguish better and worse decompositions at all.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Random directions baseline</strong> — <a href="../edge/random-directions-baseline-anchors-autointerpretability-score.html">anchors</a> → Autointerpretability score</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/decomposition-baselines.html">The ladder of decomposition baselines</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES&rdquo;, p. 3</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+{
+ "pages": [
+  {
+   "id": "autointerpretability-score",
+   "sections": [
+    {
+     "heading": "A scalable stand-in for reading every feature by hand",
+     "body": "The paper's central problem is that its sparse autoencoders learn thousands of [[dictionary-feature|dictionary features]] per layer, far too many for a human to read through and judge one by one. The autointerpretability score, adopted from Bills et al. (2023), is the metric that makes evaluating all of them possible: a scalable, automated proxy for whether a feature shows \"reduced polysemanticity,\" i.e. [[monosemanticity]] (sparse-autoencoders, §\"3.1 INTERPRETABILITY AT SCALE\", p. 3). It becomes this paper's primary yardstick throughout Section 3, used to argue that [[sparse-autoencoders|sparse dictionary features]] beat [[pca]], [[ica]], the [[default-basis-baseline]], and the [[random-directions-baseline]], and it is stress-tested repeatedly in the appendices against the worry that the comparison is somehow rigged in the dictionary's favor."
+    },
+    {
+     "heading": "Two models, one explanation, one blind prediction",
+     "body": "The score comes from a five-step pipeline (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 11): a feature's activation is measured across 50,000 OpenWebText fragments, rescaled to integers 0-10, and the 20 most-activating fragments are found. [[gpt-4|GPT-4]] is shown only 5 of these fragments together with their per-token activations and writes a single free-text explanation of what the feature detects. [[gpt-3-5|GPT-3.5]] then receives nothing but that explanation -- no fragments, no numbers -- and must predict per-token activations on a fresh batch of 5 highly-activating and 5 randomly sampled fragments, 640 tokens in total (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 12). The score is the correlation between GPT-3.5's predicted activations $\\hat{a}$ and the feature's true activations $a$ across those tokens:\n$$\\text{score} = \\mathrm{corr}(a, \\hat a) = \\frac{\\mathrm{cov}(a,\\hat a)}{\\sigma_a\\,\\sigma_{\\hat a}}.$$\nGPT-3.5 fills this simulator role only because, at the time, OpenAI's public API returned per-token logprobs for GPT-3.5 but not for GPT-4, which Bills et al. (2023)'s original protocol had used for simulation too (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 11)."
+    },
+    {
+     "heading": "What a high or low score is, and isn't, evidence of",
+     "body": "Sampling matters as much as scoring: because most features fire on only a sliver of the corpus, the default mixes top-activating fragments with random ones ([[top-random-scoring]]) rather than sampling purely at random, and Appendix C.4's finding that scores correlate with a feature's skew and kurtosis ([[kurtosis-skew-correlation-analysis]]) is offered as the reason heavy-tailed features are favored. The score also has known blind spots: it never looks at how a feature causally affects the model's output, so late-layer features -- often best explained by their effect on the logits rather than by input text -- score worse for reasons that may have little to do with quality (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5). It is also a different axis of fidelity entirely from the [[reconstruction-perplexity-metric]], which asks how much information a dictionary loses when it replaces a layer's activations outright rather than whether an individual feature is describable in words."
+    }
+   ]
+  },
+  {
+   "id": "top-random-scoring",
+   "sections": [
+    {
+     "heading": "A sampling choice baked into the score itself",
+     "body": "Top-and-random scoring is not a separate metric but a parameter of how the [[autointerpretability-score]] gathers its evidence: which text fragments [[gpt-3-5|GPT-3.5]] is shown when it tries to predict a feature's activations from [[gpt-4|GPT-4]]'s explanation. Bills et al. (2023) defined two options -- mix highly-activating fragments with randomly sampled ones (\"top-and-random\"), or use only random fragments (\"random-only\") -- and this paper adopts top-and-random as its default throughout Section 3, while treating random-only as a check it deliberately runs later to see how much the default choice is doing the work (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 12)."
+    },
+    {
+     "heading": "Why a purely random sample would tell you little",
+     "body": "The reasoning is about budget and rarity: each feature gets only 10 fragments of 64 tokens, 640 tokens total, to be scored on, and most dictionary features activate on a tiny fraction of any corpus. A sample drawn uniformly at random from a heavy-tailed activation distribution will, with overwhelming probability, contain almost no fragments where the feature actually fires, leaving GPT-3.5 nothing informative to correlate against except near-zero activations -- \"a random sample will likely not contain any highly activating examples for all but the most common features\" (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 12). Guaranteeing a few genuinely high-activation fragments in the mix trades a fully blind test for a usable signal, at the acknowledged cost of making the comparison more open-book than the stricter alternative."
+    },
+    {
+     "heading": "Rerun as its own robustness check",
+     "body": "Because top-and-random scoring could in principle make any decomposition look artificially interpretable by handing the simulator cherry-picked examples, Appendix C.2 reruns the entire baseline comparison using random-only scores instead and finds the paper's [[sparse-autoencoders|dictionary features]] still consistently outperform [[pca]], [[ica]], the [[default-basis-baseline]], and the [[random-directions-baseline]], especially in early layers (sparse-autoencoders, §\"C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING\", p. 13). This is a distinct check from the [[top-k-baseline-control]] run in Appendix G: one asks whether the fragments shown to the simulator are unfairly chosen, the other asks whether the baselines are unfairly allowed to be \"active\" too often; passing one says nothing about the other."
+    }
+   ]
+  },
+  {
+   "id": "gpt-3-5",
+   "sections": [
+    {
+     "heading": "A general-purpose model reused for a narrow, mechanical job",
+     "body": "GPT-3.5 appears in this paper not as an object of study but as one half of the [[autointerpretability-score]] pipeline: the \"simulator\" that turns a feature's free-text explanation back into a testable prediction. Its entire contribution is mechanical -- read an explanation written by [[gpt-4|GPT-4]], then guess per-token activation numbers -- rather than anything drawing on general conversational ability, which is what makes it usable as a scoring instrument rather than merely a chatbot."
+    },
+    {
+     "heading": "What GPT-3.5 is",
+     "body": "GPT-3.5 is OpenAI's model family that succeeded the original GPT-3 (Brown et al., 2020) and underlay the initial public release of ChatGPT in November 2022, later exposed via API as models such as gpt-3.5-turbo. Like GPT-3, it is an autoregressive transformer trained first on next-token prediction and then refined with instruction tuning and reinforcement learning from human feedback, giving it the ability to follow a described task -- such as \"predict this feature's activation on each token\" -- without task-specific training. The paper treats it as a fixed external tool, taking its capabilities and API behavior as given rather than studying its architecture or training."
+    },
+    {
+     "heading": "Chosen for its logprobs, not for being the better model",
+     "body": "GPT-3.5's role here is a direct substitution for a step Bills et al. (2023)'s original autointerpretability protocol assigned to GPT-4 itself. The swap is explained as a practical constraint rather than a methodological preference: \"the simulation protocol requires the model's logprobs for scoring, and OpenAI's public API for GPT-3.5 (but not GPT-4) supports returning logprobs\" (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 11). GPT-3.5 therefore never sees the curated top-activating fragments or the numeric activations [[gpt-4|GPT-4]] used to write its explanation -- it works from the explanation's prose alone, predicting per-token activations on 5 highly-activating and 5 randomly sampled fragments, which are then correlated against the feature's true activations to produce the score (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 12)."
+    }
+   ]
+  },
+  {
+   "id": "kurtosis-skew-correlation-analysis",
+   "sections": [
+    {
+     "heading": "Testing a theoretical link against real dictionary features",
+     "body": "This analysis, run in Appendix C.4, asks a question the rest of the paper only gestures at: is there a measurable statistical reason some [[dictionary-feature|dictionary features]] score higher on the [[autointerpretability-score]] than others? It correlates each feature's score against several moments of its activation distribution across all layers and dictionary sizes studied, and finds the answer is not \"features that fire more\" or \"features that fire more variably,\" but specifically features whose activations are heavy-tailed (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 15). The paper offers an intuition for why that pattern should hold at all: interference from other features sharing a direction under [[superposition]] should be roughly Gaussian by the central limit theorem, so a feature whose activations stand out from that Gaussian background is more likely to be a real, cleanly-recovered feature than noise (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 15)."
+    },
+    {
+     "heading": "Skew and kurtosis: measuring how a distribution deviates from Gaussian",
+     "body": "Skewness and kurtosis are the third and fourth standardized moments of a distribution, measuring respectively its asymmetry and the heaviness of its tails relative to a normal distribution:\n$$\\mathrm{skew}(X) = \\mathbb{E}\\!\\left[\\left(\\frac{X-\\mu}{\\sigma}\\right)^{3}\\right], \\qquad \\mathrm{kurt}(X) = \\mathbb{E}\\!\\left[\\left(\\frac{X-\\mu}{\\sigma}\\right)^{4}\\right].$$\nA Gaussian has skew 0 and kurtosis 3 (or excess kurtosis 0); large positive values mean a distribution with occasional extreme spikes rather than smoothly varying values, exactly the pattern a feature would show if it stayed near zero except for rare, sharp, meaningful activations. Table 2 reports correlations with score of -0.09 for mean and 0.02 for variance -- both negligible -- against 0.20 for skew and 0.15 for kurtosis (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 16); the main text quotes slightly different figures for the same relationship, 0.19 and 0.24 respectively (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 15)."
+    },
+    {
+     "heading": "What the correlation is used to explain",
+     "body": "The paper motivates the analysis by citing Qu et al. (2019)'s theoretical result that searching for sparse overcomplete dictionaries can be reformulated as searching for directions that maximize the $\\ell_4$ norm ([[l4-norm-maximization]]), a quantity closely tied to kurtosis; the correlation found here is offered as an empirical fingerprint of that theory holding up on real features from [[sparse-dictionary-learning]] (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 15). It also supplies the paper's explanation for why [[ica]] -- a technique that explicitly maximizes non-Gaussianity -- is by far the strongest of the non-dictionary-learning baselines: it is optimizing for the same heavy-tailedness this analysis shows real dictionary features share (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 16). And it retroactively justifies preferring [[top-random-scoring]] over the stricter random-only alternative: if features really are heavy-tailed, a small random sample should be expected to underestimate their true score."
+    }
+   ]
+  },
+  {
+   "id": "top-k-baseline-control",
+   "sections": [
+    {
+     "heading": "Checking whether the advantage is real or just geometric",
+     "body": "Appendix G exists to close off one specific objection to the paper's headline result that [[sparse-autoencoders|sparse dictionary features]] score better on the [[autointerpretability-score]] than [[pca]] or [[ica]]: maybe the comparison isn't even, because the baselines are structurally \"active\" on more of the data than a dictionary feature is, at every datapoint, regardless of content. If that were the whole story, the interpretability gap would say more about how activity is defined than about which decomposition finds better features (sparse-autoencoders, §\"G TOP K COMPARISONS\", p. 18)."
+    },
+    {
+     "heading": "Why the baselines start out less sparse by construction",
+     "body": "A PCA or ICA direction is \"active\" across an entire half-space -- everything on one side of a hyperplane through the origin -- since its projection is simply positive or negative. A dictionary feature's activation, by contrast, is $\\mathrm{ReLU}(w\\cdot x + b)$ with a bias $b$ that is in practice always negative, so it only fires past a hyperplane offset away from the origin, covering a strictly smaller region of activation space. That asymmetry alone would make dictionary features look sparser -- and, if sparsity itself correlates with score the way [[kurtosis-skew-correlation-analysis]] suggests, more interpretable -- even with no difference in the quality of what each direction detects (sparse-autoencoders, §\"G TOP K COMPARISONS\", p. 18)."
+    },
+    {
+     "heading": "Matching activity levels, and what survives",
+     "body": "The control forces PCA and [[ica|ICA]] into the same regime: only a fixed number $K$ of their directions are allowed to count as active per datapoint, with $K$ set to the average number of simultaneously active features in a sparse dictionary trained with expansion ratio $R=1$ and sparsity coefficient $\\alpha = 8.6\\times10^{-4}$ on the layer in question, matching PCA and ICA's per-datapoint activity to the SAE's own (sparse-autoencoders, §\"G TOP K COMPARISONS\", p. 18). Even with density equalized this way, the adjustment \"does not explain more than a small fraction of the improvement in scores,\" which the paper takes as evidence the sparse dictionary's advantage reflects genuinely better features rather than an artifact of how liberally the baselines get to fire. It answers a different worry than [[top-random-scoring]]'s random-only rerun does: that check targets which text fragments the simulator sees, this one targets how \"active\" a direction is defined in the first place, and clearing one says nothing about the other."
+    }
+   ]
+  },
+  {
+   "id": "ica",
+   "sections": [
+    {
+     "heading": "The one baseline that keeps pace",
+     "body": "Among the four baseline decompositions this paper measures against its [[sparse-autoencoders|sparse dictionaries]] -- the [[default-basis-baseline]], the [[random-directions-baseline]], [[pca]], and ICA -- Independent Component Analysis is consistently the strongest non-learned competitor on the [[autointerpretability-score]] (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3). It is old enough and general enough to need no introduction specific to this paper: ICA predates sparse autoencoders by decades and is used across signal processing and neuroscience for problems with no connection to language models."
+    },
+    {
+     "heading": "Finding sources that don't look Gaussian",
+     "body": "ICA is a classical blind source separation technique (formalized by Comon, 1994): given observed mixtures $x = As$ of unknown, statistically independent source signals $s$, it recovers an unmixing matrix $W \\approx A^{-1}$ without knowing $A$ or $s$ in advance -- the textbook example is separating individual voices from overlapping microphone recordings at a cocktail party. What makes this possible is a fact about Gaussian variables: linear mixtures of independent non-Gaussian sources become more Gaussian than the sources themselves, by a version of the central limit theorem, so ICA works by searching for the projection that is maximally non-Gaussian, typically via a proxy such as negentropy or kurtosis -- algorithms like FastICA (Hyvärinen, 1999) iteratively maximize a contrast function $J(w) \\propto \\big(\\mathbb{E}[G(w^\\top x)] - \\mathbb{E}[G(\\nu)]\\big)^2$ for a nonquadratic $G$ and a standard Gaussian $\\nu$. Applied to model activations instead of audio, it looks for directions where the data spikes and clusters rather than the smooth spread PCA optimizes for."
+    },
+    {
+     "heading": "Why non-Gaussianity happens to track interpretability here",
+     "body": "The paper's own explanation for ICA's relative strength ties directly to [[kurtosis-skew-correlation-analysis]]: interpretability score correlates with a feature's skew and kurtosis, and \"this also explains why Independent Component Analysis (ICA), which maximises the non-Gaussianity of the found components, is the best performing of the alternatives that we considered\" (sparse-autoencoders, §\"C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION\", p. 16). The advantage is not stable across the whole network, though: the sparse dictionary's lead over baselines \"declines as we move through the model, being comparable to ICA in layer 4 and showing minimal improvement in the final layer\" (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5). And the comparison is not run on equal footing to begin with: ICA is fit on only about 2GB of data -- roughly 4 million residual-stream activations, versus the 5-50M vectors used to train the autoencoders and estimate [[pca|PCA]] online -- because ICA algorithms converge far more slowly at scale (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3), so its closing of the gap in later layers happens despite a smaller training budget, not because of a larger one."
+    }
+   ]
+  },
+  {
+   "id": "random-directions-baseline",
+   "sections": [
+    {
+     "heading": "The floor the other results are measured against",
+     "body": "Of the four baselines this paper compares against its learned dictionaries, randomly sampled directions in activation space are the deliberately unstructured one: no data, no optimization, nothing about the model informs their choice. That is exactly the point -- they exist to define the bottom of the [[autointerpretability-score]]'s usable range, so that [[pca]], [[ica]], and the [[default-basis-baseline]] can be judged not just against the [[sparse-autoencoders|sparse dictionary]] but against a baseline with no claim to meaning anything at all (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3)."
+    },
+    {
+     "heading": "What 'random' means here",
+     "body": "A random direction is simply a vector drawn without reference to any activation data -- intuitively, a point sampled uniformly on the unit hypersphere in the model's activation space, $u \\sim \\mathrm{Unif}(\\mathbb{S}^{d-1})$, with no preference for any particular orientation. Projecting a language model's activations onto such a direction and reading off the result is the null hypothesis for feature-finding: whatever pattern of activation shows up is, by construction, not the product of the direction having been chosen for anything, so any interpretability it exhibits has to come from the activations themselves rather than the projection."
+    },
+    {
+     "heading": "Given the benefit of the doubt, and still losing",
+     "body": "The comparison is not run against random directions in the rawest possible form: because the [[autointerpretability-score]] and the dictionary features it evaluates both assume nonnegative, ReLU-shaped activations, the paper applies the same accommodation to this baseline that it gives the [[default-basis-baseline]] -- \"for the random directions and for the default basis in the residual stream, we replace negative activations with zeros so that all feature activations are nonnegative\" (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3). Random directions are therefore scored on a version of themselves already reshaped to look more like a genuine feature, which if anything should inflate their apparent interpretability. That the floor still sits low despite this handicap in its favor is what gives the score room to distinguish better and worse decompositions at all."
+    }
+   ]
+  },
+  {
+   "id": "default-basis-baseline",
+   "sections": [
+    {
+     "heading": "Treating the model's own coordinates as the features",
+     "body": "The default basis is the baseline that asks what interpretability looks like if you do nothing: take the units the model already computes in -- individual neurons for the MLP, individual residual-stream coordinates elsewhere -- and treat each one as a candidate feature, with no decomposition applied at all. It stands in for the pre-dictionary-learning default in interpretability research, against which the paper measures how much [[sparse-autoencoders|sparse dictionary features]], [[pca]], [[ica]], and the [[random-directions-baseline]] actually improve on doing nothing (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3)."
+    },
+    {
+     "heading": "A basis with no strong claim to being privileged",
+     "body": "Whether treating individual coordinates as meaningful units makes sense at all depends on whether the space has a [[privileged-basis]] -- a coordinate system distinguished as unusually meaningful, the way the standard basis is right after an elementwise nonlinearity like ReLU. The [[residual-stream]] has no comparable reason to be privileged, yet transformers still tend to write disproportionately large values into specific coordinates, so-called [[outlier-dimensions]], hypothesized to arise from the Adam optimizer storing gradients at finite precision in the residual basis (Dettmers et al., 2022). Despite that partial privilege, the paper reports it \"does not find residual stream basis directions to be any more interpretable than random directions\" (sparse-autoencoders, §\"C.3 INTERPRETING THE MLP SUBLAYER\", p. 15) -- carrying disproportionate information is not the same as being interpretable one coordinate at a time."
+    },
+    {
+     "heading": "Losing head-to-head to the matched dictionary feature",
+     "body": "The clearest illustration is the [[apostrophe-feature]] case study: searching the residual stream's raw coordinates for the dimension most associated with apostrophes found one (dimension 21) that was only the 10th-highest dimension the dictionary's own apostrophe feature reads from, since the nine stronger-weighted coordinates didn't show apostrophes among their own top activations (sparse-autoencoders, §\"D.1 RESIDUAL STREAM BASIS\", p. 16). Even that best-available coordinate stays polysemantic where the dictionary feature does not: it shows a large share of apostrophes at its highest activation values but \"only explains a very small fraction of the variance for middle-to-lower activation ranges,\" meaning it means something else most of the time it fires (sparse-autoencoders, §\"D.1 RESIDUAL STREAM BASIS\", p. 16). This single comparison is a worked instance of the aggregate finding across Section 3.2: the default basis is far less interpretable than dictionary features on the same metric."
+    }
+   ]
+  },
+  {
+   "id": "pca",
+   "sections": [
+    {
+     "heading": "Projecting onto directions of maximal variance",
+     "body": "Principal Component Analysis (PCA) is a general-purpose, unsupervised technique for reducing the dimensionality of data while preserving as much of its variation as possible. Given a set of points -- here, residual-stream activation vectors -- centered so their mean is zero, PCA looks for the direction along which the data varies the most, then the next such direction orthogonal to the first, and so on. Formally, for centered data $X$ with covariance matrix $\\Sigma$, the first principal component is\n$$v_1 = \\arg\\max_{\\|v\\|=1} \\mathrm{Var}(v^\\top X) = \\arg\\max_{\\|v\\|=1} v^\\top \\Sigma v,$$\nand subsequent components maximize the same quantity subject to being orthogonal to all previous ones; equivalently, the components are the eigenvectors of $\\Sigma$, ordered by decreasing eigenvalue. Projecting data onto the top two or three components gives the best low-dimensional linear summary of the data's spread, which is what makes it possible to plot high-dimensional activations on a page and look for structure by eye."
+    },
+    {
+     "heading": "CAA's use: a linear-separability check",
+     "body": "CAA quotes its own working definition directly: \"Principal Component Analysis (PCA) is a linear dimensionality reduction technique. It linearly projects the data onto a new coordinate system, where the axes (principal components) are selected to account for the most significant variance in the data\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The paper applies it, via the Scikit-learn package, directly to the problem [[activation-pca-visualization]] is built to solve: projecting contrastive-dataset activations down to their top two components and checking by eye whether the resulting scatter separates by behavior. No new projection method is introduced -- the contribution is the specific diagnostic use of an existing one."
+    },
+    {
+     "heading": "Unsupervised agreement as evidence",
+     "body": "What makes PCA more than a plotting convenience here is that it uses no behavior labels at all, unlike the supervised [[mean-difference-method]] CAA actually extracts steering vectors with. That two such differently-informed procedures land on similar directions -- the finding CAA cites from [[linear-representations-of-sentiment]] for the specific case of sentiment -- is part of the broader case for the [[linear-representation-hypothesis]]: if a behavior's representation were not close to linear, an unsupervised, variance-maximizing, two-dimensional projection would have no particular reason to align with a supervised difference-of-means direction, let alone to reveal any separation at all."
+    },
+    {
+     "heading": "A second career: baseline for a later paper's dictionary features",
+     "body": "A different paper later repurposes PCA in a role that has nothing to do with visualizing behavioral separation: as one of four fixed baselines -- alongside the default basis, [[random-directions-baseline|random directions]], and [[ica|ICA]] -- that [[sparse-autoencoders|sparse dictionary features]] are measured against. Here PCA is not a diagnostic plot but a full competing decomposition of a language model's activations, estimated online over the same 5-50M activation vectors used to train the autoencoders themselves (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 3). It is compared on two separate grounds: the [[autointerpretability-score]] of its components, and, on the Indirect Object Identification task, how few of its components need to be patched into the residual stream, and by how little, to reach a given KL divergence from the target output -- a comparison PCA loses on both counts (sparse-autoencoders, §\"4.2 PRECISE LOCALISATION OF IOI DICTIONARY FEATURES\", p. 6). Tellingly, the gap is not just about PCA's fixed, variance-ranked axes being unable to rotate to fit an arbitrary target: patching an equal-size set of features from the same autoencoder architecture trained with no sparsity penalty at all ($\\alpha=0$) also underperforms the sparse dictionary and looks more like PCA, indicating that what actually produces cleaner causal localization is the sparsity penalty forcing few features to matter per token, not just the extra flexibility of learning a dictionary at all (sparse-autoencoders, §\"4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION\", p. 5). PCA's variance-maximizing objective, unchanged from its general definition above, simply optimizes for the wrong thing here: it spreads a corpus's signal across whichever directions carry the most variance overall, which need not be the few directions that causally drive one specific behavior like IOI."
+    }
+   ]
+  },
+  {
+   "id": "gpt-4",
+   "sections": [
+    {
+     "heading": "A large model from OpenAI, inherited whole",
+     "body": "GPT-4 is OpenAI's large language model, released in March 2023 as the successor to the GPT-3 family that underlies InstructGPT (OpenAI, 2023) — substantially more capable at following complex instructions, reasoning over long contexts, and producing fluent, well-structured text, though CAA treats it as a fixed external tool rather than an object of study. The paper cites it only for its usage, not its architecture or training (contrastive-activation-addition, §\"1 Introduction\", p. 2). Unlike every model CAA actually experiments on, GPT-4 is never steered, finetuned, or probed — it sits entirely outside the [[llama-2]] family CAA modifies, brought in as an already-capable instrument for two jobs the paper needs done at a scale no team of human annotators could match cheaply."
+    },
+    {
+     "heading": "Author of two datasets, rater of every open-ended result",
+     "body": "Where Anthropic's [[advanced-ai-risk-dataset]] and [[sycophancy-eval-datasets-anthropic]] cover five of the seven target behaviors, no equivalent human-written set exists for Hallucination or Refusal, so GPT-4 generates the contrastive multiple-choice items itself — [[caa-hallucination-dataset]] following Rawte et al.'s taxonomy of unprompted versus contextually-triggered hallucination, and [[caa-refusal-dataset]] contrasting refusal and compliant answers to questions the model should decline (contrastive-activation-addition, §\"D Generating custom refusal dataset\", p. 13). GPT-4 never sees Llama 2's weights, yet its output becomes the entire contrastive basis for a vector injected directly into [[llama-2-chat]]'s residual stream. The same paper then uses GPT-4 downstream too, rating every [[open-ended-generation-evaluation]] response 0–10 against a per-behavior rubric for how strongly it displays the targeted behavior (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 5). Author and judge of the same pipeline is a dual role no earlier paper in this corpus asks one model to fill: GPT-4 both writes the material used to build two of the seven steering vectors and grades how well every one of the seven, including those two, worked."
+    },
+    {
+     "heading": "Third career: writing explanations inside a different model's head",
+     "body": "A third paper adds a third job, and it is a different kind of task from either CAA role: in the autointerpretability protocol (Bills et al., 2023) that this later paper runs at scale, GPT-4 is not generating training data or grading a finished response but explaining what a single [[dictionary-feature|dictionary feature]] inside a language model detects. Shown 5 curated fragments of text where the feature activates most strongly, together with each fragment's per-token activations rescaled to integers 0-10, GPT-4 writes one free-text explanation per feature -- the only description of that feature's meaning the rest of the pipeline ever sees (sparse-autoencoders, §\"A AUTOINTERPRETATION PROTOCOL\", p. 11). [[gpt-3-5|GPT-3.5]] then simulates the feature's activations from that explanation alone, and the correlation between simulated and true activations becomes the feature's [[autointerpretability-score]]. The role has documented limits the paper inherits from Bills et al. (2023) rather than discovers itself: GPT-4 struggles to describe patterns keyed to a token's neighbors rather than the token itself, and the protocol gives it no way to check a candidate explanation against how ablating the feature actually changes the model's output, since \"we currently do not send this information to the language model for hypothesis generation\" (sparse-autoencoders, §\"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES\", p. 5). Across this corpus, GPT-4 now has a documented multi-paper career built entirely on being treated as a fixed, capable outside instrument rather than a subject of study: dataset author and output judge in CAA (2023), feature explainer in this paper (2023) -- three distinct jobs, in three different pipelines, all delegated to the same model because each was too large a labeling task for humans to do by hand."
+    }
+   ]
+  }
+ ]
+}

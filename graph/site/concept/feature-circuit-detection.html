@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Automatic feature circuit detection — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Automatic feature circuit detection</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">A method for tracing causal dependencies between dictionary features in adjacent layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature and rank features by how much their ablation decreases the target&#x27;s activation, optionally recursing to build a multi-layer causal tree. Demonstrated on a layer-5 feature that predicts closing parentheses, yielding an interpretable circuit of upstream features.</p>
+<div class="page-intro"><p>Showing that a single feature is interpretable is one thing; showing how a whole chain of features causes each other to fire is a different and harder claim, closer to what an actual map of a model's internal computation would need to look like. This method builds that chain by brute force: ablate every candidate feature in the previous layer one at a time, measure how much each removal weakens the target feature's own activation, and rank the results.</p>
+<p>The page covers the ablate-and-rank procedure itself, the worked example it's demonstrated on, the cheaper weights-only method that was tried first and abandoned, and the larger ambition this kind of causal tracing is offered as one small step toward.</p></div>
+<section class="prose-section">
+<h2>Where three of the paper&#x27;s themes meet</h2>
+<p>Feature-circuit-detection sits at an unusual crossing point: it belongs to causal-proof-by-patching as an ablation-based causal method, to single-features-under-the-microscope as the technique demonstrated on the <a href="../concept/closing-parenthesis-feature.html">closing-parenthesis feature</a>, and to enumerating-features-for-safety as the paper's only worked example of what a safety-relevant map of causal dependencies between features could actually look like in practice.</p>
+</section>
+<section class="prose-section">
+<h2>The procedure: ablate backward from a target feature</h2>
+<p>Given a target <a href="../concept/dictionary-feature.html">dictionary feature</a>, the method first finds its maximum activation $M$ across the dataset and samples 20 contexts in which it activates within $[M/2, M]$. Then, for every feature in the previous layer, it reruns the model with that feature ablated and records how much its removal decreased the target feature's own activation; sorting previous-layer features by that decrease produces a ranked list of upstream causes, and the procedure can recurse into the previous layer's own high-impact features to build a multi-layer causal tree (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.3 Intermediate features: dictionary features allow automatic circuit detection", p. 7-8</a>).</p>
+</section>
+<section class="prose-section">
+<h2>The demonstration: layer 5&#x27;s closing-parenthesis feature</h2>
+<p>The method is demonstrated on feature 52027 in layer 5, unembedded to show its top tokens are all closing-parenthesis variants -- an unusually solid anchor, since layer 5 is the model's final layer and therefore writes directions the unembedding matrix reads out directly as tokens (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">§"5.3 Intermediate features: dictionary features allow automatic circuit detection", p. 8</a>). Applying the procedure backward from that anchor produces Figure 5, a causal tree of layer-4 features for dates, acronyms, and other parenthesis-preceding phrases, with edge thickness in the figure encoding the strength of each causal effect as measured by ablation.</p>
+</section>
+<section class="prose-section">
+<h2>What it replaced, and what it points toward</h2>
+<p>The ablation-based approach was not the first thing tried: a cheaper, purely weights-based method -- <a href="../concept/weight-based-connection-attempt.html">multiplying a feature through the MLP&#x27;s weights and checking cosine similarity with the next layer</a> -- was attempted first and abandoned after turning up no meaningful connections (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"D.4 Failed interpretability methods", p. 17</a>). The paper explicitly frames feature-circuit-detection's payoff as a first step toward its most ambitious goal: tracing causal dependencies between features is offered as "a step towards the eventual goal of building an end-to-end understanding of how a model computes its outputs" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=9" target="_blank" rel="noopener">§"6.2 Limitations and future work", p. 9</a>), which the very next paragraph names as <a href="../concept/enumerative-safety.html">Enumerative safety</a> (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=9" target="_blank" rel="noopener">§"6.3 Conclusion", p. 9</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/closing-parenthesis-feature.html">Closing-parenthesis dictionary feature</a></li><li><a href="../concept/weight-based-connection-attempt.html">Weight-based feature connection attempt (failed method)</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Automated Circuit Discovery (ACDC) — <a href="../edge/automated-circuit-discovery-lends-its-ranking-logic-to-feature-circuit-detection.html">lends its ranking logic to</a> → <strong>Automatic feature circuit detection</strong></li><li>Closing-parenthesis dictionary feature — <a href="../edge/closing-parenthesis-feature-seeds-feature-circuit-detection.html">seeds</a> → <strong>Automatic feature circuit detection</strong></li><li><strong>Automatic feature circuit detection</strong> — <a href="../edge/feature-circuit-detection-is-offered-as-a-concrete-step-toward-enumerative-safety.html">is offered as a concrete step toward</a> → Enumerative safety</li><li>Weight-based feature connection attempt (failed method) — <a href="../edge/weight-based-connection-attempt-is-the-failed-precursor-to-feature-circuit-detection.html">is the failed precursor to</a> → <strong>Automatic feature circuit detection</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/enumerating-features-for-safety.html">Feature enumeration as a safety audit</a></li><li><a href="../theme/causal-proof-by-patching.html">Features proved by intervention</a></li><li><a href="../theme/single-features-under-the-microscope.html">Single features under the microscope</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

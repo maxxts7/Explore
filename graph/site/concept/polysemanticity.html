@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Polysemanticity — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Polysemanticity</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The phenomenon in which individual neurons (or other analysis units) activate in multiple, semantically unrelated contexts, preventing concise human-understandable explanations of a network&#x27;s internal computation. Named as the paper&#x27;s central roadblock in the abstract; the paper&#x27;s entire method is aimed at finding a decomposition of activation space with reduced polysemanticity.</p>
+<div class="page-intro"><p>A single neuron lighting up for several completely unrelated ideas sounds like a minor curiosity until it becomes the reason nobody can write down, in plain language, what that neuron is actually for. This mismatch between one unit and many meanings is named as the very first obstacle standing between researchers and a real understanding of what a network computes.</p>
+<p>The rest of this entry traces where the term comes from, why relying on individual neurons as the basic unit of analysis breaks down once the mismatch is taken seriously, and what a polysemantic unit looks like mechanically: a single readout responding to several unrelated underlying signals at once.</p></div>
+<section class="prose-section">
+<h2>The roadblock the paper opens with</h2>
+<p>Polysemanticity is the phenomenon in which a single neuron, or any other individual unit of analysis inside a neural network, activates across several unrelated concepts rather than tracking one coherent idea. The term comes from the Anthropic interpretability line of work: Olah et al. (2020) first documented individual units firing for conceptually unrelated stimuli during manual circuit analysis, and Elhage et al. (2022b) later proposed superposition as its structural explanation. This paper names polysemanticity as its chosen problem statement from the first line of its abstract: 'One of the roadblocks to a better understanding of neural networks' internals is polysemanticity' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=1" target="_blank" rel="noopener">§"ABSTRACT", p. 1</a>). Framed this way, polysemanticity is not a side observation but the obstacle the entire sparse-autoencoder method is built to remove.</p>
+</section>
+<section class="prose-section">
+<h2>Why a broken unit of analysis blocks the whole research program</h2>
+<p><a href="../concept/mechanistic-interpretability.html">Mechanistic interpretability</a> proceeds by decomposing a network into small units that can be studied one at a time; the paper notes that using individual neurons as those units 'has had some success' (Olah et al., 2020; Bills et al., 2023) (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=1" target="_blank" rel="noopener">§"1 INTRODUCTION", p. 1</a>), which is why neurons were the default unit before this paper's method existed. Polysemanticity undercuts exactly that method: a neuron firing for several unrelated concepts cannot be assigned a single human-readable role no matter how carefully it is probed in isolation. <a href="../concept/superposition.html">Superposition</a> is the paper's inherited hypothesis for why polysemanticity arises at all, and resolving it, by finding a better unit of analysis than the neuron, is the explicit goal behind training <a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a>.</p>
+</section>
+<section class="prose-section">
+<h2>What a polysemantic unit looks like mechanically</h2>
+<p>Concretely, a neuron's activation is a linear readout of the layer's representation, $z = w \cdot x$ for some weight vector $w$ and activation vector $x$. If $x$ actually encodes several features additively, $x = \sum_i a_i g_i$, where each $a_i$ indicates the presence of feature $g_i$, then $z = \sum_i a_i (w \cdot g_i)$. Whenever $w$ has a substantial dot product with more than one $g_i$, the neuron's activation rises whenever any of those features is present, regardless of whether the underlying concepts have anything in common. This is exactly what the paper's case studies document at the level of individual <a href="../concept/residual-stream.html">Residual stream</a> coordinates: a single scalar that lights up for several unrelated tokens or contexts (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC", p. 7</a>), the mirror image of the <a href="../concept/monosemanticity.html">Monosemanticity</a> the paper's dictionary features are shown to approximate more closely.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Polysemanticity</strong> — <a href="../edge/polysemanticity-blocks-mechanistic-interpretability.html">blocks</a> → Mechanistic interpretability</li><li>Superposition — <a href="../edge/superposition-manifests-as-polysemanticity.html">manifests as</a> → <strong>Polysemanticity</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/superposition-vs-the-neuron-basis.html">Superposition and the case against the neuron basis</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=1" target="_blank" rel="noopener">&sect;&ldquo;1 INTRODUCTION&rdquo;, p. 1</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

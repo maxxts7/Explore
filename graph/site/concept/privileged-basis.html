@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Privileged basis — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Privileged basis</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The property of a particular coordinate basis being distinguished as unusually meaningful for a given vector space (e.g. the standard basis immediately after an elementwise nonlinearity), as opposed to a generic space with no privileged direction. The paper notes the residual stream is not usually expected to have a privileged basis, but discusses evidence (Dettmers et al., 2022; Elhage et al., 2023) that it partially does due to outlier dimensions, which is relevant to interpreting the default-basis baseline&#x27;s behavior.</p>
+<div class="page-intro"><p>Whether a network's raw coordinates mean anything, or are just one arbitrary rotation among infinitely many equally valid ones, isn't a philosophical question — it decides whether comparing a learned feature against the model's own neurons is a fair fight or one rigged from the start.</p>
+<p>Spelled out next is what makes a basis privileged in the first place, why one part of a network earns that status while another mostly doesn't, and a documented, partial exception that complicates an otherwise clean story about which coordinates in a model are worth treating as meaningful on their own.</p></div>
+<section class="prose-section">
+<h2>A basis that means something, and one that doesn&#x27;t</h2>
+<p>A privileged basis is a coordinate system for a vector space that carries genuine meaning, as opposed to being one arbitrary choice among infinitely many equivalent rotations. Whether a basis is privileged is a property of the operations applied to the space, not of the space itself: a generic linear layer treats all directions symmetrically, so no basis is singled out, but an elementwise nonlinearity like ReLU is not rotation-invariant, since it is defined coordinate by coordinate. The paper's own working definition is a basis 'in which we would expect changes to be unusually meaningful, such as the standard basis after a non-linearity in an MLP' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>). The framing was developed for transformers specifically by Elhage et al. (2023), which this paper cites directly.</p>
+</section>
+<section class="prose-section">
+<h2>Why this matters for choosing a baseline</h2>
+<p>Whether a space has a privileged basis determines whether treating its raw coordinates as the unit of analysis is a principled choice or an arbitrary one. Because the paper finds the <a href="../concept/residual-stream.html">Residual stream</a> lacks a privileged basis in general, individual residual-stream coordinates, the <a href="../concept/default-basis-baseline.html">Default (neuron/residual-stream) basis baseline</a> the paper compares its <a href="../concept/dictionary-feature.html">Dictionary feature</a>s against, have no special claim to interpretability over any other direction, including a randomly sampled one, and the paper tests this directly. The concept plays the opposite role for the MLP sublayer, where the standard basis genuinely is privileged by the nonlinearity that immediately precedes it, so training a dictionary there means competing against neurons that already have some architectural claim to meaningfulness, unlike in the residual stream.</p>
+</section>
+<section class="prose-section">
+<h2>Where the neuron basis is privileged, and where it partially isn&#x27;t</h2>
+<p>Mechanically, a linear operation such as the residual stream's running sum of layer outputs commutes with any rotation of coordinates: rotate the inputs and the output rotates the same way, so no coordinate axis is distinguished from any other. An elementwise nonlinearity breaks this symmetry, since $\mathrm{ReLU}(z)_i = \max(z_i, 0)$ depends on the value in coordinate $i$ specifically, which is what makes the post-nonlinearity standard basis privileged. By that logic the residual stream, being additive rather than the output of a nonlinearity, should have no privileged basis at all, yet the paper reports a documented, partial exception: transformers show 'a tendency ... to store information in the residual stream basis' (Dettmers et al., 2022), attributed to the Adam optimiser's finite-precision gradient storage in that basis, concentrated specifically in <a href="../concept/outlier-dimensions.html">Outlier dimensions</a> rather than restored uniformly across all coordinates.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Contains</h2><ul><li><a href="../concept/outlier-dimensions.html">Outlier dimensions</a></li></ul></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Outlier dimensions — <a href="../edge/outlier-dimensions-partially-restores-privileged-basis.html">partially restores</a> → <strong>Privileged basis</strong></li><li><strong>Privileged basis</strong> — <a href="../edge/privileged-basis-is-absent-from-residual-stream.html">is absent from</a> → Residual stream</li><li>SAE training on the MLP sublayer — <a href="../edge/mlp-sae-training-confronts-privileged-basis.html">confronts</a> → <strong>Privileged basis</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/reading-the-residual-stream.html">Steering doubles as interpretability</a></li><li><a href="../theme/superposition-vs-the-neuron-basis.html">Superposition and the case against the neuron basis</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;C.3 INTERPRETING THE MLP SUBLAYER&rdquo;, p. 15</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

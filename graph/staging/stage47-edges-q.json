@@ -1,0 +1,144 @@
+{
+  "edges": [
+    {
+      "id": "superposition-manifests-as-polysemanticity",
+      "type": "manifests-as",
+      "source": "superposition",
+      "target": "polysemanticity",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "A vector space contains only as many orthogonal directions as it has dimensions, so if a network genuinely represents more features than it has neurons, those extra features must share non-orthogonal directions rather than each owning a clean coordinate. A neuron's activation is a readout along one such shared, non-orthogonal direction, so when several crowded features write to it, the neuron ends up firing for each of them and looks polysemantic from the outside. The paper is explicit that this trade only becomes worthwhile under a further condition: 'without high sparsity, interference between non-orthogonal features prevents any performance gain from superposition,' meaning sparse activation is the load-bearing assumption connecting the storage strategy to the resulting symptom. This is why the paper treats polysemanticity as evidence to be explained by an underlying representational choice, rather than as a fixed property of what a neuron is."
+    },
+    {
+      "id": "polysemanticity-blocks-mechanistic-interpretability",
+      "type": "blocks",
+      "source": "polysemanticity",
+      "target": "mechanistic-interpretability",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "Mechanistic interpretability's basic method is to break a network into smaller units that can be analysed one at a time; the paper notes that using individual neurons as these units 'has had some success' (citing Olah et al., 2020 and Bills et al., 2023), which is why neurons were the default unit of analysis before this paper's method existed. Polysemanticity undercuts exactly that method, since a neuron activating for several unrelated concepts cannot be assigned a single human-understandable role no matter how carefully it is studied in isolation. This is why the paper's abstract opens by naming polysemanticity, not superposition or interpretability itself, as 'one of the roadblocks to a better understanding of neural networks' internals' -- it is the roadblock at the level where reverse-engineering actually happens, feature by feature."
+    },
+    {
+      "id": "superposition-motivates-sparse-autoencoders",
+      "type": "motivates",
+      "source": "superposition",
+      "target": "sparse-autoencoders",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "The superposition hypothesis reframes 'find interpretable units' as a concrete recovery problem: if activations are sparse linear combinations of unknown ground-truth features, then finding those features is the classic sparse dictionary learning problem of Olshausen & Field (1997), and both empirical work (Sharkey et al., 2023) and theory (Wright & Ma, 2022) show that l1-penalized reconstruction can recover the true generating features. That equivalence, not just the general goal of 'fixing superposition,' is what licenses the paper's specific architectural choices: a hidden layer of size dhid = R*din so the dictionary can be overcomplete the way superposition requires, and an l1 penalty on the hidden coefficients rather than on the weights. In other words, superposition does not just motivate building some interpretability tool -- it dictates the shape of this one."
+    },
+    {
+      "id": "monosemanticity-benchmarks-dictionary-feature",
+      "type": "benchmarks",
+      "source": "monosemanticity",
+      "target": "dictionary-feature",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "The paper tests monosemanticity with an activation histogram technique that 'only works for dictionary features that activate for a small set of tokens,' and applied at that resolution it finds the standard is met narrowly rather than globally: the apostrophe feature (Figure 4) does not fire on all apostrophes, and two separate dictionary features are needed to cover apostrophes in '[I/We/They]'ll'-type contexts and in '[don/won/wouldn]'t'-type contexts respectively. So the dictionary does not resolve polysemanticity by finding one feature per human concept; it resolves it by proliferating many narrower, context-specific features that each individually pass the monosemanticity test. Meeting the bar this way still counts as success because the paper's other case study, the layer-5 closing-parenthesis feature, shows a single narrow feature can still be causally central to a task-relevant behaviour."
+    },
+    {
+      "id": "privileged-basis-is-absent-from-residual-stream",
+      "type": "is-absent-from",
+      "source": "privileged-basis",
+      "target": "residual-stream",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "The paper's own definition of a privileged basis is a coordinate system 'in which we would expect changes to be unusually meaningful, such as the standard basis after a non-linearity in an MLP' -- and it explicitly states the residual stream 'can usually be treated as a vector space with no privileged basis,' unlike that MLP example. Structurally this is because the residual stream is a running sum of additive layer outputs rather than the output of an elementwise nonlinearity, so no single coordinate system is singled out by the architecture the way the standard basis is singled out immediately after a ReLU. This absence is exactly what licenses treating individual residual-stream coordinates, the default-basis baseline, as no more principled a unit of analysis than an arbitrary random direction, which the paper then checks directly."
+    },
+    {
+      "id": "outlier-dimensions-partially-restores-privileged-basis",
+      "type": "partially-restores",
+      "source": "outlier-dimensions",
+      "target": "privileged-basis",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "Despite the residual stream lacking a privileged basis in general, the paper cites a documented exception: 'a tendency for transformers to store information in the residual stream basis' (Dettmers et al., 2022), attributed to the Adam optimiser saving gradients with finite precision in that basis (Elhage et al., 2023). The paper's own feature search makes this concrete rather than just citational: searching the residual stream's default-basis coordinates for the dimensions most associated with the apostrophe feature, the top two most positive dimensions were both outlier dimensions, and one of the top two most negative dimensions was also an outlier dimension. So among the handful of coordinates that do carry a privileged, information-bearing role in this basis, outlier dimensions are disproportionately represented -- a partial, localized exception rather than the residual stream regaining a privileged basis wholesale."
+    },
+    {
+      "id": "outlier-dimensions-fails-to-elevate-default-basis-baseline",
+      "type": "fails-to-elevate",
+      "source": "outlier-dimensions",
+      "target": "default-basis-baseline",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "It would be natural to expect that, because outlier dimensions carry disproportionate real information, the default-basis baseline should score above the random-directions floor on autointerpretability -- yet the paper checks this directly and reports the opposite: 'We do not find residual stream basis directions to be any more interpretable than random directions.' This sentence is placed immediately after the paper's discussion of outlier dimensions and Dettmers et al.'s evidence for a partial privileged basis, which reads as the authors pre-empting exactly this expectation. The result implies that outlier dimensions being information-bearing in the aggregate is not the same as the specific coordinates being interpretable one at a time -- the information may be real but still spread thinly across many polysemantic dimensions rather than concentrated in a legible way."
+    },
+    {
+      "id": "default-basis-baseline-loses-to-sparse-autoencoders",
+      "type": "loses-to",
+      "source": "default-basis-baseline",
+      "target": "sparse-autoencoders",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "The paper's clearest head-to-head is the apostrophe case study: the residual-stream coordinate that most reads out the dictionary's apostrophe feature (dimension 21, Figure 11) was only the 10th-highest dimension by that feature's own read weights, meaning nine other coordinates it reads from more strongly do not even have apostrophes among their top activations. Even the one coordinate the authors do display and treat as the best available match is still polysemantic: it shows 'a large fraction of apostrophes in the upper activation range' but 'only explains a very small fraction of the variance for middle-to-lower activation ranges,' i.e. it means something else most of the time. The matched sparse-autoencoder feature (556), by contrast, activates almost exclusively on apostrophes across its whole activation range (Figure 4). This is a single-feature illustration of the aggregate finding that dictionary features are far more interpretable than default-basis directions on the autointerpretability metric."
+    },
+    {
+      "id": "pca-trails-sparse-autoencoders",
+      "type": "trails",
+      "source": "pca",
+      "target": "sparse-autoencoders",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "On the IOI activation-patching task, sparse dictionary features reach a given KL divergence from the target output using fewer patched features and smaller edit magnitude than an equal-size set of PCA components, improving the Pareto frontier of edit magnitude versus thoroughness. Crucially, the paper isolates why: training the same autoencoder architecture with no sparsity penalty (alpha=0) removes the advantage over PCA entirely, so the gap is not explained by dictionary learning's flexibility to fit an arbitrary rotation of the data the way PCA cannot -- it is specifically the sparsity penalty forcing few features to matter per token that produces cleaner causal localization. PCA's variance-maximizing objective, by design, spreads a behaviour's signal across whichever directions carry the most variance in the corpus overall, which need not coincide with the few directions that causally drive one specific behaviour like IOI."
+    },
+    {
+      "id": "ica-converges-with-sparse-autoencoders",
+      "type": "converges-with",
+      "source": "ica",
+      "target": "sparse-autoencoders",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "ICA is not a uniformly weaker baseline: the paper reports that the sparse-autoencoder advantage on autointerpretability score 'declines as we move through the model, being comparable to ICA in layer 4 and showing minimal improvement in the final layer.' That is, the gap that clearly favors dictionary features in early layers largely disappears by the last layer studied, where ICA catches up. The paper offers two possible explanations rather than picking one: sparse autoencoders may simply work less well on later-layer representations, or later-layer features may be intrinsically harder for the autointerpretability pipeline to score well, since by that point they are 'often best explained by their effect on the output' rather than by input tokens, which the GPT-4/GPT-3.5 pipeline is not set up to check."
+    },
+    {
+      "id": "random-directions-baseline-anchors-autointerpretability-score",
+      "type": "anchors",
+      "source": "random-directions-baseline",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "To make the autointerpretability comparison fair to a metric built for nonnegative activations, the paper applies a specific preprocessing step only to the two baselines without a built-in nonlinearity: 'for the random directions and for the default basis in the residual stream, we replace negative activations with zeros so that all feature activations are nonnegative,' matching what a ReLU-based dictionary feature would produce natively. Random directions therefore are not scored on raw projections but on this clipped, half-space-restricted version, which if anything should make them easier, not harder, to interpret. That the random-directions floor still sits low despite this accommodation is what gives the autointerpretability score its usable dynamic range: every other decomposition, including the default basis, which Appendix C.2 finds is statistically no better than this floor in the residual stream, is judged against a baseline already given the benefit of the doubt."
+    },
+    {
+      "id": "mlp-sae-training-confronts-privileged-basis",
+      "type": "confronts",
+      "source": "mlp-sae-training",
+      "target": "privileged-basis",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "superposition-vs-the-neuron-basis",
+      "prose": "The MLP sublayer is the paper's own worked example of a space that does have a privileged basis -- it is literally the definitional example given elsewhere in the paper, 'the standard basis after a non-linearity in an MLP' -- so training a dictionary there means competing against neurons that are already somewhat meaningfully aligned with the coordinate axes, unlike in the residual stream. Even so, the paper reports 'mixed success': many MLP dictionary features are more interpretable than the neurons themselves, showing the privileged basis does not make neurons optimal. But capacity is wasted differently here than in the residual stream -- MLP dictionaries develop large numbers of dead features that never activate, severely enough that 'in a dictionary with twice as many features as neurons, less than half might be active enough to perform automatic interpretability,' except in early layers where most features stay alive. Tied encoder/decoder weights, which cost nothing on residual-stream data, also measurably hurt MLP performance, forcing the paper to use separate encoder and decoder matrices specifically for this setting."
+    },
+    {
+      "id": "top-k-baseline-control-density-matches-ica",
+      "type": "density-matches",
+      "source": "top-k-baseline-control",
+      "target": "ica",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "The paper identifies a structural asymmetry that could inflate the sparse-autoencoder's apparent advantage: 'a PCA direction is active to an entire half-space on one side of a hyperplane through the origin, whereas a sparse coding feature activates on less than a full direction,' only firing past a hyperplane offset by a negative bias -- so on any given datapoint, far fewer PCA/ICA directions register as simultaneously inactive than dictionary features do. The top-K control directly neutralizes this by restricting ICA (and PCA) to a fixed number K of simultaneously active directions per datapoint, set equal to the average number of active features in a sparse dictionary with R=1 and alpha=8.6e-4 on the layer in question. With activation density equalized this way, the paper finds the adjustment 'does not explain more than a small fraction of the improvement in scores,' ruling out density mismatch as the source of ICA's underperformance and pointing instead to a genuine difference in feature quality."
+    },
+    {
+      "id": "pca-gets-more-training-data-than-ica",
+      "type": "gets-more-training-data-than",
+      "source": "pca",
+      "target": "ica",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "decomposition-baselines",
+      "prose": "The paper's two classical baselines are not fit on equal amounts of data: PCA is estimated online 'on the same quantity of data we used for training the autoencoders' (the paper's full activation datasets, 5-50M vectors), while ICA, run on only 2GB of data, about 4 million residual-stream activations or 1 million MLP activations, is deliberately given far less, explicitly 'due to the slower convergence times' of ICA algorithms at scale. This means the interpretability-score comparison between the two baselines is not apples-to-apples on data budget alone, which is worth knowing before reading too much into ICA narrowing the gap with sparse autoencoders in later layers: ICA is doing comparably well while working from a noticeably smaller sample."
+    }
+  ]
+}

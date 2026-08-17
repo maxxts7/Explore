@@ -1,0 +1,887 @@
+{
+ "paperConcepts": [
+  {
+   "id": "activation-patching",
+   "name": "Activation patching",
+   "role": "inherited",
+   "summary": "A causal mediation analysis technique (Vig et al., 2020) in which a model's internal activations are edited toward values observed on a counterfactual input and the resulting change in output is measured. This paper adapts it to dictionary features -- patching feature-encoded activation differences into the residual stream and measuring KL divergence from a target output -- to test how precisely SAE features localize the Indirect Object Identification behavior, compared to patching PCA components.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION",
+     "page": 5
+    },
+    {
+     "section": "4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES",
+     "page": 6
+    }
+   ]
+  },
+  {
+   "id": "dictionary-feature-patching",
+   "name": "Dictionary-feature patching procedure",
+   "role": "introduced",
+   "summary": "The paper's specific patching procedure for dictionary features: run the model on a counterfactual sentence, cache the encoded feature activations, then re-run on the base sentence and add the encoded activation differences for a chosen feature subset F into the residual stream, measuring KL divergence between patched and target output logits. Found to reach a given KL divergence with fewer patched features and smaller edit magnitude than patching an equivalent number of PCA components.",
+   "parent": "activation-patching",
+   "locators": [
+    {
+     "section": "4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES",
+     "page": 6
+    },
+    {
+     "section": "4.2 PRECISE LOCALISATION OF IOI DICTIONARY FEATURES",
+     "page": 6
+    }
+   ]
+  },
+  {
+   "id": "less-than-rank-one-ablation",
+   "name": "Less-than-rank-one ablation",
+   "role": "introduced",
+   "summary": "A specific ablation technique that lowers a residual-stream activation's component along a feature's direction only up to the point where that feature is no longer active, rather than a full-magnitude subtraction. Used to measure a dictionary feature's causal effect on next-token logits in the apostrophe-feature case study.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "5.2 OUTPUT: DICTIONARY FEATURES HAVE INTUITIVE EFFECTS ON THE LOGITS",
+     "page": 7
+    }
+   ]
+  },
+  {
+   "id": "ioi-task",
+   "name": "Indirect Object Identification (IOI) task",
+   "role": "inherited",
+   "summary": "A previously-studied model behavior (Wang et al., 2022) in which a language model completes sentences such as 'Alice and Bob went to the store. Alice gave a snack to ___' by correctly naming the indirect object. Used as this paper's case-study task for testing how precisely dictionary features localize a known circuit, via activation patching and KL-divergence comparisons against PCA.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION",
+     "page": 5
+    },
+    {
+     "section": "4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES",
+     "page": 6
+    }
+   ]
+  },
+  {
+   "id": "automated-circuit-discovery",
+   "name": "Automated Circuit Discovery (ACDC)",
+   "role": "inherited",
+   "summary": "A prior algorithm (Conmy et al., 2023) for automatically discovering the subgraph of a network responsible for a behavior. This paper reuses ACDC's ordering procedure (its Algorithm 4.1) to rank dictionary features by their individual causal contribution to reducing KL divergence on the IOI task, producing the feature subset used in the dictionary-feature-patching experiments.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES",
+     "page": 6
+    }
+   ]
+  },
+  {
+   "id": "feature-circuit-detection",
+   "name": "Automatic feature circuit detection",
+   "role": "introduced",
+   "summary": "A method for tracing causal dependencies between dictionary features in adjacent layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature and rank features by how much their ablation decreases the target's activation, optionally recursing to build a multi-layer causal tree. Demonstrated on a layer-5 feature that predicts closing parentheses, yielding an interpretable circuit of upstream features.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION",
+     "page": 8
+    }
+   ]
+  },
+  {
+   "id": "weight-based-connection-attempt",
+   "name": "Weight-based feature connection attempt (failed method)",
+   "role": "introduced",
+   "summary": "A failed alternative method for connecting features across layers, tried by multiplying a layer-4 feature through the MLP weights and checking cosine similarity with layer-5 features. It found no meaningful connections, likely because the resulting vector went out-of-distribution; reported as a negative result contrasting with the ablation-based feature-circuit-detection method that did succeed.",
+   "parent": "feature-circuit-detection",
+   "locators": [
+    {
+     "section": "D.4 FAILED INTERPRETABILITY METHODS",
+     "page": 17
+    }
+   ]
+  },
+  {
+   "id": "closing-parenthesis-feature",
+   "name": "Closing-parenthesis dictionary feature",
+   "role": "introduced",
+   "summary": "A case-study dictionary feature in layer 5 whose unembedding directly predicts closing-parenthesis tokens, used to illustrate the paper's feature-circuit-detection method by tracing which upstream features (detecting dates, acronyms, and other parenthesis-preceding phrases) cause it to activate.",
+   "parent": "feature-circuit-detection",
+   "locators": [
+    {
+     "section": "5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION",
+     "page": 8
+    }
+   ]
+  },
+  {
+   "id": "enumerative-safety",
+   "name": "Enumerative safety",
+   "role": "inherited",
+   "summary": "An aspirational goal in interpretability research (Elhage et al., 2022b) of producing a complete, human-understandable enumeration of a model's features sufficient to guarantee it will not perform dangerous behaviors such as deception. Invoked in the paper's conclusion as the long-term motivation its sparse-autoencoder method is framed as a step toward.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "6.3 CONCLUSION",
+     "page": 9
+    }
+   ]
+  },
+  {
+   "id": "mechanistic-interpretability",
+   "name": "Mechanistic interpretability",
+   "role": "inherited",
+   "summary": "A research agenda that seeks to understand neural networks by reverse-engineering their internal computations into human-understandable parts, aiming to enable verification, targeted editing, and mitigation of risks such as deceptive behavior. Named in the introduction as the field this paper's sparse-autoencoder method aims to advance, offering it as 'a foundation for future mechanistic interpretability work.'",
+   "parent": null,
+   "locators": [
+    {
+     "section": "1 INTRODUCTION",
+     "page": 1
+    }
+   ]
+  },
+  {
+   "id": "sparse-autoencoders",
+   "name": "Sparse autoencoders (SAEs)",
+   "role": "introduced",
+   "summary": "This paper trains single-hidden-layer, ReLU, tied-weight autoencoders with an L1 sparsity penalty on their hidden activations to decompose language model activations into an overcomplete, sparsely-activating dictionary of features. It is one of the two founding empirical demonstrations (alongside the concurrent Anthropic 'Towards Monosemanticity' work) that this architecture recovers features that are more interpretable, more monosemantic, and more causally precise than PCA/ICA/neuron-basis baselines, establishing SAEs as a scalable method for resolving superposition.",
+   "parent": null,
+   "locators": [
+    {
+     "section": "2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING",
+     "page": 2
+    },
+    {
+     "section": "B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION",
+     "page": 12
+    }
+   ],
+   "notes": "Re-roots the sparse-autoencoders id, which was previously only inherited via persona-vectors (whose summary cites 'Cunningham et al., 2023' -- i.e. this paper). Role changed to introduced since this paper is the cited origin; Bricken et al. (2023), the registry's other cited origin, is a separate concurrent paper not yet in this corpus."
+  }
+ ],
+ "crossPaperConcepts": [
+  {
+   "id": "sae-decomposition-of-persona-vectors",
+   "name": "SAE decomposition of persona vectors",
+   "summary": "A technique decomposing a persona vector into a small set of fine-grained, interpretable sparse-autoencoder (SAE) features by ranking SAE decoder directions by cosine similarity to the persona vector. For 'evil,' top features correspond to insulting language, deliberate cruelty, and hacking-related content; for 'sycophancy,' to affirmative and promotional/marketing language; for 'hallucination,' to fictional world-building and fabricated-detail content. Each feature's causal role is validated by steering with its decoder direction and measuring the resulting trait expression score.",
+   "origins": [
+    {
+     "paper": "persona-vectors",
+     "role": "introduced",
+     "summary": "A technique decomposing a persona vector into a small set of fine-grained, interpretable sparse-autoencoder (SAE) features by ranking SAE decoder directions by cosine similarity to the persona vector. For 'evil,' top features correspond to insulting language, deliberate cruelty, and hacking-related content; for 'sycophancy,' to affirmative and promotional/marketing language; for 'hallucination,' to fictional world-building and fabricated-detail content. Each feature's causal role is validated by steering with its decoder direction and measuring the resulting trait expression score.",
+     "notes": ""
+    }
+   ],
+   "locators": [
+    {
+     "section": "M Decomposing persona vectors using sparse autoencoders",
+     "page": 59,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "M.4 Interesting features",
+     "page": 60,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "steering-vector",
+   "name": "Steering vector",
+   "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations (or subtracting it) shifts a model's outputs toward (or away from) that behavior — whether injected during a single forward pass at inference time or, in later work, during the training updates themselves. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs; persona vectors extract them via an automated pipeline and reuse them as both inference-time and training-time controls.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "A single direction in a model's activation space that encodes a high-level behavior or concept, such that adding it to the activations during a forward pass (or subtracting it) shifts the model's outputs toward (or away from) that behavior. The object at the center of activation engineering: prior work extracts steering vectors from single prompt pairs, optimization, or probes; CAA extracts them by averaging over datasets of contrast pairs.",
+     "notes": "Inherited: the term and object predate this paper (Subramani et al. 2022 latent steering vectors; Turner et al. 2023 Activation Addition). Serves as the hub concept connecting activation-addition, inference-time-intervention, and caa-steering-vector-construction."
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "refined",
+     "summary": "Persona vectors are a specific application of the general steering-vector concept to character/personality traits. This paper extends steering vectors' use beyond inference-time behavioral shifting to include projection-based deployment monitoring and, via preventative steering, injection during training itself rather than only at inference.",
+     "notes": "id reused from contrastive-activation-addition:inherited."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3.2 Controlling persona traits via steering",
+     "page": 4,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "5.2 Preventative steering limits behavioral shifts during finetuning",
+     "page": 8,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "activation-engineering",
+   "name": "Activation engineering / representation engineering (technique family)",
+   "summary": "The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "The broader family of alignment techniques, of which CAA is an instance, that steer language models by making targeted perturbations to their internal activations rather than through training; also called representation engineering.",
+     "notes": "Umbrella term also covering Subramani et al. (2022) and Hernandez et al. (2023), cited only in passing; the more substantively-discussed instances (Activation Addition, ITI, Representation Engineering, In-Context Vectors) are captured as separate concepts."
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "inherited",
+     "summary": "The paper situates its entire persona-vector method within this broader activation/representation-engineering technique family, contrasting activation-space interventions with weight-based finetuning interventions.",
+     "notes": "id reused from contrastive-activation-addition:inherited."
+    }
+   ],
+   "locators": [
+    {
+     "section": "1 Introduction",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 1,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "contrastive-activation-addition",
+   "name": "Contrastive Activation Addition (CAA)",
+   "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "introduced",
+     "summary": "A method for steering language model behavior at inference time by adding a \"steering vector\" to residual stream activations at all token positions after the prompt; the vector is the mean difference in activations between contrastive pairs of positive and negative examples of a target behavior. Evaluated on Llama 2 Chat across seven alignment-relevant behaviors using both multiple-choice and open-ended generation tests.",
+     "notes": "The paper's central contribution; most other introduced concepts in this inventory are components, comparison experiments, or interpretability analyses built around it."
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "inherited",
+     "summary": "CAA (cited as 'Panickssery et al., 2024') is repeatedly cited as prior activation-steering work this paper builds on and differentiates from, noting that CAA and similar techniques 'generally required bespoke data curation to obtain contrastive pairs,' a need the paper's automated pipeline removes.",
+     "notes": "id reused from contrastive-activation-addition:introduced."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9 Discussion",
+     "page": 8,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "7 Related work",
+     "page": 12,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "representation-engineering-zou",
+   "name": "Representation Engineering (Zou et al. 2023)",
+   "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "A prior body of techniques (Zou et al., 2023) for locating and extracting representations of high-level concepts such as honesty and emotion in LLMs, including testing the Mean Difference approach also used by CAA. CAA builds on this by focusing on steering rather than representation extraction.",
+     "notes": ""
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "inherited",
+     "summary": "Zou et al.'s representation-engineering framework (cited here as 'Zou et al., 2025') is repeatedly invoked as foundational grounding for translating trait descriptions into linear directions and for activation-based monitoring, and its mean-difference extraction approach is one basis for this paper's own extraction method.",
+     "notes": "id reused from contrastive-activation-addition:inherited."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 2,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "3.2 Visualizing activations for contrastive dataset analysis",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "2 An automated pipeline to extract persona vectors",
+     "page": 3,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "7 Related work",
+     "page": 12,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "linear-representation-hypothesis",
+   "name": "Linear representation hypothesis",
+   "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work.",
+     "notes": ""
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "inherited",
+     "summary": "The paper's entire premise -- that personality traits are encoded as linear directions in activation space -- rests on this hypothesis, and it cites Wang et al. (2025)'s finding that emergent misalignment is mediated by linear 'misaligned persona' directions as direct supporting evidence.",
+     "notes": "id reused from contrastive-activation-addition:inherited."
+    }
+   ],
+   "locators": [
+    {
+     "section": "2 Related work",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 1,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "7 Related work",
+     "page": 12,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "open-ended-generation-evaluation",
+   "name": "Open-ended generation evaluation with GPT-4 rating",
+   "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "introduced",
+     "summary": "The paper's protocol for testing whether CAA generalizes beyond multiple-choice settings: steering vectors are applied while generating free-form answers to open-ended questions, and GPT-4 rates each response 1-10 for how strongly it displays the targeted behavior using behavior-specific rubric prompts.",
+     "notes": "Reliability of GPT-4 as a rater is cross-checked against manual human inspection (Limitations, citing Hackl et al., 2023)."
+    }
+   ],
+   "locators": [
+    {
+     "section": "4.2 Open-ended generation",
+     "page": 4,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "G Examples of open-ended generation with CAA",
+     "page": 16,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "L GPT-4 rater prompts",
+     "page": 19,
+     "paper": "contrastive-activation-addition"
+    }
+   ]
+  },
+  {
+   "id": "caa-red-teaming-application",
+   "name": "CAA as an adversarial red-teaming tool (proposed application)",
+   "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "introduced",
+     "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety.",
+     "notes": "References the authors' own prior work (Panickssery, 2023a, \"Red-teaming language models via activation engineering\"). Connects to the registry's red-teaming concept as the general practice this proposes to extend with an activation-based method."
+    }
+   ],
+   "locators": [
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ]
+  },
+  {
+   "id": "red-teaming",
+   "name": "Red Teaming",
+   "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training.",
+   "origins": [
+    {
+     "paper": "constitutional-ai",
+     "role": "inherited",
+     "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training.",
+     "notes": ""
+    },
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "The practice of probing a model for unwanted or unsafe behavior; discussed here as a potential application area for CAA, which could adversarially trigger unwanted behaviors more efficiently than manual prompting.",
+     "notes": "Reuses registry id red-teaming (constitutional-ai:inherited, there defined as crowdworker-driven adversarial conversation). CAA's discussion is about an activation-based approach rather than crowdworker conversations, but the underlying concept -- finding inputs/methods that reveal unsafe model behavior -- is the same; the CAA-specific proposal is separately captured as caa-red-teaming-application."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3.1 Method",
+     "page": 7,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "3.2 Datasets and Training",
+     "page": 8,
+     "paper": "constitutional-ai"
+    },
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    }
+   ]
+  },
+  {
+   "id": "residual-stream",
+   "name": "Residual stream",
+   "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+   "origins": [
+    {
+     "paper": "contrastive-activation-addition",
+     "role": "inherited",
+     "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+     "notes": ""
+    },
+    {
+     "paper": "persona-vectors",
+     "role": "inherited",
+     "summary": "Persona vectors are extracted from, and steering/monitoring interventions are applied directly to, the residual stream at a selected layer, using the same layer-output (1-indexed) convention as prior activation-engineering work.",
+     "notes": "id reused from contrastive-activation-addition:inherited."
+    }
+   ],
+   "locators": [
+    {
+     "section": "3 Method",
+     "page": 3,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "9.1 Suggested future work",
+     "page": 9,
+     "paper": "contrastive-activation-addition"
+    },
+    {
+     "section": "2.2 Extracting persona vectors",
+     "page": 3,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "3.2 Controlling persona traits via steering",
+     "page": 4,
+     "paper": "persona-vectors"
+    }
+   ]
+  },
+  {
+   "id": "persona-vectors",
+   "name": "Persona vector",
+   "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+   "origins": [
+    {
+     "paper": "persona-vectors",
+     "role": "introduced",
+     "summary": "A direction in a language model's residual-stream activation space corresponding to a specific personality/character trait (e.g. evil, sycophancy, hallucination), computed as the difference in mean activations between responses that exhibit the trait and those that do not. The paper shows a single persona vector can be used to monitor, steer, and predict trait-related behavior both at deployment and during finetuning.",
+     "notes": "The paper's central object; distinct from a generic CAA-style steering vector in that it comes with its own automated, trait-agnostic extraction pipeline built specifically for personality/character traits."
+    }
+   ],
+   "locators": [
+    {
+     "section": "Abstract",
+     "page": 1,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "1 Introduction",
+     "page": 1,
+     "paper": "persona-vectors"
+    },
+    {
+     "section": "2.2 Extracting persona vectors",
+     "page": 3,
+     "paper": "persona-vectors"
+    }
+   ]
+  }
+ ],
+ "existingStoreEdgesTouchingCandidates": [
+  {
+   "source": "red-teaming",
+   "target": "automated-red-teaming",
+   "type": "is-the-manual-process-that-scales-into",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "red-teaming",
+   "target": "classifying-harmful-behavior-eval",
+   "type": "supplies-the-transcripts-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "palms",
+   "target": "red-teaming",
+   "type": "provides-an-independent-check-outside",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "contrastive-activation-addition",
+   "target": "inference-time-intervention",
+   "type": "skips-the-head-search-required-by",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "contrastive-activation-addition",
+   "target": "representation-engineering-zou",
+   "type": "repurposes-for-steering-relative-to",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "in-context-vectors",
+   "target": "contrastive-activation-addition",
+   "type": "spans-every-layer-unlike",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "residual-stream",
+   "target": "contrastive-activation-addition",
+   "type": "is-the-injection-site-whose-growth-constrains",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "steering-multiplier",
+   "target": "steering-vector",
+   "type": "sets-the-dose-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "targeted-token-steering",
+   "target": "contrastive-activation-addition",
+   "type": "would-relax-the-quality-ceiling-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "steering-outside-residual-stream",
+   "target": "residual-stream",
+   "type": "would-localize-representations-beyond",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "linear-representation-hypothesis",
+   "target": "steering-vector",
+   "type": "licenses-the-vector-arithmetic-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "activation-engineering",
+   "target": "linear-representation-hypothesis",
+   "type": "empirically-motivated-the-formalization-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "contrastive-activation-addition",
+   "target": "rlhf",
+   "type": "operates-on-top-of",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition"
+  },
+  {
+   "source": "caa-finetuning-comparison",
+   "target": "contrastive-activation-addition",
+   "type": "isolates-a-generalization-advantage-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "multiple-choice-behavioral-evaluation",
+   "target": "contrastive-activation-addition",
+   "type": "supplies-the-layer-hyperparameter-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "open-ended-generation-evaluation",
+   "target": "multiple-choice-behavioral-evaluation",
+   "type": "shows-a-different-margin-than",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "gpt-4",
+   "target": "open-ended-generation-evaluation",
+   "type": "rates-outputs-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "open-ended-generation-evaluation",
+   "target": "rlaif",
+   "type": "shares-the-ai-judge-move-with",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition"
+  },
+  {
+   "source": "mmlu",
+   "target": "contrastive-activation-addition",
+   "type": "sets-the-capability-floor-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "behavioral-clustering",
+   "target": "residual-stream",
+   "type": "localizes-suddenly-in",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "behavioral-clustering",
+   "target": "linear-representation-hypothesis",
+   "type": "is-evidence-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "token-level-cosine-similarity-analysis",
+   "target": "steering-vector",
+   "type": "reveals-as-a-feature-detector",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "caa-red-teaming-application",
+   "target": "contrastive-activation-addition",
+   "type": "inverts-the-purpose-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "caa-red-teaming-application",
+   "target": "red-teaming",
+   "type": "relocates-the-attack-surface-of",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition"
+  },
+  {
+   "source": "caa-red-teaming-application",
+   "target": "automated-red-teaming",
+   "type": "skips-the-prompt-search-of",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition"
+  },
+  {
+   "source": "jailbreaks",
+   "target": "caa-red-teaming-application",
+   "type": "motivates",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "jailbreaks",
+   "target": "red-teaming",
+   "type": "is-the-target-phenomenon-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "persona-vectors",
+   "target": "steering-vector",
+   "type": "specializes-for-character-traits",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "persona-vector-extraction-pipeline",
+   "target": "contrastive-activation-addition",
+   "type": "automates-away-the-bespoke-curation-of",
+   "hindsight": true,
+   "groundedIn": "persona-vectors"
+  },
+  {
+   "source": "trait-expression-score",
+   "target": "open-ended-generation-evaluation",
+   "type": "succeeds-the-sampled-rating-protocol-of",
+   "hindsight": true,
+   "groundedIn": "persona-vectors"
+  },
+  {
+   "source": "persona-vectors",
+   "target": "linear-representation-hypothesis",
+   "type": "quantifies-empirical-support-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "persona-vector-computation",
+   "target": "residual-stream",
+   "type": "sweeps-and-selects-a-layer-within",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "persona-vectors",
+   "target": "steering-multiplier",
+   "type": "extends-the-dosing-role-of-into-training",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "evil-trait",
+   "target": "persona-vectors",
+   "type": "flagship-worked-example-for",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "persona-vectors",
+   "target": "sae-decomposition-of-persona-vectors",
+   "type": "admits-a-fine-grained-decomposition-via",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "sae-decomposition-of-persona-vectors",
+   "target": "sparse-autoencoders",
+   "type": "applies-the-unsupervised-machinery-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "emergent-misalignment",
+   "target": "sae-decomposition-of-persona-vectors",
+   "type": "motivated-the-training-data-mix-behind",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "projection-based-persona-monitoring",
+   "target": "persona-vectors",
+   "type": "reads-instead-of-writing-to",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "projection-based-persona-monitoring",
+   "target": "representation-engineering-zou",
+   "type": "revives-the-reading-half-of",
+   "hindsight": false,
+   "groundedIn": null
+  },
+  {
+   "source": "post-hoc-steering",
+   "target": "contrastive-activation-addition",
+   "type": "reinstantiates",
+   "hindsight": true,
+   "groundedIn": "persona-vectors"
+  }
+ ],
+ "alreadyStagedPairsBatchesPQR": [
+  "sparse-dictionary-learning -> sparse-autoencoders [operationalized-as]",
+  "sparsity-loss -> reconstruction-loss [trades-off-against]",
+  "sparsity-loss -> dictionary-feature [forces-unit-norm-on]",
+  "expansion-factor-r -> dead-features [governs-emergence-of]",
+  "tied-weights-sae -> sparse-autoencoders [is-the-default-configuration-of]",
+  "expansion-factor-r -> sparsity-reconstruction-tradeoff [sets-the-operating-point-on]",
+  "sparsity-reconstruction-tradeoff -> sparse-autoencoders [rules-out-a-single-canonical-dictionary-for]",
+  "reconstruction-perplexity-metric -> reconstruction-loss [independently-corroborates]",
+  "mlp-sae-training -> sparse-autoencoders [stress-tests]",
+  "l4-norm-maximization -> sparse-dictionary-learning [reformulates]",
+  "yun-dictionary-learning -> sparse-autoencoders [is-extended-by]",
+  "sharkey-interim-report -> sparse-autoencoders [is-validated-at-scale-by]",
+  "dead-features -> dictionary-feature [hollows-out-the-count-of]",
+  "tied-weights-sae -> mlp-sae-training [gives-way-to-an-untied-variant-in]",
+  "l4-norm-maximization -> dictionary-feature [predicts-the-heavy-tailed-activation-of]",
+  "superposition -> polysemanticity [manifests-as]",
+  "polysemanticity -> mechanistic-interpretability [blocks]",
+  "superposition -> sparse-autoencoders [motivates]",
+  "monosemanticity -> dictionary-feature [benchmarks]",
+  "privileged-basis -> residual-stream [is-absent-from]",
+  "outlier-dimensions -> privileged-basis [partially-restores]",
+  "outlier-dimensions -> default-basis-baseline [fails-to-elevate]",
+  "default-basis-baseline -> sparse-autoencoders [loses-to]",
+  "pca -> sparse-autoencoders [trails]",
+  "ica -> sparse-autoencoders [converges-with]",
+  "random-directions-baseline -> autointerpretability-score [anchors]",
+  "mlp-sae-training -> privileged-basis [confronts]",
+  "top-k-baseline-control -> ica [density-matches]",
+  "pca -> ica [gets-more-training-data-than]",
+  "gpt-4 -> autointerpretability-score [generates-explanations-for]",
+  "gpt-3-5 -> autointerpretability-score [simulates-activations-for]",
+  "top-random-scoring -> autointerpretability-score [shapes-fragment-sampling-in]",
+  "top-k-baseline-control -> top-random-scoring [tests-a-separate-confound-from]",
+  "kurtosis-skew-correlation-analysis -> autointerpretability-score [explains-variation-in]",
+  "kurtosis-skew-correlation-analysis -> sparse-dictionary-learning [supplies-empirical-evidence-for]",
+  "reconstruction-perplexity-metric -> autointerpretability-score [measures-a-different-axis-than]",
+  "apostrophe-feature -> monosemanticity [demonstrates-the-limits-of]",
+  "apostrophe-feature -> default-basis-baseline [is-benchmarked-against]",
+  "closing-parenthesis-feature -> feature-circuit-detection [seeds]",
+  "dictionary-feature -> autointerpretability-score [scores-unevenly-across-depth-in]",
+  "monosemanticity -> autointerpretability-score [is-imperfectly-proxied-by]",
+  "top-random-scoring -> kurtosis-skew-correlation-analysis [is-vindicated-by]",
+  "apostrophe-feature -> closing-parenthesis-feature [divides-case-study-labor-with]"
+ ],
+ "formatExamples": [
+  {
+   "id": "sparse-dictionary-learning-operationalized-as-sparse-autoencoders",
+   "type": "operationalized-as",
+   "source": "sparse-dictionary-learning",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "Classical sparse dictionary learning (Olshausen & Field, 1997; Lee et al., 2006) solves for a dictionary and per-example sparse codes by alternating optimization, re-solving a fresh sparse-coding problem for every data point at inference time. This paper's sparse autoencoder instead amortizes that inference step into a single learned function: the encoder c = ReLU(Mx+b) produces a sparse code for any activation vector x in one forward pass, rather than running a new optimization per example. The decoder x-hat = M^T c then plays the role of the classical dictionary's linear-combination step, with M's rows serving directly as the learned dictionary atoms. The paper grounds the L1 term's ability to recover the true generating directions in both Sharkey et al.'s (2023) empirical results and Wright & Ma's (2022) theoretical guarantees for l1-penalized reconstruction, making the SAE a scalable neural-network stand-in for a decades-old convex-optimization framework."
+  },
+  {
+   "id": "goodharts-law-is-empirically-instantiated-by-reward-overoptimization",
+   "type": "is-empirically-instantiated-by",
+   "source": "goodharts-law",
+   "target": "reward-overoptimization",
+   "hindsight": true,
+   "groundedIn": "instructgpt",
+   "motivatedByTheme": "goodhart-across-corpus",
+   "prose": "Concrete Problems states Goodhart's law as a general principle in 2016: a designer picks a proxy that correlates with the true goal under ordinary conditions, and that correlation breaks down once the proxy is optimized directly, illustrated with a cleaning robot rewarded for bleach consumption that learns to waste bleach (concrete-problems, §\"Goodhart's Law:\", p. 8). InstructGPT's reward-model over-optimization is what that principle looks like inside an RLHF pipeline, six years later, though the paper never uses the word \"Goodhart\": a PPO policy is optimized against a learned reward model that only approximates human preference, and pushing that optimization hard enough produces outputs that score well under the RM without being genuinely preferred (instructgpt, §\"3.5 Models\", p. 9). Constitutional AI, published later the same year, closes the terminological loop explicitly, citing Gao et al. (2022) and naming its own analogous RL-CAI over-training symptom \"Goodharting behavior\" outright (constitutional-ai, §\"4.3 Main Results\", p. 12). Read together, the three papers show a named 2016 principle becoming, by the end of 2022, the field's standard vocabulary for describing exactly this RLHF failure."
+  }
+ ]
+}

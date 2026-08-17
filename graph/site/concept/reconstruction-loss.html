@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Reconstruction loss — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Reconstruction loss</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The ||x - x-hat||^2 term in the SAE training objective (Equation 4), the standard squared-error measure of how well the reconstructed activation vector matches the original. The paper notes this loss is never driven to zero, showing the dictionary fails to capture all information in a layer&#x27;s activations, a gap it also quantifies via the reconstruction-perplexity metric.</p>
+<div class="page-intro"><p>Penalizing an autoencoder for using too many directions creates an easy way to cheat: switch nothing on, and the penalty disappears along with any real reconstruction work. Reconstruction loss is what keeps that cheat from paying off, rewarding an autoencoder only when its sparse code still manages to reproduce the activation it was given.</p>
+<p>The rest of this entry walks through the loss in its exact form, the tug-of-war it wages against sparsity during training, and why the paper treats its own inability to drive this term to zero as the clearest sign that its method still leaves real information about the model unexplained.</p></div>
+<section class="prose-section">
+<h2>The half of the objective that keeps the dictionary honest</h2>
+<p>Reconstruction loss is what stops <a href="../concept/sparse-autoencoders.html">sparse autoencoder</a> training from degenerating into a decomposition that is sparse but meaningless: without a term rewarding faithful reconstruction, the <a href="../concept/sparsity-loss.html">L1 penalty</a> alone could be minimized by simply never activating any <a href="../concept/dictionary-feature.html">dictionary feature</a>. Reconstruction loss is the standard squared-error measure of how far the reconstructed activation $\hat{x}$ falls from the original $x$, and it is what ties the sparse code back to the actual activations of the language model being studied, rather than to some arbitrary sparse pattern unrelated to what the model computes (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 3</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Why the paper treats this loss as its clearest limitation</h2>
+<p>The paper reports plainly that this loss is never driven to zero, meaning the learned dictionaries fail to capture all the information present in a layer's activations (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">§"6.2 LIMITATIONS AND FUTURE WORK", p. 8</a>). Because squared-error numbers on cached activations have no inherent interpretation, the paper backs this claim with a concrete downstream check, the <a href="../concept/reconstruction-perplexity-metric.html">Reconstruction-substitution perplexity metric</a>: substituting Pythia-70M's layer-2 residual stream with its SAE reconstruction during a real forward pass raises Pile perplexity from 25 to 40, evidence that the gap reconstruction loss reports is not a rounding error but a real, measurable loss of information the model actually uses (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=9" target="_blank" rel="noopener">§"6.2 LIMITATIONS AND FUTURE WORK", p. 9</a>). This is also why the paper's enumerative-safety framing in its conclusion is careful to call the method 'a step towards' rather than an achievement of a complete feature enumeration -- an incomplete reconstruction is direct evidence the dictionary is not yet capturing everything relevant (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=9" target="_blank" rel="noopener">§"6.3 CONCLUSION", p. 9</a>).</p>
+</section>
+<section class="prose-section">
+<h2>The term itself and its tug-of-war with sparsity</h2>
+<p>Reconstruction loss is the first term of $$L(x) = \underbrace{\|x - \hat{x}\|_2^2}_{\text{Reconstruction loss}} + \underbrace{\alpha\|c\|_1}_{\text{Sparsity loss}}$$ where $\hat{x} = M^Tc$ is the autoencoder's output (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 3</a>). Because both terms sum into one objective, the optimizer is free to trade one against the other: dictionaries trained with a larger sparsity coefficient alpha reach lower reconstruction accuracy, visible in the IOI patching experiments as a higher floor on the minimum KL divergence no amount of further patching can close, while a non-sparse dictionary (alpha=0) reconstructs well but loses the causal-precision advantage over PCA that motivates using <a href="../concept/sparsity-loss.html">sparsity</a> at all (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">§"4.2 PRECISE LOCALISATION OF IOI DICTIONARY FEATURES", p. 6</a>). Sweeping alpha traces a smooth curve between the two losses with no distinguished 'knee,' the same empirical basis behind the <a href="../concept/sparsity-reconstruction-tradeoff.html">Sparsity-reconstruction tradeoff (no single correct decomposition)</a>'s finding that no single alpha setting is uniquely correct.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Reconstruction-substitution perplexity metric — <a href="../edge/reconstruction-perplexity-metric-independently-corroborates-reconstruction-loss.html">independently corroborates</a> → <strong>Reconstruction loss</strong></li><li>Sparsity loss (L1 penalty on feature activations) — <a href="../edge/sparsity-loss-trades-off-against-reconstruction-loss.html">trades off against</a> → <strong>Reconstruction loss</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/unmixing-activations-with-sparsity.html">Unmixing activations with a sparsity penalty</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;6.2 LIMITATIONS AND FUTURE WORK&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

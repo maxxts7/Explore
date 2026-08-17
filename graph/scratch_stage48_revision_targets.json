@@ -1,0 +1,173 @@
+{
+ "sparse-autoencoders": {
+  "id": "sparse-autoencoders",
+  "name": "Sparse autoencoders (SAEs)",
+  "summary": "An unsupervised dictionary-learning technique (Cunningham et al., 2023; Bricken et al., 2023) that decomposes model activations into a larger set of sparse, individually interpretable feature directions. The paper trains BatchTopK SAEs (Bussmann et al., 2024) on Qwen-2.5-7B-Chat's residual stream, on a mix of pretraining, chat, and misalignment data, as a complementary, unsupervised approach to obtaining persona-relevant directions.",
+  "parent": null,
+  "origins": [
+   {
+    "paper": "persona-vectors",
+    "role": "inherited",
+    "summary": "An unsupervised dictionary-learning technique (Cunningham et al., 2023; Bricken et al., 2023) that decomposes model activations into a larger set of sparse, individually interpretable feature directions. The paper trains BatchTopK SAEs (Bussmann et al., 2024) on Qwen-2.5-7B-Chat's residual stream, on a mix of pretraining, chat, and misalignment data, as a complementary, unsupervised approach to obtaining persona-relevant directions.",
+    "notes": ""
+   }
+  ],
+  "locators": [
+   {
+    "section": "8 Limitations",
+    "page": 13,
+    "paper": "persona-vectors"
+   },
+   {
+    "section": "M.1 SAE training details",
+    "page": 59,
+    "paper": "persona-vectors"
+   }
+  ],
+  "sections": [
+   {
+    "heading": "What sparse autoencoders are",
+    "body": "Sparse autoencoders are a prior, unsupervised dictionary-learning technique for interpretability, predating this paper's own persona-vector extraction method. The core idea, developed by Cunningham et al. (2023) and Bricken et al. (2023) and cited by the paper as offering \"a complementary approach to obtaining meaningful directions\" (persona-vectors, §\"8 Limitations\", p. 13), addresses a specific problem: individual neurons in a network's activations typically do not correspond to single human-interpretable concepts, because models pack far more concepts into their representations than they have dimensions available (the \"superposition\" hypothesis). An SAE is trained to reconstruct a layer's activations while passing them through a much wider, sparsely-active hidden layer, forcing each token's activation to be explained by only a handful of active \"features\" out of a much larger dictionary, under the hypothesis that many of the resulting individual features will turn out to be interpretable, unlike the raw activation dimensions they were trained on. Unlike methods that require a target concept specified in advance, SAE training needs no labels at all: the dictionary of features is discovered purely from unlabeled activations."
+   },
+   {
+    "heading": "The SAEs trained for this paper",
+    "body": "The paper's own related-work section places SAEs among several prior methods for extracting interpretable directions: \"another approach to obtaining interpretable directions is to train sparse autoencoders (SAEs), which find directions in an unsupervised way\" (persona-vectors, §\"7 Related work\", p. 12). Concretely, it trains BatchTopK SAEs (Bussmann et al., 2024) on every fourth layer of Qwen-2.5-7B-Chat's residual stream, using a dictionary-learning codebase adapted from Marks et al. (2024), with 131,072 features against a residual-stream dimension of 3,584 — roughly a 37x expansion factor — and reports results at sparsity level k = 64 active features per token (persona-vectors, §\"M.1 SAE training details\", p. 59). The training mix combines pretraining text (The Pile), chat data ([[lmsys-chat-1m]]), and a small amount of misalignment data (Betley et al.'s insecure-code dataset and Chua et al.'s bad-medical-advice dataset), chosen because the authors were originally chasing [[emergent-misalignment]], not persona vectors specifically (persona-vectors, §\"M.1 SAE training details\", p. 59)."
+   },
+   {
+    "heading": "A trait-agnostic complement to the paper's own extraction pipeline",
+    "body": "Training even one of these SAEs is a far heavier investment than the paper's own extraction method: the [[persona-vector-extraction-pipeline]] needs only 400 rollouts per trait and a single mean-difference computation, while an SAE at this width requires the standard large-scale unsupervised dictionary-learning procedure, repeated separately for each residual-stream layer. The payoff is that the SAE is trained once and is trait-agnostic — any persona vector, for a trait targeted by the extraction pipeline or not, can later be projected onto it and decomposed via [[sae-decomposition-of-persona-vectors]], without rerunning contrastive extraction. The paper frames this as a way past its own supervision requirement: \"SAEs may therefore enable unsupervised discovery of persona-relevant directions, including specific traits that cannot be easily elicited through prompting\" (persona-vectors, §\"8 Limitations\", p. 13)."
+   }
+  ],
+  "intro": "A model's raw internal activations rarely break cleanly along the lines of individual human concepts, since a network packs in far more distinct ideas than it has dimensions to represent them separately. Sparse autoencoders are a prior, unsupervised way of pulling interpretable structure back out of that crowded representation, without needing to know in advance what concepts you're looking for.\n\nThe general technique comes first, alongside the specific version trained for this paper on real chat and pretraining data. Why having one already trained beforehand matters comes last: it becomes a general-purpose tool that any later-extracted trait direction can be compared against, without repeating the paper's own supervised extraction process from scratch."
+ },
+ "residual-stream": {
+  "id": "residual-stream",
+  "name": "Residual stream",
+  "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+  "parent": null,
+  "origins": [
+   {
+    "paper": "contrastive-activation-addition",
+    "role": "inherited",
+    "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+    "notes": ""
+   },
+   {
+    "paper": "persona-vectors",
+    "role": "inherited",
+    "summary": "Persona vectors are extracted from, and steering/monitoring interventions are applied directly to, the residual stream at a selected layer, using the same layer-output (1-indexed) convention as prior activation-engineering work.",
+    "notes": "id reused from contrastive-activation-addition:inherited."
+   }
+  ],
+  "locators": [
+   {
+    "section": "3 Method",
+    "page": 3,
+    "paper": "contrastive-activation-addition"
+   },
+   {
+    "section": "9.1 Suggested future work",
+    "page": 9,
+    "paper": "contrastive-activation-addition"
+   },
+   {
+    "section": "2.2 Extracting persona vectors",
+    "page": 3,
+    "paper": "persona-vectors"
+   },
+   {
+    "section": "3.2 Controlling persona traits via steering",
+    "page": 4,
+    "paper": "persona-vectors"
+   }
+  ],
+  "sections": [
+   {
+    "heading": "The running total every layer writes into",
+    "body": "In a transformer, the residual stream is the vector that carries information from one layer to the next by simple addition: each attention block and each MLP block reads the current stream, computes some update, and adds that update back in, rather than replacing the stream outright. A token's representation at layer $L$ is literally a running sum of every block's output from layer 1 through $L$, plus the original embedding — nothing already written is overwritten, only added to. That additive structure is what makes the stream a natural place to intervene: adding an external vector to it is the same operation every layer already performs. It is also why the stream's norm tends to grow deeper into the network, accumulating rather than resetting, a pattern the paper cites directly (Heimersheim and Turner, 2023) (contrastive-activation-addition, §\"Vector normalization choices\", p. 10)."
+   },
+   {
+    "heading": "Where CAA writes, and why that has consequences",
+    "body": "[[contrastive-activation-addition]] commits to injecting its steering vector into the residual stream at one chosen layer, rather than into attention activations at every layer, as [[in-context-vectors]] does, or a sparse set of attention heads, as [[inference-time-intervention]] does. Because the stream's norm grows with depth, and [[steering-vector-normalization]] standardizes vector magnitude across behaviors but deliberately not across layers, a fixed [[steering-multiplier]] represents a different relative perturbation depending on which layer it is added at (contrastive-activation-addition, §\"Vector normalization choices\", p. 10) — the residual stream is not a neutral injection site, its own scale shapes how the paper's layer-optimality results should be read."
+   },
+   {
+    "heading": "Uninformative, then abruptly not",
+    "body": "The stream is not uniformly informative about behavior across depth. [[activation-pca-visualization]] shows [[behavioral-clustering]] is largely absent for roughly the first third of the model's layers, then appears abruptly within a single layer: at layer 9 of Llama 2 7B Chat there is no separation on the refusal dataset, while at layer 10 there is a clean split (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). [[steering-outside-residual-stream]] is the paper's own proposed alternative to injecting into this accumulating sum — intervening at a sub-component's output, such as after the MLP but before it merges into the stream, to localize effects the summed stream currently blurs together."
+   }
+  ],
+  "intro": "Every layer of a transformer reads from and writes back into the same running total of information as it flows through the network, a channel called the residual stream. It's an unglamorous piece of architecture, but it's also the one place a steering vector can be added once and have its effect persist through every layer that comes after.\n\nWhat the residual stream is, and why CAA targets it directly, gets explained ahead: injecting a steering vector into this stream at a single chosen layer rather than intervening on any more specific internal component."
+ },
+ "pca": {
+  "id": "pca",
+  "name": "Principal Component Analysis (PCA)",
+  "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior.",
+  "parent": null,
+  "origins": [
+   {
+    "paper": "contrastive-activation-addition",
+    "role": "inherited",
+    "summary": "A linear dimensionality-reduction technique that projects data onto axes of maximal variance. CAA uses it (via scikit-learn) to visualize whether contrastive-dataset activations linearly separate by target behavior.",
+    "notes": ""
+   }
+  ],
+  "locators": [
+   {
+    "section": "3.2 Visualizing activations for contrastive dataset analysis",
+    "page": 4,
+    "paper": "contrastive-activation-addition"
+   }
+  ],
+  "sections": [
+   {
+    "heading": "Projecting onto directions of maximal variance",
+    "body": "Principal Component Analysis (PCA) is a general-purpose, unsupervised technique for reducing the dimensionality of data while preserving as much of its variation as possible. Given a set of points -- here, residual-stream activation vectors -- centered so their mean is zero, PCA looks for the direction along which the data varies the most, then the next such direction orthogonal to the first, and so on. Formally, for centered data $X$ with covariance matrix $\\Sigma$, the first principal component is\n$$v_1 = \\arg\\max_{\\|v\\|=1} \\mathrm{Var}(v^\\top X) = \\arg\\max_{\\|v\\|=1} v^\\top \\Sigma v,$$\nand subsequent components maximize the same quantity subject to being orthogonal to all previous ones; equivalently, the components are the eigenvectors of $\\Sigma$, ordered by decreasing eigenvalue. Projecting data onto the top two or three components gives the best low-dimensional linear summary of the data's spread, which is what makes it possible to plot high-dimensional activations on a page and look for structure by eye."
+   },
+   {
+    "heading": "CAA's use: a linear-separability check",
+    "body": "CAA quotes its own working definition directly: \"Principal Component Analysis (PCA) is a linear dimensionality reduction technique. It linearly projects the data onto a new coordinate system, where the axes (principal components) are selected to account for the most significant variance in the data\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The paper applies it, via the Scikit-learn package, directly to the problem [[activation-pca-visualization]] is built to solve: projecting contrastive-dataset activations down to their top two components and checking by eye whether the resulting scatter separates by behavior. No new projection method is introduced -- the contribution is the specific diagnostic use of an existing one."
+   },
+   {
+    "heading": "Unsupervised agreement as evidence",
+    "body": "What makes PCA more than a plotting convenience here is that it uses no behavior labels at all, unlike the supervised [[mean-difference-method]] CAA actually extracts steering vectors with. That two such differently-informed procedures land on similar directions -- the finding CAA cites from [[linear-representations-of-sentiment]] for the specific case of sentiment -- is part of the broader case for the [[linear-representation-hypothesis]]: if a behavior's representation were not close to linear, an unsupervised, variance-maximizing, two-dimensional projection would have no particular reason to align with a supervised difference-of-means direction, let alone to reveal any separation at all."
+   }
+  ],
+  "intro": "Reducing a pile of high-dimensional activations down to the two directions that capture the most variance in the data is a decades-old trick, and it doesn't care what kind of data you feed it. Point it at a contrastive dataset's activations and it becomes a fast visual check for whether that dataset separates cleanly along the behavior you're hoping to steer.\n\nPrincipal Component Analysis is the general-purpose tool CAA borrows for exactly that diagnostic role, kept carefully distinct from Mean Difference, which is what actually builds the steering vector CAA uses at inference time."
+ },
+ "gpt-4": {
+  "id": "gpt-4",
+  "name": "GPT-4",
+  "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior.",
+  "parent": null,
+  "origins": [
+   {
+    "paper": "contrastive-activation-addition",
+    "role": "inherited",
+    "summary": "OpenAI's large language model (OpenAI, 2023), used by CAA both to generate the custom hallucination and refusal contrastive datasets and to rate open-ended generations for how strongly they display a targeted behavior.",
+    "notes": ""
+   }
+  ],
+  "locators": [
+   {
+    "section": "1 Introduction",
+    "page": 2,
+    "paper": "contrastive-activation-addition"
+   },
+   {
+    "section": "4.2 Open-ended generation",
+    "page": 5,
+    "paper": "contrastive-activation-addition"
+   }
+  ],
+  "sections": [
+   {
+    "heading": "A large model from OpenAI, inherited whole",
+    "body": "GPT-4 is OpenAI's large language model, released in March 2023 as the successor to the GPT-3 family that underlies InstructGPT (OpenAI, 2023) — substantially more capable at following complex instructions, reasoning over long contexts, and producing fluent, well-structured text, though CAA treats it as a fixed external tool rather than an object of study. The paper cites it only for its usage, not its architecture or training (contrastive-activation-addition, §\"1 Introduction\", p. 2). Unlike every model CAA actually experiments on, GPT-4 is never steered, finetuned, or probed — it sits entirely outside the [[llama-2]] family CAA modifies, brought in as an already-capable instrument for two jobs the paper needs done at a scale no team of human annotators could match cheaply."
+   },
+   {
+    "heading": "Author of two datasets, rater of every open-ended result",
+    "body": "Where Anthropic's [[advanced-ai-risk-dataset]] and [[sycophancy-eval-datasets-anthropic]] cover five of the seven target behaviors, no equivalent human-written set exists for Hallucination or Refusal, so GPT-4 generates the contrastive multiple-choice items itself — [[caa-hallucination-dataset]] following Rawte et al.'s taxonomy of unprompted versus contextually-triggered hallucination, and [[caa-refusal-dataset]] contrasting refusal and compliant answers to questions the model should decline (contrastive-activation-addition, §\"D Generating custom refusal dataset\", p. 13). GPT-4 never sees Llama 2's weights, yet its output becomes the entire contrastive basis for a vector injected directly into [[llama-2-chat]]'s residual stream. The same paper then uses GPT-4 downstream too, rating every [[open-ended-generation-evaluation]] response 0–10 against a per-behavior rubric for how strongly it displays the targeted behavior (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 5). Author and judge of the same pipeline is a dual role no earlier paper in this corpus asks one model to fill: GPT-4 both writes the material used to build two of the seven steering vectors and grades how well every one of the seven, including those two, worked."
+   }
+  ],
+  "intro": "Building custom datasets by hand is slow, and scoring hundreds of open-ended generations by hand is slower still, so CAA leans on an outside model to do both. That choice trades effort for a new source of uncertainty: how much do you trust one language model's judgment about another language model's behavior?\n\nGPT-4 does two jobs in this paper: generating the Hallucination and Refusal contrastive datasets, and rating open-ended responses on a 1-10 scale for how strongly they display a targeted behavior, with the spot-check against human ratings the authors ran to make sure that trust wasn't misplaced."
+ }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Weight-based feature connection attempt (failed method) — is the failed precursor to → Automatic feature circuit detection — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Weight-based feature connection attempt (failed method) — is the failed precursor to → Automatic feature circuit detection</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/causal-proof-by-patching.html">Features proved by intervention</a></p>
+<section class="prose-section"><p>Before settling on the ablation-based procedure in Section 5.3, the authors tried a cheaper, purely weight-based shortcut for finding which features cause which: multiply a layer-4 feature through the MLP’s weights and check the cosine similarity of the result against layer-5 features, hoping matrix multiplication alone would reveal which downstream features a given feature feeds into (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"D.4 Failed interpretability methods", p. 17</a>). It found no meaningful connections at all, and the paper attributes the failure to the intermediate vector going out of distribution: multiplying a feature through the MLP weights does not land back in the region of activation space the MLP was ever trained to process, so cosine similarity there is not measuring anything the network’s own computation respects (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"D.4 Failed interpretability methods", p. 17</a>). The authors also note the approach does not obviously generalize to the attention sublayer, where there is no single position dimension to multiply through. Feature-circuit-detection is the working alternative: instead of asking what a feature’s weights point toward algebraically, it asks what happens to a target feature’s actual activation when a candidate cause is ablated from a real forward pass, trading the weight method’s one-shot cheapness for causal grounding in activations the model actually produces.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/weight-based-connection-attempt.html">Weight-based feature connection attempt (failed method)</a> and <a href="../concept/feature-circuit-detection.html">Automatic feature circuit detection</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/failed-routes-left-visible.html">Failed routes left visible</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION&rdquo;, p. 8</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">&sect;&ldquo;D.4 FAILED INTERPRETABILITY METHODS&rdquo;, p. 17</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

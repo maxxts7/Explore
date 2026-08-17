@@ -1,7 +1,7 @@
 
 (function () {
   'use strict';
-  var POPUP_KINDS = /\/(concept|edge|theme|supertheme|superedge|tissue)\/[^\/]+\.html$/;
+  var POPUP_KINDS = /\/(concept|edge|theme|supertheme|superedge|tissue|figure)\/[^\/]+\.html$/;
 
   function popupTarget(ev) {
     if (ev.defaultPrevented || ev.button !== 0 ||

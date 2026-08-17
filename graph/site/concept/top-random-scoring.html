@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Top-and-random vs. random-only interpretability scoring — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Top-and-random vs. random-only interpretability scoring</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A distinction, from the Bills et al. (2023) protocol, in how text fragments are chosen when scoring an autointerpretability explanation: &#x27;top-and-random&#x27; scoring mixes highly-activating fragments with randomly sampled ones (the paper&#x27;s default), while the stricter &#x27;random-only&#x27; scoring uses only random fragments. The paper reruns its comparison using random-only scoring (Appendix C.2) and finds its learned features still outperform baselines, ruling out an artifact-of-top-scoring explanation for its results.</p>
+<div class="page-intro"><p>Scoring how well a description predicts a feature's behavior sounds like it should use a fair, random sample of text — except most features only fire on a sliver of any corpus, so a handful of random fragments would almost certainly contain nothing but zeroes, telling you nothing about whether the description is any good. Top-and-random scoring is the fix: mix in a few fragments where the feature is known to activate strongly alongside the random ones, trading a fully blind test for a sample that actually contains a signal worth predicting.</p>
+<p>The page traces where this choice sits inside the scoring pipeline, why a purely random sample would be close to useless given how rarely most features fire, and the later robustness check that reruns the comparison the stricter way to see how much of the result the choice was responsible for.</p></div>
+<section class="prose-section">
+<h2>A sampling choice baked into the score itself</h2>
+<p>Top-and-random scoring is not a separate metric but a parameter of how the <a href="../concept/autointerpretability-score.html">Autointerpretability score</a> gathers its evidence: which text fragments <a href="../concept/gpt-3-5.html">GPT-3.5</a> is shown when it tries to predict a feature's activations from <a href="../concept/gpt-4.html">GPT-4</a>'s explanation. Bills et al. (2023) defined two options -- mix highly-activating fragments with randomly sampled ones ("top-and-random"), or use only random fragments ("random-only") -- and this paper adopts top-and-random as its default throughout Section 3, while treating random-only as a check it deliberately runs later to see how much the default choice is doing the work (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">§"A AUTOINTERPRETATION PROTOCOL", p. 12</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Why a purely random sample would tell you little</h2>
+<p>The reasoning is about budget and rarity: each feature gets only 10 fragments of 64 tokens, 640 tokens total, to be scored on, and most dictionary features activate on a tiny fraction of any corpus. A sample drawn uniformly at random from a heavy-tailed activation distribution will, with overwhelming probability, contain almost no fragments where the feature actually fires, leaving GPT-3.5 nothing informative to correlate against except near-zero activations -- "a random sample will likely not contain any highly activating examples for all but the most common features" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">§"A AUTOINTERPRETATION PROTOCOL", p. 12</a>). Guaranteeing a few genuinely high-activation fragments in the mix trades a fully blind test for a usable signal, at the acknowledged cost of making the comparison more open-book than the stricter alternative.</p>
+</section>
+<section class="prose-section">
+<h2>Rerun as its own robustness check</h2>
+<p>Because top-and-random scoring could in principle make any decomposition look artificially interpretable by handing the simulator cherry-picked examples, Appendix C.2 reruns the entire baseline comparison using random-only scores instead and finds the paper's <a href="../concept/sparse-autoencoders.html">dictionary features</a> still consistently outperform <a href="../concept/pca.html">Principal Component Analysis (PCA)</a>, <a href="../concept/ica.html">Independent Component Analysis (ICA)</a>, the <a href="../concept/default-basis-baseline.html">Default (neuron/residual-stream) basis baseline</a>, and the <a href="../concept/random-directions-baseline.html">Random directions baseline</a>, especially in early layers (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">§"C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING", p. 13</a>). This is a distinct check from the <a href="../concept/top-k-baseline-control.html">Top-K-active baseline control</a> run in Appendix G: one asks whether the fragments shown to the simulator are unfairly chosen, the other asks whether the baselines are unfairly allowed to be "active" too often; passing one says nothing about the other.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/autointerpretability-score.html">Autointerpretability score</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Top-and-random vs. random-only interpretability scoring</strong> — <a href="../edge/top-random-scoring-shapes-fragment-sampling-in-autointerpretability-score.html">shapes fragment sampling in</a> → Autointerpretability score</li><li><strong>Top-and-random vs. random-only interpretability scoring</strong> — <a href="../edge/top-random-scoring-is-vindicated-by-kurtosis-skew-correlation-analysis.html">is vindicated by</a> → Interpretability-vs-kurtosis/skew correlation analysis</li><li>Top-K-active baseline control — <a href="../edge/top-k-baseline-control-tests-a-separate-confound-from-top-random-scoring.html">tests a separate confound from</a> → <strong>Top-and-random vs. random-only interpretability scoring</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/automated-interpretability-scoring.html">Interpretability itself becomes a benchmark</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING&rdquo;, p. 13</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

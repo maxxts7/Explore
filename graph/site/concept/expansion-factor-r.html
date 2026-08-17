@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Dictionary expansion factor (R) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Dictionary expansion factor (R)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">The hyperparameter R controlling the ratio of the autoencoder&#x27;s hidden dimension to the model&#x27;s activation dimension (dhid = R x din), governing how overcomplete the learned feature dictionary is. The paper sweeps R and finds interpretability gains hold even for undercomplete dictionaries (R&lt;1), with larger dictionaries explaining more of the overall activation variance.</p>
+<div class="page-intro"><p>If a model really does pack more features into a layer than it has dimensions for, recovering them means building a dictionary deliberately bigger than the layer itself — and how much bigger turns out to matter more than it might first seem.</p>
+<p>Ahead is the ratio itself, how far it can be pushed before the extra capacity stops adding anything useful, and how it interacts with the sparsity setting to decide which balance of accuracy and interpretability a given trained dictionary ends up landing on.</p></div>
+<section class="prose-section">
+<h2>Turning the superposition hypothesis into a hyperparameter</h2>
+<p>If <a href="../concept/superposition.html">Superposition</a> is right that a model packs more features into a layer than it has dimensions, then a dictionary meant to recover those features needs to be allowed to be larger than the layer itself. The expansion factor R is exactly the knob that allows this: it sets the ratio between the autoencoder's hidden dimension and the model's activation dimension, so that R&gt;1 gives an overcomplete dictionary -- more candidate <a href="../concept/dictionary-feature.html">dictionary features</a> than the model has neurons or residual-stream coordinates -- directly operationalizing what the superposition hypothesis requires the method to search for (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 2</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What sweeping R actually buys, and where it breaks</h2>
+<p>The paper finds interpretability gains from <a href="../concept/sparse-autoencoders.html">dictionary learning</a> are not an artefact of having an overcomplete dictionary specifically: they hold even for undercomplete dictionaries with R&lt;1, though each such smaller dictionary explains less of the model's overall activation variance than a larger one at the same sparsity level, because there is simply less capacity to work with (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">§"C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES", p. 13</a>). Pushed the other direction, R has a ceiling before the extra capacity goes to waste: for residual-stream dictionaries, raising R keeps essentially the whole dictionary alive up to roughly 4x overcompleteness, with <a href="../concept/dead-features.html">dead features</a> only beginning to appear past that point (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=17" target="_blank" rel="noopener">§"E NUMBER OF ACTIVE FEATURES", p. 17</a>). R also determines which tradeoff curve a given training run sits on in the first place: the smooth <a href="../concept/sparsity-reconstruction-tradeoff.html">Sparsity-reconstruction tradeoff (no single correct decomposition)</a> traced out by sweeping the sparsity coefficient alpha is measured at a fixed dictionary size, and a larger R shifts the whole curve toward explaining more variance at a given sparsity level without making any individual feature less interpretable on average (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">§"C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES", p. 13</a>).</p>
+</section>
+<section class="prose-section">
+<h2>The ratio itself</h2>
+<p>Formally, the autoencoder's hidden dimension is $$d_{hid} = R \cdot d_{in}$$ where $d_{in}$ is the dimension of the language model activation being modeled -- 512 for <a href="../concept/pythia.html">Pythia-70M</a>'s residual stream and 1024 for Pythia-410M's -- and R is a free hyperparameter chosen per experiment (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">§"2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING", p. 2</a>). The paper's main interpretability comparisons use R=2, a mild 2x overcomplete dictionary (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=5" target="_blank" rel="noopener">§"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES", p. 5</a>), while the dictionary-size sweep in Appendix C.1 tests R values from well below 1 up through several multiples, and the dead-feature sweep in Appendix E covers R up to and beyond the roughly 4x point where residual-stream dictionaries start to lose live capacity (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">§"C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES", p. 13</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Dictionary expansion factor (R)</strong> — <a href="../edge/expansion-factor-r-governs-emergence-of-dead-features.html">governs emergence of</a> → Dead features</li><li><strong>Dictionary expansion factor (R)</strong> — <a href="../edge/expansion-factor-r-sets-the-operating-point-on-sparsity-reconstruction-tradeoff.html">sets the operating point on</a> → Sparsity-reconstruction tradeoff (no single correct decomposition)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/unmixing-activations-with-sparsity.html">Unmixing activations with a sparsity penalty</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES&rdquo;, p. 13</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Transformer visualization via dictionary learning (Yun et al., 2021) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Transformer visualization via dictionary learning (Yun et al., 2021)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">Prior work applying sparse dictionary learning to residual stream activations across all layers of a language model simultaneously, framing token representations as a linear superposition of transformer factors. Cited as closely related prior work alongside Sharkey et al. (2023), applying a similar technique but without the interpretability and causal-localization evaluations this paper contributes.</p>
+<div class="page-intro"><p>Applying sparse dictionary learning to a transformer's internal representations wasn't a new idea when this paper did it — an earlier paper had already tried something close, decomposing token representations the same way, years before anyone asked whether the resulting directions were actually interpretable or causally meaningful.</p>
+<p>This entry covers what that earlier work did differently, fitting one shared dictionary across every layer rather than training one dictionary per layer, what it never tested that gets added here, and how a single shared co-author threads a decades-old signal-processing idea through both projects.</p></div>
+<section class="prose-section">
+<h2>Direct prior work, cited by name</h2>
+<p>This concept names a specific prior paper, Yun, Chen, Olshausen &amp; LeCun (2021), 'Transformer visualization via dictionary learning,' rather than a general technique. It applies sparse dictionary learning, the same Olshausen &amp; Field (1997) framework this paper also inherits, to a transformer's token representations, treating each token's representation as a linear superposition of a shared set of learned 'transformer factors.' The paper cites it directly alongside <a href="../concept/sharkey-interim-report.html">Sharkey et al. (2023) interim research report</a> as the closest prior work to its own approach: 'Our approach is also similar to Yun et al. (2021), who apply sparse dictionary learning to all residual stream layers in a language model simultaneously' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">§"1 INTRODUCTION", p. 2</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What differs: granularity and evaluation</h2>
+<p>The key difference from this paper is granularity, not method: Yun et al. (2021) fit one shared dictionary across every layer of the <a href="../concept/residual-stream.html">Residual stream</a> simultaneously, while this paper trains a separate <a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a> instance per layer, and separately again for the MLP sublayer in Appendix C.3, which is what makes it possible to track interpretability and dead-feature rates layer by layer rather than only at the level of the whole model. A larger gap is evaluative: Yun et al. never test whether their learned factors are more interpretable than baselines, more monosemantic than neurons, or more causally precise on a behavioral task, which is exactly the <a href="../concept/autointerpretability-score.html">Autointerpretability score</a>, case-study, and <a href="../concept/ioi-task.html">Indirect Object Identification (IOI) task</a>-patching apparatus this paper layers on top of essentially the same underlying idea.</p>
+</section>
+<section class="prose-section">
+<h2>A continuity link in the dictionary-learning lineage</h2>
+<p>Concretely, Yun et al. (2021) express each token's representation at every depth as a combination of a common set of 'transformer factors,' a visualization tool for how a token's meaning is built up through the network rather than an interpretability-scoring framework. Because Bruno Olshausen, co-author of the 1997 paper that originated sparse coding, is also a co-author here, the work functions as a continuity link running through this corpus's lineage: the same mathematical framework moves from modeling receptive fields in the visual cortex, to visualizing transformer representations as superposed factors, to this paper's per-layer, per-feature interpretability and causal analysis of language model activations. The paper's related-work section places both Yun et al. (2021) and the <a href="../concept/sharkey-interim-report.html">Sharkey et al. (2023) interim research report</a> together as the limited set of prior works that 'have learned dictionaries of sparsely-activating features in pretrained models' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">§"6.1 RELATED WORK", p. 8</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Transformer visualization via dictionary learning (Yun et al., 2021)</strong> — <a href="../edge/yun-dictionary-learning-is-extended-by-sparse-autoencoders.html">is extended by</a> → Sparse autoencoders (SAEs)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/dictionary-learning-lineage.html">The dictionary-learning lineage</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;1 INTRODUCTION&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;6.1 RELATED WORK&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

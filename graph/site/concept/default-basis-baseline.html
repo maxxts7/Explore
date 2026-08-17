@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Default (neuron/residual-stream) basis baseline — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Default (neuron/residual-stream) basis baseline</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">Treating individual neurons, or for the residual stream individual basis coordinates, as the units of analysis, used as a naive baseline against which the paper&#x27;s dictionary features are compared for autointerpretability. The residual-stream default basis is shown, via the apostrophe-dimension case study, to be polysemantic where the corresponding dictionary feature is monosemantic.</p>
+<div class="page-intro"><p>Before reaching for any decomposition technique at all, it's worth asking what interpretability looks like if you do nothing to the data — just take the individual coordinates a network already computes in and treat each one as a candidate feature. That's the default basis, and it matters as a baseline precisely because it's the option every more elaborate technique has to justify improving on, not a strawman built to lose easily.</p>
+<p>The page covers why treating raw coordinates as meaningful units is a genuinely open question rather than an obvious mistake, and a worked comparison — a single coordinate against its closest learned-feature counterpart — that shows how much is lost by skipping decomposition altogether.</p></div>
+<section class="prose-section">
+<h2>Treating the model&#x27;s own coordinates as the features</h2>
+<p>The default basis is the baseline that asks what interpretability looks like if you do nothing: take the units the model already computes in -- individual neurons for the MLP, individual residual-stream coordinates elsewhere -- and treat each one as a candidate feature, with no decomposition applied at all. It stands in for the pre-dictionary-learning default in interpretability research, against which the paper measures how much <a href="../concept/sparse-autoencoders.html">sparse dictionary features</a>, <a href="../concept/pca.html">Principal Component Analysis (PCA)</a>, <a href="../concept/ica.html">Independent Component Analysis (ICA)</a>, and the <a href="../concept/random-directions-baseline.html">Random directions baseline</a> actually improve on doing nothing (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">§"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES", p. 3</a>).</p>
+</section>
+<section class="prose-section">
+<h2>A basis with no strong claim to being privileged</h2>
+<p>Whether treating individual coordinates as meaningful units makes sense at all depends on whether the space has a <a href="../concept/privileged-basis.html">Privileged basis</a> -- a coordinate system distinguished as unusually meaningful, the way the standard basis is right after an elementwise nonlinearity like ReLU. The <a href="../concept/residual-stream.html">Residual stream</a> has no comparable reason to be privileged, yet transformers still tend to write disproportionately large values into specific coordinates, so-called <a href="../concept/outlier-dimensions.html">Outlier dimensions</a>, hypothesized to arise from the Adam optimizer storing gradients at finite precision in the residual basis (Dettmers et al., 2022). Despite that partial privilege, the paper reports it "does not find residual stream basis directions to be any more interpretable than random directions" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>) -- carrying disproportionate information is not the same as being interpretable one coordinate at a time.</p>
+</section>
+<section class="prose-section">
+<h2>Losing head-to-head to the matched dictionary feature</h2>
+<p>The clearest illustration is the <a href="../concept/apostrophe-feature.html">Apostrophe dictionary feature (feature 556)</a> case study: searching the residual stream's raw coordinates for the dimension most associated with apostrophes found one (dimension 21) that was only the 10th-highest dimension the dictionary's own apostrophe feature reads from, since the nine stronger-weighted coordinates didn't show apostrophes among their own top activations (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=16" target="_blank" rel="noopener">§"D.1 RESIDUAL STREAM BASIS", p. 16</a>). Even that best-available coordinate stays polysemantic where the dictionary feature does not: it shows a large share of apostrophes at its highest activation values but "only explains a very small fraction of the variance for middle-to-lower activation ranges," meaning it means something else most of the time it fires (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=16" target="_blank" rel="noopener">§"D.1 RESIDUAL STREAM BASIS", p. 16</a>). This single comparison is a worked instance of the aggregate finding across Section 3.2: the default basis is far less interpretable than dictionary features on the same metric.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Apostrophe dictionary feature (feature 556) — <a href="../edge/apostrophe-feature-is-benchmarked-against-default-basis-baseline.html">is benchmarked against</a> → <strong>Default (neuron/residual-stream) basis baseline</strong></li><li>Outlier dimensions — <a href="../edge/outlier-dimensions-fails-to-elevate-default-basis-baseline.html">fails to elevate</a> → <strong>Default (neuron/residual-stream) basis baseline</strong></li><li><strong>Default (neuron/residual-stream) basis baseline</strong> — <a href="../edge/default-basis-baseline-loses-to-sparse-autoencoders.html">loses to</a> → Sparse autoencoders (SAEs)</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/superposition-vs-the-neuron-basis.html">Superposition and the case against the neuron basis</a></li><li><a href="../theme/decomposition-baselines.html">The ladder of decomposition baselines</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=16" target="_blank" rel="noopener">&sect;&ldquo;D.1 RESIDUAL STREAM BASIS&rdquo;, p. 16</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,114 @@
+{
+ "edges": [
+  {
+   "id": "activation-patching-is-adapted-into-dictionary-feature-patching",
+   "type": "is-adapted-into",
+   "source": "activation-patching",
+   "target": "dictionary-feature-patching",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "causal-proof-by-patching",
+   "prose": "Activation patching is Vig et al. (2020)’s causal mediation analysis technique: run a model on a counterfactual input, save its internal activations, transplant them into a run on the base input, and measure how far the output moves toward the counterfactual’s, quantifying how much some internal part causally mediates a behavior (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 5). Dictionary-feature-patching is this paper’s Section 4.1 adaptation of that idea to a different unit of intervention: rather than swapping in whole raw activations, it runs the model on a counterfactual sentence, encodes and caches the resulting dictionary-feature coefficients, then adds only the per-feature encoded differences (c̄ᵢⱼ − cᵢⱼ) for a chosen subset of features back into the base sentence’s residual stream, measuring the KL divergence between patched and target output logits (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). The paper names the move explicitly, titling the section \"Adapting Activation Patching to Dictionary Features\". What changes is the granularity of the causal unit under test: Vig et al.’s method mediates on components such as attention heads or layers; this paper’s version mediates on individual, sparsely-active learned directions, letting the same causal-mediation logic ask whether a handful of named features, rather than a handful of named components, is responsible for a behavior."
+  },
+  {
+   "id": "dictionary-feature-patching-is-tested-against-ioi-task",
+   "type": "is-tested-against",
+   "source": "dictionary-feature-patching",
+   "target": "ioi-task",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "causal-proof-by-patching",
+   "prose": "The Indirect Object Identification task is dictionary-feature-patching’s proving ground: a previously-studied, well-characterized model behavior (Wang et al., 2022) in which a model completes sentences like \"Then, Alice and Bob went to the store. Alice gave a snack to ___\" with the correct indirect object, chosen because it is well-understood externally even though the dictionaries used to explain it were trained with no knowledge of the task at all — \"the training of our feature dictionaries does not emphasize any particular task\" (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 6). Applying the patching procedure here, and comparing against an equivalent intervention using the residual stream’s PCA decomposition, shows dictionary features reach a given KL divergence from the target output using fewer patched features and a smaller mean edit magnitude than patching an equal number of PCA components (sparse-autoencoders, §\"4.2 Precise localisation of IOI dictionary features\", p. 6). That comparison is only informative because the feature subset patched is chosen by an automated ranking procedure rather than by hand, and IOI’s already-known circuit is what makes the ranking’s quality externally checkable at all: unlike the autointerpretability score, which has no independent ground truth to verify against, a task with a previously-published circuit lets the paper confirm that features patching identifies as causally important actually are."
+  },
+  {
+   "id": "less-than-rank-one-ablation-edits-with-finer-granularity-than-dictionary-feature-patching",
+   "type": "edits-with-finer-granularity-than",
+   "source": "less-than-rank-one-ablation",
+   "target": "dictionary-feature-patching",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "causal-proof-by-patching",
+   "prose": "Both techniques edit a residual-stream activation along a dictionary feature’s direction, but they stop at different points. Dictionary-feature-patching (Section 4) pushes a chosen feature’s encoded activation the full distance from its base-sentence value to its counterfactual-sentence value, adding the complete difference so the patched run matches the target as closely as that feature allows (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). Less-than-rank-one ablation, used in the apostrophe-feature case study to measure a feature’s effect on next-token logits, instead lowers the activation only as far as the point where the feature stops firing, not past it (sparse-autoencoders, §\"5.2 Output: dictionary features have intuitive effects on the logits\", p. 7). That stopping point is not arbitrary: Appendix G explains that a dictionary feature, unlike a PCA or ICA direction, is only ever active on the far side of a hyperplane that does not pass through the origin, a consequence of the ReLU nonlinearity’s always-negative bias, so a feature’s \"on\" region is already less than a full direction in activation space (sparse-autoencoders, §\"G Top K comparisons\", p. 18). Ablating exactly to that boundary, rather than subtracting a feature’s full magnitude the way patching moves a feature the full distance to a counterfactual target, respects the very geometry the paper’s own fairness check in Appendix G identifies as distinguishing dictionary features from every baseline it compares against."
+  },
+  {
+   "id": "automated-circuit-discovery-lends-its-ranking-logic-to-feature-circuit-detection",
+   "type": "lends-its-ranking-logic-to",
+   "source": "automated-circuit-discovery",
+   "target": "feature-circuit-detection",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "causal-proof-by-patching",
+   "prose": "Automated Circuit Discovery is a borrowed algorithm; feature-circuit-detection is the paper’s own, and the two share a family resemblance the paper never states outright. Section 4.1 explicitly imports ACDC’s Algorithm 4.1 (Conmy et al., 2023) to select which dictionary features to patch for the IOI task: treating every feature as a node in a flat computational graph, ablating it, and ordering features by how much removing each one moves the model’s output KL divergence away from the target (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). Section 5.3’s feature-circuit-detection procedure, used to trace which upstream features cause the closing-parenthesis feature to fire, runs a strikingly similar routine one level down: for each candidate feature in the previous layer, ablate it, rerun the model, and rank previous-layer features by how much their removal decreases the target feature’s own activation, optionally recursing into further layers (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 7-8). Neither ACDC nor Conmy et al. is cited again in Section 5.3, so the paper presents feature-circuit-detection as a fresh, self-contained method rather than an explicit reapplication. But the underlying move — ablate a candidate cause, measure the drop in a target metric, rank and recurse — is the same one Section 4.1 imports wholesale, run here on a single feature’s activation strength instead of a whole task’s KL divergence."
+  },
+  {
+   "id": "weight-based-connection-attempt-is-the-failed-precursor-to-feature-circuit-detection",
+   "type": "is-the-failed-precursor-to",
+   "source": "weight-based-connection-attempt",
+   "target": "feature-circuit-detection",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "causal-proof-by-patching",
+   "prose": "Before settling on the ablation-based procedure in Section 5.3, the authors tried a cheaper, purely weight-based shortcut for finding which features cause which: multiply a layer-4 feature through the MLP’s weights and check the cosine similarity of the result against layer-5 features, hoping matrix multiplication alone would reveal which downstream features a given feature feeds into (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17). It found no meaningful connections at all, and the paper attributes the failure to the intermediate vector going out of distribution: multiplying a feature through the MLP weights does not land back in the region of activation space the MLP was ever trained to process, so cosine similarity there is not measuring anything the network’s own computation respects (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17). The authors also note the approach does not obviously generalize to the attention sublayer, where there is no single position dimension to multiply through. Feature-circuit-detection is the working alternative: instead of asking what a feature’s weights point toward algebraically, it asks what happens to a target feature’s actual activation when a candidate cause is ablated from a real forward pass, trading the weight method’s one-shot cheapness for causal grounding in activations the model actually produces."
+  },
+  {
+   "id": "feature-circuit-detection-is-offered-as-a-concrete-step-toward-enumerative-safety",
+   "type": "is-offered-as-a-concrete-step-toward",
+   "source": "feature-circuit-detection",
+   "target": "enumerative-safety",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "enumerating-features-for-safety",
+   "prose": "The paper places feature-circuit-detection’s payoff directly next to its most ambitious stated goal. Its discussion of future work frames tracing causal dependencies between features across layers as building toward \"a lens for viewing language models under which causal dependencies are sparse,\" named explicitly as \"a step towards the eventual goal of building an end-to-end understanding of how a model computes its outputs\" (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9). The very next paragraph names that eventual goal: enumerative safety, Elhage et al.’s (2022b) dream of a complete, human-understandable list of a model’s features sufficient to guarantee it will not perform dangerous behaviors such as deception (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). Feature-circuit-detection, demonstrated concretely on a single closing-parenthesis feature and its upstream causes, is the paper’s only worked example of what tracing those causal dependencies actually looks like in practice — a small, real instance of the \"sparse causal dependencies\" the future-work paragraph gestures at, sitting, by the paper’s own structure, as the nearest concrete precedent to the safety guarantee enumerative safety describes."
+  },
+  {
+   "id": "sparse-autoencoders-is-framed-as-a-step-toward-enumerative-safety",
+   "type": "is-framed-as-a-step-toward",
+   "source": "sparse-autoencoders",
+   "target": "enumerative-safety",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "enumerating-features-for-safety",
+   "prose": "The paper’s own closing move is to name the safety ambition its method is a down payment on. Enumerative safety, credited to Elhage et al. (2022b), is the goal of producing a human-understandable explanation of a model’s computations as a complete list of its features, sufficient to guarantee the model will not perform dangerous behaviors such as deception (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). Sparse autoencoders are offered as a concrete method for producing exactly the kind of list that goal requires: the paper states plainly, \"we hope that the techniques we presented in this paper also provide a step towards achieving this ambition\" (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). The gap between the two is left honest rather than closed: the paper’s own reconstruction loss never reaches zero, raising the Pile perplexity of Pythia-70M’s layer-2 residual stream from 25 to 40 when substituted with its reconstruction (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9), MLP dictionaries suffer many dead features, and even residual-stream dictionaries are confirmed interpretable only up to the handful of layers and small models tested here — so \"a step towards\" enumerative safety, not an instance of it, is the paper’s own characterization of what it has shown."
+  },
+  {
+   "id": "mechanistic-interpretability-is-the-field-that-dreams-of-enumerative-safety",
+   "type": "is-the-field-that-dreams-of",
+   "source": "mechanistic-interpretability",
+   "target": "enumerative-safety",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "enumerating-features-for-safety",
+   "prose": "The paper opens by naming a field and closes by naming that field’s most ambitious unmet goal, and deception is the thread connecting them. The introduction frames mechanistic interpretability as a response to a specific worry — that AI systems might \"deceive humans in order to accomplish undesirable goals\" (Ngo et al., 2022) — and defines the field’s method as understanding how networks calculate their outputs well enough to \"reverse engineer parts of their internal processes and make targeted changes to them\" (sparse-autoencoders, §\"1 Introduction\", p. 1). The conclusion returns to the same worry by name: enumerative safety is described as the field’s \"ambitious dream\" of a complete, human-understandable list of a model’s features sufficient to guarantee it will not perform \"dangerous behaviours such as deception\" (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). Read together, the two passages show that enumerative safety is not a separate goal bolted onto the introduction’s framing — it is what the field’s stated concern, reverse-engineering a network well enough to rule out deception, looks like when pushed to its logical completion: not partial reverse-engineering of chosen circuits, but an exhaustive one."
+  },
+  {
+   "id": "sparse-autoencoders-offers-an-unsupervised-alternative-to-steering-vector",
+   "type": "offers-an-unsupervised-alternative-to",
+   "source": "sparse-autoencoders",
+   "target": "steering-vector",
+   "hindsight": true,
+   "groundedIn": "persona-vectors",
+   "motivatedByTheme": null,
+   "prose": "Sparse autoencoders and steering vectors are two different answers to the same question — how do you find a direction in activation space that means something — and Persona Vectors is the paper in this corpus that states the contrast directly. A steering vector, whether CAA’s Mean Difference over hundreds of contrast pairs or the persona-vector-extraction-pipeline’s automated version, requires picking a target concept in advance and constructing labeled positive/negative examples of it before any direction can be computed. A sparse autoencoder needs neither: it is trained on unlabelled activations alone, discovering a dictionary of thousands of directions with no concept specified up front, which is exactly why Persona Vectors’ own related-work section describes SAEs as \"another approach to obtaining interpretable directions... which find directions in an unsupervised way\" (persona-vectors, §\"7 Related work\", p. 12), and its limitations section frames that unsupervised property as a genuine advantage over its own supervised pipeline: SAEs \"may therefore enable unsupervised discovery of persona-relevant directions, including specific traits that cannot be easily elicited through prompting\" (persona-vectors, §\"8 Limitations\", p. 13). From the sparse-autoencoder paper’s own 2023 standpoint this framing did not exist yet — its dictionaries were built purely to decompose activations at scale, with no notion of a \"steering vector\" to be an alternative to — so the contrast is legible only in hindsight, once a later paper had a supervised, labeled-direction method for the unsupervised method to be compared against."
+  },
+  {
+   "id": "sparse-autoencoders-runs-counter-to-the-depth-profile-of-residual-stream",
+   "type": "runs-counter-to-the-depth-profile-of",
+   "source": "sparse-autoencoders",
+   "target": "residual-stream",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": null,
+   "prose": "Both papers plot something against depth in the same architectural object, and the two curves point opposite directions. The sparse-autoencoder paper’s interpretability advantage over PCA, ICA, and the default basis is measured layer by layer and is not constant: it is already \"comparable to ICA\" by layer 4 and shows \"minimal improvement in the final layer\" (sparse-autoencoders, §\"3.2 Sparse dictionary features are more interpretable than baselines\", p. 5) — and its dictionaries are trained with no knowledge of any downstream task, since \"the training of our feature dictionaries does not emphasize any particular task\" (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 6). Contrastive Activation Addition, reading the same residual stream for a different purpose three months later, finds that behavior-relevant structure appears late rather than early: PCA-projected activations show no separation by behavior at layer 9 of Llama 2 7B Chat and a clean split one layer later, with behavioral clustering largely absent for roughly the first third of the network’s depth (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The two findings are not strictly in tension — one is a decomposition’s fidelity to arbitrary local structure, the other is where one specific labeled behavior becomes linearly separable — but juxtaposed they mean a dictionary’s best guarantee of monosemanticity and a behavior’s best guarantee of linear separability sit at opposite ends of the same stack of layers, a fact visible only once a later paper supplied the second curve."
+  },
+  {
+   "id": "autointerpretability-score-prefigures-the-llm-judge-pattern-of-open-ended-generation-evaluation",
+   "type": "prefigures-the-llm-judge-pattern-of",
+   "source": "autointerpretability-score",
+   "target": "open-ended-generation-evaluation",
+   "hindsight": true,
+   "groundedIn": "contrastive-activation-addition",
+   "motivatedByTheme": null,
+   "prose": "Both papers solve an evaluation-at-scale problem with the same trick: hand the judging to a capable language model instead of a human, because there is too much to grade by hand. The sparse-autoencoder paper’s autointerpretability score asks GPT-4 to read activating text fragments for a dictionary feature and write a natural-language explanation, then asks GPT-3.5 to use that explanation to predict the feature’s activation on held-out text, scoring the feature by how well predicted and actual activations correlate — a procedure run across \"thousands of dictionary features\" that no team of human annotators could read individually (sparse-autoencoders, §\"3.1 Interpretability at scale\", p. 3). Contrastive Activation Addition’s open-ended generation evaluation, published three months later, hands the identical model the same kind of job at the opposite end of the pipeline: rather than explaining what an internal feature detects, GPT-4 reads a free-form generated response and scores it 0-10 against a rubric for how strongly it displays a targeted behavior (contrastive-activation-addition, §\"4.2 Open-ended generation\", p. 4). Both papers hedge the same worry rather than treating LLM judgment as free of cost: the SAE paper notes that \"current LLMs are limited in the kinds of patterns that they can find\" as explainers (sparse-autoencoders, §\"3.2 Sparse dictionary features are more interpretable than baselines\", p. 5), while CAA’s limitations section flags that GPT-4’s open-ended scores \"can be sensitive to rubric wording\" and \"may carry systematic bias,\" mitigated only by a manual spot-check rather than a formal inter-rater statistic (contrastive-activation-addition, §\"10 Limitations\", p. 10). The SAE paper could not have framed its autointerpretability score as an instance of a recurring \"LLM-as-judge\" pattern, since CAA’s own use of the same model for a structurally similar job did not exist yet; the parallel is visible only once the later paper supplied its own half of it."
+  }
+ ]
+}

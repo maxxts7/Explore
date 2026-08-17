@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Automated Circuit Discovery (ACDC) — lends its ranking logic to → Automatic feature circuit detection — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Automated Circuit Discovery (ACDC) — lends its ranking logic to → Automatic feature circuit detection</h1>
+<p class="edge-meta">explored within the theme <a href="../theme/causal-proof-by-patching.html">Features proved by intervention</a></p>
+<section class="prose-section"><p>Automated Circuit Discovery is a borrowed algorithm; feature-circuit-detection is the paper’s own, and the two share a family resemblance the paper never states outright. Section 4.1 explicitly imports ACDC’s Algorithm 4.1 (Conmy et al., 2023) to select which dictionary features to patch for the IOI task: treating every feature as a node in a flat computational graph, ablating it, and ordering features by how much removing each one moves the model’s output KL divergence away from the target (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">§"4.1 Adapting activation patching to dictionary features", p. 6</a>). Section 5.3’s feature-circuit-detection procedure, used to trace which upstream features cause the closing-parenthesis feature to fire, runs a strikingly similar routine one level down: for each candidate feature in the previous layer, ablate it, rerun the model, and rank previous-layer features by how much their removal decreases the target feature’s own activation, optionally recursing into further layers (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.3 Intermediate features: dictionary features allow automatic circuit detection", p. 7-8</a>). Neither ACDC nor Conmy et al. is cited again in Section 5.3, so the paper presents feature-circuit-detection as a fresh, self-contained method rather than an explicit reapplication. But the underlying move — ablate a candidate cause, measure the drop in a target metric, rank and recurse — is the same one Section 4.1 imports wholesale, run here on a single feature’s activation strength instead of a whole task’s KL divergence.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/automated-circuit-discovery.html">Automated Circuit Discovery (ACDC)</a> and <a href="../concept/feature-circuit-detection.html">Automatic feature circuit detection</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/borrowed-causal-tools-refitted-to-features.html">Borrowed causal tools, refitted to features</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES&rdquo;, p. 6</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

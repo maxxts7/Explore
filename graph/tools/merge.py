@@ -19,6 +19,9 @@ Usage:
   python merge.py walks <staged.json>...
   python merge.py pages <staged.json>...
   python merge.py intros <staged.json>...
+  python merge.py figures <staged.json>...
+  python merge.py figure-pages <staged.json>...
+  python merge.py figure-sections <staged.json>...
   python merge.py apply <manifest.json>
   python merge.py validate
 
@@ -32,6 +35,7 @@ File paths are relative to the graph/ directory (this file's parent's parent).
 """
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -48,9 +52,23 @@ EMPTY = {
     "tissueThemes": [],
     "paperStories": [],
     "paperOverlay": None,
+    "figures": {},
 }
 
 KEBAB = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+
+FIGURE_CLASSIFICATIONS = ("data-and-experiments", "results-and-interpretation")
+FIGURE_DATA_LABELS = ("data", "experiments", "architecture")
+# Papers merged before the figure stage existed (stages 0-43). They are exempt
+# from the figures-required rule until their backfill lands; every paper added
+# after sparse-autoencoders MUST bring its figure inventory, pages, and
+# sections in the same apply transaction, or validation rejects the add.
+FIGURE_BACKFILL_PENDING = {
+    "concrete-problems", "instructgpt", "constitutional-ai",
+    "deep-rl-human-prefs", "contrastive-activation-addition", "persona-vectors",
+}
+# (staged src, store dest) image copies, executed only after validation passes.
+PENDING_IMAGE_COPIES = []
 
 
 def load_store():
@@ -270,6 +288,70 @@ def validate(store):
         for pid in paper_ids - seen_po:
             err(f"paper overlay: paper {pid} has no entry (coverage must be total)")
 
+    figures = store.get("figures") or {}
+    for pid in paper_ids - set(figures) - FIGURE_BACKFILL_PENDING:
+        err(f"paper {pid}: no figure inventory (figures/pages/sections are "
+            f"required for every new paper; land them in the same apply)")
+    pending_dests = {dest for _src, dest in PENDING_IMAGE_COPIES}
+    for pid, entry in figures.items():
+        if pid not in paper_ids:
+            err(f"figures: paper {pid!r} does not exist")
+        items = entry.get("items") or []
+        if not items:
+            err(f"figures {pid}: empty inventory")
+        seen_f = set()
+        for it in items:
+            fid = it.get("id", "")
+            if not KEBAB.match(fid):
+                err(f"figures {pid}: id not kebab-case: {fid!r}")
+            if fid in seen_f:
+                err(f"figures {pid}: duplicate id {fid!r}")
+            seen_f.add(fid)
+            if it.get("kind") not in ("figure", "table"):
+                err(f"figure {pid}/{fid}: bad kind {it.get('kind')!r}")
+            if it.get("classification") not in FIGURE_CLASSIFICATIONS:
+                err(f"figure {pid}/{fid}: bad classification {it.get('classification')!r}")
+            if not it.get("label") or not it.get("section"):
+                err(f"figure {pid}/{fid}: missing label or section locator")
+            if not isinstance(it.get("page"), int):
+                err(f"figure {pid}/{fid}: page must be an int")
+            image = it.get("image", "")
+            dest = STORE.parent / image
+            if not image or not (dest.is_file() or dest in pending_dests):
+                err(f"figure {pid}/{fid}: image file missing: {image!r}")
+            if not it.get("name"):
+                err(f"figure {pid}/{fid}: missing page name")
+            secs = it.get("sections") or []
+            if not secs:
+                err(f"figure {pid}/{fid}: no page sections (every figure needs a page)")
+            for s in secs:
+                if not s.get("heading") or len(s.get("body", "").strip()) < 100:
+                    err(f"figure {pid}/{fid}: section {s.get('heading')!r} empty or too thin")
+        for cls, key in (("data-and-experiments", "dataAndExperiments"),
+                         ("results-and-interpretation", "resultsAndInterpretation")):
+            bucket = {it["id"] for it in items if it.get("classification") == cls}
+            groups = entry.get(key) or []
+            covered = []
+            for g in groups:
+                if key == "dataAndExperiments":
+                    if g.get("label") not in FIGURE_DATA_LABELS:
+                        err(f"figures {pid}: bad subsection label {g.get('label')!r}")
+                else:
+                    if not g.get("title") or not (g.get("narrative") or "").strip():
+                        err(f"figures {pid}: group {g.get('id')!r} missing title or narrative")
+                for e in g.get("entries") or []:
+                    covered.append(e.get("figure"))
+                    if len((e.get("teaser") or "").strip()) < 60:
+                        err(f"figures {pid}: teaser for {e.get('figure')!r} missing or too thin")
+            if len(covered) != len(set(covered)):
+                err(f"figures {pid}: {key} lists a figure twice")
+            missing = bucket - set(covered)
+            extra = set(covered) - bucket
+            if missing:
+                err(f"figures {pid}: {key} misses {sorted(missing)} (coverage must be total)")
+            if extra:
+                err(f"figures {pid}: {key} lists non-{cls} items {sorted(extra)}")
+
     pages_done = [c for c in store["concepts"] if c.get("sections")]
     for c in pages_done:
         for s in c["sections"]:
@@ -373,6 +455,58 @@ def merge_pages(store, staged_files):
                 by_id[cid]["summary"] = page["summary"]
 
 
+def merge_figures(store, staged_files):
+    """Ingest a paper's figure inventory. Staged image paths are relative to
+    graph/; they are verified now, rewritten to figures/<paper>/<file> relative
+    to store/, and copied there only after the whole store validates."""
+    store.setdefault("figures", {})
+    for f in staged_files:
+        data = json.loads(Path(f).read_text(encoding="utf-8"))
+        pid = data["paper"]
+        entry = store["figures"].setdefault(
+            pid, {"items": [], "dataAndExperiments": [], "resultsAndInterpretation": []})
+        by_id = {it["id"]: it for it in entry["items"]}
+        for it in data["figures"]:
+            src = ROOT / it["image"]
+            if not src.is_file():
+                raise SystemExit(f"figures: staged image missing: {it['image']} (in {f})")
+            item = dict(it, image=f"figures/{pid}/{src.name}")
+            PENDING_IMAGE_COPIES.append((src, STORE.parent / item["image"]))
+            if item["id"] in by_id:
+                by_id[item["id"]].update(item)
+            else:
+                entry["items"].append(item)
+                by_id[item["id"]] = item
+
+
+def merge_figure_pages(store, staged_files):
+    figures = store.get("figures") or {}
+    for f in staged_files:
+        data = json.loads(Path(f).read_text(encoding="utf-8"))
+        entry = figures.get(data["paper"])
+        if entry is None:
+            raise SystemExit(f"figure-pages: paper {data['paper']!r} has no figure "
+                             f"inventory (run figures first) in {f}")
+        by_id = {it["id"]: it for it in entry["items"]}
+        for page in data["pages"]:
+            if page["id"] not in by_id:
+                raise SystemExit(f"figure-pages: unknown figure {page['id']!r} in {f}")
+            by_id[page["id"]]["name"] = page["name"]
+            by_id[page["id"]]["sections"] = page["sections"]
+
+
+def merge_figure_sections(store, staged_files):
+    figures = store.get("figures") or {}
+    for f in staged_files:
+        data = json.loads(Path(f).read_text(encoding="utf-8"))
+        entry = figures.get(data["paper"])
+        if entry is None:
+            raise SystemExit(f"figure-sections: paper {data['paper']!r} has no figure "
+                             f"inventory (run figures first) in {f}")
+        entry["dataAndExperiments"] = data["dataAndExperiments"]
+        entry["resultsAndInterpretation"] = data["resultsAndInterpretation"]
+
+
 def run_step(store, cmd, files, aliases):
     if cmd == "concepts":
         merge_concepts(store, files, aliases)
@@ -409,6 +543,12 @@ def run_step(store, cmd, files, aliases):
         merge_pages(store, files)
     elif cmd == "intros":
         merge_intros(store, files)
+    elif cmd == "figures":
+        merge_figures(store, files)
+    elif cmd == "figure-pages":
+        merge_figure_pages(store, files)
+    elif cmd == "figure-sections":
+        merge_figure_sections(store, files)
     else:
         raise SystemExit(f"unknown command {cmd!r}")
 
@@ -454,10 +594,15 @@ def main():
     if errors:
         print("\n".join(errors))
         raise SystemExit(f"\nmerge aborted, store NOT written: {len(errors)} error(s)")
+    for src, dest in PENDING_IMAGE_COPIES:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
     save_store(store)
+    n_figs = sum(len(e.get("items") or []) for e in (store.get("figures") or {}).values())
     print(f"merged {cmd}: store now has "
           + ", ".join(f"{len(store[k])} {k}" for k in
-                      ("concepts", "themes", "edges", "superthemes", "superedges", "tissueThemes")))
+                      ("concepts", "themes", "edges", "superthemes", "superedges", "tissueThemes"))
+          + f", {n_figs} figures")
 
 
 if __name__ == "__main__":

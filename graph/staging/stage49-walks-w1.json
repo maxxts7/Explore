@@ -1,0 +1,185 @@
+{
+ "walks": [
+  {
+   "theme": "unmixing-activations-with-sparsity",
+   "steps": [
+    {
+     "concept": "sparse-dictionary-learning",
+     "prose": "Sparse dictionary learning is the decades-old mathematical framework this theme scales up: Olshausen and Field (1997) and Lee et al. (2006) showed that data could be expressed as sparse linear combinations of an overcomplete set of learned basis vectors, originally to model sparse coding in the visual cortex. Cunningham et al. (2023) treat a language model's internal activations as exactly this kind of data, hypothesizing that a network's true features sit as an overcomplete, non-orthogonal set of directions that ordinary neurons or coordinates cannot represent one-to-one. Sparse autoencoders are how that decades-old framework gets implemented as a trainable neural network."
+    },
+    {
+     "concept": "sparse-autoencoders",
+     "prose": "A sparse autoencoder is a single-hidden-layer, ReLU network trained directly on a language model's cached activations, with tied encoder/decoder weights and an overcomplete hidden layer. Cunningham et al. train these autoencoders on Pythia-70M and Pythia-410M residual streams to demonstrate, alongside Anthropic's concurrent 'Towards Monosemanticity' work, that this simple architecture recovers features more interpretable, more monosemantic, and more causally precise than PCA, ICA, or the neuron basis. Every subsequent step in this walk is a design choice or training-time fact about that one small network."
+    },
+    {
+     "concept": "dictionary-feature",
+     "prose": "Each row of the sparse autoencoder's weight matrix M is a dictionary feature, a direction in activation space that the network uses, in sparse linear combination with others, to reconstruct its input. The paper calls this feature its central unit of analysis: Sections 3 through 5 examine dictionary features for interpretability, causal importance, and monosemanticity respectively. What makes a set of dictionary features good or bad is entirely determined by the training objective that produces them."
+    },
+    {
+     "concept": "reconstruction-loss",
+     "prose": "That objective's first term is reconstruction loss, the squared error ||x - x-hat||^2 between an input activation and the autoencoder's reconstruction of it, Equation 4 in the paper. Cunningham et al. are explicit that this loss never reaches zero: the dictionary always fails to capture some information in a layer's activations, a gap the reconstruction-substitution perplexity metric will later quantify directly. Reconstruction loss alone, though, would just reproduce ordinary autoencoding; the second term in the objective is what makes the decomposition a dictionary."
+    },
+    {
+     "concept": "sparsity-loss",
+     "prose": "Sparsity loss is that second term, alpha times the L1 norm of the hidden-layer coefficients c, added to reconstruction loss to encourage each input to be explained by only a few active dictionary features at a time. Alpha is the paper's single most consequential hyperparameter: at alpha=.00086 with a two-fold expansion factor, the residual-stream dictionaries used for the main interpretability comparison in Figure 2 are trained for 10 epochs, and every sweep in the paper varies alpha to trace how much sparsity a given amount of reconstruction accuracy costs. How much room that sparsity penalty has to work with is set by a separate hyperparameter, the dictionary's expansion factor."
+    },
+    {
+     "concept": "expansion-factor-r",
+     "prose": "The expansion factor R fixes the ratio between the autoencoder's hidden dimension and the model's activation dimension, dhid = R x din, controlling how overcomplete the learned dictionary is. Sweeping R shows interpretability gains hold even for undercomplete dictionaries with R<1, while larger dictionaries, unsurprisingly, explain more of a layer's overall activation variance. R sets how many dictionary features exist to compete for sparsity budget; the weight matrix mapping between them and the model's own activations is itself a further design choice, tied encoder/decoder weights."
+    },
+    {
+     "concept": "tied-weights-sae",
+     "prose": "Tied encoder/decoder weights are the choice of using a single weight matrix, transposed between the encoder and decoder halves of the network, rather than two independent ones. Cunningham et al. adopt this because it encodes the expectation that a feature's detecting and defining directions coincide, halves memory cost, and removes an otherwise-arbitrary ambiguity between encoder and decoder directions, but they find it hurts performance enough on MLP-sublayer activations to motivate an untied variant there. That MLP setting is also where a second cost of undertrained dictionaries shows up: dead features."
+    },
+    {
+     "concept": "dead-features",
+     "prose": "Dead features are dictionary rows that never activate across the training corpus, wasted capacity in an already-overcomplete dictionary. Residual-stream dictionaries stay largely alive, overcomplete up to roughly a 4x expansion factor before features start dropping out, but MLP-sublayer dictionaries suffer many dead features even with no sparsity penalty at all (alpha=0), in some cases leaving less than half a nominally twice-as-large dictionary usably active. That imbalance between the residual stream and the MLP sublayer is worth following into the MLP setting directly."
+    },
+    {
+     "concept": "mlp-sae-training",
+     "prose": "SAE training on the MLP sublayer extends the same architecture and objective to a different set of activations, with mixed results: many MLP features are more interpretable than individual neurons, but the training pipeline does not yet robustly learn overcomplete bases in the intermediate or later MLP layers, making untied weights and reinitializing dead features necessary workarounds. This mixed outcome on the MLP is a smaller-scale version of the residual stream's own unresolved gap, the amount of information the dictionary still fails to reconstruct."
+    },
+    {
+     "concept": "reconstruction-perplexity-metric",
+     "prose": "The reconstruction-substitution perplexity metric puts a number on that gap: replace a layer's activations with the SAE's reconstruction of them and measure how much the model's perplexity on the Pile rises. Substituting Pythia-70M's layer-2 residual stream with its reconstruction raises Pile perplexity from 25 to 40, direct evidence that reconstruction loss, even after training, is far from zero. That residual gap turns out not to be a bug to be swept away by tuning alpha harder, but a structural feature of the whole tradeoff the objective is built on."
+    },
+    {
+     "concept": "sparsity-reconstruction-tradeoff",
+     "prose": "The sparsity-reconstruction tradeoff is what sweeping alpha actually reveals: a smooth curve between the number of active features and unexplained reconstruction variance, with no knee or bump marking a single best operating point. Cunningham et al. read this as weak evidence against there being one uniquely correct sparse decomposition of a given activation space, only a family of decompositions at different points along the curve. Every other choice this walk has covered, R, tied weights, alpha itself, is a choice of where on that curve to sit, not a search for a single ground truth waiting to be found."
+    }
+   ]
+  },
+  {
+   "theme": "superposition-vs-the-neuron-basis",
+   "steps": [
+    {
+     "concept": "polysemanticity",
+     "prose": "Polysemanticity is the paper's opening problem: individual neurons activate in multiple, semantically unrelated contexts, blocking any concise human-understandable account of what a network's units are doing. Cunningham et al. name it in their abstract as the central roadblock their sparse-autoencoder method is built to remove, and every technique in this theme traces back to explaining or curing it. The paper's proposed explanation for why polysemanticity happens at all is superposition."
+    },
+    {
+     "concept": "superposition",
+     "prose": "Superposition, hypothesized by Elhage et al. (2022), is a network representing more features than it has dimensions by packing them into an overcomplete set of non-orthogonal directions, relying on activation sparsity to keep interference between them manageable. If superposition is the reason neurons are polysemantic, then recovering the true, overcomplete set of directions -- via sparse dictionary learning -- should recover monosemantic features instead of polysemantic neurons. The paper's main testing ground for this claim is the residual stream."
+    },
+    {
+     "concept": "residual-stream",
+     "prose": "The residual stream, the transformer's running sum of layer outputs, is this paper's primary object of study: sparse autoencoders are trained mainly on residual-stream activations, rather than on individual neurons or MLP units. Studying it raises an immediate question the paper has to address before its results mean anything: does this space even have a meaningful default coordinate system to compare its learned features against?"
+    },
+    {
+     "concept": "privileged-basis",
+     "prose": "A privileged basis is a coordinate system distinguished as unusually meaningful for a given vector space, the way the standard basis is meaningful immediately after an elementwise nonlinearity. Cunningham et al. note that the residual stream is not usually expected to have one; nothing about how it accumulates layer outputs picks out any particular set of coordinates as special. That expectation turns out to be only partially true, because of outlier dimensions."
+    },
+    {
+     "concept": "outlier-dimensions",
+     "prose": "Outlier dimensions are specific residual-stream coordinates that transformers write disproportionately large, information-bearing values to, a pattern Dettmers et al. (2022) attribute to the Adam optimizer storing gradients with finite precision in the residual basis. The paper finds its top-activating default-basis dimensions for both the most positive and most negative apostrophe-related directions were outlier dimensions rather than typical coordinates -- a partial exception to the 'no privileged basis' expectation that the paper has to control for when it builds its baseline. That baseline is the default basis itself."
+    },
+    {
+     "concept": "default-basis-baseline",
+     "prose": "The default basis baseline treats individual neurons, or for the residual stream individual coordinates, as the units worth analyzing directly, exactly the naive hypothesis that features are neurons taken literally. Scored for autointerpretability against the paper's learned dictionary features, this baseline is shown, through the apostrophe-dimension case study, to be polysemantic exactly where the corresponding dictionary feature is monosemantic. That contrast is the paper's cleanest empirical demonstration of what superposition predicts and sparse coding is meant to fix."
+    },
+    {
+     "concept": "monosemanticity",
+     "prose": "Monosemanticity, activating for one coherent, human-interpretable concept, is the property the default basis lacks and the learned dictionary feature has: the same apostrophe-related direction that is polysemantic as a raw residual-stream coordinate becomes monosemantic once expressed as a dictionary feature. The paper's case studies extend this same contrast beyond apostrophes, to a closing-parenthesis feature and others, arguing that monosemanticity is a general property of the learned decomposition rather than one lucky example. Taken together, the theoretical account and this empirical demonstration argue for a broader methodological conclusion about how interpretability research should proceed."
+    },
+    {
+     "concept": "mechanistic-interpretability",
+     "prose": "Mechanistic interpretability is that broader research agenda: reverse-engineering a network's internal computations into human-understandable parts, in service of verifying, editing, and mitigating risks such as deceptive behavior. Cunningham et al. frame their sparse-autoencoder method as a foundation for future work in this agenda precisely because it validates the theme's premise -- that neurons and coordinate bases are not privileged units of analysis, and meaningful units have to be discovered rather than assumed. The paper's remaining sections extend that discovered basis into scoring, baselines, and causal tests, but the case against the neuron basis is made in full by this point."
+    }
+   ]
+  },
+  {
+   "theme": "automated-interpretability-scoring",
+   "steps": [
+    {
+     "concept": "autointerpretability-score",
+     "prose": "The autointerpretability score, adapted from Bills et al. (2023), is the paper's primary measure of whether a dictionary feature means anything: a language model is shown text where the feature activates, writes a natural-language explanation of it, and a second language-model pass predicts the feature's per-token activations from that explanation alone. The correlation between predicted and true activations is the score, and Cunningham et al. compute it across thousands of features and four baselines. Two different language models carry out the two halves of that pipeline, starting with the one that writes the explanation."
+    },
+    {
+     "concept": "gpt-4",
+     "prose": "GPT-4 is the explainer: given a dictionary feature's highly-activating text fragments and their rescaled per-token activations, it writes the natural-language description of what the feature detects, such as 'instances of the letter W and words beginning with w' for one layer-1 residual-stream feature. Table 1 in the paper shows five such GPT-4-written descriptions alongside their scores, ranging from -0.11 to 0.57 for the first five features in that dictionary. GPT-4's explanation is only half the pipeline; a second model has to test whether that explanation actually predicts the feature's behavior."
+    },
+    {
+     "concept": "gpt-3-5",
+     "prose": "GPT-3.5 is that second model, the simulator: given GPT-4's explanation, it predicts the feature's per-token activations on held-out text, and those predictions are correlated against the ground truth to produce the score. Cunningham et al. substitute GPT-3.5 for GPT-4 at this step, departing from Bills et al.'s original protocol, purely because OpenAI's public GPT-3.5 API exposed the logprobs the simulation step needs while its GPT-4 API did not at the time. Which text fragments get shown to these two models is itself a protocol choice with consequences for the score."
+    },
+    {
+     "concept": "top-random-scoring",
+     "prose": "Top-and-random vs. random-only interpretability scoring names that choice: the default 'top-and-random' scoring mixes highly-activating fragments with randomly sampled ones, since with only 640 tokens of context a purely random sample would rarely contain a highly-activating example for anything but the most common features. Appendix C.2 reruns the whole comparison using stricter random-only scoring and finds the learned dictionary features still outperform every baseline, especially in early layers, ruling out top-scoring as an artifact explaining the paper's results. A second, independent control checks a different possible artifact, this time in how the baselines themselves are set up."
+    },
+    {
+     "concept": "top-k-baseline-control",
+     "prose": "The top-K-active baseline control, run in Appendix G, addresses an asymmetry: a PCA direction is active across an entire half-space, while a sparse-coding feature activates only past a learned bias threshold, so the PCA and ICA baselines get restricted to a fixed number K of simultaneously active directions per datapoint, set equal to the SAE's own average active-feature count at R=1 and alpha=8.6e-4. This handicap explains only a small fraction of the interpretability gap between the learned dictionary and its baselines, meaning sparsity of activation alone does not account for the advantage. What does help explain both the size of that advantage and which baseline comes closest to closing it is a property of the activation distributions themselves."
+    },
+    {
+     "concept": "kurtosis-skew-correlation-analysis",
+     "prose": "The interpretability-vs-kurtosis/skew correlation analysis correlates a feature's autointerpretability score with statistical moments of its activation distribution, finding weak positive correlations of 0.19 with skew and 0.24 with kurtosis. Heavier-tailed features, in other words, tend to score as more interpretable, an intuitive fit with the idea that interference from other active features should be roughly normally distributed by the central limit theorem, leaving genuine features to stand out as outliers. This is also the analysis that explains ICA's position among the four baselines: because ICA directly maximizes non-Gaussianity, it lands closest to the SAE's scores of any baseline tested, closing the loop between what this pipeline measures and why some methods score better on it than others."
+    }
+   ]
+  },
+  {
+   "theme": "decomposition-baselines",
+   "steps": [
+    {
+     "concept": "default-basis-baseline",
+     "prose": "The ladder of baselines starts with the most literal hypothesis about where a model's features live: the default basis baseline, treating individual neurons, or for the residual stream individual coordinates, as the units worth scoring directly. It is shown, via the apostrophe-dimension case study, to be polysemantic exactly where the corresponding learned dictionary feature is monosemantic, and every stronger baseline in this theme is an attempt to do better than this naive starting point. The weakest possible alternative to it is not a smarter basis at all, but no basis, just random directions."
+    },
+    {
+     "concept": "random-directions-baseline",
+     "prose": "The random directions baseline samples directions in activation space with no relationship to the model's computation whatsoever, a lower bound against which the default basis, PCA, and ICA are all compared in the paper's autointerpretability figures. If a learned dictionary scored no better than random directions, sparsity-driven decomposition would have nothing to recommend it; the next two baselines instead ask whether some principled, non-random criterion for choosing directions can close that gap."
+    },
+    {
+     "concept": "pca",
+     "prose": "Principal Component Analysis chooses directions of maximal variance in the activation data, the paper's first non-arbitrary baseline decomposition, run online on the same quantity of data used to train the autoencoders. PCA underperforms the learned dictionaries both on autointerpretability score and, in Section 4, on IOI-patching precision, where it needs more patched features and larger edit magnitudes to reach the same KL divergence from target. A different, sparsity-adjacent principle does better than maximizing variance: maximizing statistical independence."
+    },
+    {
+     "concept": "ica",
+     "prose": "Independent Component Analysis finds statistically independent, maximally non-Gaussian directions, and it is consistently the strongest of the four baselines, on both metrics the paper runs. The paper's kurtosis and skew analysis explains why: interpretability correlates weakly but positively with how heavy-tailed a feature's activations are, and ICA is the one baseline built to directly optimize for exactly that non-Gaussian, heavy-tailed property. Because ICA and PCA both activate across an entire half-space rather than only past a threshold like the SAE does, the paper subjects them to one further check before declaring the comparison fair."
+    },
+    {
+     "concept": "top-k-baseline-control",
+     "prose": "The top-K-active baseline control, in Appendix G, restricts PCA and ICA to a fixed number K of simultaneously active directions per datapoint, matched to the sparse autoencoder's own average active-feature count at R=1 and alpha=8.6e-4. This tightens the ladder by removing a structural advantage the SAE might otherwise have simply by activating fewer directions per input at once, and the adjustment is found to explain only a small fraction of the interpretability gap. With every rung of the ladder handicapped as fairly as the paper can manage, what remains standing above all four baselines is the sparse autoencoder itself."
+    },
+    {
+     "concept": "sparse-autoencoders",
+     "prose": "Sparse autoencoders are what every one of these baselines is run against, on both of the paper's central comparisons: autointerpretability score and IOI-patching precision alike. Beating the default basis rules out neurons as the right unit, beating random directions rules out that any direction would do, and beating PCA and even the tightened, top-K-matched ICA rules out variance-maximization and non-Gaussianity-maximization as sufficient substitutes for what sparsity-driven dictionary learning finds. The ladder is how Cunningham et al. (2023) argue that sparse autoencoders recover something more specific than any generic statistical decomposition of activation space -- a claim earned one baseline at a time."
+    }
+   ]
+  },
+  {
+   "theme": "causal-proof-by-patching",
+   "steps": [
+    {
+     "concept": "activation-patching",
+     "prose": "Activation patching is the causal mediation technique, borrowed from Vig et al. (2020), that this theme's entire argument rests on: edit a model's internal activations toward values observed on a counterfactual input, then measure the resulting change in output. Cunningham et al. adapt it specifically to dictionary features, patching feature-encoded activation differences into the residual stream rather than raw neuron or coordinate values, to test how precisely those features localize a real model behavior. That behavior is a previously-studied task chosen for being simple enough to check the method against a known answer."
+    },
+    {
+     "concept": "ioi-task",
+     "prose": "The Indirect Object Identification task has the model complete sentences like 'Then, Alice and Bob went to the store. Alice gave a snack to ___' by correctly naming the indirect object, a behavior Wang et al. (2022) had already reverse-engineered into a known circuit in GPT-2-small. Cunningham et al. reuse it as a case study specifically because their dictionaries were trained task-agnostically, on generic activations with no emphasis on IOI at all, so any precision the features show here is not an artifact of training on the task. Turning that precision into a number requires a specific patching procedure built for dictionary features."
+    },
+    {
+     "concept": "dictionary-feature-patching",
+     "prose": "The dictionary-feature patching procedure runs the model on a counterfactual sentence, caches the encoded activations of a chosen feature subset, then reruns on the base sentence and adds the encoded activation differences for that subset back into the residual stream, measuring the KL divergence between the patched output and the target output. On layer 11 of Pythia-410M, this procedure reaches a given KL divergence with fewer patched features and smaller edit magnitude than patching an equivalent number of PCA components, and a non-sparse (alpha=0) dictionary shows no such advantage. Which features belong in that patched subset in the first place is decided by a separate algorithm."
+    },
+    {
+     "concept": "automated-circuit-discovery",
+     "prose": "Automated Circuit Discovery supplies that algorithm: Cunningham et al. reuse its ordering procedure, Algorithm 4.1 from Conmy et al. (2023), treating dictionary features as a flat computational graph and ranking each by its individual contribution to reducing KL divergence, averaged over a test set of 50 IOI data points. The resulting ordering is what defines the feature subsets patched in the dictionary-feature-patching experiments, applied separately to each decomposition being compared. That same causal logic, applied at the level of a single feature rather than a whole subset, is what the paper's finer-grained ablation technique isolates next."
+    },
+    {
+     "concept": "less-than-rank-one-ablation",
+     "prose": "Less-than-rank-one ablation lowers a residual-stream activation's component along a feature's direction only as far as that feature's own activation threshold, rather than subtracting the full magnitude of the direction. Used in the apostrophe-feature case study, this precision is what lets the paper isolate a single feature's causal effect on next-token logits cleanly, showing that removing the apostrophe feature specifically suppresses the logit for the following 's' token. The same ablate-and-measure logic, applied not to logits but to another feature's activation, is how the paper traces causal dependencies between features across layers."
+    },
+    {
+     "concept": "feature-circuit-detection",
+     "prose": "Automatic feature circuit detection extends activation-patching-style causal testing across layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature in turn and rank features by how much their ablation lowers the target's activation, optionally recursing to build a multi-layer causal tree. This is the method that turns individual causally-validated features into circuits, an interpretable chain of upstream causes rather than an isolated case study. Its central demonstration is a single layer-5 feature chosen because its role in the network is unusually easy to verify independently."
+    },
+    {
+     "concept": "closing-parenthesis-feature",
+     "prose": "The closing-parenthesis dictionary feature is that demonstration: a layer-5 feature whose unembedding directly predicts closing-parenthesis tokens, letting the paper check its circuit-detection method against a feature whose output-side meaning is already unambiguous. Tracing upstream causes turns up features detecting dates, acronyms, and other parenthesis-preceding phrases, exactly the contexts that intuitively precede a closing parenthesis, giving the ablation-based method a legible, checkable success. Not every attempt to trace causal structure between features succeeded this cleanly, and the paper reports one that did not."
+    },
+    {
+     "concept": "weight-based-connection-attempt",
+     "prose": "The weight-based feature connection attempt was a different, faster-to-compute alternative: multiply a layer-4 feature through the MLP weights and check cosine similarity with layer-5 features, hoping weights alone would reveal the same connections ablation found. It found no meaningful connections, likely because the resulting vector went out-of-distribution, and Cunningham et al. report this failure alongside the ablation-based method's success rather than omitting it. The contrast closes the theme's argument: an interpretable-looking feature, or a plausible-looking connection between features, earns trust only once an actual intervention -- ablation, patching -- has been shown to change model behavior in the predicted way, not merely once its weights look suggestive."
+    }
+   ]
+  }
+ ]
+}

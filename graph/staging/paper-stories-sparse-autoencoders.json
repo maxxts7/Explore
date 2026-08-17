@@ -1,0 +1,996 @@
+{
+ "paperStories": [
+  {
+   "id": "sparse-autoencoders",
+   "stories": [
+    {
+     "id": "sparse-autoencoders-inside",
+     "tab": "Inside the paper",
+     "claim": "The paper's claim is that neurons are the wrong unit for reading a language model, that superposition explains why, and that a sparsely-penalized autoencoder trained on nothing but raw activations can recover a dictionary of features that score higher on automated interpretability, localize a known behavior more precisely under causal patching, and hold up to hand inspection as genuinely monosemantic — with the reconstruction gap and the method's own MLP-layer struggles reported alongside the wins.",
+     "name": "Inside Sparse Autoencoders: neurons give way to a learned dictionary of directions",
+     "narrative": "The paper's own arc runs from a diagnosis to an instrument to three kinds of proof: why neurons and superposition make the model's internals illegible, how a small autoencoder trained with an L1 penalty is built to unpack them, how an automated scoring pipeline checks whether the unpacking beats four rival decompositions, how a causal patching test on a known behavior checks whether the resulting features actually do anything, how two hand-picked features hold up when read from both ends, and where the method's own reconstruction gap, MLP struggles, and safety ambition are left honestly unresolved.",
+     "ref": null,
+     "children": [
+      {
+       "id": "sae-in-ch1-obstacle",
+       "name": "The obstacle: superposition, and why neurons are the wrong unit",
+       "ref": null,
+       "narrative": "The introduction states the paper's target directly: polysemanticity, individual neurons activating for multiple unrelated concepts, is “one of the roadblocks to a better understanding of neural networks' internals” (sparse-autoencoders, Abstract, p. 1). Superposition is offered as the hypothesized cause — models packing more features than they have neurons into an overcomplete set of directions — which reframes the problem as sparse dictionary learning, a decades-old framework this paper's introduction traces from Olshausen & Field's 1997 sparse coding through a 2023 interim report by one of its own co-authors.",
+       "children": [
+        {
+         "id": "sae-in-polysemanticity",
+         "name": "The roadblock named in the first sentence",
+         "ref": {
+          "kind": "concept",
+          "id": "polysemanticity"
+         },
+         "narrative": "Polysemanticity is named in the paper's opening sentence as the roadblock motivating everything that follows: neurons “appear to activate in multiple, semantically distinct contexts,” which “prevents us from identifying concise, human-understandable explanations for what neural networks are doing internally” (sparse-autoencoders, Abstract, p. 1). Using individual neurons as the unit of analysis “has had some success,” the paper concedes, but polysemanticity is the specific failure mode that success runs into.",
+         "children": []
+        },
+        {
+         "id": "sae-in-superposition",
+         "name": "The hypothesized cause the method is built to reverse",
+         "ref": {
+          "kind": "concept",
+          "id": "superposition"
+         },
+         "narrative": "Superposition is the hypothesized mechanism behind polysemanticity: a network represents more features than it has dimensions by assigning them to an overcomplete set of non-orthogonal directions, relying on sparse activation to keep interference between them manageable. “Without high sparsity, interference between non-orthogonal features prevents any performance gain from superposition” (sparse-autoencoders, §1 Introduction, p. 1) — the paper's stated goal is to resolve superposition by recovering those directions directly.",
+         "children": []
+        },
+        {
+         "id": "sae-in-monosemanticity",
+         "name": "The converse property the method is judged by",
+         "ref": {
+          "kind": "concept",
+          "id": "monosemanticity"
+         },
+         "narrative": "Monosemanticity is the converse property the paper's method is built to find: a feature or direction that activates for one coherent, human-interpretable concept rather than several unrelated ones. It becomes a demonstrated, not just scored, property once the apostrophe and closing-parenthesis case studies (Section 5) show individual dictionary features behaving this way under direct hand inspection.",
+         "children": []
+        },
+        {
+         "id": "sae-in-mech-interp",
+         "name": "The field this method is offered to advance",
+         "ref": {
+          "kind": "concept",
+          "id": "mechanistic-interpretability"
+         },
+         "narrative": "Mechanistic interpretability is named as the field this method aims to advance: a research agenda seeking to “reverse engineer parts of [a network's] internal processes and make targeted changes to them,” motivated in part by the worry that AI systems “might deceive humans in order to accomplish undesirable goals” (sparse-autoencoders, §1 Introduction, p. 1). The paper positions its method as “a foundation for future mechanistic interpretability work.”",
+         "children": []
+        },
+        {
+         "id": "sae-in-sparse-dict-learning",
+         "name": "The decades-old framework the problem reduces to",
+         "ref": {
+          "kind": "concept",
+          "id": "sparse-dictionary-learning"
+         },
+         "narrative": "Sparse dictionary learning is the decades-old mathematical framework, developed by Olshausen & Field (1997) and Lee et al. (2006) to model sparse coding in the visual cortex, that the introduction identifies its problem with: finding features is “equivalent to the well-known problem of sparse dictionary learning.” The paper's sparse autoencoder is presented throughout as a scalable neural-network implementation of that older framework, applied here for the first time at this scale to language-model activations.",
+         "children": []
+        },
+        {
+         "id": "sae-in-sharkey",
+         "name": "The direct predecessor, co-authored by the same person",
+         "ref": {
+          "kind": "concept",
+          "id": "sharkey-interim-report"
+         },
+         "narrative": "Sharkey, Braun & Millidge's 2023 unpublished interim report, titled “Taking features out of superposition with sparse autoencoders” — the exact phrase this paper's Section 2 heading borrows — first proposed training sparse autoencoders on language model activations and showed in toy settings that the idea could recover known ground-truth features. This paper, co-authored by Lee Sharkey himself, is explicitly framed as scaling that report up to a real language model and adding the autointerpretability, causal-localization, and monosemanticity evaluations it lacked.",
+         "children": []
+        },
+        {
+         "id": "sae-in-lineage-theme",
+         "name": "A lineage running from 1997 to a co-author's own 2023 report",
+         "ref": {
+          "kind": "theme",
+          "id": "dictionary-learning-lineage"
+         },
+         "narrative": "The paper presents its method as a scaling-up of existing ideas rather than a new invention: sparse dictionary learning itself traces to [[sparse-dictionary-learning]]'s decades-old sparse-coding framework, [[yun-dictionary-learning]] already applied a version of it to every residual-stream layer of a transformer at once, and [[l4-norm-maximization]] supplies a separate theoretical reformulation the paper later invokes to explain why interpretability correlates with how heavy-tailed a feature's activations are. Read together, this lineage runs from a 1997 optimization principle through a 2021 transformer-scale precedent to a co-author's own unpublished 2023 forerunner.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch2-method",
+       "name": "The instrument: an autoencoder that trades sparsity for reconstruction",
+       "ref": null,
+       "narrative": "Section 2 lays out the recipe: a single-hidden-layer, ReLU, tied-weight autoencoder is trained to reconstruct a language model's activations from a sparse code, with the encoder c = ReLU(Mx+b) producing that code in one forward pass rather than re-solving a fresh optimization per datapoint the way classical sparse coding would. Every design choice in the section is a position on one tradeoff, set most directly by the training objective's two loss terms and the dictionary-size hyperparameter governing how overcomplete the hidden layer is allowed to be.",
+       "children": [
+        {
+         "id": "sae-in-object",
+         "name": "The method itself: an autoencoder built to unmix superposition",
+         "ref": {
+          "kind": "concept",
+          "id": "sparse-autoencoders"
+         },
+         "narrative": "A sparse autoencoder, in this paper's design, is a single-hidden-layer, ReLU, tied-weight network trained with an L1 penalty on its hidden activations to reconstruct a language model's activations as a sparse linear combination of an overcomplete dictionary. It is one of two founding empirical demonstrations, alongside the concurrent Anthropic “Towards Monosemanticity” work, that this architecture recovers features more interpretable and monosemantic than PCA, ICA, or the neuron basis (sparse-autoencoders, §2, p. 2).",
+         "children": []
+        },
+        {
+         "id": "sae-in-unmixing-theme",
+         "name": "One tradeoff behind every design choice in the method",
+         "ref": {
+          "kind": "theme",
+          "id": "unmixing-activations-with-sparsity"
+         },
+         "narrative": "Nearly every design choice in [[sparse-autoencoders]] is a position on one tradeoff: minimize a [[reconstruction-loss]] plus a [[sparsity-loss]] weighted by a coefficient alpha, with the [[expansion-factor-r]] setting how overcomplete the hidden layer is and [[tied-weights-sae]] halving the parameter count by forcing encoder and decoder to share values. Reconstruction never reaches zero — swapping in Pythia-70M's reconstructed layer-2 activations raises Pile perplexity from 25 to 40 — and sweeping alpha traces a smooth [[sparsity-reconstruction-tradeoff]] with no distinguished “knee,” weak evidence against there being one uniquely correct decomposition.",
+         "children": []
+        },
+        {
+         "id": "sae-in-dict-feature",
+         "name": "The unit of analysis: one row of the dictionary",
+         "ref": {
+          "kind": "concept",
+          "id": "dictionary-feature"
+         },
+         "narrative": "A dictionary feature is one learned row of the autoencoder's weight matrix M — equivalently, one hidden unit — representing a direction in activation space used to reconstruct inputs as part of a sparse linear combination. It is the paper's central unit of analysis, examined for interpretability (Section 3), causal importance (Section 4), and monosemanticity (Section 5) (sparse-autoencoders, §2, p. 2; §5.1, p. 7).",
+         "children": []
+        },
+        {
+         "id": "sae-in-sparsity-loss",
+         "name": "The penalty that forces the code to be sparse",
+         "ref": {
+          "kind": "concept",
+          "id": "sparsity-loss"
+         },
+         "narrative": "The alpha·||c||_1 term in the training objective (Equation 4) penalizes the L1 norm of the hidden-layer coefficients c to encourage sparse feature activations. The sparsity coefficient alpha is the paper's key hyperparameter, swept throughout to trade sparsity against reconstruction accuracy, and is only meaningful because each dictionary feature is separately held to unit norm — otherwise the optimizer could game the penalty by rescaling M instead of genuinely zeroing out coefficients.",
+         "children": []
+        },
+        {
+         "id": "sae-in-recon-loss",
+         "name": "The term that admits the dictionary is never complete",
+         "ref": {
+          "kind": "concept",
+          "id": "reconstruction-loss"
+         },
+         "narrative": "The ||x - x-hat||^2 term in the training objective (Equation 4) is the standard squared-error measure of how well the reconstructed activation matches the original. The paper is candid that this loss is never driven to zero, evidence the dictionary fails to capture all the information a layer's activations carry — a gap independently corroborated later by the reconstruction-substitution perplexity metric introduced as a limitation (sparse-autoencoders, §2, p. 3; §6.2, p. 8).",
+         "children": []
+        },
+        {
+         "id": "sae-in-expansion",
+         "name": "The dial that sets how overcomplete the dictionary is",
+         "ref": {
+          "kind": "concept",
+          "id": "expansion-factor-r"
+         },
+         "narrative": "R controls the ratio of the autoencoder's hidden dimension to the model's activation dimension (d_hid = R x d_in), governing how overcomplete the learned dictionary is. Sweeping R shows interpretability gains hold even for undercomplete dictionaries (R<1), with larger dictionaries explaining more of the overall activation variance without any single feature scoring less interpretable on average (sparse-autoencoders, §2, p. 2; §C.1, p. 13).",
+         "children": []
+        },
+        {
+         "id": "sae-in-tied",
+         "name": "The weight-sharing choice, and where it breaks",
+         "ref": {
+          "kind": "concept",
+          "id": "tied-weights-sae"
+         },
+         "narrative": "Tied encoder/decoder weights — a single shared matrix M, transposed between encoder and decoder — halve the model's memory cost and remove any ambiguity about whether a feature's direction should be read from the encoder or the decoder, since with tying the two coincide by construction. The choice costs nothing measurable on residual-stream data, but hurts performance on MLP activations, motivating an untied variant there instead.",
+         "children": []
+        },
+        {
+         "id": "sae-in-tradeoff",
+         "name": "A smooth curve with no single right answer on it",
+         "ref": {
+          "kind": "concept",
+          "id": "sparsity-reconstruction-tradeoff"
+         },
+         "narrative": "Sweeping the sparsity coefficient alpha traces a smooth curve trading the number of active features against unexplained reconstruction variance, with no distinct “knee” or single best operating point (sparse-autoencoders, §B, p. 12). The paper reads this as weak evidence against there being one uniquely correct sparse decomposition of a given activation space — every (alpha, R) setting is a defensible, merely different, decomposition.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch3-scoring",
+       "name": "Grading interpretability at scale, against a ladder of baselines",
+       "ref": null,
+       "narrative": "Section 3 puts the learned dictionary to its first test: does an automated interpretability metric, run across thousands of features, actually favor sparse dictionary features over four rival decompositions of the same activations? GPT-4 and GPT-3.5 do the grading in a two-step pipeline adapted from Bills et al. (2023), and the paper spends several appendices checking whether the resulting advantage is real or an artifact of how the metric itself is built.",
+       "children": [
+        {
+         "id": "sae-in-autointerp",
+         "name": "The metric: explain, then simulate, then correlate",
+         "ref": {
+          "kind": "concept",
+          "id": "autointerpretability-score"
+         },
+         "narrative": "GPT-4 is shown text where a feature activates and writes a natural-language explanation; GPT-3.5 then uses that explanation alone to predict the feature's activations on held-out text, and the correlation between predicted and actual activations is the score (sparse-autoencoders, §3.1, p. 3). Run across thousands of features and four baselines, this is the paper's primary measure of interpretability, adapted from Bills et al. (2023) and applied here at a scale no team of human annotators could match.",
+         "children": []
+        },
+        {
+         "id": "sae-in-gpt4",
+         "name": "The explainer, working from a narrow window",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-4"
+         },
+         "narrative": "GPT-4 is the autointerpretability pipeline's explainer: shown 5 of a feature's 20 top-activating text fragments from OpenWebText, along with per-token activations rescaled to integers 0-10, it writes the single free-text explanation the rest of the pipeline treats as ground truth (sparse-autoencoders, §A, p. 11). Its explanations range from concrete (“the number 5... personal names and some nouns,” scored 0.57) to vague enough to anti-predict the feature's real behavior.",
+         "children": []
+        },
+        {
+         "id": "sae-in-gpt35",
+         "name": "The simulator, working from words alone",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-3-5"
+         },
+         "narrative": "GPT-3.5 is the pipeline's simulator: given only GPT-4's finished explanation text, with no access to the original activating fragments, it predicts per-token activations on a fresh batch of fragments, and the score is the correlation with the feature's true activations. GPT-3.5 substitutes for GPT-4 in this role purely because OpenAI's public API exposed the logprobs the simulation step needs for GPT-3.5 but not, at the time, for GPT-4 (sparse-autoencoders, §A, p. 11).",
+         "children": []
+        },
+        {
+         "id": "sae-in-pca",
+         "name": "The baseline that loses once sparsity is what's tested",
+         "ref": {
+          "kind": "concept",
+          "id": "pca"
+         },
+         "narrative": "PCA is one of four baseline decompositions the learned dictionary is measured against, fit on the same multi-million-vector activation dataset used to train the autoencoders themselves. On the IOI causal-localization test it underperforms the sparse dictionary noticeably, needing more patched components and larger edit magnitude to reach a given KL divergence — a gap the paper shows disappears if the sparsity penalty is removed (sparse-autoencoders, §3.2, p. 3; §4.2, p. 6).",
+         "children": []
+        },
+        {
+         "id": "sae-in-ica",
+         "name": "The baseline that closes the gap in later layers",
+         "ref": {
+          "kind": "concept",
+          "id": "ica"
+         },
+         "narrative": "ICA finds maximally non-Gaussian, statistically independent directions, and is consistently the strongest of the four non-dictionary-learning baselines — the sparse dictionary's autointerpretability advantage over it “declines as we move through the model, being comparable to ICA in layer 4 and showing minimal improvement in the final layer” (sparse-autoencoders, §3.2, p. 3). The paper attributes ICA's strength to interpretability correlating with activation kurtosis and skew, properties ICA directly optimizes for — though ICA is also trained on markedly less data than PCA.",
+         "children": []
+        },
+        {
+         "id": "sae-in-score-audit-tissue",
+         "name": "The paper checking its own metric before trusting it",
+         "ref": {
+          "kind": "tissue",
+          "id": "the-score-is-itself-audited"
+         },
+         "narrative": "The paper interrogates its own metric rather than trusting it outright. [[random-directions-baseline]] anchors the score's floor with every accommodation given; the [[top-k-baseline-control]] density-matches PCA and ICA to the dictionary's own activation sparsity and finds this explains only a small fraction of the gap; [[top-random-scoring]]'s fragment-sampling compromise is checked with a random-only rerun; and the [[kurtosis-skew-correlation-analysis]] finds the score rewards heavy-tailed activation specifically, a signature [[l4-norm-maximization]] predicts theoretically. Even so, [[monosemanticity]] is only imperfectly proxied by a score that cannot see a feature's causal effect on outputs — a blind spot the paper states plainly and Section 5's hand-run case studies exist to cover.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch4-ioi",
+       "name": "Causal proof: patching dictionary features onto a known circuit",
+       "ref": null,
+       "narrative": "A high autointerpretability score only shows a feature's activation pattern is describable from text — it says nothing about whether the feature does anything to the model's behavior. Section 4 supplies that missing half by adapting activation patching, a causal mediation technique, to individual dictionary features, and testing the result against the Indirect Object Identification task, a behavior with an already-published circuit that gives the paper external ground truth an internally-defined score cannot.",
+       "children": [
+        {
+         "id": "sae-in-actpatch",
+         "name": "The borrowed technique: transplant, then measure the shift",
+         "ref": {
+          "kind": "concept",
+          "id": "activation-patching"
+         },
+         "narrative": "Activation patching (Vig et al., 2020) is a causal mediation technique: run a model on a counterfactual input, cache its internal activations, transplant them into a run on the base input, and measure how far the output moves toward the counterfactual's. This paper adapts it to dictionary features — patching feature-encoded activation differences into the residual stream rather than whole raw activations — to test how precisely SAE features localize the IOI behavior (sparse-autoencoders, §4, p. 5; §4.1, p. 6).",
+         "children": []
+        },
+        {
+         "id": "sae-in-dictpatch",
+         "name": "The paper's own adaptation, tested against PCA",
+         "ref": {
+          "kind": "concept",
+          "id": "dictionary-feature-patching"
+         },
+         "narrative": "The paper's specific procedure: run the model on a counterfactual sentence, cache the encoded feature activations, re-run on the base sentence, and add the encoded activation differences for a chosen feature subset into the residual stream, measuring KL divergence from the target output. It reaches a given KL divergence with fewer patched features and smaller edit magnitude than patching an equivalent number of PCA components (sparse-autoencoders, §4.1, p. 6; §4.2, p. 6).",
+         "children": []
+        },
+        {
+         "id": "sae-in-acdc",
+         "name": "The borrowed ranking algorithm that picks which features to patch",
+         "ref": {
+          "kind": "concept",
+          "id": "automated-circuit-discovery"
+         },
+         "narrative": "Automated Circuit Discovery (Conmy et al., 2023) is a prior algorithm for finding the subgraph of a network responsible for a behavior. This paper reuses ACDC's ordering procedure — ablate each candidate feature and rank it by how much removing it moves the model's KL divergence from the target — to rank dictionary features by causal contribution, producing the feature subset used in the patching experiments (sparse-autoencoders, §4.1, p. 6).",
+         "children": []
+        },
+        {
+         "id": "sae-in-ioi",
+         "name": "The task chosen because its circuit is already known",
+         "ref": {
+          "kind": "concept",
+          "id": "ioi-task"
+         },
+         "narrative": "The Indirect Object Identification task (Wang et al., 2022) is a previously-studied behavior in which a model completes sentences like “Alice and Bob went to the store. Alice gave a snack to ___” by naming the correct recipient. It serves as the paper's causal-localization testbed precisely because its circuit is already published externally, letting the paper confirm that features patching identifies as important actually are — a check the autointerpretability score has no way to supply (sparse-autoencoders, §4, p. 5).",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch5-casestudies",
+       "name": "Two features under the microscope, read from both ends",
+       "ref": null,
+       "narrative": "Section 5 cashes out the dictionary's promise not in aggregate scores but in two hand-picked features, examined from input, output, and circuit angles. The apostrophe feature carries the input and output legs of the argument; the closing-parenthesis feature carries the third, tracing which upstream features cause it to fire — and a weight-based shortcut the authors tried first, and abandoned, is reported alongside the method that worked.",
+       "children": [
+        {
+         "id": "sae-in-apostrophe",
+         "name": "The paper's headline example of monosemanticity",
+         "ref": {
+          "kind": "concept",
+          "id": "apostrophe-feature"
+         },
+         "narrative": "Feature 556 activates almost exclusively on apostrophe tokens, the paper's central worked example of monosemanticity — though it does not activate on all apostrophes, since two further features cover contractions like “[I/We/They]'ll” and “[don/won/wouldn]'t” separately. Ablating it specifically suppresses the logit for the following 's' token, giving it an intuitive, predictable causal effect in contrast to the corresponding polysemantic default-basis dimension (sparse-autoencoders, §5.1, p. 7; §5.2, p. 7).",
+         "children": []
+        },
+        {
+         "id": "sae-in-rankone",
+         "name": "The precise tool used to measure the feature's effect",
+         "ref": {
+          "kind": "concept",
+          "id": "less-than-rank-one-ablation"
+         },
+         "narrative": "This ablation lowers a residual-stream activation's component along a feature's direction only as far as the point where the feature stops firing, not past it — respecting the same geometry, a hyperplane offset from the origin by the ReLU's negative bias, that Appendix G identifies as distinguishing dictionary features from every baseline direction. It is the tool used to measure the apostrophe feature's causal effect on next-token logits (sparse-autoencoders, §5.2, p. 7).",
+         "children": []
+        },
+        {
+         "id": "sae-in-closepar",
+         "name": "A feature whose meaning is nearly given for free",
+         "ref": {
+          "kind": "concept",
+          "id": "closing-parenthesis-feature"
+         },
+         "narrative": "A layer-5 feature whose unembedding directly predicts closing-parenthesis tokens — an identity confirmable almost without cost, since layer 5 is the model's final layer, whose job is to write directions the unembedding reads out as tokens. That near-unambiguous meaning is what makes it a credible test case for tracing which upstream features (dates, acronyms, and other parenthesis-preceding phrases) cause it to fire (sparse-autoencoders, §5.3, p. 8).",
+         "children": []
+        },
+        {
+         "id": "sae-in-circuitdetect",
+         "name": "The method that traces a feature back to its causes",
+         "ref": {
+          "kind": "concept",
+          "id": "feature-circuit-detection"
+         },
+         "narrative": "A method for tracing causal dependencies between features in adjacent layers: sample contexts where a target feature strongly activates, ablate each previous-layer feature in turn, and rank features by how much their ablation lowers the target's activation, optionally recursing to build a multi-layer causal tree. Demonstrated on the closing-parenthesis feature, it is the paper's only worked example of what the future-work goal of tracing “sparse causal dependencies” actually looks like (sparse-autoencoders, §5.3, p. 7-8).",
+         "children": []
+        },
+        {
+         "id": "sae-in-weightfail",
+         "name": "The shortcut tried first, and abandoned",
+         "ref": {
+          "kind": "concept",
+          "id": "weight-based-connection-attempt"
+         },
+         "narrative": "Before settling on ablation, the authors tried multiplying a layer-4 feature through the MLP's weights and checking cosine similarity against layer-5 features, hoping matrix multiplication alone would reveal causal connections. It found none, likely because the resulting vector went out-of-distribution — a negative result reported alongside the ablation-based method that did succeed, and one the authors note does not obviously generalize to the attention sublayer either (sparse-autoencoders, §D.4, p. 17).",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch6-basis",
+       "name": "What the case study found in the residual stream's own basis",
+       "ref": null,
+       "narrative": "Searching by hand for the residual-stream coordinate that best matches the apostrophe feature turns the case study into a second experiment: is the raw coordinate basis itself ever privileged, the way a basis right after a nonlinearity would be? The residual stream is a running sum with no such nonlinearity, so the answer is mostly no — except for a documented handful of outlier dimensions the search runs straight into.",
+       "children": [
+        {
+         "id": "sae-in-defaultbasis",
+         "name": "The naive baseline the apostrophe case study beats",
+         "ref": {
+          "kind": "concept",
+          "id": "default-basis-baseline"
+         },
+         "narrative": "Treating individual neurons, or individual residual-stream coordinates, as the unit of analysis is the naive baseline the paper measures its dictionary against. The apostrophe case study makes the comparison concrete: the best-matching coordinate found (dimension 21) took checking ten candidates, and even it “only explains a very small fraction of the variance for middle-to-lower activation ranges” — polysemantic where the matched dictionary feature stays clean across its whole range (sparse-autoencoders, §3.2, p. 3; §D.1, p. 16).",
+         "children": []
+        },
+        {
+         "id": "sae-in-residstream",
+         "name": "The object the whole method is trained on",
+         "ref": {
+          "kind": "concept",
+          "id": "residual-stream"
+         },
+         "narrative": "The transformer's running sum of layer outputs is the paper's primary object of study: sparse autoencoders are trained mainly on residual-stream activations, and the paper separately investigates whether the stream has a “privileged basis” and how outlier dimensions relate to interpretable dictionary features (sparse-autoencoders, §2, p. 2; §D.1, p. 16).",
+         "children": []
+        },
+        {
+         "id": "sae-in-privbasis",
+         "name": "The property the residual stream mostly lacks",
+         "ref": {
+          "kind": "concept",
+          "id": "privileged-basis"
+         },
+         "narrative": "A privileged basis is a coordinate system distinguished as unusually meaningful, “such as the standard basis after a non-linearity in an MLP.” The paper states the residual stream “can usually be treated as a vector space with no privileged basis” — it is a running sum of additive outputs, not the product of an elementwise nonlinearity — which is exactly what licenses treating individual coordinates as no more principled than a random direction (sparse-autoencoders, §C.3, p. 15).",
+         "children": []
+        },
+        {
+         "id": "sae-in-outlierdim",
+         "name": "The partial exception the search runs into",
+         "ref": {
+          "kind": "concept",
+          "id": "outlier-dimensions"
+         },
+         "narrative": "Specific residual-stream coordinates that transformers write disproportionately large, information-bearing values to, hypothesized to arise from the Adam optimizer storing gradients with finite precision in the residual basis (Dettmers et al., 2022). Searching for the apostrophe feature's best-matching default-basis dimensions, the paper finds most of the top candidates were outlier dimensions — a partial, localized exception to the residual stream's usual lack of a privileged basis, though one that still fails to make those dimensions more interpretable than a random direction (sparse-autoencoders, §D.3, p. 16-17).",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-in-ch7-limits",
+       "name": "Where the method strains, and the ambition it's offered toward",
+       "ref": null,
+       "narrative": "The paper closes by testing its own recipe against a harder setting and naming what remains unresolved. Porting the residual-stream recipe unchanged to MLP-sublayer activations breaks two of its working assumptions at once; the reconstruction-substitution perplexity check shows a modest-looking loss still costs real predictive accuracy; and the conclusion names enumerative safety, a complete feature catalogue sufficient to rule out dangerous behaviors like deception, as the ambitious goal this work is offered only as “a step towards.”",
+       "children": [
+        {
+         "id": "sae-in-mlp",
+         "name": "The recipe, ported to a harder setting, and half-breaking",
+         "ref": {
+          "kind": "concept",
+          "id": "mlp-sae-training"
+         },
+         "narrative": "An extension of the method to MLP sublayer activations rather than the residual stream, finding “mixed success”: many features are more interpretable than individual neurons, but the approach suffers from large numbers of dead features and does not yet robustly learn an overcomplete basis in intermediate or later MLP layers. The fix — a different sparsity coefficient and untied encoder/decoder weights — is itself evidence the recipe validated on the residual stream has hidden, activation-specific dependencies (sparse-autoencoders, §C.3, p. 15).",
+         "children": []
+        },
+        {
+         "id": "sae-in-perplexity",
+         "name": "A small-looking gap, made concrete",
+         "ref": {
+          "kind": "concept",
+          "id": "reconstruction-perplexity-metric"
+         },
+         "narrative": "Substituting a layer's activations with the SAE's reconstruction and measuring the resulting rise in the model's perplexity on the Pile translates an abstract squared-error number into a concrete, downstream cost. For Pythia-70M's layer-2 residual stream, doing so raises perplexity from 25 to 40 — nearly doubling it, and the paper's clearest evidence that reconstruction loss, though small-looking in absolute terms, is “not yet near zero” in any sense that matters to the model's actual behavior (sparse-autoencoders, §6.2, p. 8-9).",
+         "children": []
+        },
+        {
+         "id": "sae-in-audit-tissue",
+         "name": "A safety destination named, not yet reached",
+         "ref": {
+          "kind": "tissue",
+          "id": "the-audit-is-promised-not-performed"
+         },
+         "narrative": "The paper names a safety destination it has not reached. [[mechanistic-interpretability]] is introduced as the field that dreams of [[enumerative-safety]], Elhage et al.'s goal of a complete, human-understandable feature list sufficient to rule out dangerous behaviors like deception — the same worry the introduction opens with. [[sparse-autoencoders]] is offered as “a step towards” that ambition, a framing left honest by an adjacent admission that reconstruction never reaches zero, MLP dictionaries lose many features, and only a handful of layers and small models have been tested; [[feature-circuit-detection]] is the paper's one concrete, if narrow, worked instance of what tracing the ambition's causal dependencies actually looks like.",
+         "children": []
+        }
+       ]
+      }
+     ],
+     "intro": "A language model's individual neurons rarely mean just one thing: the same neuron can fire for several unrelated concepts at once, with no reliable way to tell from the outside which one is driving it. That makes reverse-engineering a network's behavior nearly hopeless if neurons are the unit you are stuck reading. This 2023 paper argues neurons were never the right unit to look at, and builds a small autoencoder that finds units that are.\n\nWhat follows tracks the paper's own path through Pythia's residual stream: the theoretical case that models pack more concepts than they have neurons, the autoencoder built to unpack them, the automated scoring that checks whether the unpacking actually helps, the causal test that checks whether the resulting features do anything, two features examined by hand, and the limits the paper names against its own method."
+    },
+    {
+     "id": "sparse-autoencoders-across",
+     "tab": "Across the corpus",
+     "claim": "Set beside CAA's inference-time steering vectors and Persona Vectors' automated pipeline, this September-2023 paper turns out to be the corpus's odd one in: an unsupervised method for finding directions that nobody built to compete with steering, yet whose autointerpretability pipeline anticipates the corpus's later LLM-judge pattern by three months, whose residual-stream depth profile runs opposite to CAA's own, and whose dictionaries get reopened wholesale two years later by a 2025 paper looking for a persona vector's own hidden parts.",
+     "name": "The odd one in: how a 2023 unsupervised method threads through a corpus of steering papers",
+     "narrative": "The chapters trace this paper's contact points with the rest of the corpus in the order they matter most: a cross-paper theme it joins already in progress, reading the same residual stream CAA and Persona Vectors read for different purposes; a safety audit ambition set beside CAA's own unexecuted proposal; an LLM-judge pipeline that predates CAA's identical trick by three months; an unsupervised alternative to steering vectors that a 2025 paper names and puts to direct use; a depth profile that runs opposite to CAA's own; and the corpus-wide patterns of baselines, ablations, Goodhart's law, and borrowed decades-old ideas this newcomer turns out to repeat.",
+     "ref": null,
+     "children": [
+      {
+       "id": "sae-ac-ch1-reading",
+       "name": "Reading the residual stream: three papers, one running object",
+       "ref": null,
+       "narrative": "Reading the residual stream is a theme this paper joins already in progress: CAA's 2023 PCA visualization of contrastive activations and Persona Vectors' 2025 decomposition of a persona vector into a sparse autoencoder's own directions had already treated the residual stream as something to be read, not just computed through, before this paper's own study of the stream's basis joined the same theme.",
+       "children": [
+        {
+         "id": "sae-ac-reading-theme",
+         "name": "Three papers, one object, three different questions",
+         "ref": {
+          "kind": "theme",
+          "id": "reading-the-residual-stream"
+         },
+         "narrative": "Three papers meet in this theme. CAA's activation-pca-visualization checks whether a behavior's activations separate at all, finding [[behavioral-clustering]] emerging suddenly around a third of the way through the network. Persona Vectors' sae-decomposition-of-persona-vectors ranks a sparse autoencoder's decoder directions by cosine similarity to a persona vector, pulling out interpretable sub-features underneath it. This paper contributes its own study of the residual stream's basis: not usually privileged, but partially so because of [[outlier-dimensions]], the same disproportionately large coordinates sitting under its own apostrophe-feature case study.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-superedge-reading",
+         "name": "What a steering paper found by eye, this paper explains mechanistically",
+         "ref": {
+          "kind": "superedge",
+          "id": "reading-the-residual-stream-surfaces-artifacts-explained-by-superposition-vs-the-neuron-basis"
+         },
+         "narrative": "CAA's PCA visualization already shows, on a far larger and RLHF-tuned model, the same structural claim this paper argues from first principles: behavioral clustering emerging suddenly around a third of the way through the layers, evidence meaningful structure lives in directions rather than in any privileged coordinate. What this paper adds back is a mechanistic account the steering side has no access to — when it searches by hand for the coordinate nearest its apostrophe feature, the top candidates are specifically outlier dimensions, a named cause for why some directions in an otherwise unprivileged basis behave as if privileged after all.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-decomp-edge",
+         "name": "Two years later, a 2025 paper reopens these dictionaries",
+         "ref": {
+          "kind": "edge",
+          "id": "sae-decomposition-of-persona-vectors-applies-the-unsupervised-machinery-of-sparse-autoencoders"
+         },
+         "narrative": "Two years after this paper's method was published, Persona Vectors (2025) applies it directly: training BatchTopK SAEs at every fourth layer of a chat model's residual stream, each with roughly a 37x expansion factor, then decomposing its own evil, sycophancy, and hallucination persona vectors into the smaller sub-features sitting underneath each one. It is a substantially heavier interpretability investment than anything else in that paper — a fixed, trait-agnostic decomposition of the whole residual stream, computed once, into which any direction can later be projected.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-residstream-concept",
+         "name": "The accumulating vector space all three papers return to",
+         "ref": {
+          "kind": "concept",
+          "id": "residual-stream"
+         },
+         "narrative": "The object all three papers keep returning to: a running sum of layer outputs with, this paper argues, no privileged basis of its own except for a handful of outlier dimensions. CAA reads it for behavioral clustering, Persona Vectors reads a single trait direction inside it, and this paper reads its basis directly — three different questions asked of the same accumulating vector space.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-ac-ch2-audit",
+       "name": "Two routes to audit: elicit what you suspect, or enumerate everything",
+       "ref": null,
+       "narrative": "Validating that training has made a model robustly safe is hard, because unwanted behavior that survives training can still be hard to find. CAA's steering paper and this paper propose two different routes to that audit, both left as an ambition rather than a finished result — CAA's a future-work paragraph, this paper's a closing conclusion, but structurally quite different in what they can find.",
+       "children": [
+        {
+         "id": "sae-ac-steering-audit-theme",
+         "name": "Elicit a suspected behavior, or enumerate every feature",
+         "ref": {
+          "kind": "theme",
+          "id": "steering-as-audit"
+         },
+         "narrative": "CAA's route is elicitation: push a model's activations toward an unwanted behavior deliberately, on the premise that a behavior easily elicited by a small internal perturbation is plausibly reachable by some input in deployment too, so failing to elicit it is a stronger guarantee than failing to find it by sampling outputs. This paper proposes a second, structural route instead: [[enumerative-safety]], the aspiration that a complete, human-understandable list of a model's features could itself guarantee it will not perform dangerous behaviors — audit not by eliciting behavior but by enumerating and inspecting the parts that could produce it.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-superedge-audit",
+         "name": "One route rests on validated machinery; the other, on a toy case",
+         "ref": {
+          "kind": "superedge",
+          "id": "steering-as-audit-elicits-only-what-it-already-suspects-unlike-enumerating-features-for-safety"
+         },
+         "narrative": "CAA's audit proposal is introduced under a “suggested future work” heading and never executed in that paper, resting only on steering machinery already validated for other purposes. This paper's ambition is the same kind of unfinished, but its structural half is not purely aspirational — Section 5.3 already runs feature-circuit-detection end to end on a toy case. The two routes also differ in what they can find: eliciting a behavior requires already having a target in mind; this paper's dictionary turns up features nobody was looking for, five arbitrarily-ordered layer-1 features covering personal names, the letter “W,” the number 5, and legal terminology, none hypothesized in advance.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-enumsafety-concept",
+         "name": "The ambition that reframes what an audit even means",
+         "ref": {
+          "kind": "concept",
+          "id": "enumerative-safety"
+         },
+         "narrative": "Elhage et al.'s (2022) aspirational goal of a complete, human-understandable enumeration of a model's features, sufficient to guarantee it will not perform dangerous behaviors such as deception. Invoked in this paper's conclusion as the long-term motivation its method is framed as a step toward — an ambition that reframes the oversight problem the rest of the corpus tackles by judging outputs: audit a model instead by listing and inspecting its internal parts.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-mechinterp-concept",
+         "name": "The discipline that pursues safety from the inside out",
+         "ref": {
+          "kind": "concept",
+          "id": "mechanistic-interpretability"
+         },
+         "narrative": "The field named as this paper's home discipline, and the field whose “ambitious dream” enumerative safety is said to be. Where the corpus's other papers pursue model safety through training signal — reward models, constitutions, revised responses — mechanistic interpretability, as this paper frames it, pursues the same goal by reverse-engineering a network's internals well enough to check for a specific worry, deception, directly rather than by shaping outputs from the outside.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-ac-ch3-judge",
+       "name": "A judge for features, three months before a judge for behavior",
+       "ref": null,
+       "narrative": "This paper's autointerpretability pipeline and CAA's open-ended generation evaluation solve the same problem — grading at a scale no human team could match — with the same trick, three months apart, and neither paper could have known it. The parallel is visible only in hindsight, once both halves exist to be compared.",
+       "children": [
+        {
+         "id": "sae-ac-hindsight-judge",
+         "name": "The same trick, three months before it had a name",
+         "ref": {
+          "kind": "edge",
+          "id": "autointerpretability-score-prefigures-the-llm-judge-pattern-of-open-ended-generation-evaluation"
+         },
+         "narrative": "This paper's autointerpretability score asks GPT-4 to read activating text and write an explanation, then asks GPT-3.5 to use that explanation to predict activations on held-out text — run across “thousands of dictionary features” no human team could grade individually. CAA's open-ended generation evaluation, published three months later, hands the identical model the same kind of job at the opposite end of the pipeline: GPT-4 reads a free-form response and scores it against a rubric. Both papers hedge the same worry rather than treating LLM judgment as free — this paper notes “current LLMs are limited in the kinds of patterns they can find,” CAA flags its scores “can be sensitive to rubric wording.”",
+         "children": []
+        },
+        {
+         "id": "sae-ac-aisub-tissue",
+         "name": "The corpus's earliest instance of an AI judging an AI",
+         "ref": {
+          "kind": "tissue",
+          "id": "ai-substitutes-for-the-human-bottleneck"
+         },
+         "narrative": "An AI process substitutes for a human one at exactly the point human throughput was scarce, and this pairing is the pattern's earliest instance in the corpus, predating even Constitutional AI's constitution or CAA's own rater. [[gpt-4]] replaces the human who would otherwise inspect a feature's activating fragments and write down what it detects; [[gpt-3-5]] replaces the human who would otherwise check that explanation by predicting activations from it alone. Three months before CAA's own GPT-4 rater existed, this pairing had already prefigured the corpus's recurring LLM-judge move, one model generating material to be judged or explained, a second model doing the judging.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-gpt4-concept",
+         "name": "One model, doing the same kind of job at both ends",
+         "ref": {
+          "kind": "concept",
+          "id": "gpt-4"
+         },
+         "narrative": "GPT-4 does the explaining in this paper, three months before CAA has it doing the rating and, in CAA, the authoring of two entire training datasets. Across both roles the corpus asks the same model to stand in for a human reader at scale — reading a feature's activating text here, reading a full generated response there — with each paper hedging the same worry that its explanations or scores may not transfer cleanly.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-autointerp-concept",
+         "name": "The metric that got there first",
+         "ref": {
+          "kind": "concept",
+          "id": "autointerpretability-score"
+         },
+         "narrative": "The metric that gives this paper its headline comparison also gives the corpus its earliest LLM-judge instance: a two-model, explain-then-simulate pipeline, adapted from Bills et al. (2023), that predates CAA's own GPT-4 rater by three months and produces the same basic shape — one model generating a description or a response, a second model checking it against ground truth or a rubric — that recurs across the corpus's next two years of papers.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-ac-ch4-unsupervised",
+       "name": "An unsupervised alternative, reopened by a 2025 paper",
+       "ref": null,
+       "narrative": "Sparse autoencoders and steering vectors are two different answers to the same question — how do you find a direction in activation space that means something — and it takes Persona Vectors, in 2025, to state the contrast directly. From this paper's own 2023 standpoint the comparison did not exist yet; a steering vector, in the sense the later papers mean it, is a concept this paper's dictionaries predate.",
+       "children": [
+        {
+         "id": "sae-ac-hindsight-altvector",
+         "name": "The advantage a 2025 paper names in its own limitations",
+         "ref": {
+          "kind": "edge",
+          "id": "sparse-autoencoders-offers-an-unsupervised-alternative-to-steering-vector"
+         },
+         "narrative": "A steering vector, whether CAA's Mean Difference or Persona Vectors' automated pipeline, requires picking a target concept in advance and building labeled contrastive examples of it before any direction can be computed. This paper's autoencoder needs neither — trained on unlabelled activations alone, it discovers thousands of directions with no concept specified up front. Persona Vectors' own limitations section names that unsupervised property a genuine advantage over its own supervised pipeline: SAEs “may... enable unsupervised discovery of persona-relevant directions, including specific traits that cannot be easily elicited through prompting.”",
+         "children": []
+        },
+        {
+         "id": "sae-ac-mirror-tissue",
+         "name": "Reading a direction out, versus writing one in",
+         "ref": {
+          "kind": "tissue",
+          "id": "mirror-image-pairs"
+         },
+         "narrative": "A sparse autoencoder's dictionary features are learned to read a direction's presence out of the residual stream, an unsupervised decomposition with no target concept specified in advance; a steering vector is built to write a chosen direction into the residual stream, always starting from a labelled concept and contrastive examples. Persona Vectors is the paper that states this pairing directly, describing sparse autoencoders as finding directions “in an unsupervised way.” Reading out and writing in are the same underlying move, projecting onto or adding along a direction in the same vector space, run toward opposite ends.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-saeobject-concept",
+         "name": "The method, read two years later",
+         "ref": {
+          "kind": "concept",
+          "id": "sparse-autoencoders"
+         },
+         "narrative": "The method itself, read from two years later: a way of finding directions in activation space with no target concept named in advance, in contrast to every steering-vector method the rest of the corpus builds. Persona Vectors names this contrast explicitly in its own limitations section, and puts the method to direct use, training its own sparse autoencoders on a chat model's residual stream to decompose the persona vectors it had already extracted by other means.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-dictfeature-concept",
+         "name": "What a 2025 paper goes looking for underneath a persona vector",
+         "ref": {
+          "kind": "concept",
+          "id": "dictionary-feature"
+         },
+         "narrative": "What Persona Vectors' sparse-autoencoder exploration is actually looking for underneath a persona vector: not the vector itself, but the smaller, more interpretable dictionary features a much larger, unsupervised dictionary decomposes it into. The same unit of analysis this paper defines and validates on Pythia in 2023 is, two years later, being read out from underneath a very different kind of direction on a much larger model.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-ac-ch5-depth",
+       "name": "A depth profile that runs the opposite way",
+       "ref": null,
+       "narrative": "Both papers plot something against depth in the same architectural object, and the two curves point opposite directions — a contrast visible only once CAA supplied its half three months on. Both also lean on PCA, but for different jobs: a baseline to beat here, a visualization tool there.",
+       "children": [
+        {
+         "id": "sae-ac-hindsight-depth",
+         "name": "Two curves through the same stack of layers, pointing apart",
+         "ref": {
+          "kind": "edge",
+          "id": "sparse-autoencoders-runs-counter-to-the-depth-profile-of-residual-stream"
+         },
+         "narrative": "This paper's interpretability advantage over baselines is not constant across depth — it is already “comparable to ICA” by layer 4 and shows “minimal improvement in the final layer,” and its dictionaries are trained with no knowledge of any downstream task at all. CAA, reading the same residual stream three months later for a different purpose, finds behavior-relevant structure appears late rather than early: no separation by behavior at layer 9 of Llama 2 7B Chat, a clean split one layer later. A dictionary's best guarantee of monosemanticity and a behavior's best guarantee of linear separability sit at opposite ends of the same stack of layers.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-behavclustering-edge",
+         "name": "CAA's own half of the contrast",
+         "ref": {
+          "kind": "edge",
+          "id": "behavioral-clustering-localizes-suddenly-in-residual-stream"
+         },
+         "narrative": "CAA's own finding, giving the depth-profile contrast its other half: behavioral clustering does not fade in gradually across a model's depth, it appears abruptly, with no separation visible at layer 9 of Llama 2 7B Chat and a clean split one layer later, consistently around a third of the way through the network across every behavior tested. Set beside this paper's own interpretability curve, which shrinks rather than grows through depth, the two decompositions locate their best evidence at opposite ends of the same stack of layers.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-pca-viz-edge",
+         "name": "One technique, two different jobs",
+         "ref": {
+          "kind": "edge",
+          "id": "pca-is-the-projection-technique-behind-activation-pca-visualization"
+         },
+         "narrative": "The same off-the-shelf technique does two different jobs across the corpus. Here, PCA is a baseline this paper's dictionary features are measured against and shown to beat on causal-localization precision. In CAA, the identical technique — unmodified, via Scikit-learn — becomes a visualization tool, projecting contrastive-dataset activations to two dimensions and checking by eye whether they separate by behavior. One paper asks whether PCA's directions are individually interpretable; the other asks only whether a behavior is visible in PCA's top two components at all.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-pca-concept",
+         "name": "General-purpose machinery, repurposed twice",
+         "ref": {
+          "kind": "concept",
+          "id": "pca"
+         },
+         "narrative": "Principal Component Analysis appears throughout the corpus as general-purpose, off-the-shelf machinery repurposed for whatever a paper needs. This paper measures it as a baseline decomposition, finding sparse dictionary features beat it on both autointerpretability score and IOI causal-localization precision. CAA instead uses it as a visualization tool, projecting activations to two dimensions to check by eye whether a behavior separates — the same technique, doing diagnostic work at two different grains of the same underlying question.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-ac-ch6-patterns",
+       "name": "Recurring shapes: baselines, ablations, Goodhart's law, and borrowed decades-old ideas",
+       "ref": null,
+       "narrative": "Beyond its direct contact points with CAA and Persona Vectors, this paper turns out to repeat several patterns that recur across the whole corpus: a careful comparison against a ladder of baselines, a design choice defended by ablation rather than by first-principles argument, Goodhart's law finding one more, smaller instance to fit, and an old idea — decades old, in this case — resurfacing as a resource rather than merely a citation.",
+       "children": [
+        {
+         "id": "sae-ac-scaleasym-tissue",
+         "name": "A ladder of baselines, each rung isolating one confound",
+         "ref": {
+          "kind": "tissue",
+          "id": "scale-asymmetry-and-the-ladder-of-baselines"
+         },
+         "narrative": "The corpus repeatedly stages its headline comparison as a ladder rather than a single number, each rung isolating one specific reason the previous rung falls short. This paper builds its own ladder the same way, addressed at one question: is the dictionary's interpretability edge real, or an artifact of which baseline got which advantage? [[default-basis-baseline]] loses outright, no better than chance once outlier dimensions are checked; [[pca]] trails on the causal-localization test that matters most, a gap the paper isolates to the sparsity penalty specifically; and [[ica]] converges with the dictionary in later layers — though [[pca]] is given more training data than [[ica]], a data-budget asymmetry the paper states outright as a reason to read ICA's late-layer catch-up as an even stronger result than the raw numbers show.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-ablations-tissue",
+         "name": "A default weight choice, defended by ablation, not argument",
+         "ref": {
+          "kind": "tissue",
+          "id": "ablations-carry-the-design-argument"
+         },
+         "narrative": "The corpus repeatedly defends a design choice not with a first-principles argument but with an ablation that removes it and shows what happens. This paper's tied-weights default is argued for the same way: a single shared encoder/decoder matrix halves memory cost and collapses the encoder/decoder direction ambiguity, and a footnote reports no measurable performance loss from tying on residual-stream data — the ablation licensing its use everywhere in the main text. The choice is not free of a counter-ablation, though: on MLP-sublayer activations the same configuration measurably underperforms, and the paper switches to an untied variant there instead, true of the setting actually tested rather than true by design.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-goodhart-tissue",
+         "name": "A sixth instance, and the only one pre-empted rather than found",
+         "ref": {
+          "kind": "tissue",
+          "id": "goodhart-names-itself-across-six-years"
+         },
+         "narrative": "Concrete Problems states Goodhart's law abstractly in 2016; by 2023, five instances of it have accumulated across the corpus, from reward overoptimization to a single steerable sycophancy direction. This paper supplies a sixth, smaller in scope than any of the others and internal to a single training objective rather than a whole model's behavior: the L1 sparsity penalty only sparsifies meaningfully if a dictionary feature's scale is fixed, since inflating a feature's row norm lets the optimizer shrink its coefficient to match, silently gaming the loss without the reconstruction becoming any sparser. Where the corpus's other five instances are found after the fact, this one is anticipated and designed around before training even starts — the only instance of Goodhart's law being pre-empted rather than discovered.",
+         "children": []
+        },
+        {
+         "id": "sae-ac-precursors-tissue",
+         "name": "A lineage running from 1997 to a co-author's own report",
+         "ref": {
+          "kind": "tissue",
+          "id": "precursors-old-ideas-resurface"
+         },
+         "narrative": "Several corpus concepts have an explicit ancestor from decades-earlier scholarship. This paper's own lineage runs from a thirty-year-old optimization principle to an eighteen-month-old forerunner: sparse dictionary learning is operationalized as this paper's autoencoder, Olshausen & Field's 1997 alternating optimization becoming a single learned encoder function computed in one forward pass; a 2019 result on L4-norm maximization is invoked to explain why interpretability correlates with heavy-tailed activation; and a 2023 unpublished interim report by one of this paper's own co-authors is validated at the scale a toy demonstration never reached.",
+         "children": []
+        }
+       ]
+      }
+     ],
+     "intro": "This paper does not build a steering method, does not touch RLHF, and cites almost none of this corpus directly — it trains an unsupervised autoencoder on raw activations and studies whatever falls out. That makes it an odd fit for a collection otherwise organized around nudging models toward good behavior, and yet its dictionaries get reopened, its depth curve gets contradicted, and its scoring pipeline gets echoed, all by papers written afterward.\n\nWhat follows traces those contact points in the order they matter most: a theme this paper joins that already spans two other papers reading the same residual stream, an audit ambition set against a steering paper's own audit proposal, a scoring pipeline months ahead of the corpus's first behavioral judge, a 2025 paper's direct use of this method's own unsupervised machinery, and the corpus-wide patterns of baselines and borrowed ideas this newcomer turns out to repeat."
+    },
+    {
+     "id": "sparse-autoencoders-big-picture",
+     "tab": "The big picture",
+     "claim": "The paper's thesis is that polysemanticity is caused by superposition, models packing more features than they have neurons into an overcomplete set of directions, and that a sparsely-penalized autoencoder trained on nothing but raw activations can recover those directions as a dictionary of features that score higher on automated interpretability than four rival decompositions, localize a known behavior more precisely under causal patching, and hold up under hand inspection as genuinely monosemantic — demonstrated on two small, fully open language models, with the reconstruction gap and the method's MLP-layer struggles reported as open problems rather than resolved ones.",
+     "name": "The 2023 argument: neurons are the wrong unit, and a learned dictionary is the fix",
+     "narrative": "Evidence for the thesis runs in three stages: the theoretical case that superposition, not just noisy training, is why individual neurons are polysemantic; the autoencoder built to recover the overcomplete set of directions superposition implies; and two kinds of proof that the recovered features are genuinely better than four rival decompositions, an automated interpretability score run at scale and a causal-patching test on a well-understood behavior, backed up by two individual features examined by hand. The paper reports its own limits alongside the result: reconstruction that never reaches zero, a recipe that partly breaks on MLP activations, and a safety ambition it names as unreached.",
+     "ref": null,
+     "children": [
+      {
+       "id": "sae-bp-ch1-thesis",
+       "name": "The thesis: neurons hide more than they show",
+       "ref": null,
+       "narrative": "The paper's central claim, stated in its abstract and defended for the rest of its length, is that polysemanticity — individual neurons activating in multiple, semantically distinct contexts — is caused by superposition, models representing more features than they have neurons by assigning them to an overcomplete set of directions rather than to individual neurons. Sparse autoencoders are offered as a scalable, unsupervised method for recovering those directions directly, aimed at providing “a foundation for future mechanistic interpretability work.”",
+       "children": [
+        {
+         "id": "sae-bp-superposition",
+         "name": "Why a network can represent more than it has room for",
+         "ref": {
+          "kind": "concept",
+          "id": "superposition"
+         },
+         "narrative": "A hypothesized cause of polysemanticity in which a network represents more features than it has dimensions by assigning them to an overcomplete set of non-orthogonal directions, relying on activation sparsity to limit interference between them. The paper's stated goal is to resolve superposition in language models directly, by recovering these directions via sparse dictionary learning rather than working around the problem.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-polysemanticity",
+         "name": "The opening problem the whole paper answers to",
+         "ref": {
+          "kind": "concept",
+          "id": "polysemanticity"
+         },
+         "narrative": "The paper's opening problem: individual neurons activate in multiple, semantically unrelated contexts, preventing concise, human-understandable explanations of what a network is doing internally. Named in the abstract's first sentence as “one of the roadblocks to a better understanding of neural networks' internals,” it is the roadblock the paper's entire method is aimed at removing.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-monosemanticity",
+         "name": "The property the recovered directions are judged by",
+         "ref": {
+          "kind": "concept",
+          "id": "monosemanticity"
+         },
+         "narrative": "The property the method is judged by: a feature activating for a single, coherent, human-interpretable concept, the converse of polysemanticity. The paper's case studies — an apostrophe-detecting feature and a closing-parenthesis-predicting feature — are framed as demonstrating that learned dictionary features are highly monosemantic compared to neurons or other baseline directions, even if not every feature covers an entire human-nameable category on its own.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-mechinterp",
+         "name": "The discipline the method is offered to advance",
+         "ref": {
+          "kind": "concept",
+          "id": "mechanistic-interpretability"
+         },
+         "narrative": "The research agenda the paper names as its home discipline: reverse-engineering a network's internal computations well enough to make targeted changes to them, motivated in part by the worry that AI systems might deceive humans to accomplish undesirable goals. The paper offers its method as “a foundation for future mechanistic interpretability work,” hoping it will “enable greater model transparency and steerability.”",
+         "children": []
+        },
+        {
+         "id": "sae-bp-saeobject",
+         "name": "The method: an autoencoder built to unmix superposition",
+         "ref": {
+          "kind": "concept",
+          "id": "sparse-autoencoders"
+         },
+         "narrative": "The paper's method: a single-hidden-layer, ReLU, tied-weight autoencoder trained with an L1 sparsity penalty to reconstruct a language model's activations as a sparse linear combination of an overcomplete dictionary of learned features. The paper's central claim about this object is that the resulting features are more interpretable, more monosemantic, and more causally precise than neurons or any of four alternative decompositions tested.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-bp-ch2-method",
+       "name": "The method: sparsity traded against reconstruction",
+       "ref": null,
+       "narrative": "Building the dictionary means committing to a single training objective with two competing terms: reconstruct the original activation as closely as possible, while keeping the code that reconstructs it as sparse as possible. Every other design choice in the method — how overcomplete the dictionary is, how its weights are structured — is downstream of how that one tradeoff is set.",
+       "children": [
+        {
+         "id": "sae-bp-dictfeature",
+         "name": "The central unit: one learned direction",
+         "ref": {
+          "kind": "concept",
+          "id": "dictionary-feature"
+         },
+         "narrative": "A single learned row of the autoencoder's weight matrix, representing one direction in activation space used to reconstruct inputs as part of a sparse linear combination. Individual dictionary features are the paper's central unit of analysis throughout — examined for interpretability, causal importance, and monosemanticity in turn.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-sparsityloss",
+         "name": "The penalty that keeps the code sparse",
+         "ref": {
+          "kind": "concept",
+          "id": "sparsity-loss"
+         },
+         "narrative": "The L1 penalty on the autoencoder's hidden-layer coefficients, encouraging each activation to be reconstructed from as few active features as possible. The sparsity coefficient is the paper's key hyperparameter, swept throughout every experiment to trade sparsity against reconstruction accuracy rather than fixed at one value.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-reconloss",
+         "name": "The term that admits the dictionary is incomplete",
+         "ref": {
+          "kind": "concept",
+          "id": "reconstruction-loss"
+         },
+         "narrative": "The squared-error term measuring how well the autoencoder's output matches the original activation it was given. The paper is explicit that this loss never reaches zero in its experiments — the dictionary does not capture everything a layer's activations carry, a gap the paper treats as an open limitation rather than something the method has yet resolved.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-expansionr",
+         "name": "The dial that sets how overcomplete the dictionary is",
+         "ref": {
+          "kind": "concept",
+          "id": "expansion-factor-r"
+         },
+         "narrative": "The hyperparameter controlling how overcomplete the learned dictionary is, the ratio between the autoencoder's hidden dimension and the model's own activation dimension. The paper finds interpretability gains hold even for undercomplete dictionaries, with larger dictionaries simply explaining more of a layer's overall activation variance rather than producing individually more interpretable features.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-bp-ch3-evidence",
+       "name": "The evidence: features that score and localize better than every alternative",
+       "ref": null,
+       "narrative": "Two experiments carry the paper's argument that its dictionary features are not just plausible but genuinely superior. An automated scoring pipeline, run across thousands of features, measures interpretability against four baseline decompositions; a causal-patching test on a well-understood model behavior checks whether the winning features do anything at all, not just whether they look interpretable.",
+       "children": [
+        {
+         "id": "sae-bp-autointerp",
+         "name": "The scoring pipeline: explain, then simulate",
+         "ref": {
+          "kind": "concept",
+          "id": "autointerpretability-score"
+         },
+         "narrative": "The paper's primary interpretability measure: a language model is shown text where a feature activates and writes a natural-language explanation, then a second model uses that explanation alone to predict the feature's activations on held-out text, with the correlation between predicted and actual activations as the score. Run across thousands of features, dictionary features score higher on average than every one of the paper's four baseline decompositions.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-pca",
+         "name": "The baseline that loses once causal precision is what's tested",
+         "ref": {
+          "kind": "concept",
+          "id": "pca"
+         },
+         "narrative": "One of four baseline decompositions the paper's dictionary features are measured against. On the causal-localization test, PCA needs more patched components and larger edit magnitude than the dictionary to reach a given level of behavioral change — a gap the paper traces specifically to its sparsity penalty, since removing that penalty from the same architecture erases the advantage entirely.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-defaultbasis",
+         "name": "The naive baseline: just read the coordinates directly",
+         "ref": {
+          "kind": "concept",
+          "id": "default-basis-baseline"
+         },
+         "narrative": "The naive baseline of treating individual neurons, or individual residual-stream coordinates, as the unit of analysis. The paper's apostrophe case study makes the comparison direct: the best-matching raw coordinate the paper could find is still polysemantic across much of its activation range, where the matched dictionary feature stays clean throughout.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-dictpatch",
+         "name": "The causal test: patch a feature, and measure what moves",
+         "ref": {
+          "kind": "concept",
+          "id": "dictionary-feature-patching"
+         },
+         "narrative": "The paper's causal test: run the model on a counterfactual sentence, cache the resulting feature activations, then add the encoded differences for a chosen subset of features back into a base sentence's residual stream, measuring how far the output moves toward the counterfactual target. This reaches a given level of change using fewer patched features and a smaller edit magnitude than an equivalent patch built from PCA components.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-ioi",
+         "name": "The behavior used to test causal precision",
+         "ref": {
+          "kind": "concept",
+          "id": "ioi-task"
+         },
+         "narrative": "The behavior used to test causal precision: a model correctly naming the recipient in sentences like “Alice and Bob went to the store. Alice gave a snack to ___.” Its circuit was already well-understood externally before this paper touched it, which is what lets the paper confirm that the features its patching procedure identifies as important are actually the ones responsible for the behavior.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-bp-ch4-demo",
+       "name": "The demonstration: two features, read from both ends",
+       "ref": null,
+       "narrative": "Aggregate scores establish that dictionary features are interpretable on average; two hand-picked features establish what that interpretability actually looks like up close. One is examined for what activates it and what it causes; the other is examined for what causes it.",
+       "children": [
+        {
+         "id": "sae-bp-apostrophe",
+         "name": "A feature that fires on apostrophes, and only apostrophes",
+         "ref": {
+          "kind": "concept",
+          "id": "apostrophe-feature"
+         },
+         "narrative": "A feature that activates almost exclusively on apostrophe tokens, the paper's central worked example of monosemanticity. Ablating it specifically suppresses the model's prediction of the following 's' token, giving it an intuitive, predictable effect on the model's output — in clear contrast to the polysemantic raw coordinate that shares its top activations.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-closepar",
+         "name": "A feature whose own weights nearly name its meaning",
+         "ref": {
+          "kind": "concept",
+          "id": "closing-parenthesis-feature"
+         },
+         "narrative": "A feature in the model's final layer whose unembedding directly predicts closing-parenthesis tokens — a meaning confirmable almost without any activation data at all, since a final-layer feature's unembedding directly names the tokens it promotes. Its near-unambiguous identity is what makes it a credible test case for the paper's circuit-tracing method.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-circuitdetect",
+         "name": "Tracing a feature back to what causes it",
+         "ref": {
+          "kind": "concept",
+          "id": "feature-circuit-detection"
+         },
+         "narrative": "A method for tracing which upstream features cause a target feature to activate: sample contexts where the target fires, ablate each candidate upstream feature in turn, and rank candidates by how much their removal lowers the target's activation. Applied to the closing-parenthesis feature, it surfaces upstream features detecting dates, acronyms, and other parenthesis-preceding phrases — an interpretable, sensible-looking circuit built from nothing but repeated ablation.",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": "sae-bp-ch5-limits",
+       "name": "The limits the paper names against its own result",
+       "ref": null,
+       "narrative": "The paper closes by naming exactly where its own method stops working, rather than letting the interpretability and causal-precision results stand unqualified. Reconstruction never fully succeeds, the recipe validated on the residual stream breaks down when ported to MLP activations, and the safety ambition the method is offered toward is explicitly named as unreached.",
+       "children": [
+        {
+         "id": "sae-bp-perplexity",
+         "name": "A modest-looking loss, made concrete",
+         "ref": {
+          "kind": "concept",
+          "id": "reconstruction-perplexity-metric"
+         },
+         "narrative": "A check on how much information the dictionary actually loses: substitute a layer's activations with the autoencoder's reconstruction and measure the resulting rise in the model's perplexity. For one tested layer, this raises perplexity from 25 to 40, nearly doubling it — concrete evidence that a reconstruction loss which looks small in the abstract still costs the model real predictive accuracy.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-mlptraining",
+         "name": "The recipe, ported to a harder setting, and half-breaking",
+         "ref": {
+          "kind": "concept",
+          "id": "mlp-sae-training"
+         },
+         "narrative": "An attempt to extend the method from the residual stream to MLP sublayer activations, reported as “mixed success”: many resulting features are more interpretable than individual neurons, but the approach suffers from large numbers of features that never activate at all, and does not yet reliably learn an overcomplete dictionary in the model's middle or later MLP layers.",
+         "children": []
+        },
+        {
+         "id": "sae-bp-enumsafety",
+         "name": "The ambition the paper admits it has not reached",
+         "ref": {
+          "kind": "concept",
+          "id": "enumerative-safety"
+         },
+         "narrative": "The long-term goal the paper names in its conclusion: a complete, human-understandable enumeration of a model's features, sufficient to guarantee it will not perform dangerous behaviors such as deception. The paper is explicit that it offers only “a step towards” this ambition, not an instance of it — reconstruction never reaches zero, MLP dictionaries lose many features, and only a handful of layers on two small models have been tested.",
+         "children": []
+        }
+       ]
+      }
+     ],
+     "intro": "Strip away the corpus and the citations, and this paper makes one claim in its own words: individual neurons are the wrong place to look for what a language model represents, because a network can pack more concepts than it has neurons by scattering them across shared, overlapping directions instead of clean, separate units.\n\nWhat follows is the paper's own argument, in its own vocabulary: the thesis that neurons hide more than they show, the autoencoder built to recover the directions underneath them, the evidence that the recovered features score and localize better than every rival decomposition tried, a demonstration on two individual features examined by hand, and the limits the paper reports against its own result."
+    }
+   ]
+  }
+ ]
+}

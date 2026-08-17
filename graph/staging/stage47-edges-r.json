@@ -1,0 +1,144 @@
+{
+  "edges": [
+    {
+      "id": "gpt-4-generates-explanations-for-autointerpretability-score",
+      "type": "generates-explanations-for",
+      "source": "gpt-4",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Of the 20 top-activating fragments identified per feature from the first 50,000 lines of OpenWebText, GPT-4 is shown only 5, together with each fragment's per-token activations rescaled to integers 0-10, and from that narrow window writes the single free-text explanation that the rest of the pipeline treats as ground truth. Because GPT-3.5's later simulation step never sees the original fragments or activation numbers, GPT-4's explanation is the sole channel through which everything the feature 'means' has to pass, so any wording problem in that explanation propagates undetected into the final score. Bills et al. (2023), whose protocol this paper follows, already found this explainer role limited: it struggles to describe patterns keyed to the previous or next token rather than the current one, and has no way to check a candidate explanation against how ablating the feature changes the model's output. Table 1's arbitrary first-five features from the layer-1 dictionary show what this produces in practice: GPT-4 writes a description as concrete as 'the number 5, and also records moderate to low activation for personal names and some nouns' (scored 0.57) alongside one as vague as 'actions performed by a subject or object' (scored -0.11), a negative score meaning the explanation actively anti-predicts the feature's real behavior."
+    },
+    {
+      "id": "gpt-3-5-simulates-activations-for-autointerpretability-score",
+      "type": "simulates-activations-for",
+      "source": "gpt-3-5",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "GPT-3.5 never sees the fragments GPT-4 used to write its explanation; it is handed only the finished explanation text and must predict per-token activations on a fresh batch of 5 highly-activating and 5 randomly-selected fragments, 10 fragments of 64 tokens each, 640 tokens total, with the score being the correlation between its predicted and the feature's true activations. This is a deliberate deviation from Bills et al. (2023)'s original protocol, which used GPT-4 for simulation too; the authors swap in GPT-3.5 purely because OpenAI's public API exposed the per-token logprobs the simulation scoring needs for GPT-3.5 but not for GPT-4 at the time. The result is an asymmetric division of labor: GPT-4 gets curated top-activating text plus the numeric activations themselves, while GPT-3.5 gets only prose and must reconstruct numbers from it. So the autointerpretability score is not really testing 'is this feature interpretable' in the abstract; it is testing whether an explanation written by one model with privileged numeric access transfers well enough for a second model with no such access to reconstruct those same numbers from words alone."
+    },
+    {
+      "id": "top-random-scoring-shapes-fragment-sampling-in-autointerpretability-score",
+      "type": "shapes-fragment-sampling-in",
+      "source": "top-random-scoring",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "The autointerpretability pipeline's entire scoring budget for one feature is small (10 fragments of 64 tokens, 640 tokens total), and most dictionary features fire on only a tiny fraction of tokens in the corpus. Appendix A spells out why this forces a top-and-random default rather than uniform sampling: 'a random sample will likely not contain any highly activating examples for all but the most common features,' so a purely random draw would give GPT-3.5 nothing but near-zero activations to correlate against, making the score uninformative for anything but the most frequently-firing features. Mixing in fragments already known to activate the feature guarantees the simulator sees the feature in action at least once, at the cost of making the comparison less like a blind test and more like an open-book one. The paper treats this as a real methodological compromise rather than a free lunch: Appendix C.2 reruns everything with random-only scoring specifically to check how much top-random inflates the numbers."
+    },
+    {
+      "id": "top-k-baseline-control-tests-a-separate-confound-from-top-random-scoring",
+      "type": "tests-a-separate-confound-from",
+      "source": "top-k-baseline-control",
+      "target": "top-random-scoring",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Both controls answer the same worry, that the SAE's apparent interpretability edge over PCA and ICA is a scoring artifact, but they patch two unrelated seams in the pipeline. Random-only scoring (the alternative to top-random-scoring, run in Appendix C.2/Figure 9) tests whether mixing in cherry-picked highly-activating fragments inflates scores; it says nothing about how 'active' a direction is defined in the first place. The top-K control (Appendix G) instead targets a geometric asymmetry: a PCA or ICA direction is active across an entire half-space on one side of a hyperplane through the origin, while an SAE feature, because its pre-activation bias is in practice always negative, only activates past a hyperplane offset from the origin, making it structurally sparser regardless of content. Top-K forces PCA and ICA to match the SAE's average per-datapoint active-feature count (from the R=1, alpha=8.6e-4 dictionary) before scoring, and Appendix G's Figure 18 shows this explains only a small fraction of the gap. So a feature or baseline could in principle pass one check and fail the other: random-only scoring rules out a data-selection artifact, top-K rules out a density artifact, and neither substitutes for the other."
+    },
+    {
+      "id": "kurtosis-skew-correlation-analysis-explains-variation-in-autointerpretability-score",
+      "type": "explains-variation-in",
+      "source": "kurtosis-skew-correlation-analysis",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Appendix C.4's Table 2 breaks the correlation between interpretability score and a feature's activation statistics down by moment, and the pattern is not uniform: mean correlates at -0.09 and variance at 0.02, both essentially nothing, while skew correlates at 0.20 and kurtosis at 0.15 (the main text quotes slightly different figures for the same analysis, 0.19 and 0.24 respectively). That split matters for what it implies the score is picking up on: it is not rewarding features that simply activate more strongly or more variably, only ones whose activation distribution has a heavier tail relative to a Gaussian, i.e. large but rare spikes rather than broad or high-magnitude activation generally. The paper's proposed mechanism is that interference from other features sharing a direction in superposition should be roughly Gaussian by the central limit theorem, so a feature standing out from that Gaussian background is more likely to be a real, cleanly-recovered feature rather than noise. This is also offered as the explanation for ICA's baseline performance: since ICA explicitly searches for non-Gaussian, heavy-tailed directions, it scores closer to the SAE's dictionary features than PCA or the default basis do."
+    },
+    {
+      "id": "kurtosis-skew-correlation-analysis-supplies-empirical-evidence-for-sparse-dictionary-learning",
+      "type": "supplies-empirical-evidence-for",
+      "source": "kurtosis-skew-correlation-analysis",
+      "target": "sparse-dictionary-learning",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Qu et al. (2019) proved, as pure theory, that searching for sparse overcomplete dictionaries can be reformulated as searching for directions that maximize the L4 norm, a measure closely related to kurtosis, the fourth statistical moment. The kurtosis/skew correlation analysis is the paper's empirical check on whether that theoretical reformulation shows up in practice: if sparse dictionary learning is, mathematically, a search for heavy-tailed directions, then real dictionary features recovered by an L1-penalized autoencoder should be more interpretable precisely to the degree that they are more heavy-tailed, which is what Table 2 finds, since skew and kurtosis correlate with score while mean and variance do not. In other words, this correlation analysis is the closest thing in the paper to a direct empirical fingerprint of sparse coding actually working as the L4-norm theory predicts, rather than an incidental property of the learned features. It also supplies the paper's account of why ICA, a technique from outside the sparse-dictionary-learning lineage that nonetheless explicitly maximizes non-Gaussianity, ends up as by far the strongest non-SAE baseline: it is optimizing for the same heavy-tailedness this analysis shows the SAE's dictionary features share."
+    },
+    {
+      "id": "reconstruction-perplexity-metric-measures-a-different-axis-than-autointerpretability-score",
+      "type": "measures-a-different-axis-than",
+      "source": "reconstruction-perplexity-metric",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "These two metrics are run as separate report cards on the same dictionaries and are never checked against each other. The interpretability score (Section 3) asks whether an automated system can explain and predict a feature's activations from text; the reconstruction-perplexity metric (Section 6.2) instead asks how much information the whole dictionary loses when it replaces a layer's activations outright, and finds a large gap: substituting Pythia-70M's layer-2 residual stream with its SAE reconstruction raises Pile perplexity from 25 to 40, nearly doubling it. A dictionary could in principle score well on interpretability, each active feature having a clean story, while still being unfaithful in this stronger sense, because interpretability scoring never looks at what the reconstruction does to downstream behavior, only at whether a feature's own activation pattern is describable. The paper flags reconstruction loss never reaching zero as a limitation precisely because it means the dictionary omits information the interpretability score has no way of noticing was missing."
+    },
+    {
+      "id": "apostrophe-feature-demonstrates-the-limits-of-monosemanticity",
+      "type": "demonstrates-the-limits-of",
+      "source": "apostrophe-feature",
+      "target": "monosemanticity",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "single-features-under-the-microscope",
+      "prose": "The paper is explicit that its headline case-study feature, despite activating almost exclusively on apostrophe tokens, 'does not activate on all apostrophes.' Two other dictionary features (shown in Figures 14 and 15) fire on apostrophes too, but in different grammatical contexts: one for contractions like '[I/We/They]'ll' and another for '[don/won/wouldn]'t.' So what looks from the outside like a single 'apostrophe' concept is, in the model's actual feature dictionary, split across at least three separate monosemantic features, each narrower than 'apostrophe' and each keyed to a different surrounding grammatical pattern. Monosemanticity, as the paper operationalizes and demonstrates it, is therefore not a claim that one feature exhaustively covers an entire human-nameable category; it is a claim that each feature covers one coherent narrow slice, and the human-level category can itself decompose into several such slices."
+    },
+    {
+      "id": "apostrophe-feature-is-benchmarked-against-default-basis-baseline",
+      "type": "is-benchmarked-against",
+      "source": "apostrophe-feature",
+      "target": "default-basis-baseline",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "single-features-under-the-microscope",
+      "prose": "When the authors searched the residual stream's raw coordinate basis for the dimension most associated with apostrophes (Appendix D.1/D.3), it took checking ten candidates: the dimension eventually shown in Figure 11 (dimension 21) was only the 10th-highest-magnitude dimension the apostrophe feature itself reads from, since the 9 dimensions with larger weights didn't show apostrophes among their own top activations the way dimension 21 does. Both directions pick up apostrophes at their highest activation range, but Figure 11's caption notes the basis dimension 'only explains a very small fraction of the variance for middle-to-lower activation ranges,' exactly where the dictionary feature stays clean. The search also turned up a structural link between them: the apostrophe dictionary feature's own top-reading direction 'mainly reads from an outlier dimension' of the residual stream (Dettmers et al., 2022), and when the authors separately searched the default basis for its most positive and most negative apostrophe-related dimensions, three of the four extremes checked were confirmed outlier dimensions too. So the SAE feature and the default-basis baseline are not drawing on unrelated information, both gravitate toward the same outlier-dimension substrate, but the SAE isolates a single clean apostrophe signal from it while the raw coordinate stays polysemantic across that same substrate."
+    },
+    {
+      "id": "closing-parenthesis-feature-seeds-feature-circuit-detection",
+      "type": "seeds",
+      "source": "closing-parenthesis-feature",
+      "target": "feature-circuit-detection",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "single-features-under-the-microscope",
+      "prose": "The feature chosen to demonstrate circuit detection, feature 52027 in layer 5, was not picked at random: unembedding it shows its top tokens are all closing-parenthesis variants, which is possible to check directly because layer 5 is the model's final layer, whose job is to write directions the unembedding matrix reads out as tokens. That gives the target feature's meaning an unusually strong, weights-based confirmation before any circuit-tracing happens, unlike a mid-network feature whose semantics can only be inferred from activating text. The circuit-detection procedure then works backward from that anchor: find the feature's max activation M, sample 20 contexts where it fires in [M/2, M], ablate each layer-4 feature in turn and rank them by how much their ablation reduces the target's activation, optionally recursing to build the multi-layer causal tree shown in Figure 5. Because the closing-parenthesis feature's own identity is nearly unambiguous, the method's output, upstream features for dates, acronyms, and other parenthesis-preceding phrases, can be judged as sensible or not, which is what makes this feature a credible validation case rather than just an illustration."
+    },
+    {
+      "id": "dictionary-feature-scores-unevenly-across-depth-in-autointerpretability-score",
+      "type": "scores-unevenly-across-depth-in",
+      "source": "dictionary-feature",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Being autointerpretability-scored well is not evenly distributed across a dictionary: Section 3.2 finds the SAE's advantage over baselines like PCA, ICA, and the default basis shrinks as depth increases, becoming merely 'comparable to ICA' by layer 4 and showing 'minimal improvement' by the model's final layer. The paper offers two candidate reasons tied to what dictionary features actually are at each depth: later-layer features build on many earlier-layer features and so may encode more complex, composite concepts, and later features are often best explained by their effect on the model's output rather than by the input text the autointerpretability protocol relies on. That second point is a real gap in the metric, not just a hard case: the paper has a method (Section 5's ablation analysis) for reading a feature's effect on output logits, but notes 'we currently do not send this information to the language model for hypothesis generation,' so GPT-4 is asked to explain late-layer features using exactly the kind of evidence, input text, least suited to them. 'A dictionary feature that scores well' is therefore layer-dependent almost by construction: early features are graded on terms the protocol is good at, late features on terms it is not."
+    },
+    {
+      "id": "monosemanticity-is-imperfectly-proxied-by-autointerpretability-score",
+      "type": "is-imperfectly-proxied-by",
+      "source": "monosemanticity",
+      "target": "autointerpretability-score",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "The autointerpretability score is introduced explicitly as a scalable stand-in for a property the paper cannot check by hand at scale: whether a feature shows 'reduced polysemanticity,' i.e. monosemanticity. But the paper is candid that the proxy is imperfect on its own terms, citing Bills et al. (2023)'s finding that automated explainers struggle with patterns centered on neighboring rather than current tokens, and adding its own limitation that the current protocol 'is unable to verify outputs by looking at changes in output or other data.' That second gap is precisely why Section 5's hand-run case studies exist: the apostrophe and closing-parenthesis features are validated not by their autointerpretability score at all, but by directly inspecting activating tokens, measuring ablation effects on output logits, and tracing upstream causal features, evidence the score-based protocol structurally cannot feed into GPT-4's explanation step. So the relationship runs: monosemanticity is the target property, the score is a scalable but output-blind proxy for it, and the paper's most convincing monosemanticity evidence comes from exactly the channel, causal effect on outputs, the score cannot see."
+    },
+    {
+      "id": "top-random-scoring-is-vindicated-by-kurtosis-skew-correlation-analysis",
+      "type": "is-vindicated-by",
+      "source": "top-random-scoring",
+      "target": "kurtosis-skew-correlation-analysis",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "automated-interpretability-scoring",
+      "prose": "Appendix C.2 defends preferring top-random over random-only scoring with an empirical claim it does not yet prove there: 'the features we are considering are heavy-tailed, so with limited sample sizes, we should expect random samples to underestimate the true correlation.' Appendix C.4's kurtosis/skew analysis is where that claim actually gets tested rather than asserted, finding score correlates with skew (about 0.20) and kurtosis (about 0.15) but not with mean (-0.09) or variance (0.02), direct evidence that the dictionary's features really are heavy-tailed in the specific sense the sampling argument needed. Read in sequence, the case for trusting top-random scores over the stricter random-only alternative (Figure 9) is not just an intuition about rare features; by Appendix C.4, it is backed by a measured statistical property of the very features being scored. Without that later analysis, C.2's heavy-tailedness claim would be doing real argumentative work while remaining an unverified assumption."
+    },
+    {
+      "id": "apostrophe-feature-divides-case-study-labor-with-closing-parenthesis-feature",
+      "type": "divides-case-study-labor-with",
+      "source": "apostrophe-feature",
+      "target": "closing-parenthesis-feature",
+      "hindsight": false,
+      "groundedIn": null,
+      "motivatedByTheme": "single-features-under-the-microscope",
+      "prose": "Section 5's three-part methodology, input, output, and intermediate-feature analysis, is not applied evenly to one feature; the paper splits it across these two examples. The apostrophe feature carries the input analysis (Figure 4's token histogram) and the output analysis (less-than-rank-one ablation, which selectively suppresses the following 's' logit), demonstrating monosemanticity in both what activates the feature and what it causally does downstream. The closing-parenthesis feature is reserved for the third leg, intermediate/circuit analysis: sitting in the model's final layer with an unembedding that directly names closing-parenthesis tokens, its own meaning is nearly given for free, which frees the demonstration to focus entirely on tracing which upstream layer-4 features (for dates, acronyms, and other parenthesis-preceding phrases) cause it to fire. The two features thus function as complementary halves of the same argument, one showing a feature is monosemantic by input and output, the other showing dictionary features compose into traceable circuits, and neither was chosen to carry all three analyses alone."
+    }
+  ]
+}

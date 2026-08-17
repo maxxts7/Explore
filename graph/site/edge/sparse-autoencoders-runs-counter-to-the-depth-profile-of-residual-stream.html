@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Sparse autoencoders (SAEs) — runs counter to the depth profile of → Residual stream — Edge</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-edge">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-edge">edge</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Sparse autoencoders (SAEs) — runs counter to the depth profile of → Residual stream</h1>
+<p class="edge-meta"><span class="tag hindsight">hindsight</span> &middot; grounded in <a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a></p>
+<section class="prose-section"><p>Both papers plot something against depth in the same architectural object, and the two curves point opposite directions. The sparse-autoencoder paper’s interpretability advantage over PCA, ICA, and the default basis is measured layer by layer and is not constant: it is already "comparable to ICA" by layer 4 and shows "minimal improvement in the final layer" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=5" target="_blank" rel="noopener">§"3.2 Sparse dictionary features are more interpretable than baselines", p. 5</a>) — and its dictionaries are trained with no knowledge of any downstream task, since "the training of our feature dictionaries does not emphasize any particular task" (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">§"4 Identifying causally-important dictionary features for indirect object identification", p. 6</a>). Contrastive Activation Addition, reading the same residual stream for a different purpose three months later, finds that behavior-relevant structure appears late rather than early: PCA-projected activations show no separation by behavior at layer 9 of Llama 2 7B Chat and a clean split one layer later, with behavioral clustering largely absent for roughly the first third of the network’s depth (contrastive-activation-addition, <a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=4" target="_blank" rel="noopener">§"3.2 Visualizing activations for contrastive dataset analysis", p. 4</a>). The two findings are not strictly in tension — one is a decomposition’s fidelity to arbitrary local structure, the other is where one specific labeled behavior becomes linearly separable — but juxtaposed they mean a dictionary’s best guarantee of monosemanticity and a behavior’s best guarantee of linear separability sit at opposite ends of the same stack of layers, a fact visible only once a later paper supplied the second curve.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Endpoints</h2><p><a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a> and <a href="../concept/residual-stream.html">Residual stream</a></p></section>
+<section class="nav-block"><h2>Appears in connective themes</h2><ul><li><a href="../tissue/hindsight-seams-2016-to-2022.html">Connections the source papers never draw, visible only by reading them together</a></li><li><a href="../tissue/failed-routes-left-visible.html">Failed routes left visible</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Passages behind the two endpoint concepts, grounding paper first.</p><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2312.06681" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;3 Method&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/contrastive-activation-addition.pdf#page=9" target="_blank" rel="noopener">&sect;&ldquo;9.1 Suggested future work&rdquo;, p. 9</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2507.21509" target="_blank" rel="noopener">Persona Vectors: Monitoring and Controlling Character Traits in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=3" target="_blank" rel="noopener">&sect;&ldquo;2.2 Extracting persona vectors&rdquo;, p. 3</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=4" target="_blank" rel="noopener">&sect;&ldquo;3.2 Controlling persona traits via steering&rdquo;, p. 4</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=13" target="_blank" rel="noopener">&sect;&ldquo;8 Limitations&rdquo;, p. 13</a></li><li><a class="cite" href="../assets/papers/persona-vectors.pdf#page=59" target="_blank" rel="noopener">&sect;&ldquo;M.1 SAE training details&rdquo;, p. 59</a></li></ul></li><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION&rdquo;, p. 12</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=16" target="_blank" rel="noopener">&sect;&ldquo;D.1 RESIDUAL STREAM BASIS&rdquo;, p. 16</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

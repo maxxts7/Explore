@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Small open models as interpretability testbeds — Theme</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-theme">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-theme">theme</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Small open models as interpretability testbeds</h1>
+<div class="page-intro"><p>Every interpretability result in this paper is scoped by the size of what it was tested on, and the authors chose small and open over large and proprietary. A full training run finishes on a single GPU in under an hour.</p>
+<p>This theme covers the infrastructure that choice buys: a fully open model family, a public training corpus, and a separate public source for the text fragments used to explain features, cheap enough that sweeping many settings is affordable, and modest enough that the paper is explicit about being a proof of concept rather than a claim about frontier models.</p></div>
+<section class="prose-section"><p>Cunningham et al. (2023) train and evaluate their sparse autoencoders on modest, fully open infrastructure: Pythia-70M and Pythia-410M, an open, reproducible model suite with residual-stream dimensions of 512 and 1024 respectively, trained on the Pile, the public webtext corpus also used to measure reconstruction-substitution perplexity. Autointerpretability text fragments are drawn from OpenWebText, another public corpus, sampled from its first 50,000 lines. The choice keeps every stage of the pipeline small and open: a full training run completes in under an hour on a single A40 GPU, cheap enough that the paper can afford to sweep dictionary-size ratios and sparsity coefficients rather than report a single configuration. The scale is explicitly a proof of concept rather than a claim about frontier models, the same honesty about scope that the 2017 Deep RL from Human Preferences paper's own small testbed environments show for a different method.</p></section>
+<hr class="divider">
+<section class="nav-block"><h2>Members &mdash; a guided walk</h2><ol class="walk"><li><a href="../concept/pythia.html">Pythia (model suite)</a><div class="walk-prose"><p>Cunningham et al. (2023) run their sparse autoencoders on Pythia-70M and Pythia-410M, an open, reproducible suite of language models (Biderman et al., 2023) whose residual streams are 512- and 1024-dimensional respectively. Working with a fully open model suite means every later claim in the paper -- about reconstruction quality, interpretability scores, or causal precision -- can be checked directly against public weights, rather than resting on models only the paper's own authors can access. Training the autoencoders themselves requires activations to train on, drawn from another open resource: the Pile.</p></div></li><li><a href="../concept/the-pile.html">The Pile</a><div class="walk-prose"><p>The Pile (Gao et al., 2020) is the large public webtext corpus whose text the paper runs through Pythia to build its training sets: 5-50M activation vectors per autoencoder, trained for 1-3 epochs with the Adam optimizer. The same corpus doubles as the paper's fidelity check, the reconstruction-substitution perplexity metric, where swapping in the SAE's reconstructed layer-2 activations for Pythia-70M raises Pile perplexity from 25 to 40. A separate, smaller public corpus supplies the text used for scoring features rather than training them: OpenWebText.</p></div></li><li><a href="../concept/openwebtext.html">OpenWebText</a><div class="walk-prose"><p>OpenWebText supplies the text fragments for the autointerpretability protocol: the first 50,000 of its lines are each cut into a 64-token fragment, on which a feature's activations are measured before GPT-4 writes an explanation and GPT-3.5 simulates it for scoring. Keeping this corpus public, like the models and training data before it, means the paper's interpretability scores can be reproduced from openly available pieces, with GPT-4 and GPT-3.5 the only closed components in the whole pipeline. A full autoencoder training run under this setup completes in under an hour on a single A40 GPU, cheap enough that the paper affords wide hyperparameter sweeps rather than a single committed configuration -- an explicit proof of concept rather than a claim about frontier models, the same honesty about scope that the 2017 Deep RL from Human Preferences paper shows for its own small testbed environments elsewhere in the corpus.</p></div></li></ol></section>
+<section class="nav-block"><h2>Superthemes</h2><ul><li><a href="../supertheme/decomposing-the-model-into-features.html">Decomposing the model into features</a></li></ul></section>
+<section class="nav-block"><h2>Super edges touching this theme</h2><ul><li><a href="../superedge/open-models-as-interpretability-testbeds-outsources-its-grading-to-automated-interpretability-scoring.html">Small open models as interpretability testbeds — outsources its grading to → Interpretability itself becomes a benchmark</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><p class="section-note">Every passage behind this theme&rsquo;s member concepts.</p><details class="sources-details"><summary>3 source passages in 1 paper</summary><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=2" target="_blank" rel="noopener">&sect;&ldquo;2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING&rdquo;, p. 2</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=11" target="_blank" rel="noopener">&sect;&ldquo;A AUTOINTERPRETATION PROTOCOL&rdquo;, p. 11</a></li><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION&rdquo;, p. 12</a></li></ul></li></ul></details></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

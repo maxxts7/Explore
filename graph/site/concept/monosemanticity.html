@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Monosemanticity — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Monosemanticity</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">The property of a feature or direction activating for a single, coherent, human-interpretable concept -- the converse of polysemanticity. The paper&#x27;s case studies (the apostrophe and closing-parenthesis features) are framed as demonstrating that learned dictionary features are highly monosemantic compared to neurons or other baseline directions.</p>
+<div class="page-intro"><p>Getting a single unit inside a network to mean just one thing sounds like a modest ask, but it's the property individual neurons routinely fail at, and showing that a different kind of unit can actually achieve it, reliably and at scale, turns out to be surprisingly hard to pin down.</p>
+<p>The entry then turns to how the attempt to measure this property at scale runs into a blind spot in its own scoring method, and what a convincingly monosemantic feature turns out to look like up close: often several narrower features quietly dividing up a concept a person would just call one thing.</p></div>
+<section class="prose-section">
+<h2>The target property superposition prevents</h2>
+<p>Monosemanticity is the converse of <a href="../concept/polysemanticity.html">Polysemanticity</a>: a feature or direction is monosemantic if it activates for one coherent, human-nameable concept rather than several unrelated ones. As a target property it belongs to the same Anthropic interpretability line that named polysemanticity and superposition as its diagnosis (Elhage et al., 2022b), and this paper is one of two concurrent 2023 empirical demonstrations, alongside Anthropic's own 'Towards Monosemanticity' work, that training a sparse dictionary over a language model's activations yields directions measurably closer to this ideal than neurons or generic matrix decompositions. The paper's own case studies, the apostrophe feature and the layer-5 closing-parenthesis feature, are framed explicitly as evidence that <a href="../concept/dictionary-feature.html">Dictionary feature</a>s achieve reduced polysemanticity relative to the baselines it tests.</p>
+</section>
+<section class="prose-section">
+<h2>How the paper measures it, and where the measurement breaks down</h2>
+<p>Because monosemanticity cannot be checked by hand across thousands of features, the paper relies on the <a href="../concept/autointerpretability-score.html">Autointerpretability score</a> as a scalable stand-in: a feature earns a high score only if its activations follow a pattern a language model can state and then use to predict held-out activations, something difficult for a feature that fires on more than one unrelated concept. The proxy has a structural blind spot the paper acknowledges directly: current interpretability protocols 'are unable to verify outputs by looking at changes in output or other data' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=5" target="_blank" rel="noopener">§"3.2 SPARSE DICTIONARY FEATURES ARE MORE INTERPRETABLE THAN BASELINES", p. 5</a>). So the paper's most direct monosemanticity evidence instead comes from hand-run case studies: an activation histogram technique that plots which tokens cause a feature to fire, which 'only works for dictionary features that activate for a small set of tokens' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC", p. 7</a>), together with directly measuring a feature's causal effect on output logits.</p>
+</section>
+<section class="prose-section">
+<h2>What monosemanticity looks like up close: the apostrophe feature</h2>
+<p>The paper's central worked example, dictionary feature 556, activates almost exclusively on apostrophe tokens (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC", p. 7</a>), in sharp contrast to the corresponding <a href="../concept/residual-stream.html">Residual stream</a> default-basis dimension, which the paper shows encodes different information at different activation ranges and is therefore polysemantic. Yet even this feature 'does not activate on all apostrophes' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC", p. 7</a>): two further features cover apostrophes in contraction contexts like '[I/We/They]'ll' and negation contexts like '[don/won/wouldn]'t' respectively. The dictionary does not resolve polysemanticity by mapping one feature onto one human-level word category; it does so by learning several narrower, context-specific monosemantic features that jointly cover what a person would casually call a single concept.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li>Apostrophe dictionary feature (feature 556) — <a href="../edge/apostrophe-feature-demonstrates-the-limits-of-monosemanticity.html">demonstrates the limits of</a> → <strong>Monosemanticity</strong></li><li><strong>Monosemanticity</strong> — <a href="../edge/monosemanticity-is-imperfectly-proxied-by-autointerpretability-score.html">is imperfectly proxied by</a> → Autointerpretability score</li><li><strong>Monosemanticity</strong> — <a href="../edge/monosemanticity-benchmarks-dictionary-feature.html">benchmarks</a> → Dictionary feature</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/single-features-under-the-microscope.html">Single features under the microscope</a></li><li><a href="../theme/superposition-vs-the-neuron-basis.html">Superposition and the case against the neuron basis</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">&sect;&ldquo;5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC&rdquo;, p. 7</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

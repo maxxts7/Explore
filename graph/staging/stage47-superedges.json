@@ -1,0 +1,104 @@
+{
+ "superedges": [
+  {
+   "id": "superposition-vs-the-neuron-basis-dictates-the-sparsity-mechanics-of-unmixing-activations-with-sparsity",
+   "type": "dictates-the-sparsity-mechanics-of",
+   "source": "superposition-vs-the-neuron-basis",
+   "target": "unmixing-activations-with-sparsity",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Superposition's theory supplies more than motivation for building a sparse autoencoder at all -- it supplies the two numbers that fix the autoencoder's shape. The paper states plainly that \"[f]eatures must be sufficiently sparsely activating for superposition to arise because, without high sparsity, interference between non-orthogonal features prevents any performance gain\" (sparse-autoencoders, §\"1 Introduction\", p. 1); the L1 sparsity loss operationalizes that exact condition, and the expansion factor R, which sets dhid = R·din, operationalizes the companion claim that models pack more features than dimensions by giving the dictionary room to be genuinely overcomplete. The theoretical backing cited for the L1 term is a stronger promise than a design justification: Wright & Ma (2022) are cited for showing reconstruction with an L1 penalty \"can recover the ground-truth features that generated the data\" (sparse-autoencoders, §\"2 Taking Features Out of Superposition...\", p. 3), which implies a single correct decomposition exists to be recovered -- the same promise the sparsity-reconstruction sweep's smooth, knee-less curve across alpha then quietly sits in tension with. Neither theme states this outright: the diagnosis theme reports the recovery guarantee as settled background theory, and the instrument theme reports the knee-less sweep as a footnote about hyperparameter selection, but together they show the autoencoder's own hyperparameter sweep is quiet evidence against the very theoretical guarantee that licensed building it as an L1-penalized network in the first place."
+  },
+  {
+   "id": "dictionary-learning-lineage-leaves-the-architecture-for-unmixing-activations-with-sparsity",
+   "type": "leaves-the-architecture-for",
+   "source": "dictionary-learning-lineage",
+   "target": "unmixing-activations-with-sparsity",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Both direct predecessors leave a specific engineering gap that this theme's design choices fill in. Yun et al. (2021) apply sparse dictionary learning \"to all residual stream layers... simultaneously\" (sparse-autoencoders, §\"1 Introduction\", p. 2) -- one dictionary asked to explain every layer at once -- while this paper instead trains a fresh autoencoder per layer and per sublayer (separate dictionaries reported for, e.g., the layer 1 residual stream, layer 2 and layer 11 elsewhere), which is what makes the per-layer alpha/R hyperparameter sweep in Appendix B a coherent operation in the first place, one that a single all-layers-at-once dictionary could not support. Sharkey et al.'s (2023) unpublished interim report already showed \"empirically... that reconstruction with an l1 penalty can recover the ground-truth features\" (sparse-autoencoders, §2, p. 3), establishing that sparsity works in principle and motivating this paper directly; what it left unresolved is architecture at the scale of a full transformer's sublayers, which is exactly where tied weights (halving the parameter count) and the discovery of dead features specific to MLP training (sparse-autoencoders, §\"C.3 Interpreting the MLP Sublayer\", p. 15) enter -- problems that only surface once the idea is pushed past a single demonstrated recovery result and into a sweepable, per-sublayer training pipeline. Neither narrative states this handoff: the lineage theme credits Sharkey with the motivating idea and Yun with the simultaneous-layers precedent, while the instrument theme presents tied weights and dead features as this paper's own design decisions without naming the specific gap in scale and per-layer decomposition that made them necessary."
+  },
+  {
+   "id": "unmixing-activations-with-sparsity-hands-off-only-what-fires-to-automated-interpretability-scoring",
+   "type": "hands-off-only-what-fires-to",
+   "source": "unmixing-activations-with-sparsity",
+   "target": "automated-interpretability-scoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "The autointerpretability pipeline does not grade every dictionary feature the design produces -- it can only grade features that fire enough to generate text fragments with non-zero variation, and the protocol explicitly skips any feature with fewer than 20 such fragments among 50,000 lines of OpenWebText (sparse-autoencoders, §A, p. 12). That requirement collides directly with dead features, the failure mode this theme documents as common under MLP training: in a dictionary twice the size of the neuron layer, \"less than half might be active enough to perform automatic interpretability\" (sparse-autoencoders, §\"C.3 Interpreting the MLP Sublayer\", p. 15), meaning scoring coverage silently shrinks precisely where the sparsity-reconstruction tradeoff pushes hardest toward overcompleteness. Reconstruction fidelity, by contrast, turns out to be nearly irrelevant to the score once a feature clears that firing bar: smaller, less accurate dictionaries score just as interpretable per feature as larger ones, so a larger dictionary only explains more variance rather than scoring better feature-by-feature (sparse-autoencoders, §\"C.1 Interpretability Is Consistent Across Dictionary Sizes\", p. 13). What neither theme states is how asymmetric the handoff is: the grading apparatus is blind to reconstruction quality but not to activation frequency, so the design axis theme 1 spends most of its attention on (the sparsity-reconstruction curve) barely touches the score, while the failure mode it treats as a side detail (dead features) determines how much of the dictionary even reaches grading."
+  },
+  {
+   "id": "decomposition-baselines-ranks-every-rung-through-automated-interpretability-scoring",
+   "type": "ranks-every-rung-through",
+   "source": "decomposition-baselines",
+   "target": "automated-interpretability-scoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Every rung of this ladder -- default basis, random directions, PCA, ICA, and the sparse dictionary itself -- is ranked by exactly one shared instrument, the GPT-4/GPT-3.5 autointerpretability score, so any blind spot in that instrument is a blind spot in the whole ladder at once rather than in any single method's score. The paper documents such a blind spot directly: because in the current protocol the scorer is \"unable to verify outputs by looking at changes in output or other data,\" and because later features \"are often best explained by their effect on the output\" rather than by input text alone (sparse-autoencoders, §\"3.2 Sparse Dictionary Features Are More Interpretable Than Baselines\", p. 5), the scorer is structurally weaker at judging exactly the deep-layer, output-oriented features where interpretability differences between rungs might otherwise be sharpest. This is not a hypothetical risk: the sparse dictionary's own measured advantage over the ladder \"declines as we move through the model, being comparable to ICA in layer 4 and showing minimal improvement in the final layer\" (sparse-autoencoders, §3.2, p. 5) -- a pattern equally consistent with the dictionary's real advantage shrinking with depth or with the shared scorer simply losing power to detect it there. Because the whole ladder answers to one grader, the ranking's late-layer flattening cannot by itself distinguish those two explanations, a limitation neither the ladder theme, which treats the ranking as settled, nor the scoring theme, which treats its own controls as sufficient, states."
+  },
+  {
+   "id": "automated-interpretability-scoring-passes-the-burden-of-proof-to-causal-proof-by-patching",
+   "type": "passes-the-burden-of-proof-to",
+   "source": "automated-interpretability-scoring",
+   "target": "causal-proof-by-patching",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "The autointerpretability score is explicitly correlational and says so in its own definition: it is \"the correlation between the model's predicted activations and the actual activations\" (sparse-autoencoders, §\"3.1 Interpretability at Scale\", p. 3), and the paper concedes that in its current form the protocol is \"unable to verify outputs by looking at changes in output or other data\" (sparse-autoencoders, §3.2, p. 5) -- a scorer that can certify a feature looks like a coherent concept but cannot certify that the concept does anything to the model's behavior. Causal proof by patching supplies that missing half, and the handoff is load-bearing at the exact point where scoring weakens: the autointerpretability advantage over baselines \"shows minimal improvement in the final layer\" (sparse-autoencoders, §3.2, p. 5), yet the IOI patching experiment is run on layer 11 of a 24-layer network (sparse-autoencoders, §4, Fig. 3 caption, p. 5) and still finds dictionary features reaching a given KL divergence in fewer patches and with smaller edit magnitude than PCA. A correlational grade taken alone would have undersold exactly the depth at which the causal test still finds an advantage, which is the clearest evidence in the paper that neither method could stand in for the other: scoring alone would have missed a real late-layer effect, and patching alone, run on every feature without any prior grade to prioritize candidates, would be too expensive to serve as the paper's primary evidence."
+  },
+  {
+   "id": "causal-proof-by-patching-runs-its-proof-on-separate-features-than-single-features-under-the-microscope",
+   "type": "runs-its-proof-on-separate-features-than",
+   "source": "causal-proof-by-patching",
+   "target": "single-features-under-the-microscope",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "The population-level and single-feature demonstrations of causal proof are not run on the same dictionary, or even, as far as the text specifies, the same layer. IOI patching is performed on layer 11 of Pythia-410M's residual stream, with the feature subset ordered by the ACDC algorithm over KL divergence averaged across 50 IOI datapoints (sparse-autoencoders, §4, Fig. 3 caption, p. 5) -- an aggregate statistic over whatever features ACDC selects. The closing-parenthesis case study instead starts from one hand-identified feature in \"layer 5\" whose unembedding directly predicts closing-parenthesis tokens (sparse-autoencoders, §\"5.3 Intermediate Features...\", p. 7), and the apostrophe feature was found by manually searching a single hand-picked sentence (sparse-autoencoders, §\"D.3 Feature Search Details\", p. 16) rather than by any population-level selection procedure at all. The paper's single \"features proved by intervention\" framing therefore covers two proofs that never touch: the IOI result establishes that patching some population of dictionary features beats patching PCA components in aggregate, but it says nothing about whether the two specific, hand-selected, highly monosemantic specimens examined under the microscope are themselves drawn from a population that behaves like the one the aggregate KL curve was computed over -- an inferential bridge neither theme's own narrative states, let alone the paper itself."
+  },
+  {
+   "id": "open-models-as-interpretability-testbeds-outsources-its-grading-to-automated-interpretability-scoring",
+   "type": "outsources-its-grading-to",
+   "source": "open-models-as-interpretability-testbeds",
+   "target": "automated-interpretability-scoring",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Every stage this theme documents is small, open, and self-hostable -- Pythia checkpoints, the public Pile and OpenWebText corpora, a full training run finishing \"in under an hour on a single A40 GPU\" (sparse-autoencoders, §B, p. 12) -- but the grading stage that judges the resulting features depends on the opposite kind of resource: two closed frontier models accessed by paid API, funded by \"a grant of model credits\" from the OpenAI Researcher Access Program (sparse-autoencoders, Acknowledgments, p. 9). The dependency is not even chosen for capability: GPT-3.5 stands in as the simulator \"because... OpenAI's public API for GPT-3.5 (but not GPT-4) supports returning logprobs\" that the simulation protocol requires (sparse-autoencoders, §A, footnote 6, p. 11) -- a substitution forced by a third party's API surface rather than by any judgment about which model simulates better. This asymmetry means the testbed's headline property, that the whole pipeline is cheap enough to sweep freely over dictionary sizes and sparsity coefficients, does not extend to the grading that validates those sweeps: the sweeps themselves are reproducible by anyone with a GPU, but confirming their interpretability rankings depends on continued access to a specific company's model credits and a logprobs endpoint that could be withdrawn or changed at any time. Neither theme's own narrative states this cost split between the free, open half of the pipeline and the metered, closed half that grades what it produces."
+  },
+  {
+   "id": "causal-proof-by-patching-installs-one-expensive-link-in-enumerating-features-for-safety",
+   "type": "installs-one-expensive-link-in",
+   "source": "causal-proof-by-patching",
+   "target": "enumerating-features-for-safety",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Enumerative safety's own stated requirement, in the paper's telling, is not just a list of features but a map of how they causally depend on each other: the discussion section names the goal of tracing \"the causal dependencies between features in different layers\" toward \"an end-to-end understanding of how a model computes its outputs\" (sparse-autoencoders, §\"6.2 Limitations and Future Work\", p. 9), immediately before the conclusion invokes enumerative safety by name. Feature-circuit-detection is the one place in the paper that goal is actually attempted, and only at the smallest possible scale: one target feature, the layer-5 closing-parenthesis detector, traced back through repeated ablations to its immediate upstream layer (sparse-autoencoders, §5.3, p. 7). What neither theme's own account states is that the cheaper alternative to this method -- the one that would actually scale to a whole model's worth of features rather than needing a fresh ablation run per target feature -- was tried and failed: a weight-based method multiplying a feature through the MLP and checking cosine similarity with layer-5 features found \"no meaningful connections\" at all (sparse-autoencoders, §\"D.4 Failed Interpretability Methods\", p. 17). So the one working method toward the audit's structural ambition is also the expensive one, and the paper's own record of what it tried instead of ablation is a documented dead end rather than a cheaper alternate route -- a cost the enumeration theme's ambition-focused narrative does not mention and the patching theme's method-focused narrative does not connect back to that ambition."
+  },
+  {
+   "id": "reading-the-residual-stream-surfaces-artifacts-explained-by-superposition-vs-the-neuron-basis",
+   "type": "surfaces-artifacts-explained-by",
+   "source": "reading-the-residual-stream",
+   "target": "superposition-vs-the-neuron-basis",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "CAA's activation-visualization technique already demonstrates, on a much larger and RLHF-tuned model than this paper studies, the same structural claim this theme argues from first principles: projecting Llama 2 7B/13B Chat's residual-stream activations by PCA on a contrastive dataset shows \"behavioral clustering\" -- separation by target behavior rather than by superficial prompt format -- emerging suddenly \"around one-third of the way through the layers\" (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4), evidence that meaningful structure lives in directions of activation space rather than in any privileged coordinate, arrived at independently of anything this paper's own case studies show on Pythia. What this theme adds back is a mechanistic account the steering side has no access to: when this paper searches by hand for the residual-stream dimension nearest the apostrophe feature, the top-activating dimensions it finds are not generic coordinates but specifically outlier dimensions, disproportionately large-magnitude coordinates the paper elsewhere attributes to \"the Adam optimiser saving gradients with finite precision in the residual basis\" (sparse-autoencoders, §\"D.3 Feature Search Details\" and §\"C.2\", pp. 15-17) -- a specific, named cause for why some directions in an otherwise unprivileged basis behave as if they were privileged after all. A steering paper's PCA-based behavioral clustering and this paper's dictionary-based feature search independently corroborate that directions, not neurons, carry the structure; only this theme explains why a handful of those directions look disproportionately important in raw coordinate space to begin with."
+  },
+  {
+   "id": "steering-as-audit-elicits-only-what-it-already-suspects-unlike-enumerating-features-for-safety",
+   "type": "elicits-only-what-it-already-suspects-unlike",
+   "source": "steering-as-audit",
+   "target": "enumerating-features-for-safety",
+   "hindsight": false,
+   "groundedIn": null,
+   "supertheme": "decomposing-the-model-into-features",
+   "prose": "Both routes name themselves as unfinished ambitions, but the ambitions differ in what already stands behind them. CAA's audit route is introduced under the heading \"Application to red-teaming\" inside \"9.1 Suggested future work\" (contrastive-activation-addition, p. 9) -- a proposal never executed in the paper itself, resting only on the general steering machinery already validated for other purposes. Enumerative safety is framed the same way, \"an ambitious dream\" the paper only hopes to have taken \"a step towards\" (sparse-autoencoders, §\"6.3 Conclusion\", p. 9), but the structural half of that ambition -- tracing which features cause which others to fire -- is not purely aspirational: §5.3 already runs it end to end on a toy case, the closing-parenthesis feature's two-layer circuit. The two routes also differ in what they can find: eliciting a behavior with CAA requires the auditor to already have a specific target behavior in mind, built from a contrastive dataset constructed for that behavior, whereas this paper's dictionary turns up features nobody was looking for at all -- the five arbitrarily-ordered layer-1 features in Table 1 cover personal names, the letter \"W,\" the number \"5,\" and legal terminology, none of them hypothesized in advance. An elicitation audit can only test the behaviors an auditor thinks to construct a probe for; an enumeration audit, however immature, is built to surface behaviors nobody thought to ask about."
+  }
+ ]
+}

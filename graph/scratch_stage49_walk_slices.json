@@ -1,0 +1,510 @@
+{
+ "themes": [
+  {
+   "id": "unmixing-activations-with-sparsity",
+   "name": "Unmixing activations with a sparsity penalty",
+   "narrative": "Cunningham et al. 2023's method is a single small autoencoder, a sparse autoencoder, and nearly every design choice in it is a position on one tradeoff. Each row of its weight matrix is a dictionary feature, and training minimizes a reconstruction loss (squared error between input and output) plus a sparsity loss, an L1 penalty on hidden-layer coefficients weighted by a coefficient alpha. The dictionary expansion factor (R) sets how overcomplete the hidden layer is; tied encoder/decoder weights halve the parameter count by forcing the two matrices to share values, though this hurts performance enough to motivate an untied variant for SAE training on the MLP sublayer, a setting where dead features, dictionary rows that never fire, become common. Reconstruction never reaches zero: the reconstruction-substitution perplexity metric shows swapping in Pythia-70M's reconstructed layer-2 activations raises Pile perplexity from 25 to 40. Sweeping alpha traces a smooth sparsity-reconstruction tradeoff with no knee, weak evidence against there being one correct decomposition, only points along a curve. The whole apparatus scales up sparse dictionary learning, the sparse-coding framework borrowed from vision and neuroscience.",
+   "members": [
+    {
+     "id": "sparse-autoencoders",
+     "name": "Sparse autoencoders (SAEs)",
+     "summary": "This paper trains single-hidden-layer, ReLU, tied-weight autoencoders with an L1 sparsity penalty on their hidden activations to decompose language model activations into an overcomplete, sparsely-activating dictionary of features. It is one of the two founding empirical demonstrations (alongside the concurrent Anthropic 'Towards Monosemanticity' work) that this architecture recovers features that are more interpretable, more monosemantic, and more causally precise than PCA/ICA/neuron-basis baselines, establishing SAEs as a scalable method for resolving superposition."
+    },
+    {
+     "id": "dictionary-feature",
+     "name": "Dictionary feature",
+     "summary": "A single learned row of the sparse autoencoder's weight matrix M (equivalently, one hidden unit of the autoencoder), representing a direction in activation space used to reconstruct inputs as a sparse linear combination. Individual dictionary features are the paper's central unit of analysis, examined for interpretability (Section 3), causal importance (Section 4), and monosemanticity (Section 5)."
+    },
+    {
+     "id": "sparsity-loss",
+     "name": "Sparsity loss (L1 penalty on feature activations)",
+     "summary": "The alpha*||c||_1 term in the autoencoder's training objective (Equation 4), penalizing the L1 norm of the hidden-layer coefficients c to encourage sparse feature activations. The sparsity coefficient alpha is the paper's key hyperparameter, swept throughout to trade off sparsity against reconstruction accuracy."
+    },
+    {
+     "id": "reconstruction-loss",
+     "name": "Reconstruction loss",
+     "summary": "The ||x - x-hat||^2 term in the SAE training objective (Equation 4), the standard squared-error measure of how well the reconstructed activation vector matches the original. The paper notes this loss is never driven to zero, showing the dictionary fails to capture all information in a layer's activations, a gap it also quantifies via the reconstruction-perplexity metric."
+    },
+    {
+     "id": "expansion-factor-r",
+     "name": "Dictionary expansion factor (R)",
+     "summary": "The hyperparameter R controlling the ratio of the autoencoder's hidden dimension to the model's activation dimension (dhid = R x din), governing how overcomplete the learned feature dictionary is. The paper sweeps R and finds interpretability gains hold even for undercomplete dictionaries (R<1), with larger dictionaries explaining more of the overall activation variance."
+    },
+    {
+     "id": "tied-weights-sae",
+     "name": "Tied encoder/decoder weights",
+     "summary": "The design choice of using a single weight matrix (transposed between encoder and decoder) for the SAE, adopted because it encodes the expectation that a feature's detecting and defining directions coincide, halves memory cost, and removes encoder/decoder direction ambiguity. The paper finds tied weights hurt performance on MLP activations, motivating an untied variant with separate encoder/decoder matrices for that setting."
+    },
+    {
+     "id": "dead-features",
+     "name": "Dead features",
+     "summary": "Dictionary features that never activate across the training corpus, wasting dictionary capacity. The paper finds residual-stream dictionaries stay overcomplete (few dead features) up to roughly a 4x expansion factor, while MLP-sublayer dictionaries suffer many dead features even without a sparsity penalty, in some cases leaving less than half the dictionary usably 'alive'."
+    },
+    {
+     "id": "sparsity-reconstruction-tradeoff",
+     "name": "Sparsity-reconstruction tradeoff (no single correct decomposition)",
+     "summary": "The paper's empirical finding, from sweeping the sparsity coefficient alpha, that there is a smooth tradeoff between the number of active features and unexplained reconstruction variance, with no distinct 'knee' or single best operating point. Taken as weak evidence against there being one uniquely correct sparse decomposition of a given activation space."
+    },
+    {
+     "id": "mlp-sae-training",
+     "name": "SAE training on the MLP sublayer",
+     "summary": "An extension of the paper's method to train dictionaries on MLP sublayer activations rather than the residual stream, finding 'mixed success': many features are more interpretable than individual neurons, but the approach suffers from large numbers of dead features and does not yet robustly learn overcomplete bases in intermediate or later MLP layers."
+    },
+    {
+     "id": "reconstruction-perplexity-metric",
+     "name": "Reconstruction-substitution perplexity metric",
+     "summary": "A fidelity check in which a layer's activations are replaced with the SAE's reconstruction of them and the resulting increase in the model's perplexity on the Pile is measured, quantifying information lost by the dictionary. Reported as rising from 25 to 40 when substituting Pythia-70M's layer-2 residual stream with its reconstruction, evidencing that reconstruction loss is not yet near zero."
+    },
+    {
+     "id": "sparse-dictionary-learning",
+     "name": "Sparse dictionary learning / sparse coding",
+     "summary": "A prior mathematical framework (Olshausen & Field, 1997; Lee et al., 2006), originally developed to model sparse coding in the visual cortex, for expressing data as sparse linear combinations of an overcomplete set of learned basis vectors (a 'dictionary'). This paper's sparse autoencoder is presented as a scalable neural-network implementation of this framework applied to language model activations."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "superposition-vs-the-neuron-basis",
+   "name": "Superposition and the case against the neuron basis",
+   "narrative": "This theme's claim is that neurons, and basis coordinates generally, are the wrong unit of analysis for reading a language model, and the paper demonstrates this twice over. The premise is theoretical: polysemanticity, individual units activating for unrelated concepts, is hypothesized to arise from superposition, models packing more features than they have dimensions into an overcomplete set of non-orthogonal directions. The residual stream, the transformer's running sum of layer outputs and the paper's main object of study, is not expected to have a privileged basis, no coordinate system more inherently meaningful than any rotation of it, though the paper documents outlier dimensions, specific coordinates carrying disproportionately large values, as a partial exception. The empirical half of the same fact follows: the default basis baseline, scoring individual neurons or residual-stream coordinates directly, is shown polysemantic exactly where the corresponding learned feature is monosemantic, activating for one coherent concept. Together these findings back mechanistic interpretability's premise that meaningful analysis units must be discovered, not assumed to be neurons or coordinates.",
+   "members": [
+    {
+     "id": "polysemanticity",
+     "name": "Polysemanticity",
+     "summary": "The phenomenon in which individual neurons (or other analysis units) activate in multiple, semantically unrelated contexts, preventing concise human-understandable explanations of a network's internal computation. Named as the paper's central roadblock in the abstract; the paper's entire method is aimed at finding a decomposition of activation space with reduced polysemanticity."
+    },
+    {
+     "id": "superposition",
+     "name": "Superposition",
+     "summary": "A hypothesized cause of polysemanticity (Elhage et al., 2022b) in which a network represents more features than it has dimensions by assigning them to an overcomplete set of non-orthogonal directions, relying on activation sparsity to limit interference. The paper's stated goal is to resolve superposition in language models by recovering these directions via sparse dictionary learning."
+    },
+    {
+     "id": "monosemanticity",
+     "name": "Monosemanticity",
+     "summary": "The property of a feature or direction activating for a single, coherent, human-interpretable concept -- the converse of polysemanticity. The paper's case studies (the apostrophe and closing-parenthesis features) are framed as demonstrating that learned dictionary features are highly monosemantic compared to neurons or other baseline directions."
+    },
+    {
+     "id": "privileged-basis",
+     "name": "Privileged basis",
+     "summary": "The property of a particular coordinate basis being distinguished as unusually meaningful for a given vector space (e.g. the standard basis immediately after an elementwise nonlinearity), as opposed to a generic space with no privileged direction. The paper notes the residual stream is not usually expected to have a privileged basis, but discusses evidence (Dettmers et al., 2022; Elhage et al., 2023) that it partially does due to outlier dimensions, which is relevant to interpreting the default-basis baseline's behavior."
+    },
+    {
+     "id": "outlier-dimensions",
+     "name": "Outlier dimensions",
+     "summary": "Specific residual-stream coordinates that transformers tend to write disproportionately large, information-bearing values to, hypothesized (Dettmers et al., 2022) to arise from the Adam optimizer storing gradients with finite precision in the residual basis. The paper finds that its top-activating default-basis dimensions for both the most positive and most negative apostrophe-related directions were outlier dimensions rather than typical basis coordinates."
+    },
+    {
+     "id": "residual-stream",
+     "name": "Residual stream",
+     "summary": "The transformer's running sum of layer outputs, this paper's primary object of study: sparse autoencoders are trained mainly on residual-stream activations, and the paper investigates whether the residual stream has a 'privileged basis' and how outlier dimensions relate to interpretable dictionary features."
+    },
+    {
+     "id": "default-basis-baseline",
+     "name": "Default (neuron/residual-stream) basis baseline",
+     "summary": "Treating individual neurons, or for the residual stream individual basis coordinates, as the units of analysis, used as a naive baseline against which the paper's dictionary features are compared for autointerpretability. The residual-stream default basis is shown, via the apostrophe-dimension case study, to be polysemantic where the corresponding dictionary feature is monosemantic."
+    },
+    {
+     "id": "mechanistic-interpretability",
+     "name": "Mechanistic interpretability",
+     "summary": "A research agenda that seeks to understand neural networks by reverse-engineering their internal computations into human-understandable parts, aiming to enable verification, targeted editing, and mitigation of risks such as deceptive behavior. Named in the introduction as the field this paper's sparse-autoencoder method aims to advance, offering it as 'a foundation for future mechanistic interpretability work.'"
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "automated-interpretability-scoring",
+   "name": "Interpretability itself becomes a benchmark",
+   "narrative": "The paper's headline comparison rests on language models grading language-model features. In the autointerpretability score, adapted from Bills et al. 2023, GPT-4 is shown text fragments where a dictionary feature activates and writes a natural-language explanation; GPT-3.5 then simulates the feature by predicting its per-token activations from that explanation alone, and the correlation between predicted and true activations is the score (GPT-3.5 stands in for GPT-4 as simulator only because its API exposed the logprobs the protocol needs). Three controls keep that score honest. Top-and-random vs. random-only interpretability scoring names the choice of which text fragments to grade on: mixing highly-activating fragments with random ones is the default, rerun with random fragments alone in Appendix C.2 to confirm the ranking holds. The top-K-active baseline control restricts PCA and ICA to the same number of simultaneously active directions as the SAE and finds this explains only a small fraction of its advantage. And the interpretability-vs-kurtosis/skew correlation analysis finds interpretability correlates weakly, 0.19 and 0.24, with a feature's skew and kurtosis, explaining why ICA, which directly maximizes non-Gaussianity, is the strongest non-SAE baseline.",
+   "members": [
+    {
+     "id": "autointerpretability-score",
+     "name": "Autointerpretability score",
+     "summary": "An automated interpretability metric (Bills et al., 2023) in which a language model is shown text where a feature activates, writes a natural-language explanation of the feature, and then a (possibly different) language model uses that explanation to predict the feature's activations on held-out text; the correlation between predicted and actual activations is the score. This paper applies it at scale (GPT-4 generates explanations, GPT-3.5 simulates activations) as its primary measure of dictionary-feature interpretability, run across thousands of features and several baselines."
+    },
+    {
+     "id": "top-random-scoring",
+     "name": "Top-and-random vs. random-only interpretability scoring",
+     "summary": "A distinction, from the Bills et al. (2023) protocol, in how text fragments are chosen when scoring an autointerpretability explanation: 'top-and-random' scoring mixes highly-activating fragments with randomly sampled ones (the paper's default), while the stricter 'random-only' scoring uses only random fragments. The paper reruns its comparison using random-only scoring (Appendix C.2) and finds its learned features still outperform baselines, ruling out an artifact-of-top-scoring explanation for its results."
+    },
+    {
+     "id": "gpt-4",
+     "name": "GPT-4",
+     "summary": "OpenAI's large language model, used in this paper as the explainer model in the autointerpretability pipeline: given highly-activating text fragments and per-token activations, GPT-4 generates a natural-language description of what a dictionary feature detects."
+    },
+    {
+     "id": "gpt-3-5",
+     "name": "GPT-3.5",
+     "summary": "OpenAI's GPT-3.5 model, used as the 'simulator' in the autointerpretability pipeline: given a feature's GPT-4-written explanation, it predicts the feature's per-token activations on held-out text, which are then correlated with ground truth to produce the interpretability score. Substituted for GPT-4 (used for simulation in the original Bills et al. protocol) because OpenAI's public GPT-3.5 API exposed the logprobs the simulation step requires, while its GPT-4 API did not at the time."
+    },
+    {
+     "id": "kurtosis-skew-correlation-analysis",
+     "name": "Interpretability-vs-kurtosis/skew correlation analysis",
+     "summary": "An analysis correlating a dictionary feature's autointerpretability score with statistical moments of its activation distribution, finding weak positive correlations (0.19-0.24) with skew and kurtosis respectively. Used to argue that more heavy-tailed features are more interpretable, and to explain why ICA -- which explicitly maximizes non-Gaussianity -- is the strongest of the non-SAE baselines."
+    },
+    {
+     "id": "top-k-baseline-control",
+     "name": "Top-K-active baseline control",
+     "summary": "A control experiment (Appendix G) restricting the PCA and ICA baselines to a fixed number K of simultaneously 'active' directions per datapoint, matched to the SAE's average active-feature count, to test whether SAE's interpretability advantage merely reflects its lower per-datapoint activation density rather than genuinely better features. Finds this adjustment explains only a small fraction of the interpretability gap."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "decomposition-baselines",
+   "name": "The ladder of decomposition baselines",
+   "narrative": "Sparse autoencoders are only shown to win by being run against a ladder of alternatives, each embodying its own hypothesis about where a model's features live. The default basis baseline takes the hypothesis literally: features are neurons, or for the residual stream, individual coordinates. The random directions baseline tests the null hypothesis that features are nowhere in particular, one direction as good as any other. Principal Component Analysis finds directions of maximal variance, and Independent Component Analysis finds statistically independent, maximally non-Gaussian directions, the strongest of the four baselines, and the one the paper's kurtosis and skew findings help explain. Every comparison in the paper, autointerpretability score and IOI-patching precision alike, runs the learned dictionary against this same ladder, and the top-K-active baseline control tightens it further by capping PCA and ICA to the SAE's own average number of active directions per datapoint, checking that the advantage survives even when the baselines are handicapped to match its sparsity.",
+   "members": [
+    {
+     "id": "pca",
+     "name": "Principal Component Analysis (PCA)",
+     "summary": "Used here as one of four baseline decompositions of language model activations (alongside the default basis, random directions, and ICA), against which the paper's sparse dictionary features are compared both for autointerpretability score and for IOI-patching precision, underperforming the learned dictionaries in both cases."
+    },
+    {
+     "id": "ica",
+     "name": "Independent Component Analysis (ICA)",
+     "summary": "A standard technique that finds maximally non-Gaussian (statistically independent) directions in data, used as a baseline decomposition of model activations. ICA is consistently the strongest of the non-dictionary-learning baselines, which the paper attributes to interpretability correlating with activation kurtosis and skew -- properties ICA directly optimizes for."
+    },
+    {
+     "id": "random-directions-baseline",
+     "name": "Random directions baseline",
+     "summary": "Randomly sampled directions in activation space, used as a lower-bound baseline for autointerpretability comparisons alongside the default basis, PCA, and ICA."
+    },
+    {
+     "id": "default-basis-baseline",
+     "name": "Default (neuron/residual-stream) basis baseline",
+     "summary": "Treating individual neurons, or for the residual stream individual basis coordinates, as the units of analysis, used as a naive baseline against which the paper's dictionary features are compared for autointerpretability. The residual-stream default basis is shown, via the apostrophe-dimension case study, to be polysemantic where the corresponding dictionary feature is monosemantic."
+    },
+    {
+     "id": "top-k-baseline-control",
+     "name": "Top-K-active baseline control",
+     "summary": "A control experiment (Appendix G) restricting the PCA and ICA baselines to a fixed number K of simultaneously 'active' directions per datapoint, matched to the SAE's average active-feature count, to test whether SAE's interpretability advantage merely reflects its lower per-datapoint activation density rather than genuinely better features. Finds this adjustment explains only a small fraction of the interpretability gap."
+    },
+    {
+     "id": "sparse-autoencoders",
+     "name": "Sparse autoencoders (SAEs)",
+     "summary": "This paper trains single-hidden-layer, ReLU, tied-weight autoencoders with an L1 sparsity penalty on their hidden activations to decompose language model activations into an overcomplete, sparsely-activating dictionary of features. It is one of the two founding empirical demonstrations (alongside the concurrent Anthropic 'Towards Monosemanticity' work) that this architecture recovers features that are more interpretable, more monosemantic, and more causally precise than PCA/ICA/neuron-basis baselines, establishing SAEs as a scalable method for resolving superposition."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "causal-proof-by-patching",
+   "name": "Features proved by intervention",
+   "narrative": "This theme's claim is that an interpretable-looking feature earns trust only once editing it is shown to change the model's behavior predictably. Activation patching, a causal mediation technique, supplies the method: the dictionary-feature patching procedure caches a feature's encoded activation on a counterfactual sentence and adds the difference back into the base sentence's residual stream, measuring the resulting KL divergence from a target output. On the Indirect Object Identification (IOI) task, naming the correct recipient in a sentence, this reaches a given KL divergence with fewer patched features and smaller edit magnitude than patching PCA components, using Automated Circuit Discovery's ordering algorithm to rank features by causal contribution. At finer grain, less-than-rank-one ablation lowers an activation only as far as one feature's own activation threshold, precise enough to isolate its causal effect on next-token logits. Automatic feature circuit detection extends the same logic across layers, ablating upstream features to trace what causes the closing-parenthesis dictionary feature to fire; the paper also records a weight-based feature connection attempt at the same task that found no meaningful connections, a negative result kept alongside the method that worked.",
+   "members": [
+    {
+     "id": "activation-patching",
+     "name": "Activation patching",
+     "summary": "A causal mediation analysis technique (Vig et al., 2020) in which a model's internal activations are edited toward values observed on a counterfactual input and the resulting change in output is measured. This paper adapts it to dictionary features -- patching feature-encoded activation differences into the residual stream and measuring KL divergence from a target output -- to test how precisely SAE features localize the Indirect Object Identification behavior, compared to patching PCA components."
+    },
+    {
+     "id": "dictionary-feature-patching",
+     "name": "Dictionary-feature patching procedure",
+     "summary": "The paper's specific patching procedure for dictionary features: run the model on a counterfactual sentence, cache the encoded feature activations, then re-run on the base sentence and add the encoded activation differences for a chosen feature subset F into the residual stream, measuring KL divergence between patched and target output logits. Found to reach a given KL divergence with fewer patched features and smaller edit magnitude than patching an equivalent number of PCA components."
+    },
+    {
+     "id": "less-than-rank-one-ablation",
+     "name": "Less-than-rank-one ablation",
+     "summary": "A specific ablation technique that lowers a residual-stream activation's component along a feature's direction only up to the point where that feature is no longer active, rather than a full-magnitude subtraction. Used to measure a dictionary feature's causal effect on next-token logits in the apostrophe-feature case study."
+    },
+    {
+     "id": "ioi-task",
+     "name": "Indirect Object Identification (IOI) task",
+     "summary": "A previously-studied model behavior (Wang et al., 2022) in which a language model completes sentences such as 'Alice and Bob went to the store. Alice gave a snack to ___' by correctly naming the indirect object. Used as this paper's case-study task for testing how precisely dictionary features localize a known circuit, via activation patching and KL-divergence comparisons against PCA."
+    },
+    {
+     "id": "automated-circuit-discovery",
+     "name": "Automated Circuit Discovery (ACDC)",
+     "summary": "A prior algorithm (Conmy et al., 2023) for automatically discovering the subgraph of a network responsible for a behavior. This paper reuses ACDC's ordering procedure (its Algorithm 4.1) to rank dictionary features by their individual causal contribution to reducing KL divergence on the IOI task, producing the feature subset used in the dictionary-feature-patching experiments."
+    },
+    {
+     "id": "feature-circuit-detection",
+     "name": "Automatic feature circuit detection",
+     "summary": "A method for tracing causal dependencies between dictionary features in adjacent layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature and rank features by how much their ablation decreases the target's activation, optionally recursing to build a multi-layer causal tree. Demonstrated on a layer-5 feature that predicts closing parentheses, yielding an interpretable circuit of upstream features."
+    },
+    {
+     "id": "weight-based-connection-attempt",
+     "name": "Weight-based feature connection attempt (failed method)",
+     "summary": "A failed alternative method for connecting features across layers, tried by multiplying a layer-4 feature through the MLP weights and checking cosine similarity with layer-5 features. It found no meaningful connections, likely because the resulting vector went out-of-distribution; reported as a negative result contrasting with the ablation-based feature-circuit-detection method that did succeed."
+    },
+    {
+     "id": "closing-parenthesis-feature",
+     "name": "Closing-parenthesis dictionary feature",
+     "summary": "A case-study dictionary feature in layer 5 whose unembedding directly predicts closing-parenthesis tokens, used to illustrate the paper's feature-circuit-detection method by tracing which upstream features (detecting dates, acronyms, and other parenthesis-preceding phrases) cause it to activate."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "single-features-under-the-microscope",
+   "name": "Single features under the microscope",
+   "narrative": "Cunningham et al. (2023) cash out the sparse autoencoder's promise not in aggregate scores but in a handful of individual dictionary features, examined from both ends. Reading from the input side, the apostrophe feature (feature 556) is shown to fire almost exclusively on apostrophe tokens, distinguishing it from the polysemantic residual-stream dimension that shares its top activations. Reading from the output side, ablating that feature selectively suppresses the logit for the following \"s\" token, the effect a monosemantic apostrophe detector should have on possessives and contractions like \"let's\". The closing-parenthesis feature, a layer-5 unit whose unembedding directly predicts closing-parenthesis tokens, extends the method into automatic feature-circuit detection, which ablates each upstream feature and ranks it by how much the ablation lowers the target's activation, tracing which earlier features -- detecting dates, acronyms, and other parenthesis-preceding phrases -- cause it to fire. Together the two case-study features make monosemanticity a demonstrated property, not just a scored one.",
+   "members": [
+    {
+     "id": "apostrophe-feature",
+     "name": "Apostrophe dictionary feature (feature 556)",
+     "summary": "A case-study dictionary feature that activates almost exclusively on apostrophe tokens, the paper's central worked example of monosemanticity. Ablating it specifically suppresses the logit for the following 's' token, illustrating that dictionary features have intuitive, predictable causal effects on model outputs, in contrast to the corresponding polysemantic default-basis dimension."
+    },
+    {
+     "id": "closing-parenthesis-feature",
+     "name": "Closing-parenthesis dictionary feature",
+     "summary": "A case-study dictionary feature in layer 5 whose unembedding directly predicts closing-parenthesis tokens, used to illustrate the paper's feature-circuit-detection method by tracing which upstream features (detecting dates, acronyms, and other parenthesis-preceding phrases) cause it to activate."
+    },
+    {
+     "id": "dictionary-feature",
+     "name": "Dictionary feature",
+     "summary": "A single learned row of the sparse autoencoder's weight matrix M (equivalently, one hidden unit of the autoencoder), representing a direction in activation space used to reconstruct inputs as a sparse linear combination. Individual dictionary features are the paper's central unit of analysis, examined for interpretability (Section 3), causal importance (Section 4), and monosemanticity (Section 5)."
+    },
+    {
+     "id": "monosemanticity",
+     "name": "Monosemanticity",
+     "summary": "The property of a feature or direction activating for a single, coherent, human-interpretable concept -- the converse of polysemanticity. The paper's case studies (the apostrophe and closing-parenthesis features) are framed as demonstrating that learned dictionary features are highly monosemantic compared to neurons or other baseline directions."
+    },
+    {
+     "id": "feature-circuit-detection",
+     "name": "Automatic feature circuit detection",
+     "summary": "A method for tracing causal dependencies between dictionary features in adjacent layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature and rank features by how much their ablation decreases the target's activation, optionally recursing to build a multi-layer causal tree. Demonstrated on a layer-5 feature that predicts closing parentheses, yielding an interpretable circuit of upstream features."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "open-models-as-interpretability-testbeds",
+   "name": "Small open models as interpretability testbeds",
+   "narrative": "Cunningham et al. (2023) train and evaluate their sparse autoencoders on modest, fully open infrastructure: Pythia-70M and Pythia-410M, an open, reproducible model suite with residual-stream dimensions of 512 and 1024 respectively, trained on the Pile, the public webtext corpus also used to measure reconstruction-substitution perplexity. Autointerpretability text fragments are drawn from OpenWebText, another public corpus, sampled from its first 50,000 lines. The choice keeps every stage of the pipeline small and open: a full training run completes in under an hour on a single A40 GPU, cheap enough that the paper can afford to sweep dictionary-size ratios and sparsity coefficients rather than report a single configuration. The scale is explicitly a proof of concept rather than a claim about frontier models, the same honesty about scope that the 2017 Deep RL from Human Preferences paper's own small testbed environments show for a different method.",
+   "members": [
+    {
+     "id": "pythia",
+     "name": "Pythia (model suite)",
+     "summary": "A suite of open, reproducible language models of varying sizes (Biderman et al., 2023). This paper trains sparse autoencoders on the residual streams of Pythia-70M (din=512) and Pythia-410M (din=1024), its primary experimental subjects throughout."
+    },
+    {
+     "id": "the-pile",
+     "name": "The Pile",
+     "summary": "A large public webtext corpus (Gao et al., 2020) used to generate the activation datasets the sparse autoencoders are trained on, and to measure perplexity when testing how much information is lost by reconstructing a layer's activations from its dictionary features."
+    },
+    {
+     "id": "openwebtext",
+     "name": "OpenWebText",
+     "summary": "A public web-text dataset used as the source of text fragments (the first 50,000 lines) on which dictionary feature activations are sampled for the autointerpretability protocol."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "dictionary-learning-lineage",
+   "name": "The dictionary-learning lineage",
+   "narrative": "Cunningham et al. (2023) present their method as a scaling-up of existing ideas, not a new invention. Sparse dictionary learning itself is decades old, developed by Olshausen and Field (1997) and Lee et al. (2006) to model sparse coding in the visual cortex, expressing data as sparse linear combinations of an overcomplete learned basis. Two direct predecessors bring it to language models: Yun et al. (2021) apply sparse dictionary learning to residual-stream activations across all layers of a transformer simultaneously, and Sharkey et al.'s (2023) unpublished interim report first proposes training sparse autoencoders on language-model activations specifically to address superposition, credited as this paper's direct motivation. A separate theoretical result, Qu et al.'s (2019) reformulation of sparse overcomplete dictionary search as a search for directions maximizing the L4 norm, is invoked to explain why interpretability correlates with the heavy-tailedness of feature activations and why ICA, which optimizes non-Gaussianity directly, is the strongest non-dictionary-learning baseline.",
+   "members": [
+    {
+     "id": "sparse-dictionary-learning",
+     "name": "Sparse dictionary learning / sparse coding",
+     "summary": "A prior mathematical framework (Olshausen & Field, 1997; Lee et al., 2006), originally developed to model sparse coding in the visual cortex, for expressing data as sparse linear combinations of an overcomplete set of learned basis vectors (a 'dictionary'). This paper's sparse autoencoder is presented as a scalable neural-network implementation of this framework applied to language model activations."
+    },
+    {
+     "id": "l4-norm-maximization",
+     "name": "L4-norm maximization (sparse dictionary search reformulation)",
+     "summary": "A prior theoretical result (Qu et al., 2019) showing that searching for sparse, overcomplete dictionaries can be reformulated as searching for directions that maximize the L4 norm. Cited to motivate the paper's finding that interpretability correlates with the heavy-tailedness (skew/kurtosis) of feature activations, and to help explain ICA's relatively strong baseline performance."
+    },
+    {
+     "id": "yun-dictionary-learning",
+     "name": "Transformer visualization via dictionary learning (Yun et al., 2021)",
+     "summary": "Prior work applying sparse dictionary learning to residual stream activations across all layers of a language model simultaneously, framing token representations as a linear superposition of transformer factors. Cited as closely related prior work alongside Sharkey et al. (2023), applying a similar technique but without the interpretability and causal-localization evaluations this paper contributes."
+    },
+    {
+     "id": "sharkey-interim-report",
+     "name": "Sharkey et al. (2023) interim research report",
+     "summary": "An unpublished interim research report ('Taking features out of superposition with sparse autoencoders,' Sharkey, Braun & Millidge, 2023) that first proposed training sparse autoencoders on language model activations to address superposition. Cited as the direct motivation and foundation this paper builds on and scales up."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "enumerating-features-for-safety",
+   "name": "Feature enumeration as a safety audit",
+   "narrative": "Cunningham et al. (2023) close by naming the ambition their method serves: enumerative safety, Elhage et al.'s (2022) proposal that a complete, human-understandable list of a model's features could guarantee it will not perform dangerous behaviors such as deception. Sparse autoencoders are offered as the tool for building that list -- a scalable, unsupervised way of enumerating features rather than guessing at them -- and feature-circuit-detection as a way of tracing how listed features causally depend on each other across layers, a step toward the paper's stated goal of an end-to-end account of how a model computes its outputs. Read against the rest of the corpus, this reframes the oversight problem: earlier papers audit a model by judging what it outputs -- reward modeling, red-teaming, revised responses -- while enumerative safety proposes auditing it by listing and inspecting its internal parts instead, with mechanistic interpretability named as the research agenda this project frames itself as advancing.",
+   "members": [
+    {
+     "id": "enumerative-safety",
+     "name": "Enumerative safety",
+     "summary": "An aspirational goal in interpretability research (Elhage et al., 2022b) of producing a complete, human-understandable enumeration of a model's features sufficient to guarantee it will not perform dangerous behaviors such as deception. Invoked in the paper's conclusion as the long-term motivation its sparse-autoencoder method is framed as a step toward."
+    },
+    {
+     "id": "mechanistic-interpretability",
+     "name": "Mechanistic interpretability",
+     "summary": "A research agenda that seeks to understand neural networks by reverse-engineering their internal computations into human-understandable parts, aiming to enable verification, targeted editing, and mitigation of risks such as deceptive behavior. Named in the introduction as the field this paper's sparse-autoencoder method aims to advance, offering it as 'a foundation for future mechanistic interpretability work.'"
+    },
+    {
+     "id": "sparse-autoencoders",
+     "name": "Sparse autoencoders (SAEs)",
+     "summary": "This paper trains single-hidden-layer, ReLU, tied-weight autoencoders with an L1 sparsity penalty on their hidden activations to decompose language model activations into an overcomplete, sparsely-activating dictionary of features. It is one of the two founding empirical demonstrations (alongside the concurrent Anthropic 'Towards Monosemanticity' work) that this architecture recovers features that are more interpretable, more monosemantic, and more causally precise than PCA/ICA/neuron-basis baselines, establishing SAEs as a scalable method for resolving superposition."
+    },
+    {
+     "id": "feature-circuit-detection",
+     "name": "Automatic feature circuit detection",
+     "summary": "A method for tracing causal dependencies between dictionary features in adjacent layers: given a target feature, sample contexts where it strongly activates, then ablate each previous-layer feature and rank features by how much their ablation decreases the target's activation, optionally recursing to build a multi-layer causal tree. Demonstrated on a layer-5 feature that predicts closing parentheses, yielding an interpretable circuit of upstream features."
+    }
+   ],
+   "oldWalk": null
+  },
+  {
+   "id": "reading-the-residual-stream",
+   "name": "Steering doubles as interpretability",
+   "narrative": "Three papers meet in this theme, each treating the residual stream -- the transformer's running sum of layer outputs -- as an object to be read, not just a channel for computation. CAA (2023) contributes a battery of techniques that double as diagnostics: PCA visualization of contrastive activations checks whether a behavior's activations separate at all, revealing behavioral clustering, a sudden separation by target behavior emerging around one-third of the way through the network's layers, distinct from the trivial letter clustering produced by prompt format alone. Token-level cosine similarity analysis and inter-layer similarity and transfer read steering vectors as feature detectors and track how much of their meaning survives across depth, against the backdrop of the linear representation hypothesis and prior evidence that sentiment is linearly represented. Persona Vectors (2025) decomposes a direction rather than only reading it whole: SAE decomposition of persona vectors ranks a sparse autoencoder's decoder directions by cosine similarity to a persona vector, pulling out interpretable sub-features for traits like evil, sycophancy, and hallucination, each checked causally by steering with it. Sparse autoencoders are no longer background for that technique alone: Cunningham et al. (2023) is now itself a corpus paper, contributing its own study of the residual stream and the fine print on its basis -- not usually expected to be privileged, but partially so because of outlier dimensions, the disproportionately large residual-stream coordinates the paper finds sitting under its own apostrophe-feature case study.",
+   "members": [
+    {
+     "id": "activation-pca-visualization",
+     "name": "PCA visualization of contrastive activations",
+     "summary": "A diagnostic technique projecting model activations on a contrastive dataset via PCA to assess whether that dataset's activations linearly separate along the target behavior, used to judge whether a dataset will yield an effective steering vector."
+    },
+    {
+     "id": "behavioral-clustering",
+     "name": "Behavioral clustering",
+     "summary": "The named phenomenon in which PCA-projected activations on a contrastive dataset separate according to whether the model's answer matches the target behavior, found to emerge suddenly around one-third of the way through a model's layers."
+    },
+    {
+     "id": "letter-clustering",
+     "name": "Letter clustering",
+     "summary": "The named phenomenon in which PCA-projected activations on the contrastive multiple-choice dataset separate merely by which answer token (\"A\" or \"B\") they originate from -- a trivial artifact of the prompt format that the authors distinguish from the more meaningful behavioral clustering."
+    },
+    {
+     "id": "pca",
+     "name": "Principal Component Analysis (PCA)",
+     "summary": "Used here as one of four baseline decompositions of language model activations (alongside the default basis, random directions, and ICA), against which the paper's sparse dictionary features are compared both for autointerpretability score and for IOI-patching precision, underperforming the learned dictionaries in both cases."
+    },
+    {
+     "id": "token-level-cosine-similarity-analysis",
+     "name": "Token-level cosine similarity analysis",
+     "summary": "An interpretability technique computing cosine similarity between a CAA steering vector and per-token residual stream activations during a forward pass, used to show that similarity with the vector tracks how strongly the target behavior is \"present\" at semantically relevant tokens."
+    },
+    {
+     "id": "inter-layer-similarity-and-transfer",
+     "name": "Inter-layer steering vector similarity and transfer",
+     "summary": "An analysis of how similar steering vectors generated at different layers are to each other (finding higher similarity between nearby layers, with slower decay in the model's later half), paired with a test of whether a vector extracted at layer 13 still steers behavior when applied at other layers."
+    },
+    {
+     "id": "linear-representation-hypothesis",
+     "name": "Linear representation hypothesis",
+     "summary": "A formalization (Park et al., 2023) of the idea that high-level concepts are encoded as linear directions in an LLM's activation space, cited by CAA as part of the broader motivation for why activation-engineering techniques like steering vectors work."
+    },
+    {
+     "id": "linear-representations-of-sentiment",
+     "name": "Linear representations of sentiment",
+     "summary": "Prior work (Tigges et al., 2023) verifying that sentiment is linearly represented in LLM activations, cited by CAA both as related evidence for linear representations generally and for the specific claim that Mean Difference vectors resemble PCA-derived directions."
+    },
+    {
+     "id": "residual-stream",
+     "name": "Residual stream",
+     "summary": "The transformer's running sum of layer outputs, this paper's primary object of study: sparse autoencoders are trained mainly on residual-stream activations, and the paper investigates whether the residual stream has a 'privileged basis' and how outlier dimensions relate to interpretable dictionary features."
+    },
+    {
+     "id": "sae-decomposition-of-persona-vectors",
+     "name": "SAE decomposition of persona vectors",
+     "summary": "A technique decomposing a persona vector into a small set of fine-grained, interpretable sparse-autoencoder (SAE) features by ranking SAE decoder directions by cosine similarity to the persona vector. For 'evil,' top features correspond to insulting language, deliberate cruelty, and hacking-related content; for 'sycophancy,' to affirmative and promotional/marketing language; for 'hallucination,' to fictional world-building and fabricated-detail content. Each feature's causal role is validated by steering with its decoder direction and measuring the resulting trait expression score."
+    },
+    {
+     "id": "sparse-autoencoders",
+     "name": "Sparse autoencoders (SAEs)",
+     "summary": "This paper trains single-hidden-layer, ReLU, tied-weight autoencoders with an L1 sparsity penalty on their hidden activations to decompose language model activations into an overcomplete, sparsely-activating dictionary of features. It is one of the two founding empirical demonstrations (alongside the concurrent Anthropic 'Towards Monosemanticity' work) that this architecture recovers features that are more interpretable, more monosemantic, and more causally precise than PCA/ICA/neuron-basis baselines, establishing SAEs as a scalable method for resolving superposition."
+    },
+    {
+     "id": "privileged-basis",
+     "name": "Privileged basis",
+     "summary": "The property of a particular coordinate basis being distinguished as unusually meaningful for a given vector space (e.g. the standard basis immediately after an elementwise nonlinearity), as opposed to a generic space with no privileged direction. The paper notes the residual stream is not usually expected to have a privileged basis, but discusses evidence (Dettmers et al., 2022; Elhage et al., 2023) that it partially does due to outlier dimensions, which is relevant to interpreting the default-basis baseline's behavior."
+    },
+    {
+     "id": "outlier-dimensions",
+     "name": "Outlier dimensions",
+     "summary": "Specific residual-stream coordinates that transformers tend to write disproportionately large, information-bearing values to, hypothesized (Dettmers et al., 2022) to arise from the Adam optimizer storing gradients with finite precision in the residual basis. The paper finds that its top-activating default-basis dimensions for both the most positive and most negative apostrophe-related directions were outlier dimensions rather than typical basis coordinates."
+    }
+   ],
+   "oldWalk": [
+    {
+     "concept": "residual-stream",
+     "prose": "Every technique in this theme is a way of reading what is happening inside the residual stream: the running sum of layer outputs that a transformer's activations flow through and accumulate in as they move through the network. CAA already computes and injects its steering vectors into this stream at a chosen layer; the techniques that follow turn that same site into an object of study rather than just a place to intervene."
+    },
+    {
+     "concept": "activation-pca-visualization",
+     "prose": "PCA visualization of contrastive activations is the first such technique: projecting a behavior's contrast-pair dataset through Principal Component Analysis to check whether the model's internal representations separate along that behavior at all. It functions as a diagnostic run before committing to a full steering vector, a way of judging whether a given dataset will yield an effective one."
+    },
+    {
+     "concept": "pca",
+     "prose": "Principal Component Analysis, the linear dimensionality-reduction technique underneath that diagnostic, projects data onto the axes of maximal variance, implemented here via scikit-learn. Applied to residual stream activations on a contrastive dataset, it reduces high-dimensional internal representations down to a plane the authors can actually look at and judge for separation."
+    },
+    {
+     "concept": "behavioral-clustering",
+     "prose": "What that projection reveals, for datasets that work, is behavioral clustering: activations separating according to whether the model's answer matches the target behavior. The separation does not build up gradually across layers but emerges suddenly, around one-third of the way through the network, indicating that higher-level representations of the behavior form abruptly rather than accumulating token by token."
+    },
+    {
+     "concept": "letter-clustering",
+     "prose": "Letter clustering is the trivial separation the same projection always shows, whether or not a dataset captures anything real: activations split by which answer token, \"A\" or \"B\", they originate from, a pure artifact of the multiple-choice prompt format. The authors distinguish it carefully from behavioral clustering, since only the latter indicates the dataset is capturing the intended behavior rather than just its surface format."
+    },
+    {
+     "concept": "token-level-cosine-similarity-analysis",
+     "prose": "Token-level cosine similarity analysis reads the same vectors a different way: rather than projecting a dataset, it computes similarity between a finished steering vector and per-token activations during generation, showing the vector acts as a feature detector. It lights up at tokens like \"I cannot help\" for Refusal, or at the moment a model commits to a delayed reward for Myopic Reward, tracking how strongly the behavior is \"present\" token by token."
+    },
+    {
+     "concept": "inter-layer-similarity-and-transfer",
+     "prose": "Inter-layer similarity and transfer moves the analysis from within one layer to across depth: vectors extracted from nearby layers resemble each other closely, and that resemblance decays more slowly in the network's later half than its earlier half. A vector extracted at layer 13 still steers behavior when applied at other layers, evidence that the direction is a general representation of the behavior rather than an artifact specific to one layer."
+    },
+    {
+     "concept": "linear-representation-hypothesis",
+     "prose": "The linear representation hypothesis is the theoretical claim that makes all of the above sensible in the first place: a formalization of the idea that high-level concepts are encoded as linear directions in an LLM's activation space. The paper cites it as part of the broader motivation for why activation-engineering techniques like steering vectors should work at all."
+    },
+    {
+     "concept": "linear-representations-of-sentiment",
+     "prose": "Linear representations of sentiment is the concrete prior instance backing that theory: earlier work verifying that sentiment specifically is linearly represented in LLM activations, and separately showing that Mean-Difference-derived vectors resemble PCA-derived ones. Between the hypothesis and this evidence, CAA's own interpretability results read less as a novel discovery and more as confirmation that behaviors, like sentiment, sit along linear directions too -- a confirmation the 2025 persona-vectors paper goes on to push further, from reading a direction whole to decomposing it into parts."
+    },
+    {
+     "concept": "sae-decomposition-of-persona-vectors",
+     "prose": "SAE decomposition of persona vectors pushes the theme's doubling one step further: rather than only reading a persona vector as a single whole direction, it ranks a sparse autoencoder's decoder directions by cosine similarity to that vector, pulling out a small set of fine-grained, individually interpretable features underneath it. For 'evil,' top features correspond to insulting language, deliberate cruelty, and hacking-related content; for 'sycophancy,' to affirmative and promotional language; for 'hallucination,' to fictional world-building and fabricated detail, with each feature's causal role checked by steering with its own decoder direction."
+    },
+    {
+     "concept": "sparse-autoencoders",
+     "prose": "Sparse autoencoders are the unsupervised dictionary-learning technique that decomposition draws on: an approach that decomposes model activations into a larger set of sparse, individually interpretable feature directions. The paper trains BatchTopK SAEs on Qwen-2.5-7B-Chat's residual stream over a mix of pretraining, chat, and misalignment data, closing the theme with a second, unsupervised route to persona-relevant directions alongside the persona vector's own supervised extraction."
+    }
+   ]
+  },
+  {
+   "id": "steering-as-audit",
+   "name": "Elicitation as audit: steering for red-teaming",
+   "narrative": "Validating that finetuning and RLHF have made a model robustly safe is difficult, because unwanted behaviors that survive training can still be hard to find. The theme now holds two distinct routes to that audit. CAA's route is behavioral elicitation: jailbreaks, the adversarial or unusual inputs users find by manual search to make a model output content its safety training was meant to prevent, motivate red teaming, the broader practice -- elsewhere in the corpus a crowdworker-driven activity -- of probing a model for unwanted behavior. CAA proposes turning steering itself into that probe: deliberately push a model's internal activations toward an unwanted behavior to see how easily it can be triggered, on the premise that a behavior easily elicited by a small internal perturbation is plausibly also reachable by some input in deployment, so failure to elicit it becomes a stronger guarantee than failure to find it by sampling outputs. Cunningham et al.'s (2023) sparse-autoencoder paper proposes a second, structural route: enumerative safety, the aspiration that a complete, human-understandable list of a model's features could itself guarantee it will not perform dangerous behaviors such as deception -- audit not by eliciting behavior but by enumerating and inspecting the parts that could produce it.",
+   "members": [
+    {
+     "id": "caa-red-teaming-application",
+     "name": "CAA as an adversarial red-teaming tool (proposed application)",
+     "summary": "A suggested future application using CAA as an adversarial intervention to trigger unwanted model behaviors more efficiently than prompting alone, on the premise that behaviors easily elicited via small internal perturbations may also be reachable in deployment, while inability to elicit them could indicate stronger safety."
+    },
+    {
+     "id": "jailbreaks",
+     "name": "Jailbreaks",
+     "summary": "Adversarial or unusual inputs users find to make an LLM output content its safety training was meant to prevent. Mentioned as motivation for the proposed CAA-based red-teaming application, since unwanted behaviors that persist despite RLHF/finetuning are hard to find systematically."
+    },
+    {
+     "id": "red-teaming",
+     "name": "Red Teaming",
+     "summary": "The practice of having crowdworkers conduct adversarial conversations designed to bait a language model into harmful outputs, used as the source of harmful prompts for both SL-CAI and RL-CAI training."
+    },
+    {
+     "id": "enumerative-safety",
+     "name": "Enumerative safety",
+     "summary": "An aspirational goal in interpretability research (Elhage et al., 2022b) of producing a complete, human-understandable enumeration of a model's features sufficient to guarantee it will not perform dangerous behaviors such as deception. Invoked in the paper's conclusion as the long-term motivation its sparse-autoencoder method is framed as a step toward."
+    }
+   ],
+   "oldWalk": [
+    {
+     "concept": "jailbreaks",
+     "prose": "Jailbreaks are the paper's example of a persistent problem: adversarial or unusual inputs that users discover which make a model output content its safety training was meant to prevent. They are typically found by manual search, with no systematic method for surfacing them, which is what makes validating that finetuning and RLHF have made a model robustly safe so difficult."
+    },
+    {
+     "concept": "red-teaming",
+     "prose": "Red teaming names the broader practice that jailbreak-hunting is one instance of: probing a model for unwanted or unsafe behavior before or after deployment. Elsewhere in the safety literature this is typically a crowdworker-driven activity, humans trying deliberately to break a model; here it becomes the frame for an activation-based alternative instead."
+    },
+    {
+     "concept": "caa-red-teaming-application",
+     "prose": "The paper's proposed red-teaming application is that reframing: use CAA itself as an adversarial intervention, deliberately steering toward an unwanted behavior to see how easily it can be triggered, on the premise that a behavior easily elicited by a small internal perturbation is plausibly also reachable by some input in deployment. Steering inverts from a control tool into an audit tool -- cheaper than hunting for jailbreaks by hand, where failing to elicit a behavior becomes a stronger safety guarantee than failing to find it by sampling outputs."
+    }
+   ]
+  }
+ ]
+}

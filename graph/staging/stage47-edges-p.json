@@ -1,0 +1,154 @@
+{
+ "edges": [
+  {
+   "id": "sparse-dictionary-learning-operationalized-as-sparse-autoencoders",
+   "type": "operationalized-as",
+   "source": "sparse-dictionary-learning",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "Classical sparse dictionary learning (Olshausen & Field, 1997; Lee et al., 2006) solves for a dictionary and per-example sparse codes by alternating optimization, re-solving a fresh sparse-coding problem for every data point at inference time. This paper's sparse autoencoder instead amortizes that inference step into a single learned function: the encoder c = ReLU(Mx+b) produces a sparse code for any activation vector x in one forward pass, rather than running a new optimization per example. The decoder x-hat = M^T c then plays the role of the classical dictionary's linear-combination step, with M's rows serving directly as the learned dictionary atoms. The paper grounds the L1 term's ability to recover the true generating directions in both Sharkey et al.'s (2023) empirical results and Wright & Ma's (2022) theoretical guarantees for l1-penalized reconstruction, making the SAE a scalable neural-network stand-in for a decades-old convex-optimization framework."
+  },
+  {
+   "id": "sparsity-loss-trades-off-against-reconstruction-loss",
+   "type": "trades-off-against",
+   "source": "sparsity-loss",
+   "target": "reconstruction-loss",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Both terms sum into one training objective (Equation 4), so the optimizer is free to trade one against the other rather than driving each to its own minimum. The paper observes this trade directly: dictionaries trained with a larger sparsity coefficient alpha reach lower reconstruction accuracy, which shows up in the IOI activation-patching experiments (Section 4.2) as a higher floor on the minimum KL divergence that no amount of further patching can close. At the opposite extreme, a non-sparse dictionary (alpha=0) reconstructs well but loses the localization advantage over PCA that motivates the whole method -- Figure 3 shows its features need as many patches as PCA components to reach a given KL divergence, because sparsity rather than reconstruction fidelity is what makes the patched feature set small and precise. The two losses therefore pull in opposite directions along one smooth curve (Appendix B, Figures 6-7) rather than settling at a joint optimum, which is the same empirical basis behind the sparsity-reconstruction tradeoff's 'no knee' finding."
+  },
+  {
+   "id": "sparsity-loss-forces-unit-norm-on-dictionary-feature",
+   "type": "forces-unit-norm-on",
+   "source": "sparsity-loss",
+   "target": "dictionary-feature",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "The alpha||c||_1 penalty only sparsifies meaningfully if dictionary features are held to a fixed scale, because c and M trade off against each other: doubling a feature's row norm in M lets the optimizer halve the corresponding coefficient in c while reconstructing the same activation, silently shrinking the sparsity loss without making the reconstruction any sparser in any real sense. The paper closes this loophole by normalizing each row of M -- each dictionary feature -- to unit norm, so the L1 penalty cannot be gamed by rescaling the dictionary instead of genuinely zeroing out coefficients (footnote 3). This constraint is what makes a 'dictionary feature' well-defined as a direction rather than a direction-with-arbitrary-magnitude: its only free parameter is which way it points, not how long it is. The same normalization is cited, via Sharkey et al. (2023) and Wright & Ma (2022), as part of why l1-penalized training can recover the actual ground-truth directions that generated the data, rather than some arbitrarily rescaled proxy for them."
+  },
+  {
+   "id": "expansion-factor-r-governs-emergence-of-dead-features",
+   "type": "governs-emergence-of",
+   "source": "expansion-factor-r",
+   "target": "dead-features",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Appendix E's sweep (Figure 16) shows that for residual-stream dictionaries, raising R keeps essentially the whole dictionary alive up to roughly 4x overcompleteness, with dead features only beginning to appear past that point -- so within that range R purely trades dictionary size against interpretability, with no hidden capacity cost. Push past that range, or move to MLP-sublayer activations, and the assumption breaks: MLP dictionaries develop large numbers of dead features even at alpha=0, with no sparsity pressure at all, showing the failure mode there is driven by the ReLU nonlinearity and MLP activation geometry rather than by R or the sparsity penalty. This is part of why the paper settles on different working hyperparameters for the two settings (alpha=8.6e-4 for the residual stream, alpha=3.2e-4 for MLPs) -- R cannot be tuned in isolation from where in the model the dictionary is trained."
+  },
+  {
+   "id": "tied-weights-sae-is-the-default-configuration-of-sparse-autoencoders",
+   "type": "is-the-default-configuration-of",
+   "source": "tied-weights-sae",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Every main-text result in this paper -- the interpretability comparisons in Section 3 and the IOI patching results in Section 4 -- uses tied encoder/decoder weights as the default SAE configuration, chosen because a single matrix M (Equations 1-2) halves the model's memory cost and removes any ambiguity about whether a 'dictionary feature direction' should be read from the encoder or the decoder, since with tied weights the two coincide by construction. That equivalence is what lets the paper treat a dictionary feature as a single direction for every downstream analysis -- autointerpretability, ablation, and patching -- rather than needing separate detecting and defining directions. The tying assumption holds up on residual-stream data, where footnote 2 reports no measurable performance loss, but degrades on MLP-sublayer activations, where the paper found reduced performance and switched to an untied variant for that setting instead."
+  },
+  {
+   "id": "expansion-factor-r-sets-the-operating-point-on-sparsity-reconstruction-tradeoff",
+   "type": "sets-the-operating-point-on",
+   "source": "expansion-factor-r",
+   "target": "sparsity-reconstruction-tradeoff",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "The tradeoff curve traced out by sweeping alpha (Appendix B, Figures 6-7) is measured at a fixed dictionary size; R determines which curve you are on in the first place. Appendix C.1 (Figure 8) shows that shrinking R below 1 -- an undercomplete dictionary -- still yields interpretable features, but each such dictionary explains less of the model's overall activation variance than a larger one, because a smaller R simply gives the tradeoff less capacity to work with. Conversely, larger dictionaries push the whole curve toward explaining more variance at a given sparsity level, without any single feature becoming less interpretable on average. So where alpha moves you along a fixed tradeoff curve, R redraws the curve itself -- the two hyperparameters are not interchangeable knobs on the same axis."
+  },
+  {
+   "id": "sparsity-reconstruction-tradeoff-rules-out-a-single-canonical-dictionary-for-sparse-autoencoders",
+   "type": "rules-out-a-single-canonical-dictionary-for",
+   "source": "sparsity-reconstruction-tradeoff",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Because sweeping alpha produces a smooth curve with no 'knee' or distinguished bend (Appendix B, Figures 6-7), the paper reads this as weak evidence against there being one uniquely correct sparse decomposition of a given activation space -- every (alpha, R) setting on the curve is a defensible, merely different, decomposition rather than an approximation to some single ground-truth dictionary. That is part of why the method is presented and evaluated across a range of alpha and R values rather than as a search for the 'right' hyperparameters: Sections 3 and 4 report results at multiple settings (e.g. alpha=.00086, R=2 for the main interpretability comparison, and a separate alpha sweep for the IOI patching results) instead of tuning toward one canonical dictionary. It also reframes what 'the model's features' means for sparse autoencoders as a method: not a fixed list to be recovered exactly, but a family of similarly-valid sparse bases that trade sparsity and fidelity against each other."
+  },
+  {
+   "id": "reconstruction-perplexity-metric-independently-corroborates-reconstruction-loss",
+   "type": "independently-corroborates",
+   "source": "reconstruction-perplexity-metric",
+   "target": "reconstruction-loss",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Reconstruction loss is measured in squared-error units on cached activations (Equation 4), a number with no inherent interpretation of how much it actually matters to the model's behavior. The reconstruction-perplexity metric translates that abstract gap into a concrete, task-relevant cost by substituting the SAE's reconstruction directly into the model's forward pass and re-measuring next-token prediction quality: for Pythia-70M's layer-2 residual stream, doing so raises perplexity on the Pile from 25 to 40. That roughly 60% jump in perplexity from a single-layer substitution is the paper's evidence that reconstruction loss, though small-looking in absolute squared-error terms, is 'not yet near zero' in any sense that matters -- the dictionary is measurably failing to capture information the model actually uses. The two metrics are kept distinct in the paper: reconstruction loss is the differentiable quantity optimized during training, while the perplexity metric is a non-differentiable, downstream check computed only after training to validate what the loss curve alone cannot show."
+  },
+  {
+   "id": "mlp-sae-training-stress-tests-sparse-autoencoders",
+   "type": "stress-tests",
+   "source": "mlp-sae-training",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Every core result on the residual stream (Sections 3-4) uses a single working recipe: tied weights, alpha near 8.6e-4, and dictionaries that stay overcomplete up to roughly 4x expansion. Porting that recipe unchanged to MLP-sublayer activations (Appendix C.3) breaks two of its assumptions at once: many dictionary features still turn out more interpretable than individual neurons, but large numbers go dead even without any sparsity penalty, and the training pipeline does not yet reliably learn an overcomplete basis in the middle or later MLP layers -- only the earliest layers keep a large fraction of features alive. The fix that partially restores results is itself informative: MLPs need a different sparsity coefficient (alpha=3.2e-4 rather than 8.6e-4) and untied encoder/decoder matrices, meaning the sparse-autoencoder recipe validated on the residual stream is not activation-agnostic -- it has hidden dependencies on which part of the model it is applied to."
+  },
+  {
+   "id": "l4-norm-maximization-reformulates-sparse-dictionary-learning",
+   "type": "reformulates",
+   "source": "l4-norm-maximization",
+   "target": "sparse-dictionary-learning",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "Qu et al. (2019) show that the search for a sparse, overcomplete dictionary can be recast as a continuous optimization problem: searching for unit-norm directions that maximize their l4 norm over the data. This reformulation works because a direction that recovers one of the true sparse-coding basis vectors will have activations that are mostly near zero with occasional large spikes -- exactly the heavy-tailed profile the l4 norm, unlike the l2 norm, rewards, so maximizing it is a smooth proxy for finding maximally sparse-activating directions. This paper invokes the result to explain two of its own findings: why the correlation between a dictionary feature's autointerpretability score and the skew/kurtosis of its activations is positive, and why Independent Component Analysis, which directly maximizes non-Gaussianity, is consistently the strongest non-dictionary-learning baseline it tests against."
+  },
+  {
+   "id": "yun-dictionary-learning-is-extended-by-sparse-autoencoders",
+   "type": "is-extended-by",
+   "source": "yun-dictionary-learning",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "Yun et al. (2021) train a single sparse dictionary across all of a language model's residual-stream layers simultaneously, treating each token's representation at every depth as a linear superposition of shared 'transformer factors.' This paper takes the opposite granularity: it trains a separate sparse autoencoder per layer, and separately again for MLP sublayers in Appendix C.3, which is what makes it meaningful to compare interpretability and dead-feature rates layer by layer (Figures 2, 9, 16) rather than only at the level of the whole residual stream. The larger difference is evaluative rather than architectural -- Yun et al. never test whether their learned factors are more interpretable than baselines, more monosemantic than neurons, or more causally precise than PCA on a behavioral task, which is exactly the autointerpretability scoring, case-study, and IOI-patching apparatus this paper adds on top of the same basic sparse-dictionary-learning idea."
+  },
+  {
+   "id": "sharkey-interim-report-is-validated-at-scale-by-sparse-autoencoders",
+   "type": "is-validated-at-scale-by",
+   "source": "sharkey-interim-report",
+   "target": "sparse-autoencoders",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "Sharkey, Braun & Millidge's 2023 AlignmentForum post -- itself titled 'Taking features out of superposition with sparse autoencoders,' the same phrase this paper's Section 2 heading borrows -- first proposed training sparse autoencoders on language model activations and showed empirically that l1-penalized reconstruction could recover known ground-truth features in toy settings. It was never run at the scale of a real language model's autointerpretability, causal-localization, or monosemanticity evaluation. This paper, co-authored by Lee Sharkey himself, is explicitly framed in both the introduction and the related-work section as building on and scaling up that interim report: applying the same core method to Pythia-70M and Pythia-410M and adding the autointerpretability scoring, IOI activation-patching comparison against PCA, and feature-circuit case studies the original report lacked."
+  },
+  {
+   "id": "dead-features-hollows-out-the-count-of-dictionary-feature",
+   "type": "hollows-out-the-count-of",
+   "source": "dead-features",
+   "target": "dictionary-feature",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "A dictionary feature is defined structurally as one row of M -- it exists as soon as the matrix is initialized, regardless of whether it ever actually fires. A dead feature is exactly this: a row that occupies dictionary capacity and counts toward R but never activates on the training corpus, so it contributes nothing to any reconstruction and is never scored for interpretability. This gap between nominal and effective dictionary size can be severe: Appendix C.3 reports that an MLP dictionary with twice as many features as neurons (R=2) can end up with fewer than half of them alive enough to run autointerpretability on, meaning the dictionary is effectively less complete than the raw neuron basis it was meant to expand on. The paper's proposed fix -- periodically reinitializing dead features rather than leaving them permanently inert -- is framed as future work precisely because dead features are wasted rows, not evidence that a smaller true dictionary exists."
+  },
+  {
+   "id": "tied-weights-sae-gives-way-to-an-untied-variant-in-mlp-sae-training",
+   "type": "gives-way-to-an-untied-variant-in",
+   "source": "tied-weights-sae",
+   "target": "mlp-sae-training",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "unmixing-activations-with-sparsity",
+   "prose": "Tied weights are the default everywhere in the paper except one place: training dictionaries on MLP-sublayer activations. There, the paper reports retaining a larger number of live features by switching to separate encoder and decoder matrices, c = ReLU(M_e x + b) and x-hat = M_d^T c (Equations 5-6 in Appendix C.3), abandoning the single shared matrix M used on the residual stream. This is a direct response to the dead-features problem: MLP dictionaries lose so many features to inactivity that recovering some of that lost capacity outweighs the memory savings and detecting/defining-direction guarantee that motivated tying in the first place. The tradeoff the paper accepts is that MLP dictionary features, unlike residual-stream ones, no longer have a single canonical direction -- their encoder (detecting) and decoder (defining) directions can differ, reintroducing exactly the ambiguity tied weights were designed to remove."
+  },
+  {
+   "id": "l4-norm-maximization-predicts-the-heavy-tailed-activation-of-dictionary-feature",
+   "type": "predicts-the-heavy-tailed-activation-of",
+   "source": "l4-norm-maximization",
+   "target": "dictionary-feature",
+   "hindsight": false,
+   "groundedIn": null,
+   "motivatedByTheme": "dictionary-learning-lineage",
+   "prose": "If sparse dictionary search really is equivalent to l4-norm maximization, dictionary features that are closer to the 'true' sparse directions should have more heavy-tailed activation distributions -- mostly near zero with occasional large spikes -- since that is exactly the shape the l4 norm, unlike the l2 norm, rewards. The paper tests this prediction directly on its trained dictionary features by correlating each one's autointerpretability score against the skew and kurtosis of its activation distribution, across all residual-stream layers and dictionary sizes R in {0.5, 1, 2, 4, 8}, finding weak but consistent positive correlations (around 0.19-0.24). That is a modest but real empirical link between a purely theoretical reformulation of the sparse-coding objective and a property of the actual learned features: the more a dictionary feature's activations look like the heavy-tailed spikes l4-maximization would select for, the more interpretable it tends to score."
+  }
+ ]
+}

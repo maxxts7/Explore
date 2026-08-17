@@ -71,6 +71,12 @@ KIND_INFO = {
 KIND_DIR = {k: v[1] for k, v in KIND_INFO.items()}
 KIND_LABEL = {k: v[2] for k, v in KIND_INFO.items()}
 
+# Figures are per-paper (store key "figures" is a dict keyed by paper id), so
+# they sit outside KIND_INFO's generic collection loop; pages land at
+# site/figure/<paperId>--<figureId>.html.
+KIND_DIR["figure"] = "figure"
+KIND_LABEL["figure"] = "figure"
+
 # page kinds whose html lives at the site root (everything else is one dir down)
 ROOT_KINDS = {"index", "help"}
 
@@ -114,6 +120,7 @@ class SiteBuilder:
         self.superedges = {e["id"]: e for e in data["superedges"]}
         self.tissues = {t["id"]: t for t in data["tissueThemes"]}
         self.paper_stories = {e["id"]: e for e in data.get("paperStories") or []}
+        self.figures = data.get("figures") or {}
         self.paper_overlay_narrative = {
             e["paper"]: e.get("narrative", "")
             for e in (data.get("paperOverlay") or {}).get("papers", [])}
@@ -759,6 +766,115 @@ class SiteBuilder:
 
         return self.shell(pk, f"{t['name']} — Connective theme", "\n".join(parts))
 
+    FIGURE_SECTION_META = {
+        "data-and-experiments": ("paper-figures-data", "Data and experiments"),
+        "results-and-interpretation": ("paper-figures-results", "Results and interpretation"),
+    }
+
+    def build_figure_page(self, pid: str, item: dict, items: list[dict]) -> str:
+        pk = "figure"
+        p = self.papers[pid]
+        page_id = f"{pid}--{item['id']}"
+        panel_id, panel_label = self.FIGURE_SECTION_META[item["classification"]]
+        story_href = self.href(pk, "story", pid)
+        loc = {"paper": pid, "section": item["section"], "page": item["page"]}
+
+        parts = [f"<h1>{esc(item['name'])}</h1>"]
+        parts.append(
+            f'<p class="edge-meta">{esc(item["label"])} of '
+            f'<a href="{story_href}">{esc(p["title"])}</a>'
+            f' &middot; {self.cite_link(pk, loc)}'
+            f' &middot; in <a href="{story_href}#{panel_id}">{panel_label}</a></p>'
+        )
+        img_src = self.asset_href(pk, item["image"])
+        parts.append(
+            f'<figure class="figure-plate">'
+            f'<a href="{img_src}" target="_blank" rel="noopener">'
+            f'<img src="{img_src}" alt="{esc(item["label"])} — {esc(item["name"])}" loading="lazy">'
+            f'</a></figure>'
+        )
+        for s in item.get("sections", []):
+            parts.append('<section class="prose-section">')
+            parts.append(f"<h2>{esc(s['heading'])}</h2>")
+            parts.append(self.process_body(s["body"], pk, page_id))
+            parts.append("</section>")
+
+        parts.append('<hr class="divider">')
+        idx = next(i for i, it in enumerate(items) if it["id"] == item["id"])
+        neighbors = []
+        for off, word in ((-1, "Previous"), (1, "Next")):
+            j = idx + off
+            if 0 <= j < len(items):
+                n = items[j]
+                n_href = self.href(pk, "figure", f"{pid}--{n['id']}")
+                neighbors.append(f'<li>{word}: <a href="{n_href}">{esc(n["label"])} '
+                                 f'&mdash; {esc(n["name"])}</a></li>')
+        if neighbors:
+            parts.append('<section class="nav-block"><h2>More figures from this paper</h2>'
+                         f'<ul>{"".join(neighbors)}</ul></section>')
+        parts.append(f'<section class="nav-block"><h2>Sources</h2>'
+                     f'{self.sources_block(pk, [loc])}</section>')
+
+        return self.shell(pk, f"{item['name']} — Figure", "\n".join(parts))
+
+    def _figure_entry_html(self, pid: str, e: dict, by_id: dict, pk: str = "story") -> str:
+        """One thumbnail-plus-teaser row in a paper page's figure sections."""
+        it = by_id[e["figure"]]
+        href = self.href(pk, "figure", f"{pid}--{it['id']}")
+        img = self.asset_href(pk, it["image"])
+        return (
+            f'<div class="fig-entry">'
+            f'<a class="fig-thumb" href="{href}">'
+            f'<img src="{img}" alt="{esc(it["label"])}" loading="lazy"></a>'
+            f'<div class="fig-info">'
+            f'<p class="fig-title"><a href="{href}">{esc(it["label"])} &mdash; {esc(it["name"])}</a></p>'
+            f'<p class="fig-teaser">{esc(e["teaser"])}</p>'
+            f'</div></div>'
+        )
+
+    FIGURE_DATA_HEADS = {"data": "Data", "experiments": "Experiments",
+                         "architecture": "Architecture"}
+
+    def _paper_figures_data_panel(self, pid: str) -> str:
+        pk = "story"
+        entry = self.figures.get(pid) or {}
+        groups = entry.get("dataAndExperiments") or []
+        if not groups:
+            return ""
+        by_id = {it["id"]: it for it in entry["items"]}
+        parts = ['<p class="section-note">The paper&rsquo;s apparatus &mdash; its '
+                 'architecture, data, and experimental-setup figures. Each entry '
+                 'opens the figure&rsquo;s own page.</p>']
+        for g in groups:
+            parts.append(f'<section class="fig-group"><h2>'
+                         f'{esc(self.FIGURE_DATA_HEADS[g["label"]])}</h2>')
+            for e in g.get("entries") or []:
+                parts.append(self._figure_entry_html(pid, e, by_id, pk))
+            parts.append('</section>')
+        return "\n".join(parts)
+
+    def _paper_figures_results_panel(self, pid: str) -> str:
+        pk = "story"
+        entry = self.figures.get(pid) or {}
+        groups = entry.get("resultsAndInterpretation") or []
+        if not groups:
+            return ""
+        by_id = {it["id"]: it for it in entry["items"]}
+        parts = ['<p class="section-note">The paper&rsquo;s results figures and '
+                 'tables, grouped by experiment in the paper&rsquo;s own order. '
+                 'Each figure&rsquo;s page explains how to read it before what '
+                 'it concludes.</p>']
+        for g in groups:
+            parts.append(f'<section class="fig-group"><h2>{esc(g["title"])}</h2>')
+            narrative = (g.get("narrative") or "").strip()
+            if narrative:
+                parts.append(f'<div class="node-narrative">'
+                             f'{self.process_body(narrative, pk, f"{pid}-figures")}</div>')
+            for e in g.get("entries") or []:
+                parts.append(self._figure_entry_html(pid, e, by_id, pk))
+            parts.append('</section>')
+        return "\n".join(parts)
+
     def build_paper_story_page(self, entry: dict) -> str:
         pk = "story"
         pid = entry["id"]
@@ -778,13 +894,19 @@ class SiteBuilder:
             f' &middot; {p["pages"]} pp.'
             f' &middot; <a href="{self.href(pk, "index", None)}#tab-papers">its place among the papers</a></p>'
         )
+        fig_note = (
+            ' <b>Data and experiments</b> and <b>Results and interpretation</b> '
+            'tour the paper&rsquo;s own figures and tables, each opening into a '
+            'page of its own.' if self.figures.get(pid) else '')
         multi_note = (
             '<p class="section-note">One paper, several tellings. <b>The big '
             'picture</b> states the paper&rsquo;s own thesis and contributions in '
             'its own terms; <b>Inside the paper</b> follows the paper&rsquo;s own '
             'arc; <b>Across the corpus</b> '
             'traces how it connects to the other papers; <b>The concepts</b> '
-            'lists everything the paper uses, in reading order. Pick a tab, then '
+            'lists everything the paper uses, in reading order.'
+            + fig_note +
+            ' Pick a tab, then '
             'use the +/&minus; toggles to open it level by level, or set a '
             'granularity to read the whole thing at that zoom.</p>'
         )
@@ -798,6 +920,12 @@ class SiteBuilder:
         concepts_body = self._paper_concepts_panel(pid)
         if concepts_body:
             extra.append(("paper-concepts", "The concepts", concepts_body))
+        data_body = self._paper_figures_data_panel(pid)
+        if data_body:
+            extra.append(("paper-figures-data", "Data and experiments", data_body))
+        results_body = self._paper_figures_results_panel(pid)
+        if results_body:
+            extra.append(("paper-figures-results", "Results and interpretation", results_body))
         parts.append(self._story_tabs(stories, pk, multi_note, single_note, extra))
         parts.append(self.INDEX_TABS_JS)
         return self.shell(pk, f"{p['title']} — Stories", "\n".join(parts))
@@ -1040,13 +1168,15 @@ class SiteBuilder:
             pid = p["id"]
             page = self.href(pk, "story", pid)
             n = sum(len(v) for v in self.concepts_of_paper.get(pid, {}).values())
+            n_figs = len((self.figures.get(pid) or {}).get("items") or [])
+            fig_meta = f' &middot; {n_figs} figures' if n_figs else ''
             parts.append(
                 f'<div class="paper-card">'
                 f'<h3 class="pc-title"><a href="{page}">{esc(p["title"])}</a></h3>'
                 f'<p class="edge-meta">'
                 f'<a href="{self.paper_href(pid)}" target="_blank" rel="noopener">arXiv:{esc(p["arxiv"])}</a>'
                 f' &middot; <a href="{self.pdf_href(pk, pid)}" target="_blank" rel="noopener">PDF</a>'
-                f' &middot; {p["pages"]} pp. &middot; {n} concepts</p>'
+                f' &middot; {p["pages"]} pp. &middot; {n} concepts{fig_meta}</p>'
                 f'</div>'
             )
         parts.append("</div>")
@@ -1291,6 +1421,9 @@ class SiteBuilder:
             f'<li><b>Stories</b> &mdash; each paper retold as a story: its own arc chapter '
             f'by chapter, its ties to the other papers, and its thesis and contributions '
             f'in its own terms.</li>'
+            f'<li><b>Figures</b> &mdash; a paper&rsquo;s own figures and tables, each with '
+            f'a page explaining how to read it and what it shows. (Rolling out paper by '
+            f'paper; not every paper has them yet.)</li>'
             '</ul>'
         )
         parts.append("</section>")
@@ -1352,6 +1485,16 @@ class SiteBuilder:
                 "reading order, each deep-linked into the PDF &mdash; with a "
                 "<b>Read at</b> zoom of its own.</p>"
             )
+            if self.figures:
+                parts.append(
+                    "<p>Where a paper&rsquo;s figures have been processed, two more "
+                    "tabs join the row: <b>Data and experiments</b> tours the "
+                    "apparatus &mdash; architecture, data, and setup figures &mdash; "
+                    "and <b>Results and interpretation</b> tours the results, "
+                    "grouped by experiment. Every entry links to the figure&rsquo;s "
+                    "own page, which explains how to read the visualization before "
+                    "stating what the paper concludes.</p>"
+                )
             parts.append(self._help_figure(
                 "story-tree.png",
                 "A story tree with chapters partially expanded, showing the +/− toggles",
@@ -1454,6 +1597,17 @@ class SiteBuilder:
                 n += 1
             counts[kind] = n
 
+        fig_dir = SITE_DIR / KIND_DIR["figure"]
+        fig_dir.mkdir(parents=True, exist_ok=True)
+        n = 0
+        for pid, entry in self.figures.items():
+            items = entry.get("items") or []
+            for item in items:
+                html_doc = self.build_figure_page(pid, item, items)
+                (fig_dir / f"{pid}--{item['id']}.html").write_text(html_doc, encoding="utf-8")
+                n += 1
+        counts["figure"] = n
+
         (SITE_DIR / "index.html").write_text(self.build_index_page(), encoding="utf-8")
         counts["index"] = 1
 
@@ -1518,6 +1672,7 @@ CSS = """
   --k-superedge: #4d7c0f;
   --k-tissue: #0e7490;
   --k-story: #be123c;
+  --k-figure: #0f766e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1550,6 +1705,7 @@ CSS = """
     --k-superedge: #bccf5a;
     --k-tissue: #67e8f9;
     --k-story: #fb7185;
+    --k-figure: #5eead4;
   }
 }
 
@@ -1895,6 +2051,7 @@ a.cite:hover { color: var(--fg); text-decoration-color: currentColor; }
 .kind-superedge  { --k: var(--k-superedge); }
 .kind-tissue     { --k: var(--k-tissue); }
 .kind-story      { --k: var(--k-story); }
+.kind-figure     { --k: var(--k-figure); }
 .role-introduced { --k: var(--k-concept); }
 .role-refined    { --k: var(--k-theme); }
 .role-inherited  { --k: var(--muted); }
@@ -2280,6 +2437,71 @@ ol.walk > li::marker {
 }
 ol.walk .walk-prose { margin-left: 0; }
 
+/* ---- figure pages and the paper-page figure tours ----------------------- */
+
+.figure-plate {
+  margin: 0.4rem 0 1.6rem;
+}
+.figure-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  padding: 0.6rem;
+  box-sizing: border-box;
+}
+
+.fig-group { margin: 0 0 1.6rem; }
+.fig-group > h2 {
+  font-family: var(--sans);
+  font-size: 1.02rem;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin: 1.6rem 0 0.5rem;
+}
+
+.fig-entry {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 0.8rem 0.1rem;
+  border-bottom: 1px solid var(--stroke);
+}
+.fig-entry:last-child { border-bottom: none; }
+.fig-thumb img {
+  display: block;
+  width: 100%;
+  max-height: 140px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--stroke-strong);
+  border-radius: 10px;
+  padding: 0.3rem;
+  box-sizing: border-box;
+}
+.fig-title {
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+}
+.fig-teaser {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .fig-entry { grid-template-columns: 1fr; }
+  .fig-thumb img { max-height: 180px; }
+}
+
 /* ---- popup dialog --------------------------------------------------------- */
 
 .popup-dialog {
@@ -2372,7 +2594,7 @@ ol.walk .walk-prose { margin-left: 0; }
 POPUP_JS = r"""
 (function () {
   'use strict';
-  var POPUP_KINDS = /\/(concept|edge|theme|supertheme|superedge|tissue)\/[^\/]+\.html$/;
+  var POPUP_KINDS = /\/(concept|edge|theme|supertheme|superedge|tissue|figure)\/[^\/]+\.html$/;
 
   function popupTarget(ev) {
     if (ev.defaultPrevented || ev.button !== 0 ||
@@ -2624,6 +2846,11 @@ def main():
     for pdf in (BASE_DIR / "papers").glob("*.pdf"):
         shutil.copy2(pdf, papers_dst / pdf.name)
 
+    figures_src = BASE_DIR / "store" / "figures"
+    if figures_src.is_dir():
+        print("[render] copying figure images into site/assets/figures/")
+        shutil.copytree(figures_src, ASSETS_DIR / "figures")
+
     if HELP_SHOTS_DIR.is_dir():
         shots = sorted(HELP_SHOTS_DIR.glob("*.png"))
         if shots:
@@ -2662,6 +2889,8 @@ def main():
         "superedge": len(data["superedges"]),
         "tissue": len(data["tissueThemes"]),
         "story": len(data.get("paperStories") or []),
+        "figure": sum(len(e.get("items") or [])
+                      for e in (data.get("figures") or {}).values()),
         "index": 1,
         "help": 1,
     }

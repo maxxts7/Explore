@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Causal-tree circuit for the closing-parenthesis feature — Figure</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-figure">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-figure">figure</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Causal-tree circuit for the closing-parenthesis feature</h1>
+<p class="edge-meta">Figure 5 of <a href="../story/sparse-autoencoders.html">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> &middot; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION&rdquo;, p. 8</a> &middot; in <a href="../story/sparse-autoencoders.html#paper-figures-results">Results and interpretation</a></p>
+<figure class="figure-plate"><a href="../assets/figures/sparse-autoencoders/fig-5.png" target="_blank" rel="noopener"><img src="../assets/figures/sparse-autoencoders/fig-5.png" alt="Figure 5 — Causal-tree circuit for the closing-parenthesis feature" loading="lazy"></a></figure>
+<section class="prose-section">
+<h2>Reading the causal tree</h2>
+<p>Each box is a single dictionary feature, identified by its layer number and feature index, with a short human-written gloss of what real-world pattern it seems to detect. Layer-0 features sit at the top, later layers below, and every path converges on one layer-5 feature at the bottom: the target whose unembedding predicts closing-parenthesis tokens. An arrow from an upstream feature to a downstream one is not a correlation; it records a specific test in which that upstream feature was ablated and the downstream feature's activation dropped, so it encodes a measured causal contribution. Arrow thickness scales with how much the downstream activation fell under ablation, so the thickest paths are the dominant causes and thin ones are minor. It is easy to over-read this as the model's complete wiring diagram for the behavior. It is not: at each node only the previous layer's features were tested as candidate parents, one layer at a time, so an absent arrow means untested or below threshold, not proven unrelated, and the tree only ever traces one hop per layer transition.</p>
+</section>
+<section class="prose-section">
+<h2>What the circuit shows</h2>
+<p>Two branches feed the root. One tracks generic parenthetical context: features for an open bracket itself, for the first token after it, and for words continuing inside the parenthesis, chained up through the middle layers into features that fire on text after an open parenthesis and predict a close. A second, parallel branch tracks acronyms specifically, with layer-0 and layer-1 features for acronyms in general converging through mid-layer features for acronyms following an open bracket. The two branches merge just before the root. The paper reports that unembedding this final feature yields closing-parenthesis token variants as its top predicted outputs, and frames earlier layers as detecting the range of contexts -- dates, acronyms, and other phrases -- that tend to precede a closing parenthesis (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">§"5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION", p. 8</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Why this matters</h2>
+<p>This is <a href="../concept/feature-circuit-detection.html">Automatic feature circuit detection</a> applied to a worked example, the <a href="../concept/closing-parenthesis-feature.html">Closing-parenthesis dictionary feature</a>: rather than ranking a whole set of features against one behavior, it recursively chains single-hop ablation tests across depth to build an interpretable multi-layer circuit out of individual <a href="../concept/dictionary-feature.html">Dictionary feature</a> units. The paper contrasts this success with a <a href="../concept/weight-based-connection-attempt.html">Weight-based feature connection attempt (failed method)</a> at connecting features across layers by multiplying through the MLP weights, which found no meaningful matches -- ablation-based tracing succeeded where a purely weight-based method failed.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>More figures from this paper</h2><ul><li>Previous: <a href="../figure/sparse-autoencoders--fig-4.html">Figure 4 &mdash; Token histograms for the apostrophe feature (feature 556)</a></li><li>Next: <a href="../figure/sparse-autoencoders--fig-6.html">Figure 6 &mdash; Active-feature count vs. unexplained variance, by dictionary size</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=8" target="_blank" rel="noopener">&sect;&ldquo;5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION&rdquo;, p. 8</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

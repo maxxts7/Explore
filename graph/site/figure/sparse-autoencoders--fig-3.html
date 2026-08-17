@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>IOI patching efficiency: dictionary features vs. PCA — Figure</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-figure">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-figure">figure</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>IOI patching efficiency: dictionary features vs. PCA</h1>
+<p class="edge-meta">Figure 3 of <a href="../story/sparse-autoencoders.html">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> &middot; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION&rdquo;, p. 5</a> &middot; in <a href="../story/sparse-autoencoders.html#paper-figures-results">Results and interpretation</a></p>
+<figure class="figure-plate"><a href="../assets/figures/sparse-autoencoders/fig-3.png" target="_blank" rel="noopener"><img src="../assets/figures/sparse-autoencoders/fig-3.png" alt="Figure 3 — IOI patching efficiency: dictionary features vs. PCA" loading="lazy"></a></figure>
+<section class="prose-section">
+<h2>How to read these curves</h2>
+<p>Both panels share the same y-axis: KL divergence between the model's output when its activations are edited ("patched") and its output on a genuine counterfactual sentence — lower means the edit reproduced the counterfactual behavior more faithfully, zero would mean a perfect match. Each curve is one activation decomposition (four sparse dictionaries at different sparsity coefficients α, plus PCA and a non-negative variant of PCA), and each point on a curve corresponds to patching some number of that decomposition's directions, chosen in order of individually-estimated causal importance via <a href="../concept/automated-circuit-discovery.html">Automated Circuit Discovery (ACDC)</a>'s ranking procedure — not an arbitrary or random order. The left panel plots KL divergence against how many directions were patched; the right panel plots the same KL divergence against the total magnitude of the edit those directions required. A curve that drops toward zero quickly, using few features or small magnitude, localizes the behavior more tightly than one that drops slowly or plateaus above zero. A plateau above zero reflects a decomposition whose reconstructions are simply less accurate, not a fundamentally different task.</p>
+</section>
+<section class="prose-section">
+<h2>What the curves show</h2>
+<p>All curves start near a KL divergence of about 2.0 with nothing patched. In the left panel, the sparse-dictionary curves fall faster than both PCA variants over most of the range shown, reaching a low KL divergence with substantially fewer patched features; the exception is the dictionary trained with the largest sparsity coefficient (α=1e-03), whose curve flattens out around 0.4 and never approaches zero, since heavier sparsity trades away reconstruction accuracy. The non-sparse dictionary (α=0) falls more slowly than the sparsity-penalized dictionaries, showing that sparsity itself, not just being a learned dictionary, drives the improved localization. The right panel tells a similar story in terms of edit size: the sparse-dictionary curves sit below and to the left of the PCA curves for most of the range, meaning a given reduction in KL divergence is achieved with a smaller total edit magnitude — the paper describes this as an improved Pareto frontier of edit magnitude versus thoroughness (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">§"4.2 PRECISE LOCALISATION OF IOI DICTIONARY FEATURES", p. 6</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What this establishes</h2>
+<p>The experiment uses the <a href="../concept/ioi-task.html">Indirect Object Identification (IOI) task</a>, a previously-characterized behavior, specifically because ground truth about what the model is doing is already established, letting the comparison isolate how precisely each decomposition's directions align with the mechanism rather than whether it exists. Because the <a href="../concept/dictionary-feature.html">Dictionary feature</a>s were trained with no reference to IOI or any other downstream task, their ability to localize this behavior with fewer, smaller edits than <a href="../concept/pca.html">Principal Component Analysis (PCA)</a> via <a href="../concept/dictionary-feature-patching.html">Dictionary-feature patching procedure</a> is offered as evidence that sparsity recovers directions with genuine causal structure, not directions fit to this task.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>More figures from this paper</h2><ul><li>Previous: <a href="../figure/sparse-autoencoders--fig-2.html">Figure 2 &mdash; Interpretability score by layer: sparse coding vs. baselines</a></li><li>Next: <a href="../figure/sparse-autoencoders--fig-4.html">Figure 4 &mdash; Token histograms for the apostrophe feature (feature 556)</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=5" target="_blank" rel="noopener">&sect;&ldquo;4 IDENTIFYING CAUSALLY-IMPORTANT DICTIONARY FEATURES FOR INDIRECT OBJECT IDENTIFICATION&rdquo;, p. 5</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

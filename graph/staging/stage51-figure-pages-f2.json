@@ -1,0 +1,95 @@
+{
+ "paper": "sparse-autoencoders",
+ "pages": [
+  {
+   "id": "fig-5",
+   "name": "Causal-tree circuit for the closing-parenthesis feature",
+   "sections": [
+    {
+     "heading": "Reading the causal tree",
+     "body": "Each box is a single dictionary feature, identified by its layer number and feature index, with a short human-written gloss of what real-world pattern it seems to detect. Layer-0 features sit at the top, later layers below, and every path converges on one layer-5 feature at the bottom: the target whose unembedding predicts closing-parenthesis tokens. An arrow from an upstream feature to a downstream one is not a correlation; it records a specific test in which that upstream feature was ablated and the downstream feature's activation dropped, so it encodes a measured causal contribution. Arrow thickness scales with how much the downstream activation fell under ablation, so the thickest paths are the dominant causes and thin ones are minor. It is easy to over-read this as the model's complete wiring diagram for the behavior. It is not: at each node only the previous layer's features were tested as candidate parents, one layer at a time, so an absent arrow means untested or below threshold, not proven unrelated, and the tree only ever traces one hop per layer transition."
+    },
+    {
+     "heading": "What the circuit shows",
+     "body": "Two branches feed the root. One tracks generic parenthetical context: features for an open bracket itself, for the first token after it, and for words continuing inside the parenthesis, chained up through the middle layers into features that fire on text after an open parenthesis and predict a close. A second, parallel branch tracks acronyms specifically, with layer-0 and layer-1 features for acronyms in general converging through mid-layer features for acronyms following an open bracket. The two branches merge just before the root. The paper reports that unembedding this final feature yields closing-parenthesis token variants as its top predicted outputs, and frames earlier layers as detecting the range of contexts -- dates, acronyms, and other phrases -- that tend to precede a closing parenthesis (sparse-autoencoders, §\"5.3 INTERMEDIATE FEATURES: DICTIONARY FEATURES ALLOW AUTOMATIC CIRCUIT DETECTION\", p. 8)."
+    },
+    {
+     "heading": "Why this matters",
+     "body": "This is [[feature-circuit-detection]] applied to a worked example, the [[closing-parenthesis-feature]]: rather than ranking a whole set of features against one behavior, it recursively chains single-hop ablation tests across depth to build an interpretable multi-layer circuit out of individual [[dictionary-feature]] units. The paper contrasts this success with a [[weight-based-connection-attempt]] at connecting features across layers by multiplying through the MLP weights, which found no meaningful matches -- ablation-based tracing succeeded where a purely weight-based method failed."
+    }
+   ]
+  },
+  {
+   "id": "fig-6",
+   "name": "Active-feature count vs. unexplained variance, by dictionary size",
+   "sections": [
+    {
+     "heading": "Reading the scatter plot",
+     "body": "Each point is one trained sparse autoencoder. Its x-position is the mean number of dictionary features simultaneously active on a given input -- lower means a sparser reconstruction. Its y-position is the proportion of the original activation vector's variance the reconstruction fails to capture (unexplained variance): 0 is perfect reconstruction, values near 1 mean almost nothing was captured. Color encodes the dictionary's expansion factor $R$, its hidden size relative to the underlying activation dimension, swept across seven ratios. It is tempting to read this as one model's training trajectory. It is not: each point is a separately trained autoencoder at a different value of the sparsity coefficient $\\alpha$ (larger $\\alpha$ pushes a point up and to the left, toward fewer active features and worse reconstruction), and each color is a different dictionary size entirely, not a later stage of the same run."
+    },
+    {
+     "heading": "What the sweep shows",
+     "body": "Every dictionary size traces the same qualitative shape: unexplained variance drops steeply as active-feature count rises from near zero, then flattens toward a low floor once several hundred features are active, with no sharp bend separating a distinctly 'good' region from a 'bad' one. One extreme point, at essentially zero active features, has unexplained variance near 1.4 -- reconstruction has almost completely collapsed. The paper reads the absence of a knee anywhere along this curve as evidence against there being one single objectively correct sparsity level for decomposing this layer's activations (sparse-autoencoders, §\"B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION\", p. 12)."
+    },
+    {
+     "heading": "Context",
+     "body": "This sweep is run on an MLP-sublayer autoencoder, an application the paper elsewhere reports as only partly successful because of many [[dead-features]] (see [[mlp-sae-training]]). The tradeoff itself is the basis for the paper's [[sparsity-reconstruction-tradeoff]] argument, driven by the [[sparsity-loss]] and [[reconstruction-loss]] terms competing in training and shaped by the [[expansion-factor-r]] choice."
+    }
+   ]
+  },
+  {
+   "id": "fig-7",
+   "name": "Sparsity/variance tradeoff across training epochs",
+   "sections": [
+    {
+     "heading": "Reading the scatter plot",
+     "body": "The axes match the previous figure -- mean active-feature count (here labeled 'Sparsity') against unexplained variance -- but color now encodes the number of training epochs completed, from the legend's lowest value up to 20, rather than dictionary size. Each colored curve is itself a full sweep over the sparsity coefficient $\\alpha$, with every point a separately trained autoencoder at that epoch count. It is easy to misread a single color as one model getting trained progressively longer along that curve. It is not: a point's horizontal position comes entirely from its $\\alpha$ value, not from training time, so the effect of training duration only shows up when comparing across colors, not by following one color left to right."
+    },
+    {
+     "heading": "What the sweep shows",
+     "body": "The series with the fewest training epochs sits visibly above and to the right of every other epoch count across most of the range: for the same number of active features, its unexplained variance is markedly worse. The remaining epoch counts collapse onto nearly the same curve, largely overlapping one another. This indicates the sparsity/reconstruction tradeoff for a given $\\alpha$ converges after relatively little training, with additional epochs beyond that point producing little further change in the achievable tradeoff (sparse-autoencoders, §\"B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION\", p. 12)."
+    },
+    {
+     "heading": "Context",
+     "body": "Together with the dictionary-size sweep, this figure supports the paper's [[sparsity-reconstruction-tradeoff]] claim: the smooth, knee-free curve traced here by the $\\alpha$ sweep, and its stability once training has converged, is offered as evidence against a single objectively correct sparse decomposition, arising from the competing [[sparsity-loss]] and [[reconstruction-loss]] terms in the training objective."
+    }
+   ]
+  },
+  {
+   "id": "fig-8",
+   "name": "Interpretability by layer across seven dictionary sizes",
+   "sections": [
+    {
+     "heading": "Reading the plot",
+     "body": "The x-axis is the residual-stream layer (0 through 5) an autoencoder was trained on; the y-axis is its mean autointerpretability score, averaged over many features, with a vertical bar showing the uncertainty around that mean. Color and marker shape encode the dictionary's expansion factor $R$, swept across seven values from 0.5, which is smaller than the underlying activation dimension, up to 32, far overcomplete. Each point is one (layer, $R$) combination's mean score. It is tempting to expect the largest dictionaries, with the most feature capacity, to score best throughout. The plot does not show that ranking: score depends far more on layer than on dictionary size, and the smallest dictionary tested scores comparably to, and at some layers above, dictionaries dozens of times larger."
+    },
+    {
+     "heading": "What the plot shows",
+     "body": "All seven ratios decline over roughly the same range, from about 0.27-0.31 at layer 0 down to about 0.11-0.24 at layer 5, echoing a layer-wise decline the paper documents elsewhere. The ratios spread out most at layer 5: the two largest dictionaries hold up best there, while two of the mid-sized ratios fall furthest. The point of the sweep is that this is not a size effect: even the smallest, undercomplete dictionary reaches interpretability scores in the same range as dictionaries far larger, showing the interpretability gain is not confined to overcomplete dictionaries (sparse-autoencoders, §\"C.1 INTERPRETABILITY IS CONSISTENT ACROSS DICTIONARY SIZES\", p. 13)."
+    },
+    {
+     "heading": "Context",
+     "body": "A separate quantity, how much of a layer's total activation variance the dictionary reconstructs, does scale with [[expansion-factor-r]] -- larger dictionaries explain more of the whole, even though, per this plot, no single [[dictionary-feature]] is on average more interpretable in a larger dictionary than a smaller one. The underlying metric is the [[autointerpretability-score]]."
+    }
+   ]
+  },
+  {
+   "id": "fig-9",
+   "name": "Random-only interpretability scores vs. baselines by layer",
+   "sections": [
+    {
+     "heading": "Reading the plot",
+     "body": "Axes match the dictionary-size sweep -- layer 0-5 against mean autointerpretability score with uncertainty bars -- but here color distinguishes the decomposition method rather than dictionary size: Sparse Coding, the paper's learned features, against four baselines (ICA, PCA, Random directions, and Identity ReLU, the model's own default basis with negative activations zeroed out). Crucially, every score here uses the stricter random-only scoring variant, where text fragments are drawn purely at random rather than mixed with fragments chosen because a feature strongly activated there ([[top-random-scoring]]). Because features are sparse, a small random sample often contains no strongly activating example at all, compressing scores for every method toward zero relative to the top-and-random scores used elsewhere in the paper. The low absolute values here are an artifact of the harsher test, not evidence sparse coding got worse; the meaningful comparison is the gap between methods within this plot."
+    },
+    {
+     "heading": "What the plot shows",
+     "body": "Sparse Coding sits clearly above all four baselines at every layer, most visibly in layers 0-3, where it scores roughly 0.10-0.12 against baselines clustered around 0.02-0.06. The gap narrows at layers 4 and 5, where sparse coding falls to roughly 0.03-0.05 and several baselines drop close to zero. The four baselines are difficult to distinguish from each other anywhere in the plot, their uncertainty bars overlapping heavily. This is the paper's check against an artifact-of-top-scoring explanation for its results: even under this harsher, random-only test, learned features remain more interpretable than the baselines, especially in earlier layers (sparse-autoencoders, §\"C.2 HIGH INTERPRETABILITY SCORES ARE NOT AN ARTEFACT OF TOP SCORING\", p. 13)."
+    },
+    {
+     "heading": "Context",
+     "body": "The paper follows this check with a further control restricting baselines to the same number of simultaneously active directions as sparse coding, to rule out an alternative explanation for the gap ([[top-k-baseline-control]]). The baselines compared here are [[ica]], [[pca]], [[default-basis-baseline]], and [[random-directions-baseline]], scored with the same underlying [[autointerpretability-score]] used throughout the paper."
+    }
+   ]
+  }
+ ]
+}

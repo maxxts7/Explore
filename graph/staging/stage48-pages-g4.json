@@ -1,0 +1,277 @@
+{
+ "pages": [
+  {
+   "id": "activation-patching",
+   "sections": [
+    {
+     "heading": "Anchor of the causal-proof-by-patching theme",
+     "body": "Activation patching is the causal-mediation technique that makes the causal-proof-by-patching theme falsifiable rather than merely suggestive: instead of asking whether a direction looks interpretable, it asks whether forcing that direction to a counterfactual value actually moves the model's output, the harder causal question the paper needs answered before claiming dictionary features are more than a labeling exercise. The technique originates with Vig et al. (2020), who introduced it as a form of causal mediation analysis for investigating gender bias in language models: run the model on a counterfactual input, cache its internal activations, transplant those cached activations into a run on the base input at a chosen intervention point, and measure how far the resulting output shifts toward the counterfactual's own output. The size of that shift is read as a measure of how much the intervened-on component causally mediates the behavior, as opposed to merely correlating with it."
+    },
+    {
+     "heading": "From attention heads to a scalable circuit-discovery toolkit",
+     "body": "In the years after Vig et al. (2020), activation patching (and close relatives such as path patching) became a standard tool for reverse-engineering transformer circuits component by component -- for example, [[ioi-task|Wang et al. (2022)'s]] hand-built circuit for Indirect Object Identification was itself established largely through patching individual attention heads, and [[automated-circuit-discovery|Conmy et al. (2023)'s ACDC algorithm]] was built to automate exactly that kind of head-by-head patching search. This paper inherits the technique from that lineage but changes what gets patched: instead of transplanting whole attention-head or layer activations, Section 4.1 transplants the differences in [[dictionary-feature|dictionary feature]] activations between a counterfactual and a base sentence, via [[dictionary-feature-patching]] -- patching individual learned directions rather than architectural components (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6)."
+    },
+    {
+     "heading": "The metric: how close does patching get you to the target?",
+     "body": "The intuition carries over unchanged from the original technique: patch, then check how far the output moved toward the counterfactual. What differs is that this paper needs a single scalar summarizing that movement across an entire output distribution, so it measures the Kullback-Leibler divergence between the patched model's output logits $z$ and the target (counterfactual) model's output logits $y$, $D_{\\mathrm{KL}}(z \\parallel y)$, on the [[ioi-task|IOI]] behaviour introduced in Section 4 (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). A smaller divergence means the patched features accounted for more of what separates the base sentence's prediction from the counterfactual's."
+    },
+    {
+     "heading": "What the adaptation bought: precision over PCA",
+     "body": "The payoff of running Vig et al.'s technique on [[dictionary-feature|dictionary features]] rather than raw activations or components is a precision result: patching [[dictionary-feature-patching|the resulting feature subsets]] reaches a given KL divergence from the target using fewer patched features and a smaller mean edit magnitude than patching an equal number of principal components (sparse-autoencoders, §\"4.2 Precise localisation of IOI dictionary features\", p. 6). That comparison is only meaningful because both decompositions are patched under the same causal-mediation logic Vig et al. defined -- activation patching supplies the common yardstick that lets a feature-level intervention and a component-level intervention be compared on equal footing."
+    }
+   ]
+  },
+  {
+   "id": "dictionary-feature-patching",
+   "sections": [
+    {
+     "heading": "The paper's own instrument for the causal-proof theme",
+     "body": "Dictionary-feature patching is Section 4.1's answer to a question the causal-proof-by-patching theme needs answered concretely: given a learned feature dictionary, exactly how do you intervene on it to test causal importance? It is the specific, executable procedure underneath the more general idea of [[activation-patching]], built to run [[activation-patching|Vig et al. (2020)'s]] causal-mediation logic on individual [[dictionary-feature|dictionary features]] rather than on attention heads or layers."
+    },
+    {
+     "heading": "The procedure: run twice, cache once, patch the difference",
+     "body": "Concretely, fix a layer to intervene on. First run the model on a counterfactual target sentence -- a variant of the base [[ioi-task|IOI]] sentence with the indirect object swapped, e.g. \"Bob\" replaced by \"Vanessa\" -- and save both its output logits $y$ and its per-token encoded feature activations $\\bar{c}_{i,1},\\dots,\\bar{c}_{i,k}$. Then run the model on the base sentence up through the intervention layer, compute its own encoded features $c_{i,1},\\dots,c_{i,k}$, and at each token position $i$ replace the residual-stream vector $x_i$ with $x'_i = x_i + \\sum_{j \\in F} (\\bar{c}_{i,j} - c_{i,j}) f_j$, where $F$ is a chosen subset of features and $f_j$ is dictionary feature $j$'s learned direction (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). Finally the patched model's output logits $z$ are compared to $y$ via $D_{\\mathrm{KL}}(z \\parallel y)$."
+    },
+    {
+     "heading": "Choosing which features to patch: borrowing ACDC's ordering",
+     "body": "The subset $F$ is not chosen by hand. The paper reuses [[automated-circuit-discovery|ACDC (Conmy et al., 2023)'s]] Algorithm 4.1, treating every dictionary feature as an independent node in a flat computational graph: ablate each feature, measure the resulting change in $D_{\\mathrm{KL}}$ averaged over a 50-example [[ioi-task|IOI]] test set, and order features by how much patching each one reduces the divergence, so that $F$ for a given budget $k$ is simply the first $k$ features under that ordering (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). The same ordering procedure is applied separately to the [[pca|PCA]] baseline so the two decompositions are ranked and compared like for like."
+    },
+    {
+     "heading": "The headline result, and its asterisks",
+     "body": "Run on layer 11 of Pythia-410M's residual stream, with dictionaries trained on the first 10,000 elements of [[the-pile|the Pile]] (about 7 million activations) (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 5), dictionary-feature patching reaches a given KL divergence from the target using fewer patched features, and a smaller mean edit magnitude, than an equivalent number of patched [[pca|PCA]] components -- an advantage that disappears for a non-sparse ($\\alpha=0$) dictionary, showing the effect depends on sparsity rather than merely on having a learned dictionary at all (sparse-autoencoders, §\"4.2 Precise localisation of IOI dictionary features\", p. 6). The comparison also has a floor: dictionaries trained with a larger sparsity coefficient $\\alpha$ have lower reconstruction accuracy, which shows up as a larger minimum achievable KL divergence that no amount of patching can close (sparse-autoencoders, §\"4.2 Precise localisation of IOI dictionary features\", p. 6)."
+    }
+   ]
+  },
+  {
+   "id": "less-than-rank-one-ablation",
+   "sections": [
+    {
+     "heading": "The causal-proof theme's second surgical tool",
+     "body": "Where [[dictionary-feature-patching|dictionary-feature patching]] proves causal importance by transplanting activations from a counterfactual run, less-than-rank-one ablation proves it by subtraction within a single run: it is the technique behind the [[apostrophe-feature|apostrophe feature]]'s output analysis, the piece of evidence that a monosemantic-looking feature also has an intuitive, predictable causal effect on what the model predicts next."
+    },
+    {
+     "heading": "Lowering an activation to its own boundary, not past it",
+     "body": "The intuition is a stopping rule rather than a fixed subtraction. A standard ablation of a feature would zero out its entire encoded coefficient; less-than-rank-one ablation instead lowers the residual-stream activation along the feature's direction only as far as the point where the feature stops being active, and no further (sparse-autoencoders, §\"5.2 Output: dictionary features have intuitive effects on the logits\", p. 7). The name reflects the geometry: because a [[dictionary-feature|dictionary feature]] fires only after $c = \\mathrm{ReLU}(Mx+b)$ clears zero, feature $i$ is active only when $(Mx)_i > -b_i$, and the learned bias $b_i$ is in practice always negative -- so a feature's \"on\" region is a half-space bounded by a hyperplane that does not pass through the origin, unlike a [[pca|PCA]] or [[ica|ICA]] direction's full-space split. Removing a feature therefore means walking back to that boundary, which is strictly less editing than subtracting a full-magnitude direction would be."
+    },
+    {
+     "heading": "What it found on the apostrophe feature",
+     "body": "Applied to the [[apostrophe-feature|apostrophe feature]] (feature 556), less-than-rank-one ablation shows that removing the feature mainly reduces the logit for the following \"s\" token, matching the story that this feature detects apostrophes and is used to predict the \"s\" that follows in possessives and contractions such as \"let's\" (sparse-autoencoders, §\"5.2 Output: dictionary features have intuitive effects on the logits\", p. 7). Out of roughly 12,000 logits negatively affected in total, this single downstream token shows the largest drop -- evidence that the feature's causal role lines up with its input-side interpretation rather than diverging from it."
+    },
+    {
+     "heading": "A finer edit than patching, for a reason grounded in fairness",
+     "body": "Compared to [[dictionary-feature-patching]], which pushes a feature's activation the full distance from a base value to a counterfactual target, less-than-rank-one ablation only ever edits down to a feature's own activation boundary. That asymmetry is not incidental: the paper's fairness check in Appendix G, comparing dictionary features against fixed-K-active variants of PCA and ICA, is built around exactly this observation -- that a sparse-coding feature is active on less than a full direction while baseline directions like PCA split the whole space through the origin, a consequence of the bias term applied before the ReLU always being negative in practice (sparse-autoencoders, §\"G Top K comparisons\", p. 18). Ablating exactly to a feature's own boundary keeps the intervention consistent with that same geometric distinction."
+    }
+   ]
+  },
+  {
+   "id": "ioi-task",
+   "sections": [
+    {
+     "heading": "The known circuit that lets the paper check its own ruler",
+     "body": "The Indirect Object Identification task is the proving ground for the causal-proof-by-patching theme: every other technique in Section 4 -- [[activation-patching]], [[dictionary-feature-patching]], the [[automated-circuit-discovery|ACDC]]-borrowed feature ranking -- is only as convincing as the task it is tested on, and IOI is chosen precisely because its answer is already known from independent prior work rather than from this paper's own methods."
+    },
+    {
+     "heading": "Wang et al. (2022)'s circuit, in general terms",
+     "body": "IOI is a template task introduced by Wang, Variengien, Conmy, Shlegeris and Steinhardt (2022) in \"Interpretability in the Wild\": a model is given sentences of the form \"Then, [Name A] and [Name B] went to the [place]. [Name A] gave a [object] to ___\" and must complete them with the correct indirect object, the person who did not perform the giving action. Wang et al. hand-reverse-engineered a multi-part circuit in GPT-2 small responsible for this behavior, involving specific classes of attention heads (Duplicate Token Heads, S-Inhibition Heads, Name Mover Heads among them) that together track which name has already appeared and which should be named again; the paper became a canonical worked example in mechanistic interpretability and one of the benchmark tasks [[automated-circuit-discovery|ACDC]] itself was later validated against."
+    },
+    {
+     "heading": "This paper's usage: a task the dictionaries were never trained for",
+     "body": "This paper studies model behaviour on IOI using sentences like \"Then, Alice and Bob went to the store. Alice gave a snack to ___\", chosen because it \"captures a simple, previously-studied model behaviour\" (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 6). [[dictionary-feature-patching|The patching procedure]] then drives a counterfactual variant of that sentence, with the indirect object swapped (e.g. \"Bob\" replaced by \"Vanessa\") (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). Crucially, the [[dictionary-feature|dictionary features]] under test were trained with no knowledge of IOI at all: \"the training of our feature dictionaries does not emphasize any particular task\" (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 6)."
+    },
+    {
+     "heading": "Why an externally-verified task matters here",
+     "body": "Most of the paper's interpretability claims rest on [[autointerpretability-score|autointerpretability scores]], which have no independent ground truth to check against -- a feature's automatically-generated explanation can only be judged self-consistent, not verified correct. IOI breaks that limitation: because its circuit was already published by Wang et al. (2022) before this paper existed, the [[dictionary-feature-patching|patching results]] on it -- fewer features and smaller edits reaching a given [[activation-patching|KL divergence]] than [[pca|PCA]] (sparse-autoencoders, §\"4.2 Precise localisation of IOI dictionary features\", p. 6) -- are a claim that could in principle have come out looking arbitrary or wrong, and didn't."
+    }
+   ]
+  },
+  {
+   "id": "automated-circuit-discovery",
+   "sections": [
+    {
+     "heading": "A borrowed algorithm doing two jobs in this paper",
+     "body": "Automated Circuit Discovery is inherited machinery, not something this paper invents, but it does real work twice over: once explicitly, supplying the feature-ranking step inside [[dictionary-feature-patching]], and once implicitly and uncredited, in the logic underneath [[feature-circuit-detection]]. Both uses sit inside the causal-proof-by-patching theme's core claim that causal importance should be established by intervention, not by inspection alone."
+    },
+    {
+     "heading": "What ACDC does, in general",
+     "body": "ACDC (Conmy, Mavor-Parker, Lynch, Heimersheim and Garriga-Alonso, 2023) automates a task previously done by hand, as in [[ioi-task|Wang et al. (2022)'s]] manual reverse-engineering of the IOI circuit: given a neural network represented as a computational graph of components (attention heads, MLP sublayers, embeddings) connected by edges, it searches for the minimal subgraph that preserves performance on a chosen metric, iteratively ablating components and measuring how much each removal degrades that metric, so that what remains after pruning is offered as the circuit responsible for a behavior."
+    },
+    {
+     "heading": "What this paper borrows, specifically: Algorithm 4.1",
+     "body": "Section 4.1 imports ACDC's Algorithm 4.1 directly, but repurposes it for ranking rather than pruning down to a strict subgraph: it treats every [[dictionary-feature|dictionary feature]] as an independent node in a flat computational graph, in which each feature contributes an independent change to the target metric, and orders features by how much patching each one individually reduces the KL divergence from a target IOI output, averaged over 50 test examples (sparse-autoencoders, §\"4.1 Adapting activation patching to dictionary features\", p. 6). The resulting ordering, rather than a fixed circuit, is what supplies the feature subsets used throughout [[dictionary-feature-patching|the patching experiments]], applied separately to the dictionary-feature and [[pca|PCA]] decompositions alike."
+    },
+    {
+     "heading": "An unremarked second life in Section 5.3",
+     "body": "The same ablate-and-rank logic resurfaces one section later, in [[feature-circuit-detection|the paper's circuit-detection method for individual features]], without ACDC or Conmy et al. being cited again there (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 7). There, instead of ranking features by their effect on a whole task's KL divergence, the same ablate-measure-rank-recurse pattern ranks previous-layer features by their effect on a single target feature's own activation strength. The paper presents Section 5.3's method as a fresh, self-contained procedure, but the underlying move -- ablate a candidate cause, measure the drop in a target metric, order, and optionally recurse -- is the one Algorithm 4.1 supplied a section earlier."
+    }
+   ]
+  },
+  {
+   "id": "feature-circuit-detection",
+   "sections": [
+    {
+     "heading": "Where three of the paper's themes meet",
+     "body": "Feature-circuit-detection sits at an unusual crossing point: it belongs to causal-proof-by-patching as an ablation-based causal method, to single-features-under-the-microscope as the technique demonstrated on the [[closing-parenthesis-feature|closing-parenthesis feature]], and to enumerating-features-for-safety as the paper's only worked example of what a safety-relevant map of causal dependencies between features could actually look like in practice."
+    },
+    {
+     "heading": "The procedure: ablate backward from a target feature",
+     "body": "Given a target [[dictionary-feature|dictionary feature]], the method first finds its maximum activation $M$ across the dataset and samples 20 contexts in which it activates within $[M/2, M]$. Then, for every feature in the previous layer, it reruns the model with that feature ablated and records how much its removal decreased the target feature's own activation; sorting previous-layer features by that decrease produces a ranked list of upstream causes, and the procedure can recurse into the previous layer's own high-impact features to build a multi-layer causal tree (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 7-8)."
+    },
+    {
+     "heading": "The demonstration: layer 5's closing-parenthesis feature",
+     "body": "The method is demonstrated on feature 52027 in layer 5, unembedded to show its top tokens are all closing-parenthesis variants -- an unusually solid anchor, since layer 5 is the model's final layer and therefore writes directions the unembedding matrix reads out directly as tokens (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 8). Applying the procedure backward from that anchor produces Figure 5, a causal tree of layer-4 features for dates, acronyms, and other parenthesis-preceding phrases, with edge thickness in the figure encoding the strength of each causal effect as measured by ablation."
+    },
+    {
+     "heading": "What it replaced, and what it points toward",
+     "body": "The ablation-based approach was not the first thing tried: a cheaper, purely weights-based method -- [[weight-based-connection-attempt|multiplying a feature through the MLP's weights and checking cosine similarity with the next layer]] -- was attempted first and abandoned after turning up no meaningful connections (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17). The paper explicitly frames feature-circuit-detection's payoff as a first step toward its most ambitious goal: tracing causal dependencies between features is offered as \"a step towards the eventual goal of building an end-to-end understanding of how a model computes its outputs\" (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9), which the very next paragraph names as [[enumerative-safety]] (sparse-autoencoders, §\"6.3 Conclusion\", p. 9)."
+    }
+   ]
+  },
+  {
+   "id": "weight-based-connection-attempt",
+   "sections": [
+    {
+     "heading": "A documented negative result inside the causal-proof theme",
+     "body": "Weight-based connection attempt is one of the few places in the paper where a method is reported precisely because it failed. It belongs to the causal-proof-by-patching theme as the road not taken: an attempt to establish causal links between features across layers algebraically, from weights alone, rather than empirically, by ablating and observing a real forward pass."
+    },
+    {
+     "heading": "What was tried: multiply through the MLP, check cosine similarity",
+     "body": "The authors attempted a weight-based method for connecting the layer-4 dictionary to the layer-5 dictionary: take a layer-4 feature, multiply it through the MLP's weight matrix, and check the cosine similarity of the resulting vector against every feature in the layer-5 dictionary, hoping that a strong similarity would reveal which downstream feature the layer-4 feature feeds into (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17). The appeal of the approach was its cost: no forward passes, no sampling of activating contexts, no ablations -- just one matrix multiplication and a similarity check per feature pair."
+    },
+    {
+     "heading": "Why it didn't work",
+     "body": "The method turned up no meaningful connections at all (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17), and the paper's own explanation is that the intermediate vector produced by multiplying a feature through the MLP's weights goes out of distribution: it does not land back in the region of activation space the MLP was ever trained to process, so a cosine similarity computed there is not measuring anything the network's actual computation respects. The authors also flag a structural limitation: the approach doesn't obviously generalize to the attention sublayer, since there is no single position dimension a feature vector can be cleanly multiplied through the way there is for an MLP (sparse-autoencoders, §\"D.4 Failed interpretability methods\", p. 17)."
+    },
+    {
+     "heading": "What replaced it",
+     "body": "[[feature-circuit-detection|Feature-circuit detection]], the method actually used to trace the [[closing-parenthesis-feature|closing-parenthesis feature]]'s upstream causes, trades away the weight method's one-shot cheapness for causal grounding: instead of asking what a feature's weights point toward algebraically, it asks what happens to a target feature's real activation when a candidate cause is ablated from an actual forward pass. Reporting this failure alongside the method that succeeded is itself informative -- it ties to the paper's broader Appendix G finding that dictionary features' apparent structure is bound tightly to the activation space the model actually inhabits, not to weight-space algebra performed on top of it."
+    }
+   ]
+  },
+  {
+   "id": "closing-parenthesis-feature",
+   "sections": [
+    {
+     "heading": "The case study that carries circuit analysis, not input or output",
+     "body": "The closing-parenthesis feature is one half of the paper's two-feature case-study pair in single-features-under-the-microscope, and it is assigned a specific, narrow job: where [[apostrophe-feature|the apostrophe feature]] demonstrates monosemanticity through what activates a feature and what a feature causally does to the logits, the closing-parenthesis feature exists to demonstrate the third leg of Section 5's methodology, tracing which upstream features cause a feature to fire at all."
+    },
+    {
+     "heading": "Feature 52027, layer 5: meaning given almost for free",
+     "body": "This is feature 52027 in layer 5, chosen because layer 5 is the model's final layer, meaning its role is to write directions that the unembedding matrix reads out directly as output tokens; unembedding the feature confirms its top tokens are all closing-parenthesis variants (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 8). That gives the feature's semantic identity an unusually strong, weights-based confirmation before any circuit tracing happens at all -- a luxury a mid-network feature, whose meaning can only be inferred from the text that activates it, does not have."
+    },
+    {
+     "heading": "What tracing its causes actually found",
+     "body": "Using [[feature-circuit-detection|the paper's ablation-based circuit-detection procedure]] -- find the feature's maximum activation $M$, sample 20 activating contexts in $[M/2, M]$, ablate each layer-4 feature in turn and rank by the resulting drop in the target's own activation -- the upstream causes uncovered for the closing-parenthesis feature are features for dates, acronyms, and other phrases that typically precede a closing parenthesis (sparse-autoencoders, §\"5.3 Intermediate features: dictionary features allow automatic circuit detection\", p. 8). Figure 5 renders the result as a causal tree, with edge thickness encoding the strength of each ablation-measured causal effect and human interpretations attached to every node."
+    },
+    {
+     "heading": "Why this feature, and not a harder one",
+     "body": "Because the closing-parenthesis feature's own identity is nearly unambiguous, the sensibleness of the circuit found upstream of it -- date-like phrases and acronyms plausibly do precede closing parentheses -- can be judged directly, rather than trusted on faith. That makes it a credible validation case for [[feature-circuit-detection]] rather than a mere illustration, and it explains the paper's division of labor between the two case-study features: [[apostrophe-feature|the apostrophe feature]] covers input and output analysis, and this feature alone covers the intermediate-feature, circuit-tracing leg."
+    }
+   ]
+  },
+  {
+   "id": "apostrophe-feature",
+   "sections": [
+    {
+     "heading": "The paper's flagship demonstration of monosemanticity",
+     "body": "The apostrophe feature, feature 556, is the central worked example in single-features-under-the-microscope: it is the one feature the paper subjects to both halves of Section 5's input/output analysis, making it the strongest single piece of evidence that a [[dictionary-feature|dictionary feature]] can be both interpretable from what activates it and causally predictable in what it does downstream."
+    },
+    {
+     "heading": "Input: what activates it",
+     "body": "Plotting a histogram of which tokens activate feature 556 across every datapoint where it fires shows the large majority of activations are apostrophes, especially at high activation strength; lower-activating tokens are still conceptually related, mostly other punctuation (sparse-autoencoders, §\"5.1 Input: dictionary features are highly monosemantic\", p. 7). This token-histogram technique only works for features that activate on a small, identifiable set of tokens, which is itself part of the point: the apostrophe feature is narrow enough to check this way at all, unlike a more diffuse [[polysemanticity|polysemantic]] direction."
+    },
+    {
+     "heading": "Output: what it causally does to the logits",
+     "body": "Applying [[less-than-rank-one-ablation]] to the feature -- lowering its residual-stream contribution only down to the point where it stops firing -- shows that removing it mainly suppresses the logit for the following \"s\" token, matching the intuitive story that the feature detects apostrophes and helps the model predict the \"s\" that follows in possessives and contractions like \"let's\" (sparse-autoencoders, §\"5.2 Output: dictionary features have intuitive effects on the logits\", p. 7). This stands in contrast to the corresponding [[default-basis-baseline|default-basis dimension]] most associated with apostrophes: the paper's own search finds this raw-coordinate dimension is polysemantic, since it \"only explains a very small fraction of the variance for middle-to-lower activation ranges\" where the dictionary feature stays clean (sparse-autoencoders, §\"D.1 Residual stream basis\", p. 16)."
+    },
+    {
+     "heading": "Not one apostrophe feature, but several",
+     "body": "The feature does not activate on all apostrophes. Two further dictionary features fire on apostrophes too, but in different grammatical contexts -- one for contractions like \"[I/We/They]'ll\" and another for \"[don/won/wouldn]'t\" (sparse-autoencoders, §\"5.1 Input: dictionary features are highly monosemantic\", p. 7). What looks, from outside the model, like a single human concept of \"apostrophe\" is split, in the actual learned dictionary, across at least three narrower features, each tied to a distinct surrounding pattern -- evidence about the granularity at which [[monosemanticity]] actually holds, not just that it holds."
+    },
+    {
+     "heading": "Dividing the case-study labor with the closing-parenthesis feature",
+     "body": "Section 5's three-part methodology -- input, output, and intermediate-feature analysis -- is not run in full on any single feature; the paper splits it across two case studies. The apostrophe feature carries both the input analysis and the output analysis, while [[closing-parenthesis-feature|the closing-parenthesis feature]] is reserved for the third leg, circuit tracing, because its final-layer position makes its own meaning nearly given for free. Together the two examples argue for two separate claims: that a feature is monosemantic by both what activates it and what it does, and that dictionary features compose into traceable circuits."
+    }
+   ]
+  },
+  {
+   "id": "pythia",
+   "sections": [
+    {
+     "heading": "The default experimental substrate, not a subject of study",
+     "body": "Pythia is not something this paper investigates; it is what every other technique in the paper is run on. Every [[dictionary-feature|dictionary feature]], every [[autointerpretability-score|autointerpretability score]], every [[dictionary-feature-patching|patching result]], and every case-study feature described elsewhere on this wiki is a fact about a sparse autoencoder trained on a Pythia model's residual stream -- it belongs to open-models-as-interpretability-testbeds because its entire purpose in the corpus is to be a stable, fully-open target for interpretability tooling rather than a capability to be improved."
+    },
+    {
+     "heading": "Built for exactly this kind of research",
+     "body": "Pythia (Biderman, Schoelkopf, Anthony, Bradley, O'Brien, Hallahan, Khan, Purohit, Prashanth, Raff et al., 2023) is a suite of decoder-only transformer language models released by EleutherAI spanning roughly 70 million to 12 billion parameters, trained on identical data in an identical order across the whole suite, with 154 intermediate checkpoints released per model. That design -- full parameter access, reproducible training order, and dense checkpointing -- was deliberately built to support scaling and interpretability research that needs controlled comparisons across model size and training time, precisely the property that makes it a natural substrate for a method whose entire claim rests on inspecting a model's internals directly."
+    },
+    {
+     "heading": "What this paper trains on it",
+     "body": "This paper trains its sparse autoencoders mainly on the residual streams of Pythia-70M ($d_{in}=512$) and Pythia-410M ($d_{in}=1024$) (sparse-autoencoders, §\"2 Taking features out of superposition with sparse dictionary learning\", p. 2). Pythia-410M's layer 11 supplies the headline [[dictionary-feature-patching|IOI-patching]] results in Figure 3, with Appendix F extending the same procedure across layers 3, 7, 11, 15, 19, and 23 of its 24 total layers; Pythia-70M's layer-2 residual stream is separately used for the reconstruction-fidelity check that finds substituting a layer's activations with their dictionary reconstruction raises perplexity on [[the-pile|the Pile]] from 25 to 40 (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9)."
+    },
+    {
+     "heading": "Why a small open model, not a frontier one",
+     "body": "Choosing Pythia over a larger closed model is itself part of the paper's method, not incidental: because Pythia's weights and training data are fully public, the paper can freely publish activation datasets, feature dictionaries, and case-study details -- such as unembedding [[closing-parenthesis-feature|feature 52027]] to read off its top tokens -- without any dependence on privileged API access. That openness dovetails with the paper's own stated ambition for its method to serve as \"a foundation for future mechanistic interpretability work\" (sparse-autoencoders, §\"Abstract\", p. 1): reproducibility down to the substrate is a precondition for that kind of foundation."
+    }
+   ]
+  },
+  {
+   "id": "the-pile",
+   "sections": [
+    {
+     "heading": "The corpus underneath every activation dataset in the paper",
+     "body": "The Pile belongs to open-models-as-interpretability-testbeds for a simple reason: every sparse autoencoder in this paper is trained on activations sampled from [[pythia|Pythia]] models running over the Pile, so the Pile is the raw material every downstream claim about interpretability, causal precision, and monosemanticity is ultimately built from."
+    },
+    {
+     "heading": "An 800GB corpus built for training large language models",
+     "body": "The Pile (Gao, Biderman, Black, Golding, Hoppe, Foster, Phang, He, Thite, Nabeshima et al., 2020) is a roughly 800GB, openly released corpus assembled from 22 diverse sources, including academic text, web crawls, books, and code, designed specifically to serve as pretraining data for large language models where existing public corpora were too narrow or too small. It is also, notably, the corpus [[pythia|Pythia]] itself was pretrained on, so using it here to generate activation datasets keeps the sparse autoencoders' training distribution matched to the language model they are interpreting."
+    },
+    {
+     "heading": "How this paper uses it: two separate jobs",
+     "body": "The Pile does two distinct jobs in this paper. First, it supplies the raw text used to build every activation dataset: the model under study is run over Pile text while caching activations at a chosen layer, producing 5 to 50 million activation vectors used to train each autoencoder over 1 to 3 epochs (sparse-autoencoders, §\"B Sparse autoencoder training and hyperparameter selection\", p. 12); the dictionaries used for the [[dictionary-feature-patching|IOI-patching]] results specifically are trained on just the first 10,000 elements of the Pile, about 7 million activations, on layer 11 of Pythia-410M's residual stream (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 5). Second, it supplies the yardstick for a fidelity check: substituting Pythia-70M's layer-2 residual stream activations with their sparse-autoencoder reconstruction raises the model's perplexity on the Pile from 25 to 40 (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9)."
+    },
+    {
+     "heading": "Training corpus, not evaluation corpus",
+     "body": "The Pile's role here is deliberately different from [[openwebtext|OpenWebText]]'s: the Pile generates the activations the autoencoders are trained and evaluated for reconstruction fidelity on, while OpenWebText is reserved for a separate downstream purpose, sourcing the text fragments the [[autointerpretability-score|autointerpretability protocol]] samples feature activations from. Keeping the two corpora separate means the text used to build a feature dictionary is not identical to the text used to judge whether that dictionary's features are interpretable, a basic precaution against the evaluation simply re-testing the training distribution."
+    }
+   ]
+  },
+  {
+   "id": "openwebtext",
+   "sections": [
+    {
+     "heading": "The evaluation-side corpus, distinct from the Pile",
+     "body": "OpenWebText belongs to open-models-as-interpretability-testbeds for a narrower reason than [[the-pile|the Pile]]: it does not train anything in this paper. Its entire role is to supply the text the [[autointerpretability-score|autointerpretability protocol]] uses to judge, after the fact, whether an already-trained [[dictionary-feature|dictionary feature]] is interpretable -- keeping the judged text separate from the training text the dictionary was fit on."
+    },
+    {
+     "heading": "A public stand-in for GPT-2's private training data",
+     "body": "OpenWebText is an open-source dataset, assembled by scraping and filtering URLs shared on Reddit that received sufficient community upvotes, built specifically to reconstruct something close to OpenAI's WebText corpus, the private data GPT-2 was trained on but never released. It became a standard, widely reused public corpus in language-model research generally, including in [[autointerpretability-score|Bills et al. (2023)'s]] original OpenAI neuron-explainer protocol for automatically interpreting individual units in a network -- the exact protocol this paper adopts and scales up, keeping the same source corpus that protocol was originally built around."
+    },
+    {
+     "heading": "How the protocol samples from it",
+     "body": "The [[autointerpretability-score|autointerpretation protocol]]'s first step takes the first 50,000 lines of OpenWebText, extracts a 64-token sentence fragment from each, and measures the target feature's activation on every token of that fragment, rescaling activations to integers between 0 and 10 (sparse-autoencoders, §\"A Autointerpretation protocol\", p. 11). Those rescaled fragments are what later steps of the protocol pass to GPT-4 for explanation-writing and to GPT-3.5 for activation simulation, so OpenWebText's role is entirely upstream: it decides which text the rest of the interpretability pipeline gets to see a feature activate on."
+    }
+   ]
+  },
+  {
+   "id": "enumerative-safety",
+   "sections": [
+    {
+     "heading": "The safety ambition the whole paper is offered as a step toward",
+     "body": "Enumerative safety is where two of the paper's themes converge on a single sentence: enumerating-features-for-safety, because it is the named destination the paper's entire feature-enumeration project points at, and steering-as-audit, because a complete list of a model's features is also, implicitly, a complete list of the levers available for eliciting and red-teaming its behavior. It is the paper's very last idea, placed deliberately at the end of the conclusion rather than in the introduction, so that everything demonstrated beforehand can be read as evidence toward it."
+    },
+    {
+     "heading": "An 'ambitious dream,' named by Elhage et al. (2022b)",
+     "body": "The term is credited to Elhage, Hume, Olsson, Nanda, Henighan, Johnston, ElShowk, Joseph, DasSarma, Mann et al. (2022b)'s \"Toy Models of Superposition,\" which articulates enumerative safety as an ambitious dream in the interpretability literature: producing a human-understandable explanation of a model's computations expressed as a complete list of its features, thereby providing a guarantee that the model will not perform dangerous behaviours such as deception (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). The framing is deliberately stronger than ordinary behavioral testing: rather than checking a model's outputs on a sample of inputs and hoping the sample generalizes, an enumerated feature list would license a claim about what the model cannot do, grounded in exhaustively accounting for its internal parts rather than in trusting its behavior."
+    },
+    {
+     "heading": "How this paper claims to move toward it",
+     "body": "The paper's own closing words position sparse autoencoders as a concrete method aimed at exactly the kind of feature list enumerative safety requires: \"We hope that the techniques we presented in this paper also provide a step towards achieving this ambition\" (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). The clearest worked instance of what that step looks like in practice is [[feature-circuit-detection]], demonstrated concretely on the [[closing-parenthesis-feature|closing-parenthesis feature]] and its traced upstream causes -- the paper's future-work paragraph explicitly frames tracing such causal dependencies between features as \"a step towards the eventual goal of building an end-to-end understanding of how a model computes its outputs\" (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9), the sentence immediately preceding enumerative safety's introduction."
+    },
+    {
+     "heading": "The distance the paper is honest about",
+     "body": "The paper does not claim to have reached enumerative safety, only to have taken a step towards it, and its own numbers explain the caution: [[reconstruction-loss|reconstruction loss]] is never driven to zero, substituting Pythia-70M's layer-2 residual stream with its reconstruction raises perplexity on [[the-pile|the Pile]] from 25 to 40, [[mlp-sae-training|MLP-sublayer dictionaries]] suffer many [[dead-features|dead features]], and even the residual-stream dictionaries that work well are confirmed interpretable only across a handful of layers and two small [[pythia|Pythia]] models (sparse-autoencoders, §\"6.2 Limitations and future work\", p. 9). A guarantee that a model will not perform dangerous behaviors requires enumerating its features completely; a dictionary with unresolved reconstruction loss and many dead units enumerates them only partially."
+    }
+   ]
+  }
+ ]
+}

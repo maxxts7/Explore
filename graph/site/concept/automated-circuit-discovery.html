@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Automated Circuit Discovery (ACDC) — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Automated Circuit Discovery (ACDC)</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-inherited">inherited</span></p>
+<p class="lede">A prior algorithm (Conmy et al., 2023) for automatically discovering the subgraph of a network responsible for a behavior. This paper reuses ACDC&#x27;s ordering procedure (its Algorithm 4.1) to rank dictionary features by their individual causal contribution to reducing KL divergence on the IOI task, producing the feature subset used in the dictionary-feature-patching experiments.</p>
+<div class="page-intro"><p>An algorithm built to automate a job that used to take researchers weeks of manual, head-by-head detective work turns out to do real work twice over in a later paper — once with a citation attached, and once, quietly, as the same underlying logic reused without being named again. Both times, the point is the same: causal importance should be established by deliberately removing something and measuring the damage, not just by eyeballing what looks interpretable.</p>
+<p>The page covers what the algorithm does in general, the specific step it supplies for ranking which learned features to intervene on first, and its unremarked second appearance later in the same paper, powering a different method under a different name.</p></div>
+<section class="prose-section">
+<h2>A borrowed algorithm doing two jobs in this paper</h2>
+<p>Automated Circuit Discovery is inherited machinery, not something this paper invents, but it does real work twice over: once explicitly, supplying the feature-ranking step inside <a href="../concept/dictionary-feature-patching.html">Dictionary-feature patching procedure</a>, and once implicitly and uncredited, in the logic underneath <a href="../concept/feature-circuit-detection.html">Automatic feature circuit detection</a>. Both uses sit inside the causal-proof-by-patching theme's core claim that causal importance should be established by intervention, not by inspection alone.</p>
+</section>
+<section class="prose-section">
+<h2>What ACDC does, in general</h2>
+<p>ACDC (Conmy, Mavor-Parker, Lynch, Heimersheim and Garriga-Alonso, 2023) automates a task previously done by hand, as in <a href="../concept/ioi-task.html">Wang et al. (2022)&#x27;s</a> manual reverse-engineering of the IOI circuit: given a neural network represented as a computational graph of components (attention heads, MLP sublayers, embeddings) connected by edges, it searches for the minimal subgraph that preserves performance on a chosen metric, iteratively ablating components and measuring how much each removal degrades that metric, so that what remains after pruning is offered as the circuit responsible for a behavior.</p>
+</section>
+<section class="prose-section">
+<h2>What this paper borrows, specifically: Algorithm 4.1</h2>
+<p>Section 4.1 imports ACDC's Algorithm 4.1 directly, but repurposes it for ranking rather than pruning down to a strict subgraph: it treats every <a href="../concept/dictionary-feature.html">dictionary feature</a> as an independent node in a flat computational graph, in which each feature contributes an independent change to the target metric, and orders features by how much patching each one individually reduces the KL divergence from a target IOI output, averaged over 50 test examples (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">§"4.1 Adapting activation patching to dictionary features", p. 6</a>). The resulting ordering, rather than a fixed circuit, is what supplies the feature subsets used throughout <a href="../concept/dictionary-feature-patching.html">the patching experiments</a>, applied separately to the dictionary-feature and <a href="../concept/pca.html">PCA</a> decompositions alike.</p>
+</section>
+<section class="prose-section">
+<h2>An unremarked second life in Section 5.3</h2>
+<p>The same ablate-and-rank logic resurfaces one section later, in <a href="../concept/feature-circuit-detection.html">the paper&#x27;s circuit-detection method for individual features</a>, without ACDC or Conmy et al. being cited again there (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.3 Intermediate features: dictionary features allow automatic circuit detection", p. 7</a>). There, instead of ranking features by their effect on a whole task's KL divergence, the same ablate-measure-rank-recurse pattern ranks previous-layer features by their effect on a single target feature's own activation strength. The paper presents Section 5.3's method as a fresh, self-contained procedure, but the underlying move -- ablate a candidate cause, measure the drop in a target metric, order, and optionally recurse -- is the one Algorithm 4.1 supplied a section earlier.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>Automated Circuit Discovery (ACDC)</strong> — <a href="../edge/automated-circuit-discovery-lends-its-ranking-logic-to-feature-circuit-detection.html">lends its ranking logic to</a> → Automatic feature circuit detection</li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/causal-proof-by-patching.html">Features proved by intervention</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=6" target="_blank" rel="noopener">&sect;&ldquo;4.1 ADAPTING ACTIVATION PATCHING TO DICTIONARY FEATURES&rdquo;, p. 6</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

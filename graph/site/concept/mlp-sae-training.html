@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>SAE training on the MLP sublayer — Concept</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-concept">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-concept">concept</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>SAE training on the MLP sublayer</h1>
+<p class="origins"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> — <span class="role role-introduced">introduced</span></p>
+<p class="lede">An extension of the paper&#x27;s method to train dictionaries on MLP sublayer activations rather than the residual stream, finding &#x27;mixed success&#x27;: many features are more interpretable than individual neurons, but the approach suffers from large numbers of dead features and does not yet robustly learn overcomplete bases in intermediate or later MLP layers.</p>
+<div class="page-intro"><p>A method validated on one part of a model doesn't automatically work on another, especially when that part comes with a complication the first didn't have: a coordinate system that might already be meaningful before any dictionary is trained on it. Pointing the same recipe at different activations was the paper's way of testing that assumption rather than assuming it.</p>
+<p>This entry traces what changed once the target became a space competing against neurons with a genuine structural claim to interpretability, why the result reads as mixed success rather than a clean win, and which fixes the paper adopted, and left unfinished, against a far worse version of a familiar failure there.</p></div>
+<section class="prose-section">
+<h2>Testing whether the recipe generalizes beyond the residual stream</h2>
+<p>Everything demonstrated for <a href="../concept/sparse-autoencoders.html">the paper&#x27;s method</a> in the main text is about the residual stream. The paper is explicit that its approach 'can, in principle, be applied to any set of internal activations of a language model, not just the residual stream' (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>), and MLP-sublayer training is the appendix experiment that actually tests that claim, rather than assuming it. This matters because the residual stream is the one part of the model the paper treats as having no <a href="../concept/privileged-basis.html">Privileged basis</a> to compete against; the MLP hidden layer, sitting right after a nonlinearity, is the paper's own example of a space that does have one, so training a dictionary there means competing against neurons that already have some claim to being meaningfully aligned with the coordinate axes (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What the stress test found</h2>
+<p>The result is 'mixed success': many MLP dictionary features are still more interpretable than the neurons themselves, evidence that the privileged basis does not make individual neurons optimal even where they have some structural advantage (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>). But two of the working recipe's assumptions break at once. Large numbers of features go dead -- the <a href="../concept/dead-features.html">Dead features</a> problem is far worse here than on the residual stream, severe enough that a dictionary with twice as many features as neurons can end up with fewer than half of them usably alive, except in early layers. And the training pipeline does not yet reliably learn a genuinely overcomplete basis in the middle or later MLP layers at all. The partial fix the paper adopts -- a different sparsity coefficient (alpha=3.2e-4 rather than the residual stream's 8.6e-4) and <a href="../concept/tied-weights-sae.html">untied encoder/decoder matrices</a> instead of the residual-stream default -- only partially restores results, and is itself evidence that the sparse-autoencoder recipe validated on the residual stream is not activation-agnostic: it has hidden dependencies on which part of the model it is applied to (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>).</p>
+</section>
+<section class="prose-section">
+<h2>What counts as the MLP-training setting, concretely</h2>
+<p>MLP SAE training uses the same core architecture and loss as the residual-stream case, but with $x$ drawn from MLP-sublayer activations rather than the residual stream, and, per the fix above, an untied forward pass $c = \mathrm{ReLU}(M_ex+b)$, $\hat{x} = M_d^Tc$ in place of the tied default. Results are reported using an L1 coefficient alpha=3.2e-4 and dictionary size ratio R=1 (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>), smaller values on both axes than the residual-stream defaults, reflecting how much harder this setting is to train well. The paper frames the whole effort as unfinished business rather than a negative result: it reports being 'currently working on methods to overcome' the dead-feature and overcompleteness problems specific to middle and later MLP layers (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">§"C.3 INTERPRETING THE MLP SUBLAYER", p. 15</a>).</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>Part of</h2><p><a href="../concept/sparse-autoencoders.html">Sparse autoencoders (SAEs)</a></p></section>
+<section class="nav-block"><h2>Connections</h2><ul class="connections"><li><strong>SAE training on the MLP sublayer</strong> — <a href="../edge/mlp-sae-training-confronts-privileged-basis.html">confronts</a> → Privileged basis</li><li><strong>SAE training on the MLP sublayer</strong> — <a href="../edge/mlp-sae-training-stress-tests-sparse-autoencoders.html">stress tests</a> → Sparse autoencoders (SAEs)</li><li>Tied encoder/decoder weights — <a href="../edge/tied-weights-sae-gives-way-to-an-untied-variant-in-mlp-sae-training.html">gives way to an untied variant in</a> → <strong>SAE training on the MLP sublayer</strong></li></ul></section>
+<section class="nav-block"><h2>Lenses</h2><ul><li><a href="../theme/unmixing-activations-with-sparsity.html">Unmixing activations with a sparsity penalty</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=15" target="_blank" rel="noopener">&sect;&ldquo;C.3 INTERPRETING THE MLP SUBLAYER&rdquo;, p. 15</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

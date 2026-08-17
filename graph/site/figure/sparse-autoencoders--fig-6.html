@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Active-feature count vs. unexplained variance, by dictionary size — Figure</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-figure">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-figure">figure</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Active-feature count vs. unexplained variance, by dictionary size</h1>
+<p class="edge-meta">Figure 6 of <a href="../story/sparse-autoencoders.html">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> &middot; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION&rdquo;, p. 12</a> &middot; in <a href="../story/sparse-autoencoders.html#paper-figures-results">Results and interpretation</a></p>
+<figure class="figure-plate"><a href="../assets/figures/sparse-autoencoders/fig-6.png" target="_blank" rel="noopener"><img src="../assets/figures/sparse-autoencoders/fig-6.png" alt="Figure 6 — Active-feature count vs. unexplained variance, by dictionary size" loading="lazy"></a></figure>
+<section class="prose-section">
+<h2>Reading the scatter plot</h2>
+<p>Each point is one trained sparse autoencoder. Its x-position is the mean number of dictionary features simultaneously active on a given input -- lower means a sparser reconstruction. Its y-position is the proportion of the original activation vector's variance the reconstruction fails to capture (unexplained variance): 0 is perfect reconstruction, values near 1 mean almost nothing was captured. Color encodes the dictionary's expansion factor $R$, its hidden size relative to the underlying activation dimension, swept across seven ratios. It is tempting to read this as one model's training trajectory. It is not: each point is a separately trained autoencoder at a different value of the sparsity coefficient $\alpha$ (larger $\alpha$ pushes a point up and to the left, toward fewer active features and worse reconstruction), and each color is a different dictionary size entirely, not a later stage of the same run.</p>
+</section>
+<section class="prose-section">
+<h2>What the sweep shows</h2>
+<p>Every dictionary size traces the same qualitative shape: unexplained variance drops steeply as active-feature count rises from near zero, then flattens toward a low floor once several hundred features are active, with no sharp bend separating a distinctly 'good' region from a 'bad' one. One extreme point, at essentially zero active features, has unexplained variance near 1.4 -- reconstruction has almost completely collapsed. The paper reads the absence of a knee anywhere along this curve as evidence against there being one single objectively correct sparsity level for decomposing this layer's activations (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">§"B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION", p. 12</a>).</p>
+</section>
+<section class="prose-section">
+<h2>Context</h2>
+<p>This sweep is run on an MLP-sublayer autoencoder, an application the paper elsewhere reports as only partly successful because of many <a href="../concept/dead-features.html">Dead features</a> (see <a href="../concept/mlp-sae-training.html">SAE training on the MLP sublayer</a>). The tradeoff itself is the basis for the paper's <a href="../concept/sparsity-reconstruction-tradeoff.html">Sparsity-reconstruction tradeoff (no single correct decomposition)</a> argument, driven by the <a href="../concept/sparsity-loss.html">Sparsity loss (L1 penalty on feature activations)</a> and <a href="../concept/reconstruction-loss.html">Reconstruction loss</a> terms competing in training and shaped by the <a href="../concept/expansion-factor-r.html">Dictionary expansion factor (R)</a> choice.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>More figures from this paper</h2><ul><li>Previous: <a href="../figure/sparse-autoencoders--fig-5.html">Figure 5 &mdash; Causal-tree circuit for the closing-parenthesis feature</a></li><li>Next: <a href="../figure/sparse-autoencoders--fig-7.html">Figure 7 &mdash; Sparsity/variance tradeoff across training epochs</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=12" target="_blank" rel="noopener">&sect;&ldquo;B SPARSE AUTOENCODER TRAINING AND HYPERPARAMETER SELECTION&rdquo;, p. 12</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>

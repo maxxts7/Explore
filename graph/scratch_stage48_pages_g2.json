@@ -1,0 +1,658 @@
+{
+ "concepts": [
+  {
+   "id": "polysemanticity",
+   "staged": {
+    "id": "polysemanticity",
+    "name": "Polysemanticity",
+    "role": "inherited",
+    "summary": "The phenomenon in which individual neurons (or other analysis units) activate in multiple, semantically unrelated contexts, preventing concise human-understandable explanations of a network's internal computation. Named as the paper's central roadblock in the abstract; the paper's entire method is aimed at finding a decomposition of activation space with reduced polysemanticity.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 INTRODUCTION",
+      "page": 1
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "superposition-manifests-as-polysemanticity",
+     "type": "manifests-as",
+     "source": "superposition",
+     "target": "polysemanticity",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "A vector space contains only as many orthogonal directions as it has dimensions, so if a network genuinely represents more features than it has neurons, those extra features must share non-orthogonal directions rather than each owning a clean coordinate. A neuron's activation is a readout along one such shared, non-orthogonal direction, so when several crowded features write to it, the neuron ends up firing for each of them and looks polysemantic from the outside. The paper is explicit that this trade only becomes worthwhile under a further condition: 'without high sparsity, interference between non-orthogonal features prevents any performance gain from superposition,' meaning sparse activation is the load-bearing assumption connecting the storage strategy to the resulting symptom. This is why the paper treats polysemanticity as evidence to be explained by an underlying representational choice, rather than as a fixed property of what a neuron is."
+    },
+    {
+     "id": "polysemanticity-blocks-mechanistic-interpretability",
+     "type": "blocks",
+     "source": "polysemanticity",
+     "target": "mechanistic-interpretability",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "Mechanistic interpretability's basic method is to break a network into smaller units that can be analysed one at a time; the paper notes that using individual neurons as these units 'has had some success' (citing Olah et al., 2020 and Bills et al., 2023), which is why neurons were the default unit of analysis before this paper's method existed. Polysemanticity undercuts exactly that method, since a neuron activating for several unrelated concepts cannot be assigned a single human-understandable role no matter how carefully it is studied in isolation. This is why the paper's abstract opens by naming polysemanticity, not superposition or interpretability itself, as 'one of the roadblocks to a better understanding of neural networks' internals' -- it is the roadblock at the level where reverse-engineering actually happens, feature by feature."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "superposition",
+   "staged": {
+    "id": "superposition",
+    "name": "Superposition",
+    "role": "inherited",
+    "summary": "A hypothesized cause of polysemanticity (Elhage et al., 2022b) in which a network represents more features than it has dimensions by assigning them to an overcomplete set of non-orthogonal directions, relying on activation sparsity to limit interference. The paper's stated goal is to resolve superposition in language models by recovering these directions via sparse dictionary learning.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 INTRODUCTION",
+      "page": 1
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "superposition-manifests-as-polysemanticity",
+     "type": "manifests-as",
+     "source": "superposition",
+     "target": "polysemanticity",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "A vector space contains only as many orthogonal directions as it has dimensions, so if a network genuinely represents more features than it has neurons, those extra features must share non-orthogonal directions rather than each owning a clean coordinate. A neuron's activation is a readout along one such shared, non-orthogonal direction, so when several crowded features write to it, the neuron ends up firing for each of them and looks polysemantic from the outside. The paper is explicit that this trade only becomes worthwhile under a further condition: 'without high sparsity, interference between non-orthogonal features prevents any performance gain from superposition,' meaning sparse activation is the load-bearing assumption connecting the storage strategy to the resulting symptom. This is why the paper treats polysemanticity as evidence to be explained by an underlying representational choice, rather than as a fixed property of what a neuron is."
+    },
+    {
+     "id": "superposition-motivates-sparse-autoencoders",
+     "type": "motivates",
+     "source": "superposition",
+     "target": "sparse-autoencoders",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "The superposition hypothesis reframes 'find interpretable units' as a concrete recovery problem: if activations are sparse linear combinations of unknown ground-truth features, then finding those features is the classic sparse dictionary learning problem of Olshausen & Field (1997), and both empirical work (Sharkey et al., 2023) and theory (Wright & Ma, 2022) show that l1-penalized reconstruction can recover the true generating features. That equivalence, not just the general goal of 'fixing superposition,' is what licenses the paper's specific architectural choices: a hidden layer of size dhid = R*din so the dictionary can be overcomplete the way superposition requires, and an l1 penalty on the hidden coefficients rather than on the weights. In other words, superposition does not just motivate building some interpretability tool -- it dictates the shape of this one."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "monosemanticity",
+   "staged": {
+    "id": "monosemanticity",
+    "name": "Monosemanticity",
+    "role": "inherited",
+    "summary": "The property of a feature or direction activating for a single, coherent, human-interpretable concept -- the converse of polysemanticity. The paper's case studies (the apostrophe and closing-parenthesis features) are framed as demonstrating that learned dictionary features are highly monosemantic compared to neurons or other baseline directions.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC",
+      "page": 7
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    },
+    {
+     "id": "single-features-under-the-microscope",
+     "name": "Single features under the microscope"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "monosemanticity-benchmarks-dictionary-feature",
+     "type": "benchmarks",
+     "source": "monosemanticity",
+     "target": "dictionary-feature",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "The paper tests monosemanticity with an activation histogram technique that 'only works for dictionary features that activate for a small set of tokens,' and applied at that resolution it finds the standard is met narrowly rather than globally: the apostrophe feature (Figure 4) does not fire on all apostrophes, and two separate dictionary features are needed to cover apostrophes in '[I/We/They]'ll'-type contexts and in '[don/won/wouldn]'t'-type contexts respectively. So the dictionary does not resolve polysemanticity by finding one feature per human concept; it resolves it by proliferating many narrower, context-specific features that each individually pass the monosemanticity test. Meeting the bar this way still counts as success because the paper's other case study, the layer-5 closing-parenthesis feature, shows a single narrow feature can still be causally central to a task-relevant behaviour."
+    },
+    {
+     "id": "apostrophe-feature-demonstrates-the-limits-of-monosemanticity",
+     "type": "demonstrates-the-limits-of",
+     "source": "apostrophe-feature",
+     "target": "monosemanticity",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "single-features-under-the-microscope",
+     "prose": "The paper is explicit that its headline case-study feature, despite activating almost exclusively on apostrophe tokens, 'does not activate on all apostrophes.' Two other dictionary features (shown in Figures 14 and 15) fire on apostrophes too, but in different grammatical contexts: one for contractions like '[I/We/They]'ll' and another for '[don/won/wouldn]'t.' So what looks from the outside like a single 'apostrophe' concept is, in the model's actual feature dictionary, split across at least three separate monosemantic features, each narrower than 'apostrophe' and each keyed to a different surrounding grammatical pattern. Monosemanticity, as the paper operationalizes and demonstrates it, is therefore not a claim that one feature exhaustively covers an entire human-nameable category; it is a claim that each feature covers one coherent narrow slice, and the human-level category can itself decompose into several such slices."
+    },
+    {
+     "id": "monosemanticity-is-imperfectly-proxied-by-autointerpretability-score",
+     "type": "is-imperfectly-proxied-by",
+     "source": "monosemanticity",
+     "target": "autointerpretability-score",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "automated-interpretability-scoring",
+     "prose": "The autointerpretability score is introduced explicitly as a scalable stand-in for a property the paper cannot check by hand at scale: whether a feature shows 'reduced polysemanticity,' i.e. monosemanticity. But the paper is candid that the proxy is imperfect on its own terms, citing Bills et al. (2023)'s finding that automated explainers struggle with patterns centered on neighboring rather than current tokens, and adding its own limitation that the current protocol 'is unable to verify outputs by looking at changes in output or other data.' That second gap is precisely why Section 5's hand-run case studies exist: the apostrophe and closing-parenthesis features are validated not by their autointerpretability score at all, but by directly inspecting activating tokens, measuring ablation effects on output logits, and tracing upstream causal features, evidence the score-based protocol structurally cannot feed into GPT-4's explanation step. So the relationship runs: monosemanticity is the target property, the score is a scalable but output-blind proxy for it, and the paper's most convincing monosemanticity evidence comes from exactly the channel, causal effect on outputs, the score cannot see."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "privileged-basis",
+   "staged": {
+    "id": "privileged-basis",
+    "name": "Privileged basis",
+    "role": "inherited",
+    "summary": "The property of a particular coordinate basis being distinguished as unusually meaningful for a given vector space (e.g. the standard basis immediately after an elementwise nonlinearity), as opposed to a generic space with no privileged direction. The paper notes the residual stream is not usually expected to have a privileged basis, but discusses evidence (Dettmers et al., 2022; Elhage et al., 2023) that it partially does due to outlier dimensions, which is relevant to interpreting the default-basis baseline's behavior.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "C.3 INTERPRETING THE MLP SUBLAYER",
+      "page": 15
+     }
+    ],
+    "notes": "Locator corrected in coordinator review: passage is the body of C.3 (p.15), not C.2."
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    },
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "privileged-basis-is-absent-from-residual-stream",
+     "type": "is-absent-from",
+     "source": "privileged-basis",
+     "target": "residual-stream",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "The paper's own definition of a privileged basis is a coordinate system 'in which we would expect changes to be unusually meaningful, such as the standard basis after a non-linearity in an MLP' -- and it explicitly states the residual stream 'can usually be treated as a vector space with no privileged basis,' unlike that MLP example. Structurally this is because the residual stream is a running sum of additive layer outputs rather than the output of an elementwise nonlinearity, so no single coordinate system is singled out by the architecture the way the standard basis is singled out immediately after a ReLU. This absence is exactly what licenses treating individual residual-stream coordinates, the default-basis baseline, as no more principled a unit of analysis than an arbitrary random direction, which the paper then checks directly."
+    },
+    {
+     "id": "outlier-dimensions-partially-restores-privileged-basis",
+     "type": "partially-restores",
+     "source": "outlier-dimensions",
+     "target": "privileged-basis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "Despite the residual stream lacking a privileged basis in general, the paper cites a documented exception: 'a tendency for transformers to store information in the residual stream basis' (Dettmers et al., 2022), attributed to the Adam optimiser saving gradients with finite precision in that basis (Elhage et al., 2023). The paper's own feature search makes this concrete rather than just citational: searching the residual stream's default-basis coordinates for the dimensions most associated with the apostrophe feature, the top two most positive dimensions were both outlier dimensions, and one of the top two most negative dimensions was also an outlier dimension. So among the handful of coordinates that do carry a privileged, information-bearing role in this basis, outlier dimensions are disproportionately represented -- a partial, localized exception rather than the residual stream regaining a privileged basis wholesale."
+    },
+    {
+     "id": "mlp-sae-training-confronts-privileged-basis",
+     "type": "confronts",
+     "source": "mlp-sae-training",
+     "target": "privileged-basis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "The MLP sublayer is the paper's own worked example of a space that does have a privileged basis -- it is literally the definitional example given elsewhere in the paper, 'the standard basis after a non-linearity in an MLP' -- so training a dictionary there means competing against neurons that are already somewhat meaningfully aligned with the coordinate axes, unlike in the residual stream. Even so, the paper reports 'mixed success': many MLP dictionary features are more interpretable than the neurons themselves, showing the privileged basis does not make neurons optimal. But capacity is wasted differently here than in the residual stream -- MLP dictionaries develop large numbers of dead features that never activate, severely enough that 'in a dictionary with twice as many features as neurons, less than half might be active enough to perform automatic interpretability,' except in early layers where most features stay alive. Tied encoder/decoder weights, which cost nothing on residual-stream data, also measurably hurt MLP performance, forcing the paper to use separate encoder and decoder matrices specifically for this setting."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "outlier-dimensions",
+   "staged": {
+    "id": "outlier-dimensions",
+    "name": "Outlier dimensions",
+    "role": "inherited",
+    "summary": "Specific residual-stream coordinates that transformers tend to write disproportionately large, information-bearing values to, hypothesized (Dettmers et al., 2022) to arise from the Adam optimizer storing gradients with finite precision in the residual basis. The paper finds that its top-activating default-basis dimensions for both the most positive and most negative apostrophe-related directions were outlier dimensions rather than typical basis coordinates.",
+    "parent": "privileged-basis",
+    "locators": [
+     {
+      "section": "D.3 FEATURE SEARCH DETAILS",
+      "page": 16
+     },
+     {
+      "section": "D.3 FEATURE SEARCH DETAILS",
+      "page": 17
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    },
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "outlier-dimensions-partially-restores-privileged-basis",
+     "type": "partially-restores",
+     "source": "outlier-dimensions",
+     "target": "privileged-basis",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "Despite the residual stream lacking a privileged basis in general, the paper cites a documented exception: 'a tendency for transformers to store information in the residual stream basis' (Dettmers et al., 2022), attributed to the Adam optimiser saving gradients with finite precision in that basis (Elhage et al., 2023). The paper's own feature search makes this concrete rather than just citational: searching the residual stream's default-basis coordinates for the dimensions most associated with the apostrophe feature, the top two most positive dimensions were both outlier dimensions, and one of the top two most negative dimensions was also an outlier dimension. So among the handful of coordinates that do carry a privileged, information-bearing role in this basis, outlier dimensions are disproportionately represented -- a partial, localized exception rather than the residual stream regaining a privileged basis wholesale."
+    },
+    {
+     "id": "outlier-dimensions-fails-to-elevate-default-basis-baseline",
+     "type": "fails-to-elevate",
+     "source": "outlier-dimensions",
+     "target": "default-basis-baseline",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "It would be natural to expect that, because outlier dimensions carry disproportionate real information, the default-basis baseline should score above the random-directions floor on autointerpretability -- yet the paper checks this directly and reports the opposite: 'We do not find residual stream basis directions to be any more interpretable than random directions.' This sentence is placed immediately after the paper's discussion of outlier dimensions and Dettmers et al.'s evidence for a partial privileged basis, which reads as the authors pre-empting exactly this expectation. The result implies that outlier dimensions being information-bearing in the aggregate is not the same as the specific coordinates being interpretable one at a time -- the information may be real but still spread thinly across many polysemantic dimensions rather than concentrated in a legible way."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "mechanistic-interpretability",
+   "staged": {
+    "id": "mechanistic-interpretability",
+    "name": "Mechanistic interpretability",
+    "role": "inherited",
+    "summary": "A research agenda that seeks to understand neural networks by reverse-engineering their internal computations into human-understandable parts, aiming to enable verification, targeted editing, and mitigation of risks such as deceptive behavior. Named in the introduction as the field this paper's sparse-autoencoder method aims to advance, offering it as 'a foundation for future mechanistic interpretability work.'",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 INTRODUCTION",
+      "page": 1
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    },
+    {
+     "id": "enumerating-features-for-safety",
+     "name": "Feature enumeration as a safety audit"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "polysemanticity-blocks-mechanistic-interpretability",
+     "type": "blocks",
+     "source": "polysemanticity",
+     "target": "mechanistic-interpretability",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "Mechanistic interpretability's basic method is to break a network into smaller units that can be analysed one at a time; the paper notes that using individual neurons as these units 'has had some success' (citing Olah et al., 2020 and Bills et al., 2023), which is why neurons were the default unit of analysis before this paper's method existed. Polysemanticity undercuts exactly that method, since a neuron activating for several unrelated concepts cannot be assigned a single human-understandable role no matter how carefully it is studied in isolation. This is why the paper's abstract opens by naming polysemanticity, not superposition or interpretability itself, as 'one of the roadblocks to a better understanding of neural networks' internals' -- it is the roadblock at the level where reverse-engineering actually happens, feature by feature."
+    },
+    {
+     "id": "mechanistic-interpretability-is-the-field-that-dreams-of-enumerative-safety",
+     "type": "is-the-field-that-dreams-of",
+     "source": "mechanistic-interpretability",
+     "target": "enumerative-safety",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "enumerating-features-for-safety",
+     "prose": "The paper opens by naming a field and closes by naming that field’s most ambitious unmet goal, and deception is the thread connecting them. The introduction frames mechanistic interpretability as a response to a specific worry — that AI systems might \"deceive humans in order to accomplish undesirable goals\" (Ngo et al., 2022) — and defines the field’s method as understanding how networks calculate their outputs well enough to \"reverse engineer parts of their internal processes and make targeted changes to them\" (sparse-autoencoders, §\"1 Introduction\", p. 1). The conclusion returns to the same worry by name: enumerative safety is described as the field’s \"ambitious dream\" of a complete, human-understandable list of a model’s features sufficient to guarantee it will not perform \"dangerous behaviours such as deception\" (sparse-autoencoders, §\"6.3 Conclusion\", p. 9). Read together, the two passages show that enumerative safety is not a separate goal bolted onto the introduction’s framing — it is what the field’s stated concern, reverse-engineering a network well enough to rule out deception, looks like when pushed to its logical completion: not partial reverse-engineering of chosen circuits, but an exhaustive one."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "sparse-dictionary-learning",
+   "staged": {
+    "id": "sparse-dictionary-learning",
+    "name": "Sparse dictionary learning / sparse coding",
+    "role": "inherited",
+    "summary": "A prior mathematical framework (Olshausen & Field, 1997; Lee et al., 2006), originally developed to model sparse coding in the visual cortex, for expressing data as sparse linear combinations of an overcomplete set of learned basis vectors (a 'dictionary'). This paper's sparse autoencoder is presented as a scalable neural-network implementation of this framework applied to language model activations.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING",
+      "page": 2
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "unmixing-activations-with-sparsity",
+     "name": "Unmixing activations with a sparsity penalty"
+    },
+    {
+     "id": "dictionary-learning-lineage",
+     "name": "The dictionary-learning lineage"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "sparse-dictionary-learning-operationalized-as-sparse-autoencoders",
+     "type": "operationalized-as",
+     "source": "sparse-dictionary-learning",
+     "target": "sparse-autoencoders",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "Classical sparse dictionary learning (Olshausen & Field, 1997; Lee et al., 2006) solves for a dictionary and per-example sparse codes by alternating optimization, re-solving a fresh sparse-coding problem for every data point at inference time. This paper's sparse autoencoder instead amortizes that inference step into a single learned function: the encoder c = ReLU(Mx+b) produces a sparse code for any activation vector x in one forward pass, rather than running a new optimization per example. The decoder x-hat = M^T c then plays the role of the classical dictionary's linear-combination step, with M's rows serving directly as the learned dictionary atoms. The paper grounds the L1 term's ability to recover the true generating directions in both Sharkey et al.'s (2023) empirical results and Wright & Ma's (2022) theoretical guarantees for l1-penalized reconstruction, making the SAE a scalable neural-network stand-in for a decades-old convex-optimization framework."
+    },
+    {
+     "id": "l4-norm-maximization-reformulates-sparse-dictionary-learning",
+     "type": "reformulates",
+     "source": "l4-norm-maximization",
+     "target": "sparse-dictionary-learning",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "Qu et al. (2019) show that the search for a sparse, overcomplete dictionary can be recast as a continuous optimization problem: searching for unit-norm directions that maximize their l4 norm over the data. This reformulation works because a direction that recovers one of the true sparse-coding basis vectors will have activations that are mostly near zero with occasional large spikes -- exactly the heavy-tailed profile the l4 norm, unlike the l2 norm, rewards, so maximizing it is a smooth proxy for finding maximally sparse-activating directions. This paper invokes the result to explain two of its own findings: why the correlation between a dictionary feature's autointerpretability score and the skew/kurtosis of its activations is positive, and why Independent Component Analysis, which directly maximizes non-Gaussianity, is consistently the strongest non-dictionary-learning baseline it tests against."
+    },
+    {
+     "id": "kurtosis-skew-correlation-analysis-supplies-empirical-evidence-for-sparse-dictionary-learning",
+     "type": "supplies-empirical-evidence-for",
+     "source": "kurtosis-skew-correlation-analysis",
+     "target": "sparse-dictionary-learning",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "automated-interpretability-scoring",
+     "prose": "Qu et al. (2019) proved, as pure theory, that searching for sparse overcomplete dictionaries can be reformulated as searching for directions that maximize the L4 norm, a measure closely related to kurtosis, the fourth statistical moment. The kurtosis/skew correlation analysis is the paper's empirical check on whether that theoretical reformulation shows up in practice: if sparse dictionary learning is, mathematically, a search for heavy-tailed directions, then real dictionary features recovered by an L1-penalized autoencoder should be more interpretable precisely to the degree that they are more heavy-tailed, which is what Table 2 finds, since skew and kurtosis correlate with score while mean and variance do not. In other words, this correlation analysis is the closest thing in the paper to a direct empirical fingerprint of sparse coding actually working as the L4-norm theory predicts, rather than an incidental property of the learned features. It also supplies the paper's account of why ICA, a technique from outside the sparse-dictionary-learning lineage that nonetheless explicitly maximizes non-Gaussianity, ends up as by far the strongest non-SAE baseline: it is optimizing for the same heavy-tailedness this analysis shows the SAE's dictionary features share."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "l4-norm-maximization",
+   "staged": {
+    "id": "l4-norm-maximization",
+    "name": "L4-norm maximization (sparse dictionary search reformulation)",
+    "role": "inherited",
+    "summary": "A prior theoretical result (Qu et al., 2019) showing that searching for sparse, overcomplete dictionaries can be reformulated as searching for directions that maximize the L4 norm. Cited to motivate the paper's finding that interpretability correlates with the heavy-tailedness (skew/kurtosis) of feature activations, and to help explain ICA's relatively strong baseline performance.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "C.4 INTERPRETABILITY SCORES CORRELATE WITH KURTOSIS AND SKEW OF ACTIVATION",
+      "page": 15
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "dictionary-learning-lineage",
+     "name": "The dictionary-learning lineage"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "l4-norm-maximization-reformulates-sparse-dictionary-learning",
+     "type": "reformulates",
+     "source": "l4-norm-maximization",
+     "target": "sparse-dictionary-learning",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "Qu et al. (2019) show that the search for a sparse, overcomplete dictionary can be recast as a continuous optimization problem: searching for unit-norm directions that maximize their l4 norm over the data. This reformulation works because a direction that recovers one of the true sparse-coding basis vectors will have activations that are mostly near zero with occasional large spikes -- exactly the heavy-tailed profile the l4 norm, unlike the l2 norm, rewards, so maximizing it is a smooth proxy for finding maximally sparse-activating directions. This paper invokes the result to explain two of its own findings: why the correlation between a dictionary feature's autointerpretability score and the skew/kurtosis of its activations is positive, and why Independent Component Analysis, which directly maximizes non-Gaussianity, is consistently the strongest non-dictionary-learning baseline it tests against."
+    },
+    {
+     "id": "l4-norm-maximization-predicts-the-heavy-tailed-activation-of-dictionary-feature",
+     "type": "predicts-the-heavy-tailed-activation-of",
+     "source": "l4-norm-maximization",
+     "target": "dictionary-feature",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "If sparse dictionary search really is equivalent to l4-norm maximization, dictionary features that are closer to the 'true' sparse directions should have more heavy-tailed activation distributions -- mostly near zero with occasional large spikes -- since that is exactly the shape the l4 norm, unlike the l2 norm, rewards. The paper tests this prediction directly on its trained dictionary features by correlating each one's autointerpretability score against the skew and kurtosis of its activation distribution, across all residual-stream layers and dictionary sizes R in {0.5, 1, 2, 4, 8}, finding weak but consistent positive correlations (around 0.19-0.24). That is a modest but real empirical link between a purely theoretical reformulation of the sparse-coding objective and a property of the actual learned features: the more a dictionary feature's activations look like the heavy-tailed spikes l4-maximization would select for, the more interpretable it tends to score."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "yun-dictionary-learning",
+   "staged": {
+    "id": "yun-dictionary-learning",
+    "name": "Transformer visualization via dictionary learning (Yun et al., 2021)",
+    "role": "inherited",
+    "summary": "Prior work applying sparse dictionary learning to residual stream activations across all layers of a language model simultaneously, framing token representations as a linear superposition of transformer factors. Cited as closely related prior work alongside Sharkey et al. (2023), applying a similar technique but without the interpretability and causal-localization evaluations this paper contributes.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 INTRODUCTION",
+      "page": 2
+     },
+     {
+      "section": "6.1 RELATED WORK",
+      "page": 8
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "dictionary-learning-lineage",
+     "name": "The dictionary-learning lineage"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "yun-dictionary-learning-is-extended-by-sparse-autoencoders",
+     "type": "is-extended-by",
+     "source": "yun-dictionary-learning",
+     "target": "sparse-autoencoders",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "Yun et al. (2021) train a single sparse dictionary across all of a language model's residual-stream layers simultaneously, treating each token's representation at every depth as a linear superposition of shared 'transformer factors.' This paper takes the opposite granularity: it trains a separate sparse autoencoder per layer, and separately again for MLP sublayers in Appendix C.3, which is what makes it meaningful to compare interpretability and dead-feature rates layer by layer (Figures 2, 9, 16) rather than only at the level of the whole residual stream. The larger difference is evaluative rather than architectural -- Yun et al. never test whether their learned factors are more interpretable than baselines, more monosemantic than neurons, or more causally precise than PCA on a behavioral task, which is exactly the autointerpretability scoring, case-study, and IOI-patching apparatus this paper adds on top of the same basic sparse-dictionary-learning idea."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "sharkey-interim-report",
+   "staged": {
+    "id": "sharkey-interim-report",
+    "name": "Sharkey et al. (2023) interim research report",
+    "role": "inherited",
+    "summary": "An unpublished interim research report ('Taking features out of superposition with sparse autoencoders,' Sharkey, Braun & Millidge, 2023) that first proposed training sparse autoencoders on language model activations to address superposition. Cited as the direct motivation and foundation this paper builds on and scales up.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "1 INTRODUCTION",
+      "page": 2
+     },
+     {
+      "section": "6.1 RELATED WORK",
+      "page": 8
+     }
+    ]
+   },
+   "isRevision": false,
+   "currentStorePage": null,
+   "themes": [
+    {
+     "id": "dictionary-learning-lineage",
+     "name": "The dictionary-learning lineage"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "sharkey-interim-report-is-validated-at-scale-by-sparse-autoencoders",
+     "type": "is-validated-at-scale-by",
+     "source": "sharkey-interim-report",
+     "target": "sparse-autoencoders",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "dictionary-learning-lineage",
+     "prose": "Sharkey, Braun & Millidge's 2023 AlignmentForum post -- itself titled 'Taking features out of superposition with sparse autoencoders,' the same phrase this paper's Section 2 heading borrows -- first proposed training sparse autoencoders on language model activations and showed empirically that l1-penalized reconstruction could recover known ground-truth features in toy settings. It was never run at the scale of a real language model's autointerpretability, causal-localization, or monosemanticity evaluation. This paper, co-authored by Lee Sharkey himself, is explicitly framed in both the introduction and the related-work section as building on and scaling up that interim report: applying the same core method to Pythia-70M and Pythia-410M and adding the autointerpretability scoring, IOI activation-patching comparison against PCA, and feature-circuit case studies the original report lacked."
+    }
+   ],
+   "existingStoreEdges": []
+  },
+  {
+   "id": "residual-stream",
+   "staged": {
+    "id": "residual-stream",
+    "name": "Residual stream",
+    "role": "refined",
+    "summary": "The transformer's running sum of layer outputs, this paper's primary object of study: sparse autoencoders are trained mainly on residual-stream activations, and the paper investigates whether the residual stream has a 'privileged basis' and how outlier dimensions relate to interpretable dictionary features.",
+    "parent": null,
+    "locators": [
+     {
+      "section": "2 TAKING FEATURES OUT OF SUPERPOSITION WITH SPARSE DICTIONARY LEARNING",
+      "page": 2
+     },
+     {
+      "section": "D.1 RESIDUAL STREAM BASIS",
+      "page": 16
+     }
+    ],
+    "notes": "id reused from contrastive-activation-addition:inherited / persona-vectors:inherited. Role set to refined rather than inherited since this paper substantively investigates the residual stream's basis properties (privileged basis, outlier dimensions) rather than merely using it as an intervention point."
+   },
+   "isRevision": true,
+   "currentStorePage": {
+    "id": "residual-stream",
+    "name": "Residual stream",
+    "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+    "parent": null,
+    "origins": [
+     {
+      "paper": "contrastive-activation-addition",
+      "role": "inherited",
+      "summary": "The running sum of layer outputs that a transformer's activations flow through and accumulate in. CAA computes and injects its steering vectors directly into this stream at a chosen layer.",
+      "notes": ""
+     },
+     {
+      "paper": "persona-vectors",
+      "role": "inherited",
+      "summary": "Persona vectors are extracted from, and steering/monitoring interventions are applied directly to, the residual stream at a selected layer, using the same layer-output (1-indexed) convention as prior activation-engineering work.",
+      "notes": "id reused from contrastive-activation-addition:inherited."
+     }
+    ],
+    "locators": [
+     {
+      "section": "3 Method",
+      "page": 3,
+      "paper": "contrastive-activation-addition"
+     },
+     {
+      "section": "9.1 Suggested future work",
+      "page": 9,
+      "paper": "contrastive-activation-addition"
+     },
+     {
+      "section": "2.2 Extracting persona vectors",
+      "page": 3,
+      "paper": "persona-vectors"
+     },
+     {
+      "section": "3.2 Controlling persona traits via steering",
+      "page": 4,
+      "paper": "persona-vectors"
+     }
+    ],
+    "sections": [
+     {
+      "heading": "The running total every layer writes into",
+      "body": "In a transformer, the residual stream is the vector that carries information from one layer to the next by simple addition: each attention block and each MLP block reads the current stream, computes some update, and adds that update back in, rather than replacing the stream outright. A token's representation at layer $L$ is literally a running sum of every block's output from layer 1 through $L$, plus the original embedding — nothing already written is overwritten, only added to. That additive structure is what makes the stream a natural place to intervene: adding an external vector to it is the same operation every layer already performs. It is also why the stream's norm tends to grow deeper into the network, accumulating rather than resetting, a pattern the paper cites directly (Heimersheim and Turner, 2023) (contrastive-activation-addition, §\"Vector normalization choices\", p. 10)."
+     },
+     {
+      "heading": "Where CAA writes, and why that has consequences",
+      "body": "[[contrastive-activation-addition]] commits to injecting its steering vector into the residual stream at one chosen layer, rather than into attention activations at every layer, as [[in-context-vectors]] does, or a sparse set of attention heads, as [[inference-time-intervention]] does. Because the stream's norm grows with depth, and [[steering-vector-normalization]] standardizes vector magnitude across behaviors but deliberately not across layers, a fixed [[steering-multiplier]] represents a different relative perturbation depending on which layer it is added at (contrastive-activation-addition, §\"Vector normalization choices\", p. 10) — the residual stream is not a neutral injection site, its own scale shapes how the paper's layer-optimality results should be read."
+     },
+     {
+      "heading": "Uninformative, then abruptly not",
+      "body": "The stream is not uniformly informative about behavior across depth. [[activation-pca-visualization]] shows [[behavioral-clustering]] is largely absent for roughly the first third of the model's layers, then appears abruptly within a single layer: at layer 9 of Llama 2 7B Chat there is no separation on the refusal dataset, while at layer 10 there is a clean split (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). [[steering-outside-residual-stream]] is the paper's own proposed alternative to injecting into this accumulating sum — intervening at a sub-component's output, such as after the MLP but before it merges into the stream, to localize effects the summed stream currently blurs together."
+     }
+    ],
+    "intro": "Every layer of a transformer reads from and writes back into the same running total of information as it flows through the network, a channel called the residual stream. It's an unglamorous piece of architecture, but it's also the one place a steering vector can be added once and have its effect persist through every layer that comes after.\n\nWhat the residual stream is, and why CAA targets it directly, gets explained ahead: injecting a steering vector into this stream at a single chosen layer rather than intervening on any more specific internal component."
+   },
+   "themes": [
+    {
+     "id": "superposition-vs-the-neuron-basis",
+     "name": "Superposition and the case against the neuron basis"
+    },
+    {
+     "id": "reading-the-residual-stream",
+     "name": "Steering doubles as interpretability"
+    },
+    {
+     "id": "behavior-as-a-direction",
+     "name": "A behavior becomes a direction in activation space"
+    }
+   ],
+   "newEdges": [
+    {
+     "id": "privileged-basis-is-absent-from-residual-stream",
+     "type": "is-absent-from",
+     "source": "privileged-basis",
+     "target": "residual-stream",
+     "hindsight": false,
+     "groundedIn": null,
+     "motivatedByTheme": "superposition-vs-the-neuron-basis",
+     "prose": "The paper's own definition of a privileged basis is a coordinate system 'in which we would expect changes to be unusually meaningful, such as the standard basis after a non-linearity in an MLP' -- and it explicitly states the residual stream 'can usually be treated as a vector space with no privileged basis,' unlike that MLP example. Structurally this is because the residual stream is a running sum of additive layer outputs rather than the output of an elementwise nonlinearity, so no single coordinate system is singled out by the architecture the way the standard basis is singled out immediately after a ReLU. This absence is exactly what licenses treating individual residual-stream coordinates, the default-basis baseline, as no more principled a unit of analysis than an arbitrary random direction, which the paper then checks directly."
+    },
+    {
+     "id": "sparse-autoencoders-runs-counter-to-the-depth-profile-of-residual-stream",
+     "type": "runs-counter-to-the-depth-profile-of",
+     "source": "sparse-autoencoders",
+     "target": "residual-stream",
+     "hindsight": true,
+     "groundedIn": "contrastive-activation-addition",
+     "motivatedByTheme": null,
+     "prose": "Both papers plot something against depth in the same architectural object, and the two curves point opposite directions. The sparse-autoencoder paper’s interpretability advantage over PCA, ICA, and the default basis is measured layer by layer and is not constant: it is already \"comparable to ICA\" by layer 4 and shows \"minimal improvement in the final layer\" (sparse-autoencoders, §\"3.2 Sparse dictionary features are more interpretable than baselines\", p. 5) — and its dictionaries are trained with no knowledge of any downstream task, since \"the training of our feature dictionaries does not emphasize any particular task\" (sparse-autoencoders, §\"4 Identifying causally-important dictionary features for indirect object identification\", p. 6). Contrastive Activation Addition, reading the same residual stream for a different purpose three months later, finds that behavior-relevant structure appears late rather than early: PCA-projected activations show no separation by behavior at layer 9 of Llama 2 7B Chat and a clean split one layer later, with behavioral clustering largely absent for roughly the first third of the network’s depth (contrastive-activation-addition, §\"3.2 Visualizing activations for contrastive dataset analysis\", p. 4). The two findings are not strictly in tension — one is a decomposition’s fidelity to arbitrary local structure, the other is where one specific labeled behavior becomes linearly separable — but juxtaposed they mean a dictionary’s best guarantee of monosemanticity and a behavior’s best guarantee of linear separability sit at opposite ends of the same stack of layers, a fact visible only once a later paper supplied the second curve."
+    }
+   ],
+   "existingStoreEdges": [
+    {
+     "id": "residual-stream-is-the-injection-site-whose-growth-constrains-contrastive-activation-addition",
+     "type": "is-the-injection-site-whose-growth-constrains",
+     "source": "residual-stream",
+     "target": "contrastive-activation-addition"
+    },
+    {
+     "id": "steering-outside-residual-stream-would-localize-representations-beyond-residual-stream",
+     "type": "would-localize-representations-beyond",
+     "source": "steering-outside-residual-stream",
+     "target": "residual-stream"
+    },
+    {
+     "id": "behavioral-clustering-localizes-suddenly-in-residual-stream",
+     "type": "localizes-suddenly-in",
+     "source": "behavioral-clustering",
+     "target": "residual-stream"
+    },
+    {
+     "id": "persona-vector-computation-sweeps-and-selects-a-layer-within-residual-stream",
+     "type": "sweeps-and-selects-a-layer-within",
+     "source": "persona-vector-computation",
+     "target": "residual-stream"
+    }
+   ]
+  }
+ ]
+}

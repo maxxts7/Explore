@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Apostrophe feature for negation contractions (&quot;don&#x27;t&quot;, &quot;won&#x27;t&quot;) — Figure</title>
+    <link rel="stylesheet" href="../assets/style.css?v=26a6ed185e">
+    <script defer src="../assets/popup.js?v=26a6ed185e"></script>
+    <link rel="stylesheet" href="../assets/katex.min.css">
+    <script defer src="../assets/katex.min.js"></script>
+    <script defer src="../assets/auto-render.min.js" onload="renderMathInElement(document.body, katexOptions);"></script>
+    <script>
+      var katexOptions = {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      };
+    </script>
+  </head>
+  <body class="pk-figure">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="home-link" href="../index.html">&larr; <b>Explore</b><span class="home-sub">an AI safety wiki</span></a>
+        <span class="header-tools"><span class="kind-badge kind-figure">figure</span><a class="help-link" href="../help.html">Help</a></span>
+      </div>
+    </header>
+    <div class="page">
+      <main>
+<h1>Apostrophe feature for negation contractions (&quot;don&#x27;t&quot;, &quot;won&#x27;t&quot;)</h1>
+<p class="edge-meta">Figure 15 of <a href="../story/sparse-autoencoders.html">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a> &middot; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;D.2 EXAMPLES OF LEARNED FEATURES&rdquo;, p. 18</a> &middot; in <a href="../story/sparse-autoencoders.html#paper-figures-results">Results and interpretation</a></p>
+<figure class="figure-plate"><a href="../assets/figures/sparse-autoencoders/fig-15.png" target="_blank" rel="noopener"><img src="../assets/figures/sparse-autoencoders/fig-15.png" alt="Figure 15 — Apostrophe feature for negation contractions (&quot;don&#x27;t&quot;, &quot;won&#x27;t&quot;)" loading="lazy"></a></figure>
+<section class="prose-section">
+<h2>Reading the histogram pair</h2>
+<p>This uses the same input/output histogram format as the other feature case studies: left shows which tokens activate the feature and how strongly (x-axis, capped around 7.6 here), stacked and colored by token identity with a catch-all '[All Other Tokens]' category; right shows which next-token predictions drop, and by how much, when the feature is ablated from the residual stream. As with the sibling feature in Figure 14, the leftmost, near-zero bin is dominated by the tan 'other tokens' color rather than the feature's true target -- a mix of weakly-activating unrelated tokens a naive reader might mistake for the feature's main identity. The informative region is the string of smaller bars at higher activation, which here are consistently the blue apostrophe token, with almost no other color competing at high activation strength.</p>
+</section>
+<section class="prose-section">
+<h2>What it shows</h2>
+<p>Beyond low activation, the input histogram is essentially pure apostrophe; the low-activation ticks include period, hyphen, and asterisk rather than the pronoun tokens seen in Figure 14, consistent with this feature triggering in negation-contraction contexts ("don't," "won't," "wouldn't") rather than pronoun-plus-'ll contractions. The output panel is far more concentrated than Figure 14's: the token 't' dominates the suppressed-logit count in essentially every activation-difference bin, with 's,' 'll,' 'y,' and 'T' contributing only minor slivers. Ablating this feature therefore has a narrow, predictable causal effect -- mainly removing the model's prediction of the 't' that closes an "n't" contraction -- in contrast to the broader spread of suppressed endings ('ve, 're, 'm, 's, 'll) seen for the "I'll"-type feature.</p>
+</section>
+<section class="prose-section">
+<h2>Two features, two contraction families</h2>
+<p>The contrast with Figure 14 is itself the point: the paper singles out these two features specifically because they show that even a single character, the apostrophe, is represented by multiple distinct <a href="../concept/dictionary-feature.html">Dictionary feature</a>s rather than one, each tied to its own contraction family and each with its own tight causal effect on next-token logits (sparse-autoencoders, <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=7" target="_blank" rel="noopener">§"5.1 INPUT: DICTIONARY FEATURES ARE HIGHLY MONOSEMANTIC", p. 7</a>; <a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=16" target="_blank" rel="noopener">§"D.2 EXAMPLES OF LEARNED FEATURES", p. 16</a>). The narrower output distribution here versus Figure 14's broader one shows <a href="../concept/monosemanticity.html">Monosemanticity</a> is a matter of degree across learned features, not all-or-nothing. Compare the general-purpose <a href="../concept/apostrophe-feature.html">Apostrophe dictionary feature (feature 556)</a> case study.</p>
+</section>
+<hr class="divider">
+<section class="nav-block"><h2>More figures from this paper</h2><ul><li>Previous: <a href="../figure/sparse-autoencoders--fig-14.html">Figure 14 &mdash; Apostrophe feature for pronoun contractions (&quot;I&#x27;ll&quot;, &quot;you&#x27;ll&quot;)</a></li><li>Next: <a href="../figure/sparse-autoencoders--fig-16.html">Figure 16 &mdash; Active-feature fraction vs. L1 sparsity across layers and architectures</a></li></ul></section>
+<section class="nav-block"><h2>Sources</h2><ul class="sources"><li class="source-paper"><a href="https://arxiv.org/abs/2309.08600" target="_blank" rel="noopener">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a><ul class="source-locs"><li><a class="cite" href="../assets/papers/sparse-autoencoders.pdf#page=18" target="_blank" rel="noopener">&sect;&ldquo;D.2 EXAMPLES OF LEARNED FEATURES&rdquo;, p. 18</a></li></ul></li></ul></section>
+      </main>
+      <footer class="site-footer">
+        <a href="../index.html">&larr; Back to index</a>
+      </footer>
+    </div>
+  </body>
+</html>
